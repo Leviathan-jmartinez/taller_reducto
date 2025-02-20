@@ -75,7 +75,7 @@ function alertasAjax(alerta) {
                 location.reload();
             }
         });
-    } else if (alerta.Alerta === "limpiar") {
+    } else if(alerta.Alerta === "limpiar"){
         Swal.fire({
             title: alerta.Titulo,
             text: alerta.Texto,
@@ -83,7 +83,7 @@ function alertasAjax(alerta) {
             confirmButtonText: 'Aceptar'
         }).then((result) => {
             if (result.value) {
-                document.querySelector(".FormularioAjax");
+                document.querySelector(".FormularioAjax").reset();
             }
         });
     } else if (alerta.Alerta === "redireccionar") {
