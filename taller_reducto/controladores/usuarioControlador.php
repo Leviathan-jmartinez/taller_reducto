@@ -8,6 +8,7 @@ if ($peticionAjax) {
 class usuarioControlador extends usuarioModelo {
     /** controlador agregar usuario*/
     public function agregar_usuario_controlador(){
+        /**inicio */
         $ci = mainModel::limpiar_string($_POST['usuario_dni_reg']);
         $nombre = mainModel::limpiar_string($_POST['usuario_nombre_reg']);
         $apellido = mainModel::limpiar_string($_POST['usuario_apellido_reg']);
