@@ -5,8 +5,7 @@ if ($peticionAjax) {
     require_once "./modelos/usuarioModelo.php";
 }
 
-class usuarioControlador extends usuarioModelo
-{
+class usuarioControlador extends usuarioModelo{
     /** controlador agregar usuario*/
     public function agregar_usuario_controlador()
     {

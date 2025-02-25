@@ -18,6 +18,17 @@
     if ($vistas == "login" || $vistas == "404") {
         require_once "./vistas/contenidos/" . $vistas . "-vista.php";
     } else {
+        session_start(['name' => 'STR']);
+        require_once "./controladores/loginControlador.php";
+        $lc = new loginControlador();
+        /** verificamos si no vinene definidos ninguna de estas variables, en ese caso se cierra la sesion */
+        if (!isset($_SESSION['token_str']) || 
+        !isset($_SESSION['nick_str']) || 
+        !isset($_SESSION['nivel_str']) || 
+        !isset($_SESSION['id_str'])) {
+            $lc->forzarCierre_sesion_controlador();
+            exit();
+        }
     ?>
         <!-- Main container -->
         <main class="full-box main-container">
