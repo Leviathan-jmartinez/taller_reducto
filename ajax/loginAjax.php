@@ -2,7 +2,7 @@
 $peticionAjax = true;
 require_once "../config/APP.php";
 
-if () {
+if (isset($_POST['usuario_nombre_reg'])) {
     
 } else {
     session_start(['name' => 'STR']);
