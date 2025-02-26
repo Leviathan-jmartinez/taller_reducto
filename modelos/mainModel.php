@@ -115,14 +115,14 @@ class mainModel
             $tabla .= '
                         <li class="page-item disabled">
                                 <a class="page-link">
-                                    <i class="fa-solid fa-angles-left"></i>
+                                    <i class="fas fa-angle-double-left"></i>
                                 </a>
                         </li>';
         } else {
             $tabla .= '
                         <li class="page-item">
                                 <a class="page-link" href="' . $url . '1/">
-                                    <i class="fa-solid fa-angles-left"></i>
+                                    <i class="fas fa-angle-double-left"></i>
                                 </a>
                         </li>
                         <li class="page-item">
@@ -156,7 +156,7 @@ class mainModel
             $tabla .= '
                         <li class="page-item disabled">
                                 <a class="page-link">
-                                    <i class="fa-solid fa-angles-right"></i>
+                                    <i class="fas fa-angle-double-right"></i>
                                 </a>
                         </li>';
         } else {
@@ -168,7 +168,7 @@ class mainModel
                         </li>
                         <li class="page-item">
                                 <a class="page-link" href="' . $url . $Npaginas . '/">
-                                    <i class="fa-solid fa-angles-right"></i>
+                                    <i class="fas fa-angle-double-right"></i>
                                 </a>
                         </li>
                         ';

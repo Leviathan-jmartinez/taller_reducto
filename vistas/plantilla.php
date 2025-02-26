@@ -19,6 +19,9 @@
         require_once "./vistas/contenidos/" . $vistas . "-vista.php";
     } else {
         session_start(['name' => 'STR']);
+
+        $pagina = explode("/",$_GET['vista']);
+
         require_once "./controladores/loginControlador.php";
         $lc = new loginControlador();
         /** verificamos si no vinene definidos ninguna de estas variables, en ese caso se cierra la sesion */
@@ -45,6 +48,7 @@
         </main>
 
     <?php
+    include "./vistas/inc/logout.php";
     }
     include "./vistas/inc/scripts.php"; ?>
 

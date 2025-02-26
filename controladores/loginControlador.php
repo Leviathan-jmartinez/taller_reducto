@@ -86,7 +86,7 @@ class loginControlador extends loginModelo {
     }
     /**Fin controlador */
 
-    /**Controladr cerrar  sesion*/
+    /**Controladr cerrar sesion*/
     public function forzarCierre_sesion_controlador(){
         session_unset();
         session_destroy();
@@ -97,5 +97,30 @@ class loginControlador extends loginModelo {
             return header("Location: ".SERVERURL."login/");
             exit();
         }
-    }
+    }/**fin controlador */
+
+    /**cerrar sesion */
+    public function cierre_sesion_controlador(){
+        session_start(['name' => 'STR']);
+        $token = mainModel::decryption($_POST['token']);
+        $usuario = mainModel::decryption($_POST['usuario']);
+
+        if ($token==$_SESSION['token_str'] && $usuario==$_SESSION['nick_str']) {
+            session_unset();
+            session_destroy();
+            $alerta=[
+                "Alerta"=>"redireccionar",
+                "URL"=> SERVERURL."login/"
+            ];
+        } else {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "No se pudo cerrar la sesion en el sistema",
+                "Tipo" => "error"
+            ];
+        }
+        echo json_encode($alerta);
+    }/**fin controlador */
+
 }
