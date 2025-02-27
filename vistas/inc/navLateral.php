@@ -6,7 +6,7 @@
             <i class="far fa-times-circle show-nav-lateral"></i>
             <img src="<?php echo SERVERURL; ?>vistas/assets/avatar/Avatar.png" class="img-fluid" alt="Avatar">
             <figcaption class="roboto-medium text-center">
-                <?php echo $_SESSION['nombre_str']." ".$_SESSION['apellido_str']?> <br><small class="roboto-condensed-light"><?php echo $_SESSION['nick_str']?></small>
+                <?php echo $_SESSION['nombre_str'] . " " . $_SESSION['apellido_str'] ?> <br><small class="roboto-condensed-light"><?php echo $_SESSION['nick_str'] ?></small>
             </figcaption>
         </figure>
         <div class="full-box nav-lateral-bar"></div>
@@ -66,22 +66,23 @@
                         </li>
                     </ul>
                 </li>
-
-                <li>
-                    <a href="#" class="nav-btn-submenu"><i class="fas  fa-user-secret fa-fw"></i> &nbsp; Usuarios <i class="fas fa-chevron-down"></i></a>
-                    <ul>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>usuario-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; Nuevo usuario</a>
-                        </li>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>usuario-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Lista de usuarios</a>
-                        </li>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>usuario-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar usuario</a>
-                        </li>
-                    </ul>
-                </li>
-
+                <?php
+                if ($_SESSION['nivel_str'] == 1) { ?>
+                    <li>
+                        <a href="#" class="nav-btn-submenu"><i class="fas  fa-user-secret fa-fw"></i> &nbsp; Usuarios <i class="fas fa-chevron-down"></i></a>
+                        <ul>
+                            <li>
+                                <a href="<?php echo SERVERURL; ?>usuario-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; Nuevo usuario</a>
+                            </li>
+                            <li>
+                                <a href="<?php echo SERVERURL; ?>usuario-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Lista de usuarios</a>
+                            </li>
+                            <li>
+                                <a href="<?php echo SERVERURL; ?>usuario-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar usuario</a>
+                            </li>
+                        </ul>
+                    </li>
+                <?php } ?>
                 <li>
                     <a href="<?php echo SERVERURL; ?>company/"><i class="fas fa-store-alt fa-fw"></i> &nbsp; Empresa</a>
                 </li>

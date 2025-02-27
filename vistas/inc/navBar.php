@@ -2,7 +2,7 @@
     <a href="#" class="float-left show-nav-lateral">
         <i class="fas fa-exchange-alt"></i>
     </a>
-    <a href="<?php echo SERVERURL; ?>usuario-actualizar/">
+    <a href="<?php echo SERVERURL."usuario-actualizar/".$lc->encryption($_SESSION['id_str'])."/"; ?>">
         <i class="fas fa-user-cog"></i>
     </a>
     <a href="#" class="btn-exit-system">
