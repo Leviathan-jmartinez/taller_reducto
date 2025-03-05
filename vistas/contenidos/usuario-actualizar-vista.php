@@ -50,8 +50,8 @@ if ($_SESSION['nivel_str'] == 1) { ?>
 					<div class="row">
 						<div class="col-12 col-md-4">
 							<div class="form-group">
-								<label for="usuario_dni" class="bmd-label-floating">DNI</label>
-								<input type="text" pattern="[0-9-]{1,20}" class="form-control" name="usuario_dni_up" id="usuario_dni" maxlength="20" value="<?php echo $campos['usu_ci']; ?>">
+								<label for="usuario_dni" class="bmd-label-floating">CI</label>
+								<input type="text" pattern="[0-9-]{1,20}" class="form-control" name="usuario_ci_up" id="usuario_ci" maxlength="20" value="<?php echo $campos['usu_ci']; ?>">
 							</div>
 						</div>
 

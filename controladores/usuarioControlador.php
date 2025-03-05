@@ -76,18 +76,6 @@ class usuarioControlador extends usuarioModelo
                 exit();
             }
         }
-        if ($telefono != "") {
-            if (mainModel::verificarDatos("[0-9()+]{8,20}", $telefono)) {
-                $alerta = [
-                    "Alerta" => "simple",
-                    "Titulo" => "Ocurrio un error inesperado!",
-                    "Texto" => "El formato del campo TELEFONO no es valido",
-                    "Tipo" => "error"
-                ];
-                echo json_encode($alerta);
-                exit();
-            }
-        }
         if (mainModel::verificarDatos("[a-zA-Z0-9]{1,35}", $nick)) {
             $alerta = [
                 "Alerta" => "simple",
@@ -376,4 +364,291 @@ class usuarioControlador extends usuarioModelo
         $id = mainModel::limpiar_string($id);
         return usuarioModelo::datos_usuario_modelo($tipo, $id);
     }
+    /**controlador actualizar usuario */
+    public function actualizar_usuario_controlador()
+    {
+        // recibir ID usuario
+        $id = mainModel::decryption($_POST['usuario_id_up']);
+        $id = mainModel::limpiar_string($id);
+
+        // comparar registro si existe en la BD
+        $checkUser = mainModel::ejecutar_consulta_simple("SELECT * FROM usuarios where id_usuario='$id'");
+        if ($checkUser->rowCount() <= 0) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El usuario que intenta actualizar no existe en el sistema",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        } else {
+            $campos_usuario_up = $checkUser->fetch();
+        }
+        $ci = mainModel::limpiar_string($_POST['usuario_ci_up']);
+        $nombre = mainModel::limpiar_string($_POST['usuario_nombre_up']);
+        $apellido = mainModel::limpiar_string($_POST['usuario_apellido_up']);
+        $telefono = mainModel::limpiar_string($_POST['usuario_telefono_up']);
+        $nick = mainModel::limpiar_string($_POST['usuario_usuario_up']);
+        $email = mainModel::limpiar_string($_POST['usuario_email_up']);
+
+        /**validar estado si viene definido */
+        if (isset($_POST['usuario_estado_up'])) {
+            $estado = mainModel::limpiar_string($_POST['usuario_estado_up']);
+        } else {
+            $estado = $campos_usuario_up['usu_estado'];
+        }
+        /**validar estado si viene definido */
+        if (isset($_POST['usuario_privilegio_up'])) {
+            $nivel = mainModel::limpiar_string($_POST['usuario_privilegio_up']);
+        } else {
+            $nivel = $campos_usuario_up['usu_nivel'];
+        }
+        $admin_user = mainModel::limpiar_string($_POST['usuario_admin']);
+        $admin_clave = mainModel::limpiar_string($_POST['clave_admin']);
+        $tipo_cuenta = mainModel::limpiar_string($_POST['tipo_cuenta']);
+
+        if ($nombre == "" || $apellido == "" || $nick == "" || $admin_user == "" || $admin_clave == "") {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "No has llenado todos los campos que son obligatorios",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        /**verificar integridad de datos  */
+        if (mainModel::verificarDatos("[0-9-]{7,20}", $ci)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El formato del campo CI no es valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        if (mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{1,35}", $nombre)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El formato del campo NOMBRE no es valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        if (mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{1,35}", $apellido)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El formato del campo APELLIDO no es valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        if ($telefono != "") {
+            if (mainModel::verificarDatos("[0-9()+]{8,20}", $telefono)) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrio un error inesperado!",
+                    "Texto" => "El formato del campo TELEFONO no es valido",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
+        }
+        if (mainModel::verificarDatos("[a-zA-Z0-9]{1,35}", $nick)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El formato del campo USUARIO no es valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if (mainModel::verificarDatos("[a-zA-Z0-9]{1,35}", $admin_user)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "Tu USUARIO no coincide con el formato solicitado",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        if (mainModel::verificarDatos("[a-zA-Z0-9$@.-]{7,100}", $admin_clave)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "Tu CLAVE no coincide con el formato solicitado",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        $admin_clave = mainModel::encryption($admin_clave);
+        if ($nivel < 1 || $nivel > 3) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El nivel de Privelegio seleccionado no corresponde",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        if ($estado != "1" && $estado != "2") {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El estado seleccionado no corresponde",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        if ($ci != $campos_usuario_up['usu_ci']) {
+            /**Comprobacion de registros */
+            $check_ci = mainModel::ejecutar_consulta_simple("SELECT usu_ci from usuarios where usu_ci='$ci'");
+            if ($check_ci->rowCount() > 0) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrio un error inesperado!",
+                    "Texto" => "El numero de CI ingresado ya se encuentra registrado!",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
+        }
+        if ($nick != $campos_usuario_up['usu_nick']) {
+            $check_nick = mainModel::ejecutar_consulta_simple("SELECT usu_nick from usuarios where usu_nick='$nick'");
+            if ($check_nick->rowCount() > 0) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrio un error inesperado!",
+                    "Texto" => "El USUARIO ingresado ya se encuentra registrado!",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
+        }
+        /**comprobar email */
+        if ($email != $campos_usuario_up['usu_email'] && $email  != "") {
+            if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $check_email = mainModel::ejecutar_consulta_simple("SELECT usu_email from usuarios where usu_email='$email'");
+                if ($check_email->rowCount() > 0) {
+                    $alerta = [
+                        "Alerta" => "simple",
+                        "Titulo" => "Ocurrio un error inesperado!",
+                        "Texto" => "El nuevo EMAIL ingresado ya se encuentra registrado!",
+                        "Tipo" => "error"
+                    ];
+                    echo json_encode($alerta);
+                    exit();
+                }
+            } else {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrio un error inesperado!",
+                    "Texto" => "El email ingresado no es válido",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
+        }
+        /**comprobar claves */
+        if ($_POST['usuario_clave_nueva_1'] != "" && $_POST['usuario_clave_nueva_2'] != "") {
+            if ($_POST['usuario_clave_nueva_1'] != $_POST['usuario_clave_nueva_2']) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrio un error inesperado!",
+                    "Texto" => "Las nuevas claves ingresadas no coinciden entre si",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            } else {
+                if (mainModel::verificarDatos("[a-zA-Z0-9$@.-]{7,100}", $_POST['usuario_clave_nueva_1']) || mainModel::verificarDatos("[a-zA-Z0-9$@.-]{7,100}", $_POST['usuario_clave_nueva_2'])) {
+                    $alerta = [
+                        "Alerta" => "simple",
+                        "Titulo" => "Ocurrio un error inesperado!",
+                        "Texto" => "Las nuevas claves ingresadas no coinciden con el formato solicitado",
+                        "Tipo" => "error"
+                    ];
+                    echo json_encode($alerta);
+                    exit();
+                }
+                $clave = mainModel::encryption($_POST['usuario_clave_nueva_1']);
+            }
+        } else {
+            $clave = $campos_usuario_up['usu_clave'];
+        }
+        /**comprobar credenciales  */
+        if ($tipo_cuenta == "propia") {
+            $check_cuenta = mainModel::ejecutar_consulta_simple("SELECT id_usuario from usuarios where usu_nick='$admin_user' and usu_clave = '$admin_clave' and id_usuario ='$id'");
+        } else {
+            session_start(['name' => 'STR']);
+            if ($_SESSION['nivel_str'] != 1) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrio un error inesperado!",
+                    "Texto" => "No tienes los permisos necesarios para realizar esta operación",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
+            $check_cuenta = mainModel::ejecutar_consulta_simple("SELECT id_usuario from usuarios where usu_nick='$admin_user' and usu_clave = '$admin_clave'");
+        }
+        if ($check_cuenta->rowCount() <= 0) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "Nombre y clave de usuario no válidos",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        /**preparando datos para envio al modelo */
+        $datos_usuario_up = [
+            "ci" => $ci,
+            "nombre" => $nombre,
+            "apellido" => $apellido,
+            "telefono" => $telefono,
+            "email" => $email,
+            "nick" => $nick,
+            "clave" => $clave,
+            "estado" => $estado,
+            "nivel" => $nivel,
+            "iduser" => $id
+        ];
+
+        if (usuarioModelo::actualizar_usuario_modelo($datos_usuario_up)) {
+            $alerta = [
+                "Alerta" => "recargar",
+                "Titulo" => "Usuario Actualizado",
+                "Texto" => "Los datos del usuario han sido registrados correctamente",
+                "Tipo" => "success"
+            ];
+        } else {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "No hemos podido actualizar el usuario",
+                "Tipo" => "error"
+            ];
+        }
+        echo json_encode($alerta);
+    }
+    /**fin controlador */
 }
