@@ -30,8 +30,8 @@
                 <div class="row">
                     <div class="col-12 col-md-6">
                         <div class="form-group">
-                            <label for="cliente_dni" class="bmd-label-floating">DNI</label>
-                            <input type="text" pattern="[0-9-]{1,27}" class="form-control" name="cliente_dni_up" id="cliente_dni" maxlength="27">
+                            <label for="cliente_dni" class="bmd-label-floating">CI</label>
+                            <input type="text" pattern="[0-9-]{1,27}" class="form-control" name="cliente_ci_up" id="cliente_dni" maxlength="27">
                         </div>
                     </div>
                     <div class="col-12 col-md-6">
