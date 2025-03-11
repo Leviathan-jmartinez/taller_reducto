@@ -6,17 +6,19 @@ class clienteModelo extends mainModel
     /** modelo agregar cliente*/
     protected static function agregar_cliente_modelo($datos)
     {
-        $sql = mainModel::conectar()->prepare("INSERT INTO usuarios (usu_nombre, usu_clave, usu_nivel, usu_estado, usu_nick, usu_apellido, usu_email, usu_telefono,usu_ci) 
-        VALUES (:nombre, :clave, :nivel, :estado, :nick, :apellido, :email, :telefono,:ci)");
-        $sql->bindParam(":ci", $datos['ci']);
+        $sql = mainModel::conectar()->prepare("INSERT INTO clientes (id_ciudad, doc_number, nombre_cliente, apellido_cliente, direccion_cliente, celular_cliente, estado_civil, estado_cliente, digito_v, email_cliente, doc_type) 
+        VALUES (:ciudad, :doc_number, :nombre, :apellido, :direccion, :celular, :estadoC, :estado, :dv, :email, :doctype)");
+        $sql->bindParam(":ciudad", $datos['ciudad']);
+        $sql->bindParam(":doc_number", $datos['doc_number']);
         $sql->bindParam(":nombre", $datos['nombre']);
-        $sql->bindParam(":clave", $datos['clave']);
-        $sql->bindParam(":nivel", $datos['nivel']);
-        $sql->bindParam(":estado", $datos['estado']);
-        $sql->bindParam(":nick", $datos['nick']);
         $sql->bindParam(":apellido", $datos['apellido']);
+        $sql->bindParam(":direccion", $datos['direccion']);
+        $sql->bindParam(":celular", $datos['celular']);
+        $sql->bindParam(":estadoC", $datos['estadoC']);
+        $sql->bindParam(":estado", $datos['estado']);
+        $sql->bindParam(":dv", $datos['dv']);
         $sql->bindParam(":email", $datos['email']);
-        $sql->bindParam(":telefono", $datos['telefono']);
+        $sql->bindParam(":doctype", $datos['doctype']);
         $sql->execute();
         return $sql;
     }
