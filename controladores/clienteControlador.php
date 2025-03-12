@@ -33,7 +33,7 @@ class clienteControlador extends clienteModelo
             exit();
         }
         /**verificar integridad de datos  */
-        if (mainModel::verificarDatos("[0-9-]{1,27}", $doc_number)) {
+        if (mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 ]{1,27}", $doc_number)) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
@@ -191,5 +191,108 @@ class clienteControlador extends clienteModelo
             ];
         }
         echo json_encode($alerta);
+    }
+
+    /**Controlador paginar clientes */
+    public function paginador_cliente_controlador($pagina, $registros, $privilegio, $url, $busqueda)
+    {
+        $pagina = mainModel::limpiar_string($pagina);
+        $registros = mainModel::limpiar_string($registros);
+        $privilegio = mainModel::limpiar_string($privilegio);
+        $busqueda = mainModel::limpiar_string($busqueda);
+
+        $url = mainModel::limpiar_string($url);
+        $url = SERVERURL . $url . "/";
+
+        $tabla = "";
+
+        $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
+        $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
+
+        if (isset($busqueda) && $busqueda != "") {
+            $consulta = "SELECT SQL_CALC_FOUND_ROWS * FROM clientes 
+            WHERE ((doc_number LIKE '%$busqueda%' OR nombre_cliente LIKE '%$busqueda%')) 
+            ORDER BY nombre_cliente ASC LIMIT $inicio,$registros";
+        } else {
+            $consulta = "SELECT SQL_CALC_FOUND_ROWS * FROM clientes 
+            ORDER BY nombre_cliente ASC LIMIT $inicio,$registros";
+        }
+        $conexion = mainModel::conectar();
+        $datos = $conexion->query($consulta);
+        $datos = $datos->fetchAll();
+
+        $total = $conexion->query("SELECT FOUND_ROWS()");
+        $total = (int) $total->fetchColumn();
+
+        $Npaginas = ceil($total / $registros);
+
+        $tabla .= '<div class="table-responsive">
+					<table class="table table-dark table-sm">
+						<thead>
+							<tr class="text-center roboto-medium">
+								<th>#</th>
+								<th>CI</th>
+								<th>CLIENTE</th>
+								<th>TELÉFONO</th>
+								<th>DIRECCIÓN</th>';
+        if ($privilegio == 1 || $privilegio == 2) {
+            $tabla .= '<th>ACTUALIZAR</th>
+                                <th>ELIMINAR</th>';
+        }
+        $tabla .= '
+						</tr>
+						</thead>
+						<tbody>';
+        if ($total >= 1 && $pagina <= $Npaginas) {
+            $contador = $inicio + 1;
+            $reg_inicio = $inicio + 1;
+            foreach ($datos as $rows) {
+                $tabla .= '
+                            <tr class="text-center">
+								<td>' . $contador . '</td>
+								<td>' . $rows['doc_number'] . '</td>
+								<td>' . $rows['nombre_cliente'] . ' ' . $rows['apellido_cliente'] . '</td>
+								<td>' . $rows['celular_cliente'] . '</td>
+								<td>
+                                <button type="button" class="btn btn-info" data-toggle="popover"data-trigger="hover" title="' . $rows['nombre_cliente'] . ' ' . $rows['apellido_cliente'] . '"
+                                    data-content="' . $rows['direccion_cliente'] . '">
+                                         <i class="fas fa-info-circle"></i>
+                                </button></td>';
+                if ($privilegio == 1 || $privilegio == 2) {
+                    $tabla .= '<td>
+									<a href="' . SERVERURL . 'cliente-actualizar/' . mainModel::encryption($rows['id_cliente']) . '/" class="btn btn-success">
+										<i class="fas fa-sync-alt"></i>
+									</a>
+								</td>
+								<td>
+									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/clienteAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
+                                    <input type="hidden" name="cliente_id_del" value=' . mainModel::encryption($rows['id_cliente']) . '>
+										<button type="submit" class="btn btn-warning">
+											<i class="far fa-trash-alt"></i>
+										</button>
+									</form>
+								</td>';
+                }
+
+                $tabla .= '</tr>';
+                $contador++;
+            }
+            $reg_final = $contador - 1;
+        } else {
+            if ($total >= 1) {
+                $tabla .= '<tr class="text-center"> <td colspan="9"> <a href="' . $url . '" class="btn btn-reaised btn-primary btn-sm"> Haga click aqui para recargar el listado </a> </td> </tr> ';
+            } else {
+                $tabla .= '<tr class="text-center"> <td colspan="9"> No hay regitros en el sistema</td> </tr> ';
+            }
+        }
+
+        $tabla .= '       </tbody>
+					</table>
+				</div>';
+        if ($total >= 1 && $pagina <= $Npaginas) {
+            $tabla .= '<p class="text-right"> Mostrando registro ' . $reg_inicio . ' al ' . $reg_final . ' de un total de ' . $total . '</p>';
+            $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);
+        }
+        echo $tabla;
     }
 }
