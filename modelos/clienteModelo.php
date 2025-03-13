@@ -34,4 +34,13 @@ class clienteModelo extends mainModel
         $sql->execute();
         return $sql;
     }
+
+    /**eliminar cliente */
+    protected static function eliminar_cliente_modelo($id)
+    {
+        $sql = mainModel::conectar()->prepare("DELETE FROM clientes WHERE id_cliente = :id");
+        $sql->bindParam(":id", $id);
+        $sql->execute();
+        return $sql;
+    }
 }

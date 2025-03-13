@@ -295,4 +295,64 @@ class clienteControlador extends clienteModelo
         }
         echo $tabla;
     }
+
+    /**Controlador eliminar cliente */
+    public function eliminar_cliente_controlador()
+    {
+        $id = mainModel::decryption($_POST['cliente_id_del']);
+        $id = mainModel::limpiar_string($id);
+
+        $check_client = mainModel::ejecutar_consulta_simple("SELECT id_cliente FROM clientes WHERE id_cliente = '$id'");
+        if ($check_client->rowCount() < 0) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El CLIENTE que intenta eliminar no existe en el sistema",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        $check_ventas = mainModel::ejecutar_consulta_simple("SELECT id_cliente FROM factura WHERE id_cliente = '$id' LIMIT 1");
+        if ($check_ventas->rowCount() < 0) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El CLIENTE no puede ser eliminado debido a que el cliente tiene facturas asociadas",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        session_start(['name' => 'STR']);
+        if ($_SESSION['nivel_str'] == 3) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "No tiene los permisos necesario para realizar esta operación",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        $eliminar_cliente = clienteModelo::eliminar_cliente_modelo($id);
+        if ($eliminar_cliente->rowCount() == 1) {
+            $alerta = [
+                "Alerta" => "recargar",
+                "Titulo" => "Cliente eliminado!",
+                "Texto" => "El Cliente ha sido eliminado correctamente",
+                "Tipo" => "success"
+            ];
+        } else {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "No se pudo eliminar el Cliente seleccionado",
+                "Tipo" => "error"
+            ];
+        }
+        echo json_encode($alerta);
+    }
 }

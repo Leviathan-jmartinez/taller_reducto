@@ -11,7 +11,7 @@ if (isset($_POST['cliente_doc_reg']) || isset($_POST['cliente_id_del'])) {
     }
     /** Eliminar usuario */
     if (isset($_POST['cliente_id_del'])) {
-        echo $inst_usuario->eliminar_cliente_controlador();
+        echo $inst_cliente->eliminar_cliente_controlador();
     }
 } else {
     session_start(['name' => 'STR']);
