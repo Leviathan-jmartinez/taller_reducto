@@ -192,6 +192,7 @@ class clienteControlador extends clienteModelo
         }
         echo json_encode($alerta);
     }
+    /** fin controlador */
 
     /**Controlador paginar clientes */
     public function paginador_cliente_controlador($pagina, $registros, $privilegio, $url, $busqueda)
@@ -295,6 +296,7 @@ class clienteControlador extends clienteModelo
         }
         echo $tabla;
     }
+    /**fin controlador */
 
     /**Controlador eliminar cliente */
     public function eliminar_cliente_controlador()
@@ -354,5 +356,33 @@ class clienteControlador extends clienteModelo
             ];
         }
         echo json_encode($alerta);
+    }
+    /**fin controlador */
+
+    /** controlador datos clientes  */
+    public function datos_cliente_controlador($tipo, $id)
+    {
+        $tipo = mainModel::limpiar_string($tipo);
+        $id = mainModel::decryption($id);
+        $id = mainModel::limpiar_string($id);
+        return clienteModelo::datos_cliente_modelo($tipo, $id);
+    }
+    /**fin controlador */
+
+    public function listar_ciudades_controlador()
+    {
+        $ciudades = clienteModelo::obtener_ciudades_modelo();
+        $options = '<option value="" disabled selected>Seleccione una opción</option>';
+
+        foreach ($ciudades as $ciudad) {
+            $options .= '<option value="' . $ciudad['id_ciudad'] . '">' . $ciudad['ciu_descri'] . '</option>';
+        }
+
+        return $options;
+    }
+
+    public function listar_ciudades_controlador_up() {
+        $ciudades = clienteModelo::obtener_ciudades_modelo(); // Llamamos al método protegido desde la clase hija
+        return $ciudades;
     }
 }

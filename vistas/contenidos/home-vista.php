@@ -9,11 +9,15 @@
 
 <!-- Content -->
 <div class="full-box tile-container">
+	<?php require_once "./controladores/clienteControlador.php";
+		$ins_cliente = new clienteControlador;
+		$total_client = $ins_cliente->datos_cliente_controlador("Conteo",0);
+	?>
 	<a href="<?php echo SERVERURL; ?>cliente-lista/" class="tile">
 		<div class="tile-tittle">Clientes</div>
 		<div class="tile-icon">
 			<i class="fas fa-users fa-fw"></i>
-			<p>5 Registrados</p>
+			<p><?php echo $total_client->rowCount(); ?> Registrados</p>
 		</div>
 	</a>
 
@@ -49,7 +53,7 @@
 		</div>
 	</a>
 	<?php
-	if ($_SESSION['nivel_str']== 1) {
+	if ($_SESSION['nivel_str'] == 1) {
 		require_once "./controladores/usuarioControlador.php";
 		$insHome = new usuarioControlador();
 		$total_user = $insHome->datos_usuario_controlador("Conteo", 0)

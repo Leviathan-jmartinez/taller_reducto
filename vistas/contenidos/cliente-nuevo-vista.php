@@ -85,14 +85,18 @@
                             <input type="text" class="form-control" name="cliente_email_reg" id="cliente_email_reg" maxlength="150">
                         </div>
                     </div>
+
+                    <?php
+                    require_once "./controladores/clienteControlador.php";
+                    $ciudadController = new clienteControlador();
+                    $ciudades = $ciudadController->listar_ciudades_controlador();
+                    ?>
+
                     <div class="col-12 col-md-4">
                         <div class="form-group">
                             <label for="ciudad_reg" class="bmd-label-floating">Ciudades</label>
-                            <select class="form-control" name="ciudad_reg" id="cliente_tipo">
-                                <option value="" disabled selected>Seleccione una opción</option>
-                                <option value="1">Itaugua</option>
-                                <option value="2">Capiata</option>
-                                <option value="3">San Lorenzo</option>
+                            <select class="form-control" name="ciudad_reg" id="ciudad_reg">
+                                <?php echo $ciudades; ?>
                             </select>
                         </div>
                     </div>

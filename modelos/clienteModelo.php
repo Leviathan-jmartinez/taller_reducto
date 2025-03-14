@@ -29,7 +29,7 @@ class clienteModelo extends mainModel
             $sql = mainModel::conectar()->prepare("SELECT * FROM clientes where id_cliente = :id ");
             $sql->bindParam(":id", $id);
         } elseif ($tipo == "Conteo") {
-            $sql = mainModel::conectar()->prepare("SELECT id_cliente FROM clientes WHERE id_cliente != '1' ");
+            $sql = mainModel::conectar()->prepare("SELECT id_cliente FROM clientes");
         }
         $sql->execute();
         return $sql;
@@ -42,5 +42,12 @@ class clienteModelo extends mainModel
         $sql->bindParam(":id", $id);
         $sql->execute();
         return $sql;
+    }
+
+    protected static function obtener_ciudades_modelo()
+    {
+        $sql = mainModel::conectar()->prepare("SELECT id_ciudad, ciu_descri FROM ciudades ORDER BY ciu_descri ASC");
+        $sql->execute();
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 }
