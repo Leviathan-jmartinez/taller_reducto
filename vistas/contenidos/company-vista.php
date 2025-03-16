@@ -15,7 +15,7 @@ $datos_empresa = $inst_empresa->datos_empresa_controlador();
 if ($datos_empresa->rowCount() == 0) {
 ?>
     <div class="container-fluid">
-        <form action="" class="form-neon" autocomplete="off">
+        <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/empresaAjax.php" method="POST" data-form="save" autocomplete="off">
             <fieldset>
                 <legend><i class="far fa-building"></i> &nbsp; Información de la empresa</legend>
                 <div class="container-fluid">
@@ -23,7 +23,7 @@ if ($datos_empresa->rowCount() == 0) {
                         <div class="col-12 col-md-6">
                             <div class="form-group">
                                 <label for="empresa_nombre" class="bmd-label-floating">RUC de la empresa</label>
-                                <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ. ]{1,70}" class="form-control" name="empresa_ruc_reg" id="empresa_ruc" maxlength="70">
+                                <input type="text" pattern="[0-9()+]{7,20}" class="form-control" name="empresa_ruc_reg" id="empresa_ruc" maxlength="70">
                             </div>
                         </div>
                         <div class="col-12 col-md-6">
