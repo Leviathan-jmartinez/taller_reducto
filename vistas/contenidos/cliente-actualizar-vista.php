@@ -42,36 +42,35 @@ if ($_SESSION['nivel_str'] > 2 || $_SESSION['nivel_str'] < 1) {
                 <legend><i class="fas fa-user"></i> &nbsp; Información básica</legend>
                 <div class="container-fluid">
                     <div class="row">
-                        <div class="col-12 col-md-4">
+                    <div class="col-12 col-md-4">
                             <div class="form-group">
-                                <label for="tipo_documento" class="bmd-label-floating">Tipo de Documento</label>
-                                <select class="form-control" name="tipo_documento" id="cliente_tipo">
-                                    <option value="" disabled selected>Seleccione una opción</option>
-                                    <option value="CI">C.I</option>
-                                    <option value="CC">CC</option>
-                                    <option value="CD">CD</option>
-                                    <option value="OF">OF</option>
-                                    <option value="RUC">RUC</option>
-                                    <option value="PASAPORTE">PASAPORTE</option>
+                                <label for="cliente_tipo" class="bmd-label-floating">Tipo de Documento</label>
+                                <select class="form-control select2" name="tipo_documento_up" id="cliente_tipo">
+                                    <option value="CI" <?php if($campos['doc_type'] == 'CI'){echo 'selected';}?>>CI <?php if($campos['doc_type'] == 'CI'){echo '(Actual)';}?></option>
+                                    <option value="CC" <?php if($campos['doc_type'] == 'CC'){echo 'selected';}?>>CC <?php if($campos['doc_type'] == 'CC'){echo '(Actual)';}?></option>
+                                    <option value="CD" <?php if($campos['doc_type'] == 'CD'){echo 'selected';}?>>CD <?php if($campos['doc_type'] == 'CD'){echo '(Actual)';}?></option>
+                                    <option value="OF" <?php if($campos['doc_type'] == 'OF'){echo 'selected';}?>>OF <?php if($campos['doc_type'] == 'OF'){echo '(Actual)';}?></option>
+                                    <option value="RUC" <?php if($campos['doc_type'] == 'RUC'){echo 'selected';}?>>RUC <?php if($campos['doc_type'] == 'RUC'){echo '(Actual)';}?></option>
+                                    <option value="PASAPORTE" <?php if($campos['doc_type'] == 'PASAPORTE'){echo 'selected';}?>>PASAPORTE <?php if($campos['doc_type'] == 'PASAPORTE'){echo '(Actual)';}?></option>
                                 </select>
                             </div>
                         </div>
                         <div class="col-12 col-md-4">
                             <div class="form-group">
                                 <label for="cliente_doc" class="bmd-label-floating">CI o RUC</label>
-                                <input type="text" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 ]{1,27}" class="form-control" name="cliente_doc_up" id="cliente_dni" maxlength="27" value="<?php echo $campos['doc_number']; ?>">
+                                <input type="text" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 ]{1,27}" class="form-control" name="cliente_doc_up" id="cliente_doc_up" maxlength="27" value="<?php echo $campos['doc_number']; ?>">
                             </div>
                         </div>
                         <div class="col-12 col-md-4">
                             <div class="form-group">
                                 <label for="cliente_dni" class="bmd-label-floating">Informacion Adicional</label>
-                                <input type="text" pattern="[0-9()\+]{1,2}" class="form-control" name="cliente_dv_up" id="cliente_dv" maxlength="27" value="<?php echo $campos['digito_v']; ?>">
+                                <input type="text" pattern="[0-9()\+]{1,2}" class="form-control" name="cliente_dv_up" id="cliente_dv_up" maxlength="27" value="<?php echo $campos['digito_v']; ?>">
                             </div>
                         </div>
                         <div class="col-12 col-md-4">
                             <div class="form-group">
                                 <label for="cliente_nombre" class="bmd-label-floating">Nombre</label>
-                                <input type="text" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{1,40}" class="form-control" name="cliente_nombre_up" id="cliente_nombre" maxlength="40" value="<?php echo $campos['nombre_cliente']; ?>">
+                                <input type="text" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ. ]{1,40}" class="form-control" name="cliente_nombre_up" id="cliente_nombre" maxlength="40" value="<?php echo $campos['nombre_cliente']; ?>">
                             </div>
                         </div>
                         <div class="col-12 col-md-4">
@@ -89,7 +88,7 @@ if ($_SESSION['nivel_str'] > 2 || $_SESSION['nivel_str'] < 1) {
                         <div class="col-12 col-md-6">
                             <div class="form-group">
                                 <label for="cliente_direccion" class="bmd-label-floating">Dirección</label>
-                                <input type="text" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ().,#\-\ ]{1,150}" class="form-control" name="cliente_direccion_up" id="cliente_direccion" maxlength="150" value="<?php echo $campos['direccion_cliente']; ?>">
+                                <input type="text" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ().,#\- ]{1,150}" class="form-control" name="cliente_direccion_up" id="cliente_direccion" maxlength="150" value="<?php echo $campos['direccion_cliente']; ?>">
                             </div>
                         </div>
                         <div class="col-12 col-md-6">
@@ -126,18 +125,17 @@ if ($_SESSION['nivel_str'] > 2 || $_SESSION['nivel_str'] < 1) {
 
                         <div class="col-12 col-md-4">
                             <div class="form-group">
-                                <label for="cliente_estadoC" class="bmd-label-floating">Estado Civil</label>
-                                <select class="form-control" name="cliente_estadoC" id="cliente_estadoC">
-                                    <option value="" selected>Seleccione una opción</option>
-                                    <option value="Soltero/a">Soltero/a</option>
-                                    <option value="Casado/a">Casado/a</option>
-                                    <option value="Viudo/a">Viudo/a</option>
-                                    <option value="Divorciado/a">Divorciado/a</option>
+                                <label for="cliente_estadoC_up" class="bmd-label-floating">Estado Civil</label>
+                                <select class="form-control" name="cliente_estadoC_up" id="cliente_estadoC_up">
+                                    <option value="Soltero/a" <?php if($campos['estado_civil'] == 'Soltero/a'){echo 'selected=""';}?>>Soltero/a <?php if($campos['estado_civil'] == 'Soltero/a'){echo '(Actual)';}?></option>
+                                    <option value="Casado/a" <?php if($campos['estado_civil'] == 'Casado/a'){echo 'selected=""';}?>>Casado/a <?php if($campos['estado_civil'] == 'Casado/a'){echo '(Actual)';}?></option>
+                                    <option value="Viudo/a" <?php if($campos['estado_civil'] == 'Viudo/a'){echo 'selected=""';}?>>Viudo/a <?php if($campos['estado_civil'] == 'Viudo/a'){echo '(Actual)';}?></option>
+                                    <option value="Divorciado/a" <?php if($campos['estado_civil'] == 'Divorciado/a'){echo 'selected=""';}?>>Divorciado/a <?php if($campos['estado_civil'] == 'Divorciado/a'){echo '(Actual)';}?></option>
                                 </select>
                             </div>
                         </div>
                         <div class="col-4 col-md-4">
-                            <span>Estado de la cuenta &nbsp; <?php
+                            <span>Estado &nbsp; <?php
                                                                 if ($campos['estado_cliente'] == 1) {
                                                                     echo '<span class="badge badge-success">Activa</span>';
                                                                 } else {

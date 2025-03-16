@@ -50,4 +50,27 @@ class clienteModelo extends mainModel
         $sql->execute();
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /** */
+    protected static function actualizar_cliente_modelo($datos)
+    {
+        $sql = mainModel::conectar()->prepare("UPDATE clientes
+        SET id_ciudad=:ciudad, doc_number=:nrodoc, nombre_cliente=:nombre, apellido_cliente=:apellido, direccion_cliente=:direccion, celular_cliente=:telefeono, 
+        estado_civil=:estadoC, estado_cliente=:estado, digito_v=:dv, doc_type=:doctype, email_cliente=:email
+        WHERE id_cliente=:id");
+        $sql->bindParam(":ciudad", $datos['ciudad']);
+        $sql->bindParam(":nrodoc", $datos['nrodoc']);
+        $sql->bindParam(":nombre", $datos['nombre']);
+        $sql->bindParam(":apellido", $datos['apellido']);
+        $sql->bindParam(":direccion", $datos['direccion']);
+        $sql->bindParam(":telefeono", $datos['telefeono']);
+        $sql->bindParam(":estadoC", $datos['estadoC']);
+        $sql->bindParam(":estado", $datos['estado']);
+        $sql->bindParam(":dv", $datos['dv']);
+        $sql->bindParam(":doctype", $datos['doctype']);
+        $sql->bindParam(":email", $datos['email']);
+        $sql->bindParam(":id", $datos['id']);
+        $sql->execute();
+        return $sql;
+    }
 }

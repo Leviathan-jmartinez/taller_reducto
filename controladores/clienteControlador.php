@@ -43,7 +43,7 @@ class clienteControlador extends clienteModelo
             echo json_encode($alerta);
             exit();
         }
-        if (mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{1,40}", $nombre)) {
+        if (mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ. ]{1,40}", $nombre)) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
@@ -150,7 +150,7 @@ class clienteControlador extends clienteModelo
             echo json_encode($alerta);
             exit();
         }
-        /**Comprobar privilegios */
+        /**Comprobar  */
         if ($city < 1) {
             $alerta = [
                 "Alerta" => "simple",
@@ -381,8 +381,214 @@ class clienteControlador extends clienteModelo
         return $options;
     }
 
-    public function listar_ciudades_controlador_up() {
+    public function listar_ciudades_controlador_up()
+    {
         $ciudades = clienteModelo::obtener_ciudades_modelo(); // Llamamos al método protegido desde la clase hija
         return $ciudades;
     }
+    /** */
+    public function actualizar_cliente_controlador()
+    {
+        $id = mainModel::decryption($_POST['cliente_id_up']);
+        $id = mainModel::limpiar_string($id);
+
+        /**Comprobacion de registros */
+        $check_id = mainModel::ejecutar_consulta_simple("SELECT * from clientes where id_cliente='$id'");
+        if ($check_id->rowCount() <= 0) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El CLIENTE ingresado no existe!",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        } else {
+            $campos_cliente_up = $check_id->fetch();
+        }
+        $doctype = mainModel::limpiar_string($_POST['tipo_documento_up']);
+        $docnumber = mainModel::limpiar_string($_POST['cliente_doc_up']);
+        $dv = mainModel::limpiar_string($_POST['cliente_dv_up']);
+        $nombre = mainModel::limpiar_string($_POST['cliente_nombre_up']);
+        $apellido = mainModel::limpiar_string($_POST['cliente_apellido_up']);
+        $telefono = mainModel::limpiar_string($_POST['cliente_telefono_up']);
+        $direccion = mainModel::limpiar_string($_POST['cliente_direccion_up']);
+        $email = mainModel::limpiar_string($_POST['cliente_email_up']);
+        $ciudad = mainModel::limpiar_string($_POST['ciudad_up']);
+        $estadoC = mainModel::limpiar_string($_POST['cliente_estadoC_up']);
+        $estado = mainModel::limpiar_string($_POST['usuario_estado_up']);
+
+        /** Comprobar campos vacios */
+        if ($docnumber == "" || $nombre == "" || $direccion == "") {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "No has llenado todos los campos que son obligatorios",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        /**verificar integridad de datos  */
+        if (mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 ]{1,27}", $docnumber)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El formato del campo Número de documento no es válido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        if (mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ. ]{1,40}", $nombre)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El formato del campo NOMBRE no es válido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        if ($apellido != "") {
+            if (mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{1,40}", $apellido)) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrio un error inesperado!",
+                    "Texto" => "El formato del campo APELLIDO no es válido",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
+        }
+        if ($telefono != "") {
+            if (mainModel::verificarDatos("[0-9()+]{8,20}", $telefono)) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrio un error inesperado!",
+                    "Texto" => "El formato del campo TELEFONO no es valido",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
+        }
+        if ($dv != "") {
+            if (mainModel::verificarDatos("[0-9()+]{1,2}", $dv)) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrio un error inesperado!",
+                    "Texto" => "El formato del campo DV no es valido",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
+        }
+        if (mainModel::verificarDatos("[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ().,#\- ]{1,150}", $direccion)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El formato del campo DIRECCIÓN no es válido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        /**comprobar email */
+        if ($email != $campos_cliente_up['email_cliente']) {
+            if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $check_email = mainModel::ejecutar_consulta_simple("SELECT email_cliente from clientes where email_cliente='$email'");
+                if ($check_email->rowCount() > 0) {
+                    $alerta = [
+                        "Alerta" => "simple",
+                        "Titulo" => "Ocurrio un error inesperado!",
+                        "Texto" => "El EMAIL ingresado ya se encuentra registrado!",
+                        "Tipo" => "error"
+                    ];
+                    echo json_encode($alerta);
+                    exit();
+                }
+            } else {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrio un error inesperado!",
+                    "Texto" => "Ha ingresado un correo no valido!",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
+        }
+        if ($estadoC != "") {
+            // Si el valor NO está en la lista de permitidos, se muestra el error
+            if (!in_array($estadoC, ['Soltero/a', 'Casado/a', 'Viudo/a', 'Divorciado/a'])) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "¡Ocurrió un error inesperado!",
+                    "Texto" => "El formato del estado civil no es válido.",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
+        }
+        if ($docnumber != $campos_cliente_up['doc_number']) {
+            $check_doc = mainModel::ejecutar_consulta_simple("SELECT doc_number from clientes where doc_number='$docnumber'");
+            if ($check_doc->rowCount() > 0) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrio un error inesperado!",
+                    "Texto" => "El numero de documento ingresado ya se encuentra registrado!",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
+        }
+        session_start(['name' => 'STR']);
+        if ($_SESSION['nivel_str'] < 1 || $_SESSION['nivel_str'] > 2) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "No posee los permisos necesarios para realizar esta operación",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        $datos_cliente_up = [
+            "ciudad" => $ciudad,
+            "doctype" => $doctype,
+            "nrodoc" => $docnumber,
+            "nombre" => $nombre,
+            "apellido" => $apellido,
+            "direccion" => $direccion,
+            "telefeono" => $telefono,
+            "estadoC" => $estadoC,
+            "estado" => $estado,
+            "dv" => $dv,
+            "email" => $email,
+            "id" => $id
+        ];
+        if (clienteModelo::actualizar_cliente_modelo($datos_cliente_up)) {
+            $alerta = [
+                "Alerta" => "recargar",
+                "Titulo" => "Cliente modificado",
+                "Texto" => "Los datos del cliente han sido modificados correctamente",
+                "Tipo" => "success"
+            ];
+        } else {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "No hemos pido actualizar los datos del cliente!",
+                "Tipo" => "error"
+            ];
+        }
+        echo json_encode($alerta);
+        exit();
+    }
+    /**fin controlador */
 }
