@@ -33,7 +33,7 @@
                         <div class="form-group">
                             <label for="tipo_documento" class="bmd-label-floating">Tipo de Documento</label>
                             <select class="form-control" name="tipo_documento" id="cliente_tipo">
-                                <option value="" disabled selected>Seleccione una opción</option>
+                                <option value="" selected>Seleccione una opción</option>
                                 <option value="CI">C.I</option>
                                 <option value="CC">CC</option>
                                 <option value="CD">CD</option>

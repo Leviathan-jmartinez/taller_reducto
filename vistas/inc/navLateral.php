@@ -82,10 +82,12 @@
                             </li>
                         </ul>
                     </li>
-                <?php } ?>
+                <?php } 
+                if ($_SESSION['nivel_str'] == 1) { ?>
                 <li>
                     <a href="<?php echo SERVERURL; ?>company/"><i class="fas fa-store-alt fa-fw"></i> &nbsp; Empresa</a>
                 </li>
+                <?php } ?>
             </ul>
         </nav>
     </div>

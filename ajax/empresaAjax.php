@@ -9,6 +9,10 @@ if (isset($_POST['empresa_nombre_reg']) || isset($_POST['empresa_nombre_up'])) {
     if (isset($_POST['empresa_nombre_reg'])) {
         echo $inst_empresa->agregar_empresa_controlador();
     }
+    /** Actualizar empresa */
+    if (isset($_POST['empresa_nombre_up'])) {
+        echo $inst_empresa->actualizar_empresa_controlador();
+    }
 } else {
     session_start(['name' => 'STR']);
     session_unset();

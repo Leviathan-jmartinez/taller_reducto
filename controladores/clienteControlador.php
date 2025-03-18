@@ -22,7 +22,7 @@ class clienteControlador extends clienteModelo
         $email = mainModel::limpiar_string($_POST['cliente_email_reg']);
 
         /** Comprobar campos vacios */
-        if ($doc_number == "" || $nombre == "" || $direccion == "") {
+        if ($doc_number == "" || $nombre == "" || $direccion == "" || $doctype == "" || $city == "") {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
@@ -372,7 +372,7 @@ class clienteControlador extends clienteModelo
     public function listar_ciudades_controlador()
     {
         $ciudades = clienteModelo::obtener_ciudades_modelo();
-        $options = '<option value="" disabled selected>Seleccione una opción</option>';
+        $options = '<option value="" selected>Seleccione una opción</option>';
 
         foreach ($ciudades as $ciudad) {
             $options .= '<option value="' . $ciudad['id_ciudad'] . '">' . $ciudad['ciu_descri'] . '</option>';
@@ -553,6 +553,17 @@ class clienteControlador extends clienteModelo
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
                 "Texto" => "No posee los permisos necesarios para realizar esta operación",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        session_start(['name' => 'STR']);
+        if ($_SESSION['nivel_str'] != 1) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado",
+                "Texto" => "No tienes los permisos necesarios para realizar esta acción",
                 "Tipo" => "error"
             ];
             echo json_encode($alerta);
