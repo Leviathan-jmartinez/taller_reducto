@@ -1,7 +1,7 @@
 <?php
 $peticionAjax = true;
 require_once "../config/APP.php";
-if () {
+if (isset($_POST['empresa_nombre_reg'])) {
     /** Instancia al controlador */
     require_once "../controladores/articuloControlador.php.php";
     $inst_article = new empresaControlador();
