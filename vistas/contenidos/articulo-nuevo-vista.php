@@ -57,13 +57,17 @@
                                 <?php
                                 require_once "./controladores/articuloControlador.php";
                                 $articleController = new articuloControlador();
-                                $articles = $articleController->listar_iva_controlador();
+                                $articlesIVA = $articleController->listar_iva_controlador();
+                                $articlesPro = $articleController->listar_proveedores_controlador();
+                                $articlesUM = $articleController->listar_UM_controlador();
+                                $articlesCAT = $articleController->listar_cate_controlador();
+                                $articlesMAR = $articleController->listar_marca_controlador();
                                 ?>
                                 <div class="col-12 col-md-4">
                                     <div class="form-group">
                                         <label for="tipo_inv" class="bmd-label-floating">Tipo Impuesto</label>
                                         <select class="form-control" name="tipo_inv_reg" id="tipo_inv_reg">
-                                            <?php echo $articles; ?>
+                                            <?php echo $articlesIVA; ?>
                                         </select>
                                     </div>
                                 </div>
@@ -71,7 +75,7 @@
                                     <div class="form-group">
                                         <label for="proveedor" class="bmd-label-floating">Proveedor</label>
                                         <select class="form-control" name="proveedor_reg" id="proveedor_reg">
-                                            <?php echo $ciudades; ?>
+                                            <?php echo $articlesPro; ?>
                                         </select>
                                     </div>
                                 </div>
@@ -79,7 +83,7 @@
                                     <div class="form-group">
                                         <label for="um" class="bmd-label-floating">Unidad de Medida</label>
                                         <select class="form-control" name="um_reg" id="um_reg">
-                                            <?php echo $ciudades; ?>
+                                            <?php echo $articlesUM; ?>
                                         </select>
                                     </div>
                                 </div>
@@ -87,25 +91,15 @@
                                     <div class="form-group">
                                         <label for="categoria" class="bmd-label-floating">Categoria</label>
                                         <select class="form-control" name="categoria_reg" id="categoria_reg">
-                                            <?php echo $ciudades; ?>
+                                            <?php echo $articlesCAT; ?>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="col-12 col-md-4">
                                     <div class="form-group">
-                                        <label for="marca" class="bmd-label-floating">Marca</label>
+                                        <label for="marca" class="bmd-label-floating">Marcas</label>
                                         <select class="form-control" name="marca_reg" id="marca_reg">
-                                            <?php echo $ciudades; ?>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-12 col-md-4">
-                                    <div class="form-group">
-                                        <label for="articulo_estado" class="bmd-label-floating">Estado</label>
-                                        <select class="form-control" name="articulo_estado_reg" id="articulo_estado">
-                                            <option value="" selected="" disabled="">Seleccione una opción</option>
-                                            <option value="Habilitado">Habilitado</option>
-                                            <option value="Deshabilitado">Deshabilitado</option>
+                                            <?php echo $articlesMAR; ?>
                                         </select>
                                     </div>
                                 </div>
