@@ -90,7 +90,7 @@
                                 <div class="col-12 col-md-4">
                                     <div class="form-group">
                                         <label for="categoria" class="bmd-label-floating">Categoria</label>
-                                        <select class="form-control" name="categoria_reg" id="categoria_reg">
+                                        <select class="form-control select2" name="categoria_reg" id="categoria_reg">
                                             <?php echo $articlesCAT; ?>
                                         </select>
                                     </div>
@@ -105,6 +105,7 @@
                                 </div>
                             </div>
                         </div>
+
                     </fieldset>
                     <br><br><br>
                     <p class="text-center" style="margin-top: 40px;">
@@ -114,3 +115,16 @@
                     </p>
                 </form>
             </div>
+                <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    if (window.jQuery) {
+                        $('#categoria_reg').select2({
+                            placeholder: "Seleccione una categoría",
+                            allowClear: true,
+                            width: '100%'
+                        });
+                    } else {
+                        console.error('jQuery no está cargado.');
+                    }
+                });
+            </script>

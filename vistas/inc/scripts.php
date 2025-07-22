@@ -2,7 +2,13 @@
 	=            Include JavaScript files           =
 	==============================================-->
    <!-- jQuery V3.4.1 -->
-   <script src="<?php echo SERVERURL; ?>vistas/js/jquery-3.4.1.min.js"></script>
+    <!--<script src="<?php echo SERVERURL; ?>vistas/js/jquery-3.4.1.min.js"></script>-->
+
+   <!-- jQuery V3.6.0 -->
+   <script src="<?php echo SERVERURL; ?>vistas/js/jquery-3.6.0.min.js"></script>
+
+   <!-- jQuery V3.6.0 -->
+   <script src="<?php echo SERVERURL; ?>vistas/js/select2.min.js"></script>
 
    <!-- popper -->
    <script src="<?php echo SERVERURL; ?>vistas/js/popper.min.js"></script>

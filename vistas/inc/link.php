@@ -21,3 +21,6 @@
 
     <!-- General Styles -->
     <link rel="stylesheet" href="<?php echo SERVERURL; ?>vistas/css/style.css">
+
+     <!-- General Styles -->
+    <link rel="stylesheet" href="<?php echo SERVERURL; ?>vistas/css/select2.min.css">
