@@ -36,4 +36,23 @@ class articuloModelo extends mainModel
         $sql->execute();
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
+    /** modelo agregar cliente*/
+    protected static function agregar_articulo_modelo($datos)
+    {
+        $sql = mainModel::conectar()->prepare("INSERT INTO articulos 
+        (id_categoria, idproveedores, idunidad_medida, idiva, id_marcas, desc_articulo, precio_venta, precio_compra, codigo, estado, date_updated, date_created) 
+        VALUES(:id_categoria, :idproveedores, :idunidad_medida, :idiva, :id_marcas, :descrip, :pricesale, :pricebuy, :code, :estado, now(), now())");
+        $sql->bindParam(":id_categoria", $datos['id_categoria']);
+        $sql->bindParam(":idproveedores", $datos['idproveedores']);
+        $sql->bindParam(":idunidad_medida", $datos['idunidad_medida']);
+        $sql->bindParam(":idiva", $datos['idiva']);
+        $sql->bindParam(":id_marcas", $datos['id_marcas']);
+        $sql->bindParam(":descrip", $datos['descrip']);
+        $sql->bindParam(":pricesale", $datos['pricesale']);
+        $sql->bindParam(":pricebuy", $datos['pricebuy']);
+        $sql->bindParam(":code", $datos['code']);
+        $sql->bindParam(":estado", $datos['estado']);
+        $sql->execute();
+        return $sql;
+    }
 }

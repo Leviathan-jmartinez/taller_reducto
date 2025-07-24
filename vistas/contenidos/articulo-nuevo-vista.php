@@ -65,15 +65,15 @@
                                 ?>
                                 <div class="col-12 col-md-4">
                                     <div class="form-group">
-                                        <label for="tipo_inv" class="bmd-label-floating">Tipo Impuesto</label>
-                                        <select class="form-control" name="tipo_inv_reg" id="tipo_inv_reg">
+                                        <label for="tipo_iva_reg" class="bmd-label-floating">Tipo Impuesto</label>
+                                        <select class="form-control" name="tipo_iva_reg" id="tipo_iva_reg">
                                             <?php echo $articlesIVA; ?>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="col-12 col-md-4">
                                     <div class="form-group">
-                                        <label for="proveedor" class="bmd-label-floating">Proveedor</label>
+                                        <label for="proveedor_reg" class="bmd-label-floating">Proveedor</label>
                                         <select class="form-control" name="proveedor_reg" id="proveedor_reg">
                                             <?php echo $articlesPro; ?>
                                         </select>
@@ -81,7 +81,7 @@
                                 </div>
                                 <div class="col-12 col-md-4">
                                     <div class="form-group">
-                                        <label for="um" class="bmd-label-floating">Unidad de Medida</label>
+                                        <label for="proveedor_reg" class="bmd-label-floating">Unidad de Medida</label>
                                         <select class="form-control" name="um_reg" id="um_reg">
                                             <?php echo $articlesUM; ?>
                                         </select>
@@ -89,7 +89,7 @@
                                 </div>
                                 <div class="col-12 col-md-4">
                                     <div class="form-group">
-                                        <label for="categoria" class="bmd-label-floating">Categoria</label>
+                                        <label for="categoria_reg" class="bmd-label-floating">Categoria</label>
                                         <select class="form-control select2" name="categoria_reg" id="categoria_reg">
                                             <?php echo $articlesCAT; ?>
                                         </select>
@@ -97,9 +97,19 @@
                                 </div>
                                 <div class="col-12 col-md-4">
                                     <div class="form-group">
-                                        <label for="marca" class="bmd-label-floating">Marcas</label>
+                                        <label for="marca_reg" class="bmd-label-floating">Marcas</label>
                                         <select class="form-control" name="marca_reg" id="marca_reg">
                                             <?php echo $articlesMAR; ?>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-4">
+                                    <div class="form-group">
+                                        <label for="articuloEstadoReg" class="bmd-label-floating">Estado</label>
+                                        <select class="form-control" name="articuloEstadoReg" id="articuloEstadoReg">
+                                            <option value="" selected>Seleccione una opción</option>
+                                            <option value="1">Activo</option>
+                                            <option value="0">Inactivo</option>
                                         </select>
                                     </div>
                                 </div>
@@ -115,7 +125,7 @@
                     </p>
                 </form>
             </div>
-                <script>
+            <script>
                 document.addEventListener('DOMContentLoaded', function() {
                     if (window.jQuery) {
                         $('#categoria_reg').select2({
