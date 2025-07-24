@@ -80,7 +80,7 @@ class articuloControlador extends articuloModelo
         $pricesale = mainModel::limpiar_string($_POST['articulo_priceV_reg']);
         $pricebuy = mainModel::limpiar_string($_POST['articulo_priceC_reg']);
         $code = mainModel::limpiar_string($_POST['articulo_codigo_reg']);
-        $estado = mainModel::limpiar_string($_POST['articuloEstadoReg'] );
+        $estado = mainModel::limpiar_string($_POST['articuloEstadoReg']);
 
         /** Comprobar campos vacios */
         if ($code == "" || $descrip == "" || $pricebuy == "" || $pricesale == "") {
@@ -94,33 +94,103 @@ class articuloControlador extends articuloModelo
             exit();
         }
         /**verificar integridad de datos  */
-        /**verificar integridad de datos  */
-        if (mainModel::verificarDatos("[a-zA-záéíóúÁÉÍÓÚñÑ0-9 ]{1,60}", $descrip)) {
+        if (mainModel::verificarDatos("[0-9]{1,15}", $code)) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "El formato del campo Descripcion no es válido",
+                "Texto" => "El formato del campo Código no es válido",
                 "Tipo" => "error"
             ];
             echo json_encode($alerta);
             exit();
         }
-        if ($estado < 0 && $estado > 1) {
+        if (mainModel::verificarDatos("[0-9]{1,15}", $pricebuy)) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "El estado seleaccionado no corresponde",
+                "Texto" => "El formato del campo Precio de compra no es válido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        if (mainModel::verificarDatos("[0-9]{1,15}", $pricesale)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El formato del campo Precio de Venta no es válido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        /**verificar integridad de datos  */
+        if (mainModel::verificarDatos("[a-zA-záéíóúÁÉÍÓÚñÑ0-9 ]{1,60}", $descrip)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El formato del campo Descripción no es válido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        if ($iva < 0 || $iva == "") {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El tipo de Impuesto seaccionado no corresponde",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        if ($proveedor < 0 || $proveedor == "") {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El proveedor seleaccionado no corresponde",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        if ($umedida < 0 || $umedida == "") {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "La Unidad de medida seleaccionado no corresponde",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        if ($categoria < 0 || $categoria == "") {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "La categoria seleaccionada no corresponde",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        if ($imarca < 0 || $imarca == "") {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "La marca seleccionada no corresponde",
                 "Tipo" => "error"
             ];
             echo json_encode($alerta);
             exit();
         }
 
-        if ($imarca < 0 || $imarca == "") {
+        if ($estado < 0 || $estado > 1 || $estado == "") {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "La marca seleccionada no corresponde",
+                "Texto" => "El estado seleccionado no corresponde",
                 "Tipo" => "error"
             ];
             echo json_encode($alerta);
@@ -138,7 +208,7 @@ class articuloControlador extends articuloModelo
             echo json_encode($alerta);
             exit();
         }
-    
+
         $datos_articulo = [
             "id_categoria" => $categoria,
             "idproveedores" => $proveedor,

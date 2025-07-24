@@ -4,7 +4,7 @@
                     <i class="fas fa-plus fa-fw"></i> &nbsp; AGREGAR ARTICULO
                 </h3>
                 <p class="text-justify">
-                    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eaque laudantium necessitatibus eius iure adipisci modi distinctio. Earum repellat iste et aut, ullam, animi similique sed soluta tempore cum quis corporis!
+                    
                 </p>
             </div>
 
@@ -32,7 +32,7 @@
                                 <div class="col-12 col-md-4">
                                     <div class="form-group">
                                         <label for="item_codigo" class="bmd-label-floating">Códido</label>
-                                        <input type="text" pattern="[a-zA-Z0-9-]{1,45}" class="form-control" name="articulo_codigo_reg" id="articulo_codigo" maxlength="45">
+                                        <input type="text" pattern="[0-9]{1,15}" class="form-control" name="articulo_codigo_reg" id="articulo_codigo" maxlength="45">
                                     </div>
                                 </div>
 
@@ -45,13 +45,13 @@
                                 <div class="col-12 col-md-4">
                                     <div class="form-group">
                                         <label for="articulo_stock" class="bmd-label-floating">Precio Compra</label>
-                                        <input type="num" pattern="[0-9]{1,9}" class="form-control" name="articulo_priceC_reg" id="articulo_priceC" maxlength="9">
+                                        <input type="num" pattern="[0-9]{1,15}" class="form-control" name="articulo_priceC_reg" id="articulo_priceC" maxlength="9">
                                     </div>
                                 </div>
                                 <div class="col-12 col-md-4">
                                     <div class="form-group">
                                         <label for="articulo_stock" class="bmd-label-floating">Precio Venta</label>
-                                        <input type="num" pattern="[0-9]{1,9}" class="form-control" name="articulo_priceV_reg" id="articulo_priceV" maxlength="9">
+                                        <input type="num" pattern="[0-9]{1,15}" class="form-control" name="articulo_priceV_reg" id="articulo_priceV" maxlength="9">
                                     </div>
                                 </div>
                                 <?php
@@ -90,7 +90,7 @@
                                 <div class="col-12 col-md-4">
                                     <div class="form-group">
                                         <label for="categoria_reg" class="bmd-label-floating">Categoria</label>
-                                        <select class="form-control select2" name="categoria_reg" id="categoria_reg">
+                                        <select class="form-control" name="categoria_reg" id="categoria_reg">
                                             <?php echo $articlesCAT; ?>
                                         </select>
                                     </div>
@@ -125,7 +125,7 @@
                     </p>
                 </form>
             </div>
-            <script>
+            <!-- <script>
                 document.addEventListener('DOMContentLoaded', function() {
                     if (window.jQuery) {
                         $('#categoria_reg').select2({
@@ -137,4 +137,4 @@
                         console.error('jQuery no está cargado.');
                     }
                 });
-            </script>
+            </script>-->
