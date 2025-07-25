@@ -22,7 +22,7 @@
 	</a>
 
 	<a href="<?php echo SERVERURL; ?>articulo-lista/" class="tile">
-		<div class="tile-tittle">Items</div>
+		<div class="tile-tittle">Articulos</div>
 		<div class="tile-icon">
 			<i class="fas fa-pallet fa-fw"></i>
 			<p>9 Registrados</p>
