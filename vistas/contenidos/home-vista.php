@@ -20,12 +20,15 @@
 			<p><?php echo $total_client->rowCount(); ?> Registrados</p>
 		</div>
 	</a>
-
+	<?php require_once "./controladores/articuloControlador.php";
+		$ins_arti = new articuloControlador;
+		$total_arti = $ins_arti->datos_articulos_controlador("Conteo",0);
+	?>
 	<a href="<?php echo SERVERURL; ?>articulo-lista/" class="tile">
 		<div class="tile-tittle">Articulos</div>
 		<div class="tile-icon">
 			<i class="fas fa-pallet fa-fw"></i>
-			<p>9 Registrados</p>
+			<p><?php echo $total_arti->rowCount(); ?> Registrados</p>
 		</div>
 	</a>
 
@@ -35,7 +38,7 @@
 			<i class="far fa-calendar-alt fa-fw"></i>
 			<p>30 Registradas</p>
 		</div>
-	</a>
+	</a>	
 
 	<a href="<?php echo SERVERURL; ?>reservacion-pendiente/" class="tile">
 		<div class="tile-tittle">Prestamos</div>

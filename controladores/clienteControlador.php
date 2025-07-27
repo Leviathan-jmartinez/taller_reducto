@@ -386,7 +386,7 @@ class clienteControlador extends clienteModelo
         $ciudades = clienteModelo::obtener_ciudades_modelo(); // Llamamos al método protegido desde la clase hija
         return $ciudades;
     }
-    /** */
+    /** controlador actualizar cliente */
     public function actualizar_cliente_controlador()
     {
         $id = mainModel::decryption($_POST['cliente_id_up']);
@@ -553,17 +553,6 @@ class clienteControlador extends clienteModelo
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
                 "Texto" => "No posee los permisos necesarios para realizar esta operación",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
-        }
-        session_start(['name' => 'STR']);
-        if ($_SESSION['nivel_str'] != 1) {
-            $alerta = [
-                "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado",
-                "Texto" => "No tienes los permisos necesarios para realizar esta acción",
                 "Tipo" => "error"
             ];
             echo json_encode($alerta);

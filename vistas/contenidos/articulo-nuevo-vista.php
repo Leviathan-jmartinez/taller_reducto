@@ -4,7 +4,7 @@
                     <i class="fas fa-plus fa-fw"></i> &nbsp; AGREGAR ARTICULO
                 </h3>
                 <p class="text-justify">
-                    
+
                 </p>
             </div>
 
@@ -57,7 +57,7 @@
                                 <?php
                                 require_once "./controladores/articuloControlador.php";
                                 $articleController = new articuloControlador();
-                                $articlesIVA = $articleController->listar_iva_controlador();
+                                $articlesIVA = $articleController->listar_IVA_controlador();
                                 $articlesPro = $articleController->listar_proveedores_controlador();
                                 $articlesUM = $articleController->listar_UM_controlador();
                                 $articlesCAT = $articleController->listar_cate_controlador();
@@ -67,7 +67,12 @@
                                     <div class="form-group">
                                         <label for="tipo_iva_reg" class="bmd-label-floating">Tipo Impuesto</label>
                                         <select class="form-control" name="tipo_iva_reg" id="tipo_iva_reg">
-                                            <?php echo $articlesIVA; ?>
+                                            <option value="" selected>Seleccione una opción</option>
+                                            <?php
+                                            foreach ($articlesIVA as $iva) {
+                                                echo '<option value="' . $iva['idiva'] . '">' . $iva['tipo_impuesto_descri'] . '</option>';
+                                            }
+                                            ?>
                                         </select>
                                     </div>
                                 </div>
@@ -75,7 +80,12 @@
                                     <div class="form-group">
                                         <label for="proveedor_reg" class="bmd-label-floating">Proveedor</label>
                                         <select class="form-control" name="proveedor_reg" id="proveedor_reg">
-                                            <?php echo $articlesPro; ?>
+                                            <option value="" selected>Seleccione una opción</option>
+                                            <?php
+                                            foreach ($articlesPro as $prov) {
+                                                echo '<option value="' . $prov['idproveedores'] . '">' . $prov['razon_social'] . '</option>';
+                                            }
+                                            ?>
                                         </select>
                                     </div>
                                 </div>
@@ -83,7 +93,12 @@
                                     <div class="form-group">
                                         <label for="proveedor_reg" class="bmd-label-floating">Unidad de Medida</label>
                                         <select class="form-control" name="um_reg" id="um_reg">
-                                            <?php echo $articlesUM; ?>
+                                            <option value="" selected>Seleccione una opción</option>
+                                            <?php
+                                            foreach ($articlesUM as $um) {
+                                                echo '<option value="' . $um['idunidad_medida'] . '">' . $um['medida'] . '</option>';
+                                            }
+                                            ?>
                                         </select>
                                     </div>
                                 </div>
@@ -91,7 +106,12 @@
                                     <div class="form-group">
                                         <label for="categoria_reg" class="bmd-label-floating">Categoria</label>
                                         <select class="form-control" name="categoria_reg" id="categoria_reg">
-                                            <?php echo $articlesCAT; ?>
+                                            <option value="" selected>Seleccione una opción</option>
+                                            <?php
+                                            foreach ($articlesCAT as $cat) {
+                                                echo '<option value="' . $cat['id_categoria'] . '">' . $cat['cat_descri'] . '</option>';
+                                            }
+                                            ?>
                                         </select>
                                     </div>
                                 </div>
@@ -99,7 +119,12 @@
                                     <div class="form-group">
                                         <label for="marca_reg" class="bmd-label-floating">Marcas</label>
                                         <select class="form-control" name="marca_reg" id="marca_reg">
-                                            <?php echo $articlesMAR; ?>
+                                            <option value="" selected>Seleccione una opción</option>
+                                            <?php
+                                            foreach ($articlesMAR as $marca) {
+                                                echo '<option value="' . $marca['id_marcas'] . '">' . $marca['mar_descri'] . '</option>';
+                                            }
+                                            ?>
                                         </select>
                                     </div>
                                 </div>

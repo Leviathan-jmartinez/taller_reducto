@@ -32,18 +32,18 @@
                 </li>
 
                 <li>
-                    <a href="#" class="nav-btn-submenu"><i class="fas fa-pallet fa-fw"></i> &nbsp; Items <i class="fas fa-chevron-down"></i></a>
+                    <a href="#" class="nav-btn-submenu"><i class="fas fa-pallet fa-fw"></i> &nbsp; Articulos <i class="fas fa-chevron-down"></i></a>
                     <ul>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>articulo-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; Agregar item</a>
+                            <a href="<?php echo SERVERURL; ?>articulo-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; Agregar Articulo</a>
                         </li>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>articulo-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Lista de items</a>
+                            <a href="<?php echo SERVERURL; ?>articulo-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Lista de Articulos</a>
                         </li>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>articulo-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar item</a>
+                            <a href="<?php echo SERVERURL; ?>articulo-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar Articulo</a>
                         </li>
-                    </ul>
+                    </ul>   
                 </li>
 
                 <li>
