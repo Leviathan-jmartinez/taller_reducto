@@ -47,7 +47,7 @@
                 </li>
 
                 <li>
-                    <a href="#" class="nav-btn-submenu"><i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; Préstamos <i class="fas fa-chevron-down"></i></a>
+                    <a href="#" class="nav-btn-submenu"><i class="fas fa-shopping-cart"></i> &nbsp; Compras  <i class="fas fa-chevron-down"></i></a>
                     <ul>
                         <li>
                             <a href="<?php echo SERVERURL; ?>reservacion-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; Nuevo préstamo</a>
