@@ -11,7 +11,7 @@
             <div class="container-fluid">
                 <ul class="full-box list-unstyled page-nav-tabs">
                     <li>
-                        <a href="<?php echo SERVERURL; ?>reservacion-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO PRÉSTAMO</a>
+                        <a href="<?php echo SERVERURL; ?>pedido-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO PRÉSTAMO</a>
                     </li>
                     <li>
                         <a href="<?php echo SERVERURL; ?>reservacion/"><i class="far fa-calendar-alt"></i> &nbsp; RESERVACIONES</a>

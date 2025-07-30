@@ -6,7 +6,7 @@ class vistasModelo
     {
         $lista_blanca = ["home", "articulo-actualizar", "articulo-buscar", "articulo-lista", "articulo-nuevo", 
         "cliente-actualizar", "cliente-buscar", "cliente-lista", "cliente-nuevo", "company", "reservacion-actualizar", 
-        "reservacion-buscar", "reservacion-lista", "reservacion-nuevo", "reservacion-pendiente", "reservacion", 
+        "reservacion-buscar", "reservacion-lista", "pedido-nuevo", "reservacion-pendiente", "reservacion", 
         "usuario-actualizar", "usuario-buscar", "usuario-lista", "usuario-nuevo"];
         if (in_array($vistas, $lista_blanca)) {
             if (is_file("./vistas/contenidos/" . $vistas . "-vista.php")) {

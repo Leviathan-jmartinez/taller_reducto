@@ -8,7 +8,7 @@
             <div class="container-fluid">
                 <ul class="full-box list-unstyled page-nav-tabs">
                     <li>
-                        <a class="active" href="<?php echo SERVERURL; ?>reservacion-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO PEDIDO </a>
+                        <a class="active" href="<?php echo SERVERURL; ?>pedido-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO PEDIDO </a>
                     </li>
                     <li>
                         <a href="<?php echo SERVERURL; ?>reservacion/"><i class="far fa-calendar-alt"></i> &nbsp; RESERVACIONES</a>
@@ -29,16 +29,22 @@
                 <div class="container-fluid form-neon">
                     <div class="container-fluid">
                         <p class="text-center">
-                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalCliente"><i class="fas fa-user-plus"></i> &nbsp; Agregar Proveedor</button>
+                            <?php if (empty($_SESSION['datos_proveedor'])) { ?>
+                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#Modalproveedor"><i class="fas fa-user-plus"></i> &nbsp; Agregar Proveedor</button>
+                            <?php } ?>
                             <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalItem"><i class="fas fa-box-open"></i> &nbsp; Agregar articulo</button>
                         </p>
                         <div>
                             <span class="roboto-medium">PROVEEDOR:</span>
-                            <span class="text-danger">&nbsp; <i class="fas fa-exclamation-triangle"></i> Seleccione un Proveedor</span>
-                            <form action="" style="display: inline-block !important;">
-                                Carlos Alfaro
-                                <button type="button" class="btn btn-danger"><i class="fas fa-user-times"></i></button>
-                            </form>
+                            <?php if (empty($_SESSION['datos_proveedor'])) { ?>
+                                <span class="text-danger">&nbsp; <i class="fas fa-exclamation-triangle"></i> Seleccione un Proveedor</span>
+                            <?php } else { ?>
+                                <form class="FormularioAjax" action="<?php echo SERVERURL ?>ajax/pedidoAjax.php" method="POST" data-form="loans" style="display: inline-block !important;">
+                                    <input type="hidden" name="id_eliminar_cliente" value="<?php echo $_SESSION['datos_proveedor']['ID']; ?>">
+                                    <?php echo $_SESSION['datos_proveedor']['RAZON'] . " (" . $_SESSION['datos_proveedor']['RUC'] . ")"; ?>
+                                    <button type="submit" class="btn btn-danger"><i class="fas fa-user-times"></i></button>
+                                </form>
+                            <?php } ?>
                         </div>
                         <div class="table-responsive">
                             <table class="table table-dark table-sm">
@@ -84,12 +90,12 @@
             </div>
 
 
-            <!-- MODAL CLIENTE -->
-            <div class="modal fade" id="ModalCliente" tabindex="-1" role="dialog" aria-labelledby="ModalCliente" aria-hidden="true">
+            <!-- MODAL proveedor -->
+            <div class="modal fade" id="Modalproveedor" tabindex="-1" role="dialog" aria-labelledby="Modalproveedor" aria-hidden="true">
                 <div class="modal-dialog" role="document">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="ModalCliente">Agregar Proovedor</h5>
+                            <h5 class="modal-title" id="Modalproveedor">Agregar Proovedor</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
@@ -97,46 +103,18 @@
                         <div class="modal-body">
                             <div class="container-fluid">
                                 <div class="form-group">
-                                    <label for="input_cliente" class="bmd-label-floating">DNI, Nombre, Apellido, Telefono</label>
-                                    <input type="text" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" class="form-control" name="input_cliente" id="input_cliente" maxlength="30">
+                                    <label for="input_proveedor" class="bmd-label-floating">RUC, RAZON SOCIAL</label>
+                                    <input type="text" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" class="form-control" name="input_proveedor" id="input_proveedor" maxlength="30">
                                 </div>
                             </div>
                             <br>
-                            <div class="container-fluid" id="tabla_clientes">
-                                <div class="table-responsive">
-                                    <table class="table table-hover table-bordered table-sm">
-                                        <tbody>
-                                            <tr class="text-center">
-                                                <td>0000000000 - Nombre del cliente</td>
-                                                <td>
-                                                    <button type="button" class="btn btn-primary"><i class="fas fa-user-plus"></i></button>
-                                                </td>
-                                            </tr>
-                                            <tr class="text-center">
-                                                <td>0000000000 - Nombre del cliente</td>
-                                                <td>
-                                                    <button type="button" class="btn btn-primary"><i class="fas fa-user-plus"></i></button>
-                                                </td>
-                                            </tr>
-                                            <tr class="text-center">
-                                                <td>0000000000 - Nombre del cliente</td>
-                                                <td>
-                                                    <button type="button" class="btn btn-primary"><i class="fas fa-user-plus"></i></button>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
+                            <div class="container-fluid" id="tabla_proveedor">
+
                             </div>
-                            <div class="alert alert-warning" role="alert">
-                                <p class="text-center mb-0">
-                                    <i class="fas fa-exclamation-triangle fa-2x"></i><br>
-                                    No hemos encontrado ningún cliente en el sistema que coincida con <strong>“Busqueda”</strong>
-                                </p>
-                            </div>
+
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-primary"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar</button>
+                            <button type="button" class="btn btn-primary" onclick="buscar_proveedor()"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar</button>
                             &nbsp; &nbsp;
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
                         </div>
@@ -266,3 +244,5 @@
                     </form>
                 </div>
             </div>
+
+            <?php include_once "./vistas/inc/pedido.php" ?>/

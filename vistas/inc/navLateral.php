@@ -50,7 +50,7 @@
                     <a href="#" class="nav-btn-submenu"><i class="fas fa-shopping-cart"></i> &nbsp; Compras  <i class="fas fa-chevron-down"></i></a>
                     <ul>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>reservacion-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; Nuevo préstamo</a>
+                            <a href="<?php echo SERVERURL; ?>pedido-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; Nuevo Pedido</a>
                         </li>
                         <li>
                             <a href="<?php echo SERVERURL; ?>reservacion/"><i class="far fa-calendar-alt fa-fw"></i> &nbsp; Reservaciones</a>
