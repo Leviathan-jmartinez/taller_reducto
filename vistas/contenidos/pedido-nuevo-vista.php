@@ -32,7 +32,7 @@
                             <?php if (empty($_SESSION['datos_proveedor'])) { ?>
                                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#Modalproveedor"><i class="fas fa-user-plus"></i> &nbsp; Agregar Proveedor</button>
                             <?php } ?>
-                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalItem"><i class="fas fa-box-open"></i> &nbsp; Agregar articulo</button>
+                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalArticulo"><i class="fas fa-box-open"></i> &nbsp; Agregar articulo</button>
                         </p>
                         <div>
                             <span class="roboto-medium">PROVEEDOR:</span>
@@ -40,7 +40,7 @@
                                 <span class="text-danger">&nbsp; <i class="fas fa-exclamation-triangle"></i> Seleccione un Proveedor</span>
                             <?php } else { ?>
                                 <form class="FormularioAjax" action="<?php echo SERVERURL ?>ajax/pedidoAjax.php" method="POST" data-form="loans" style="display: inline-block !important;">
-                                    <input type="hidden" name="id_eliminar_cliente" value="<?php echo $_SESSION['datos_proveedor']['ID']; ?>">
+                                    <input type="hidden" name="id_eliminar_proveedor" value="<?php echo $_SESSION['datos_proveedor']['ID']; ?>">
                                     <?php echo $_SESSION['datos_proveedor']['RAZON'] . " (" . $_SESSION['datos_proveedor']['RUC'] . ")"; ?>
                                     <button type="submit" class="btn btn-danger"><i class="fas fa-user-times"></i></button>
                                 </form>
@@ -124,11 +124,11 @@
 
 
             <!-- MODAL ITEM -->
-            <div class="modal fade" id="ModalItem" tabindex="-1" role="dialog" aria-labelledby="ModalItem" aria-hidden="true">
+            <div class="modal fade" id="ModalArticulo" tabindex="-1" role="dialog" aria-labelledby="ModalArticulo" aria-hidden="true">
                 <div class="modal-dialog" role="document">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="ModalItem">Agregar item</h5>
+                            <h5 class="modal-title" id="ModalArticulo">Agregar Articulo</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
@@ -137,51 +137,17 @@
                             <div class="container-fluid">
                                 <div class="form-group">
                                     <label for="input_item" class="bmd-label-floating">Código, Nombre</label>
-                                    <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" class="form-control" name="input_item" id="input_item" maxlength="30">
+                                    <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" class="form-control" name="input_articulo" id="input_articulo" maxlength="30">
                                 </div>
                             </div>
                             <br>
-                            <div class="container-fluid" id="tabla_items">
-                                <div class="table-responsive">
-                                    <table class="table table-hover table-bordered table-sm">
-                                        <tbody>
-                                            <tr class="text-center">
-                                                <td>000000000000 - Nombre del item</td>
-                                                <td>
-                                                    <button type="button" class="btn btn-primary"><i class="fas fa-box-open"></i></button>
-                                                </td>
-                                            </tr>
-                                            <tr class="text-center">
-                                                <td>000000000000 - Nombre del item</td>
-                                                <td>
-                                                    <button type="button" class="btn btn-primary"><i class="fas fa-box-open"></i></button>
-                                                </td>
-                                            </tr>
-                                            <tr class="text-center">
-                                                <td>000000000000 - Nombre del item</td>
-                                                <td>
-                                                    <button type="button" class="btn btn-primary"><i class="fas fa-box-open"></i></button>
-                                                </td>
-                                            </tr>
-                                            <tr class="text-center">
-                                                <td>000000000000 - Nombre del item</td>
-                                                <td>
-                                                    <button type="button" class="btn btn-primary"><i class="fas fa-box-open"></i></button>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
+                            <div class="container-fluid" id="tabla_articulos">
+                                
                             </div>
-                            <div class="alert alert-warning" role="alert">
-                                <p class="text-center mb-0">
-                                    <i class="fas fa-exclamation-triangle fa-2x"></i><br>
-                                    No hemos encontrado ningún item en el sistema que coincida con <strong>“Busqueda”</strong>
-                                </p>
-                            </div>
+                            
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-primary"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar</button>
+                            <button type="button" class="btn btn-primary" onclick="buscar_articulo()"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar</button>
                             &nbsp; &nbsp;
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
                         </div>
@@ -191,46 +157,23 @@
 
 
             <!-- MODAL AGREGAR ITEM -->
-            <div class="modal fade" id="ModalAgregarItem" tabindex="-1" role="dialog" aria-labelledby="ModalAgregarItem" aria-hidden="true">
+            <div class="modal fade" id="ModalAgregarArticulo" tabindex="-1" role="dialog" aria-labelledby="ModalAgregarArticulo" aria-hidden="true">
                 <div class="modal-dialog" role="document">
-                    <form class="modal-content FormularioAjax">
+                    <form class="modal-content FormularioAjax" action="<?php echo SERVERURL; ?>ajax/pedidoAjax.php" method="POST" data-form="save" autocomplete="off">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="ModalAgregarItem">Selecciona el formato, cantidad de items, tiempo y costo del préstamo del item</h5>
+                            <h5 class="modal-title" id="ModalAgregararticulo">Selecciona el formato, cantidad de articulos, tiempo y costo del préstamo del articulo</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
                         <div class="modal-body">
-                            <input type="hidden" name="id_agregar_item" id="id_agregar_item">
+                            <input type="hidden" name="id_agregar_articulo" id="id_agregar_articulo">
                             <div class="container-fluid">
                                 <div class="row">
-                                    <div class="col-12">
-                                        <div class="form-group">
-                                            <label for="detalle_formato" class="bmd-label-floating">Formato de préstamo</label>
-                                            <select class="form-control" name="detalle_formato" id="detalle_formato">
-                                                <option value="Horas" selected="">Horas</option>
-                                                <option value="Dias">Días</option>
-                                                <option value="Evento">Evento</option>
-                                                <option value="Mes">Mes</option>
-                                            </select>
-                                        </div>
-                                    </div>
                                     <div class="col-12 col-md-4">
                                         <div class="form-group">
                                             <label for="detalle_cantidad" class="bmd-label-floating">Cantidad de items</label>
                                             <input type="num" pattern="[0-9]{1,7}" class="form-control" name="detalle_cantidad" id="detalle_cantidad" maxlength="7" required="">
-                                        </div>
-                                    </div>
-                                    <div class="col-12 col-md-4">
-                                        <div class="form-group">
-                                            <label for="detalle_tiempo" class="bmd-label-floating">Tiempo (según formato)</label>
-                                            <input type="num" pattern="[0-9]{1,7}" class="form-control" name="detalle_tiempo" id="detalle_tiempo" maxlength="7" required="">
-                                        </div>
-                                    </div>
-                                    <div class="col-12 col-md-4">
-                                        <div class="form-group">
-                                            <label for="detalle_costo_tiempo" class="bmd-label-floating">Costo por unidad de tiempo</label>
-                                            <input type="text" pattern="[0-9.]{1,15}" class="form-control" name="detalle_costo_tiempo" id="detalle_costo_tiempo" maxlength="15" required="">
                                         </div>
                                     </div>
                                 </div>
@@ -239,7 +182,7 @@
                         <div class="modal-footer">
                             <button type="submit" class="btn btn-primary">Agregar</button>
                             &nbsp; &nbsp;
-                            <button type="button" class="btn btn-secondary">Cancelar</button>
+                            <button type="button" class="btn btn-secondary" onclick="modal_buscar_articulo()">Cancelar</button>
                         </div>
                     </form>
                 </div>

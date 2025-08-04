@@ -56,4 +56,41 @@
             }
         });
     }
+
+    function buscar_articulo() {
+        let input_articulo = document.querySelector('#input_articulo').value;
+        input_articulo = input_articulo.trim();
+        if (input_articulo != "") {
+            let datos = new FormData();
+            datos.append("buscar_articulo", input_articulo);
+
+            fetch("<?php echo SERVERURL ?>ajax/pedidoAjax.php", {
+                    method: 'POST',
+                    body: datos
+                })
+                .then(respuesta => respuesta.text())
+                .then(respuesta => {
+                    let tabla_articulo = document.querySelector('#tabla_articulos');
+                    tabla_articulos.innerHTML = respuesta;
+                });
+        } else {
+            Swal.fire({
+                title: 'Ocurrio un error',
+                text: 'Debes introducir el Código o el Nombre del articulo',
+                type: 'error',
+                confirmButtonText: 'Aceptar'
+            });
+        }
+    }
+
+    function modal_agregar_articulo(id) {
+        $('#ModalArticulo').modal('hide');
+        $('#ModalAgregarArticulo').modal('show');
+        document.querySelector('#id_agregar_articulo').setAttribute("value",id);
+    }
+
+    function modal_buscar_articulo(){
+        $('#ModalAgregarArticulo').modal('hide');
+        $('#ModalArticulo').modal('show');
+    }
 </script>
