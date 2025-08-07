@@ -51,29 +51,55 @@
                                 <thead>
                                     <tr class="text-center roboto-medium">
                                         <th>#</th>
+                                        <th>CODIGO</th>
                                         <th>ITEM</th>
                                         <th>CANTIDAD</th>
                                         <th>ELIMINAR</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr class="text-center">
-                                        <td>1</td>
-                                        <td>Silla plastica</td>
-                                        <td>7</td>
-                                        <td>
-                                            <form action="">
-                                                <button type="button" class="btn btn-warning">
-                                                    <i class="far fa-trash-alt"></i>
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                    <tr class="text-center bg-light">
-                                        <td colspan="2"></td>
-                                        <td><strong>TOTAL</strong></td>
-                                        <td><strong>21 items</strong></td>
-                                    </tr>
+                                    <?php
+                                    if (isset($_SESSION['datos_articulo']) && count($_SESSION['datos_articulo']) >= 1) {
+                                        $_SESSION['pedido_articulo'] = 0;
+                                        $contador = 1;
+                                        foreach ($_SESSION['datos_articulo'] as $article) {
+
+                                    ?>
+                                            <tr class="text-center">
+                                                <td><?php echo $contador ?></td>
+                                                <td><?php echo $article['codigo'] ?></td>
+                                                <td><?php echo $article['descipcion'] ?></td>
+                                                <td><?php echo $article['cantidad'] ?></td>
+                                                <td>
+                                                    <form class="FormularioAjax" action="<?php echo SERVERURL; ?>ajax/pedidoAjax.php" method="POST" data-form="loans" autocomplete="off">
+                                                        <input type="hidden" name="id_eliminar_articulo" value="<?php echo $article['ID']?>">
+                                                        <button type="submit" class="btn btn-warning">
+                                                            <i class="far fa-trash-alt"></i>
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        <?php $contador++;
+                                            $_SESSION['pedido_articulo'] += $article['cantidad'];
+                                        } ?>
+                                        <tr class="text-center bg-light">
+                                            <td colspan="2"></td>
+                                            <td><strong>TOTAL</strong></td>
+                                            <td><strong><?php echo $_SESSION['pedido_articulo'] ?> articulos</strong></td>
+                                            <td colspan="1"></td>
+                                        </tr>
+                                    <?php
+                                    } else {
+                                        $_SESSION['pedido_articulo'] = 0;
+                                    ?>
+                                        <tr class="text-center bg-light">
+                                            <td colspan="5 ">No has seleccionado articulos</td>
+                                        </tr>
+                                    <?php
+
+                                    }
+                                    ?>
+
                                 </tbody>
                             </table>
                         </div>
@@ -138,13 +164,14 @@
                                 <div class="form-group">
                                     <label for="input_item" class="bmd-label-floating">Código, Nombre</label>
                                     <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" class="form-control" name="input_articulo" id="input_articulo" maxlength="30">
+                                    
                                 </div>
                             </div>
                             <br>
                             <div class="container-fluid" id="tabla_articulos">
-                                
+                                    <input type="num" pattern="[0-9]{1,7}" class="form-control" name="detalle_cantidad" id="detalle_cantidad" maxlength="7" required="">
                             </div>
-                            
+
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-primary" onclick="buscar_articulo()"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar</button>

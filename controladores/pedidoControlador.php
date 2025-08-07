@@ -183,6 +183,17 @@ class pedidoControlador extends pedidoModelo
         }
         $cantidad = mainModel::limpiar_string($_POST['detalle_cantidad']);
 
+        if ($cantidad == "") {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El CANTIDAD no puede estar vacío",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
         if (mainModel::verificarDatos("[0-9]{1,7}", $cantidad)) {
             $alerta = [
                 "Alerta" => "simple",
@@ -193,14 +204,58 @@ class pedidoControlador extends pedidoModelo
             echo json_encode($alerta);
             exit();
         }
-         session_start(['name' => 'STR']);
-          
-         if (empty($_SESSION['datos_articulo'][$id])) {
-            # code...
-         } else {
-            # code...
-         }
-         
+        session_start(['name' => 'STR']);
+
+        if (empty($_SESSION['datos_articulo'][$id])) {
+            $_SESSION['datos_articulo'][$id] = [
+                "ID" => $campos['id_articulo'],
+                "codigo" => $campos['codigo'],
+                "descipcion" => $campos['desc_articulo'],
+                "cantidad" => $cantidad
+            ];
+            $alerta = [
+                "Alerta" => "recargar",
+                "Titulo" => "Articulo agregado!",
+                "Texto" =>  "El articulo ha sido agregado",
+                "Tipo" => "success"
+            ];
+            echo json_encode($alerta);
+            exit();
+        } else {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" =>  "El articulo que intenta agregar ya se encuentra agregado",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+    }
+    /**fin controlador*/
+
+    /**controlador eliminar articulo */
+    public function eliminar_articulo_controlador()
+    {
+        $id  = mainModel::limpiar_string($_POST['id_eliminar_articulo']);
+        session_start(['name' => 'STR']);
+        unset($_SESSION['datos_articulo'][$id]);
+        if (empty($_SESSION['datos_articulo'][$id])) {
+            $alerta = [
+                "Alerta" => "recargar",
+                "Titulo" => "Articulo removido!",
+                "Texto" => "Los datos del articulo fueron removidos correctamente",
+                "Tipo" => "success"
+            ];
+        } else {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "No hemos podido remover los datos del articulo",
+                "Tipo" => "error"
+            ];
+        }
+        echo json_encode($alerta);
     }
     /**fin controlador */
 }
