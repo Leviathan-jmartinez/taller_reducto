@@ -68,11 +68,11 @@
                                             <tr class="text-center">
                                                 <td><?php echo $contador ?></td>
                                                 <td><?php echo $article['codigo'] ?></td>
-                                                <td><?php echo $article['descipcion'] ?></td>
+                                                <td><?php echo $article['descripcion'] ?></td>
                                                 <td><?php echo $article['cantidad'] ?></td>
                                                 <td>
                                                     <form class="FormularioAjax" action="<?php echo SERVERURL; ?>ajax/pedidoAjax.php" method="POST" data-form="loans" autocomplete="off">
-                                                        <input type="hidden" name="id_eliminar_articulo" value="<?php echo $article['ID']?>">
+                                                        <input type="hidden" name="id_eliminar_articulo" value="<?php echo $article['ID'] ?>">
                                                         <button type="submit" class="btn btn-warning">
                                                             <i class="far fa-trash-alt"></i>
                                                         </button>
@@ -164,12 +164,11 @@
                                 <div class="form-group">
                                     <label for="input_item" class="bmd-label-floating">Código, Nombre</label>
                                     <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" class="form-control" name="input_articulo" id="input_articulo" maxlength="30">
-                                    
+
                                 </div>
                             </div>
                             <br>
                             <div class="container-fluid" id="tabla_articulos">
-                                    <input type="num" pattern="[0-9]{1,7}" class="form-control" name="detalle_cantidad" id="detalle_cantidad" maxlength="7" required="">
                             </div>
 
                         </div>
@@ -188,7 +187,7 @@
                 <div class="modal-dialog" role="document">
                     <form class="modal-content FormularioAjax" action="<?php echo SERVERURL; ?>ajax/pedidoAjax.php" method="POST" data-form="save" autocomplete="off">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="ModalAgregararticulo">Selecciona el formato, cantidad de articulos, tiempo y costo del préstamo del articulo</h5>
+                            <h5 class="modal-title" id="ModalAgregararticulo">Selecciona la cantidad de articulos</h5>
                             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
@@ -214,5 +213,7 @@
                     </form>
                 </div>
             </div>
+
+
 
             <?php include_once "./vistas/inc/pedido.php" ?>/

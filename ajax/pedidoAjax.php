@@ -17,10 +17,10 @@ if (isset($_POST['buscar_proveedor']) || isset($_POST['id_agregar_proveedor']) |
         echo $inst_pedido->eliminar_proveedor_controlador();
     }
     if (isset($_POST['buscar_articulo'])) {
-        echo $inst_pedido->buscar_articulo_controlador();
+        echo $inst_pedido->articulo_controlador();
     }
     if (isset($_POST['id_agregar_articulo'])) {
-        echo $inst_pedido->agregar_articulo_controlador();
+        echo $inst_pedido->articulo_controlador();
     }
     if (isset($_POST['id_eliminar_articulo'])) {
         echo $inst_pedido->eliminar_articulo_controlador();

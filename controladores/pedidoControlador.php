@@ -120,97 +120,30 @@ class pedidoControlador extends pedidoModelo
     }
     /**fin controlador */
     /**controlador buscador articulo */
-    public function buscar_articulo_controlador()
+    public function articulo_controlador()
     {
-        $articulo  = mainModel::limpiar_string($_POST['buscar_articulo']);
-
-        if ($articulo == "") {
-            return '        <div class="alert alert-warning" role="alert">
-                                <p class="text-center mb-0">
-                                    <i class="fas fa-exclamation-triangle fa-2x"></i><br>
-                                    Debes introducir el RUC o RAZON SOCIAL
-                                </p>
-                            </div>';
-            exit();
-        }
-        /**seleccionar articulo */
-        $datos_articulo = mainModel::ejecutar_consulta_simple("SELECT * FROM articulos where (codigo like '%$articulo%' or desc_articulo like '%$articulo%')
-        and (estado = 1 )
-        order by desc_articulo desc");
-
-        if ($datos_articulo->rowCount() >= 1) {
-            $datos_articulo = $datos_articulo->fetchAll();
-            $tabla = '<div class="table-responsive"><table class="table table-hover table-bordered table-sm"><tbody>';
-            foreach ($datos_articulo as $rows) {
-                $tabla .= '
-                        <tr class="text-center">
-                            <td>' . $rows['codigo'] . ' - ' . $rows['desc_articulo'] . '</td>
-                            <td>
-                                <button type="button" class="btn btn-primary" onclick="modal_agregar_articulo(' . $rows['id_articulo'] . ')"><i class="fas fa-user-plus"></i></button>
-                            </td>
-                        </tr>';
-            }
-            $tabla .= '</tbody></table></div>';
-            return $tabla;
-        } else {
-            return '        <div class="alert alert-warning" role="alert">
-                                <p class="text-center mb-0">
-                                    <i class="fas fa-exclamation-triangle fa-2x"></i><br>
-                                    No hemos encontrado ningún articulo en el sistema que coincida con <strong>“' . $articulo . '”</strong>
-                                </p>
-                            </div>';
-        }
-    }
-    /**fin controlador */
-
-    /**controlador agregar articulo */
-    public function agregar_articulo_controlador()
-    {
-        $id  = mainModel::limpiar_string($_POST['id_agregar_articulo']);
-
-        $check_articulo = mainModel::ejecutar_consulta_simple("select * from articulos where id_articulo = '$id' and estado = 1");
-        if ($check_articulo->rowCount() <= 0) {
-            $alerta = [
-                "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "No hemos podido encontrar el articulo en el sistema",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
-        } else {
-            $campos = $check_articulo->fetch();
-        }
-        $cantidad = mainModel::limpiar_string($_POST['detalle_cantidad']);
-
-        if ($cantidad == "") {
-            $alerta = [
-                "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "El CANTIDAD no puede estar vacío",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
-        }
-
-        if (mainModel::verificarDatos("[0-9]{1,7}", $cantidad)) {
-            $alerta = [
-                "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "El formato del campo CANTIDAD no es válido",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
-        }
         session_start(['name' => 'STR']);
+        ini_set('log_errors', 1);
+        ini_set('error_log', '/path/to/php-error.log');
+        // AGREGAR ARTÍCULO
+        if (isset($_POST['id_agregar_articulo'])) {
 
-        if (empty($_SESSION['datos_articulo'][$id])) {
+            $id = mainModel::limpiar_string($_POST['id_agregar_articulo']);
+            $cantidad = mainModel::limpiar_string($_POST['detalle_cantidad']);
+
+            $check_articulo = mainModel::ejecutar_consulta_simple("SELECT * FROM articulos WHERE id_articulo='$id' AND estado=1");
+            if ($check_articulo->rowCount() <= 0)
+                die(json_encode(["Alerta" => "simple", "Titulo" => "Error!", "Texto" => "No se encontró el artículo", "Tipo" => "error"]));
+
+            $campos = $check_articulo->fetch();
+            if ($cantidad == "" || !is_numeric($cantidad) || intval($cantidad) <= 0)
+                die(json_encode(["Alerta" => "simple", "Titulo" => "Error!", "Texto" => "Cantidad inválida", "Tipo" => "error"]));
+
+            if (empty($_SESSION['datos_articulo'][$id])) {
             $_SESSION['datos_articulo'][$id] = [
                 "ID" => $campos['id_articulo'],
                 "codigo" => $campos['codigo'],
-                "descipcion" => $campos['desc_articulo'],
+                "descripcion" => $campos['desc_articulo'],
                 "cantidad" => $cantidad
             ];
             $alerta = [
@@ -231,8 +164,42 @@ class pedidoControlador extends pedidoModelo
             echo json_encode($alerta);
             exit();
         }
+        }
+
+        // BUSCAR ARTÍCULO (HTML)
+        if (isset($_POST['buscar_articulo'])) {
+            $articulo = mainModel::limpiar_string($_POST['buscar_articulo']);
+            if ($articulo == "") return '<div class="alert alert-warning">Debes introducir código o descripción</div>';
+
+            $id_proveedor = $_SESSION['datos_proveedor']['ID'];
+            if (!isset($_SESSION['datos_proveedor']['ID'])) {
+                echo json_encode([
+                    "Alerta" => "simple",
+                    "Titulo" => "Error!",
+                    "Texto" => "No se ha seleccionado un proveedor",
+                    "Tipo" => "error"
+                ]);
+                exit();
+            }
+            $datos_articulo = mainModel::ejecutar_consulta_simple("SELECT * FROM articulos WHERE (codigo like '%$articulo%' OR desc_articulo like '%$articulo%') AND estado=1 AND idproveedores='$id_proveedor' ORDER BY desc_articulo DESC");
+
+            if ($datos_articulo->rowCount() >= 1) {
+                $tabla = '<div class="table-responsive"><table class="table table-hover table-bordered table-sm"><tbody>';
+                foreach ($datos_articulo->fetchAll() as $rows) {
+                    $tabla .= '<tr class="text-center">
+                    <td>' . $rows['codigo'] . ' - ' . $rows['desc_articulo'] . '</td>
+                    <td style="width:100px;"><input type="number" id="cantidad_' . $rows['id_articulo'] . '" class="form-control form-control-sm" value="1" min="1"></td>
+                    <td><button type="button" class="btn btn-primary btn-sm" onclick="agregar_articulo(' . $rows['id_articulo'] . ')"><i class="fas fa-plus-circle"></i></button></td>
+                </tr>';
+                }
+                $tabla .= '</tbody></table></div>';
+                return $tabla;
+            } else return '<div class="alert alert-warning">No se encontraron artículos que coincidan</div>';
+        }
     }
-    /**fin controlador*/
+
+
+
 
     /**controlador eliminar articulo */
     public function eliminar_articulo_controlador()
