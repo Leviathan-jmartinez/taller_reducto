@@ -225,4 +225,12 @@ class pedidoControlador extends pedidoModelo
         echo json_encode($alerta);
     }
     /**fin controlador */
+    public function datos_pedido_controlador($tipo, $id){
+         $tipo  = mainModel::limpiar_string($tipo);
+
+         $id  = mainModel::decryption($id);
+         $id  = mainModel::limpiar_string($id);
+         
+        return pedidoModelo::datos_pedido_modelo($tipo,$id);
+    }
 }

@@ -104,7 +104,7 @@
                             </table>
                         </div>
                     </div>
-                    <form action="" autocomplete="off">
+                    <form class="FormularioAjax" action="<?php echo SERVERURL ?>ajax/pedidoAjax.php" method="POST" data-form="save" autocomplete="off">
                         <br><br><br>
                         <p class="text-center" style="margin-top: 40px;">
                             <button type="reset" class="btn btn-raised btn-secondary btn-sm"><i class="fas fa-paint-roller"></i> &nbsp; LIMPIAR</button>
