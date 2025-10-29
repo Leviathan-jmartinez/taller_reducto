@@ -140,30 +140,30 @@ class pedidoControlador extends pedidoModelo
                 die(json_encode(["Alerta" => "simple", "Titulo" => "Error!", "Texto" => "Cantidad inválida", "Tipo" => "error"]));
 
             if (empty($_SESSION['datos_articulo'][$id])) {
-            $_SESSION['datos_articulo'][$id] = [
-                "ID" => $campos['id_articulo'],
-                "codigo" => $campos['codigo'],
-                "descripcion" => $campos['desc_articulo'],
-                "cantidad" => $cantidad
-            ];
-            $alerta = [
-                "Alerta" => "recargar",
-                "Titulo" => "Articulo agregado!",
-                "Texto" =>  "El articulo ha sido agregado",
-                "Tipo" => "success"
-            ];
-            echo json_encode($alerta);
-            exit();
-        } else {
-            $alerta = [
-                "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" =>  "El articulo que intenta agregar ya se encuentra agregado",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
-        }
+                $_SESSION['datos_articulo'][$id] = [
+                    "ID" => $campos['id_articulo'],
+                    "codigo" => $campos['codigo'],
+                    "descripcion" => $campos['desc_articulo'],
+                    "cantidad" => $cantidad
+                ];
+                $alerta = [
+                    "Alerta" => "recargar",
+                    "Titulo" => "Articulo agregado!",
+                    "Texto" =>  "El articulo ha sido agregado",
+                    "Tipo" => "success"
+                ];
+                echo json_encode($alerta);
+                exit();
+            } else {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrio un error inesperado!",
+                    "Texto" =>  "El articulo que intenta agregar ya se encuentra agregado",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
         }
 
         // BUSCAR ARTÍCULO (HTML)
@@ -225,12 +225,67 @@ class pedidoControlador extends pedidoModelo
         echo json_encode($alerta);
     }
     /**fin controlador */
-    public function datos_pedido_controlador($tipo, $id){
-         $tipo  = mainModel::limpiar_string($tipo);
+    public function datos_pedido_controlador($tipo, $id)
+    {
+        $tipo  = mainModel::limpiar_string($tipo);
 
-         $id  = mainModel::decryption($id);
-         $id  = mainModel::limpiar_string($id);
-         
-        return pedidoModelo::datos_pedido_modelo($tipo,$id);
+        $id  = mainModel::decryption($id);
+        $id  = mainModel::limpiar_string($id);
+
+        return pedidoModelo::datos_pedido_modelo($tipo, $id);
+    }
+
+    /**controlador agregar pedido */
+    public function agregar_pedido_controlador()
+    {
+        session_start(['name' => 'STR']);
+        if ($_SESSION['datos_articulo'] == 0) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "No has seleccionado ningun articulo para el pedido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        /**comprobar proveedor */
+        if (empty($_SESSION['datos_proveedor'])) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "No has seleccionado ningun proveedor para el pedido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        $datos_pedido_agg = [
+            "usuario" => $_SESSION['id_str'],
+            "proveeodr" => $_SESSION['datos_proveedor']['ID']
+
+        ];
+        $agregar_pedido = pedidoModelo::agregar_pedidoC_modelo($datos_pedido_agg);
+        if ($agregar_pedido->rowCount() != 1) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "No hemos pedido registrar el pedido, favor intenté nuevamente",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        } 
+        /**agregar detalle */
+        $errores_detalles=0;
+        foreach ($_SESSION['datos_articulo'] as $article) {
+            
+            $detalle_reg=[
+                "usuario"=> $_SESSION['id_str'],
+                "id"=>,
+                "cantidad"=>$article['cantidad']
+                
+            ];
+        }
     }
 }
