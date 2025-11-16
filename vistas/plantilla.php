@@ -54,25 +54,6 @@
     }
     include "./vistas/inc/scripts.php"; ?>
 
-    <script>
-        $(document).ready(function() {
-
-            // Hover sobre <li> que tienen <ul>
-            $('.nav-lateral-menu li').has('ul').hover(
-                function() { // mouse enter
-                    $(this).children('ul').stop(true, true).slideDown(200);
-                    $(this).children('a').children('i.fas').removeClass('fa-chevron-down').addClass('fa-chevron-up');
-                },
-                function() { // mouse leave
-                    $(this).children('ul').stop(true, true).slideUp(200);
-                    $(this).children('a').children('i.fas').removeClass('fa-chevron-up').addClass('fa-chevron-down');
-                }
-            );
-
-        });
-    </script>
-
-
 </body>
 
 </html>
