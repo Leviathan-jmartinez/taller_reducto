@@ -2,7 +2,7 @@
     const SERVER="localhost";
     const DB="bd_reduc";
     const USER="root";
-    const PASS="";
+    const PASS="8520123";
 
     const SGBD="mysql:host=".SERVER.";dbname=".DB;
 

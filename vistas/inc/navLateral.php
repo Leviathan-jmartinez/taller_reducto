@@ -88,6 +88,23 @@
                     <a href="<?php echo SERVERURL; ?>company/"><i class="fas fa-store-alt fa-fw"></i> &nbsp; Empresa</a>
                 </li>
                 <?php } ?>
+                <li>
+                    <a href="#" class="nav-btn-submenu"><i class="fas fa-cog fa-fw"></i> &nbsp; Administración <i class="fas fa-chevron-down"></i></a>
+                    <ul>
+                        <li>
+                            <a href="<?php echo SERVERURL; ?>ciudad-lista/"><i class="fas fa-city"></i> &nbsp; Ciudades</a>
+                        </li>
+                        <li>
+                            <a href="<?php echo SERVERURL; ?>cargo-lista/"><i class="fas fa-file-invoice"></i> &nbsp; Cargos</a>
+                        </li>
+                        <li>
+                            <a href="<?php echo SERVERURL; ?>marca-lista/"><i class="fas fa-tag fa-fw"></i> &nbsp; Marcas</a>
+                        </li>
+                        <li>
+                            <a href="<?php echo SERVERURL; ?>modelo-auto-lista/"><i class="fas fa-list-ul fa-fw"></i> &nbsp; Modelos de Auto</a>
+                        </li>
+                    </ul>   
+                </li>
             </ul>
         </nav>
     </div>
