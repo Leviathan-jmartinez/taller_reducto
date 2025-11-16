@@ -282,7 +282,7 @@ class pedidoControlador extends pedidoModelo
             
             $detalle_reg=[
                 "usuario"=> $_SESSION['id_str'],
-                "id"=>,
+                "id"=>$_SESSION['id_str'],
                 "cantidad"=>$article['cantidad']
                 
             ];
