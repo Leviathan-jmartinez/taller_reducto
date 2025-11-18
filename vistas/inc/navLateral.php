@@ -43,51 +43,39 @@
                         <li>
                             <a href="<?php echo SERVERURL; ?>articulo-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar Articulo</a>
                         </li>
-                    </ul>   
+                    </ul>
                 </li>
-
                 <li>
-                    <a href="#" class="nav-btn-submenu"><i class="fas fa-shopping-cart"></i> &nbsp; Compras  <i class="fas fa-chevron-down"></i></a>
+                    <a href="<?php echo SERVERURL; ?>inventario-nuevo/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Inventarios</a>
+                </li>
+                <li>
+                    <a href="#" class="nav-btn-submenu"><i class="fas fa-shopping-cart"></i> &nbsp; Compras <i class="fas fa-chevron-down"></i></a>
                     <ul>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>pedido-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; Nuevo Pedido</a>
+                            <a href="<?php echo SERVERURL; ?>pedido-nuevo/"><i class="fas fa-file-alt fa-fw"></i> &nbsp; Pedidos</a>
                         </li>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>reservacion/"><i class="far fa-calendar-alt fa-fw"></i> &nbsp; Reservaciones</a>
+                            <a href="<?php echo SERVERURL; ?>reservacion/"><i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; Presupuestos</a>
                         </li>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>reservacion-pendiente/"><i class="fas fa-hand-holding-usd fa-fw"></i> &nbsp; Préstamos</a>
+                            <a href="<?php echo SERVERURL; ?>reservacion-pendiente/"><i class="fas fa-file-invoice fa-fw"></i> &nbsp; Ordenes de Compra</a>
                         </li>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>reservacion-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Finalizados</a>
+                            <a href="<?php echo SERVERURL; ?>reservacion-lista/"><i class="fas fa-shopping-cart fa-fw"></i> &nbsp; Ingreso de Facturas</a>
                         </li>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>reservacion-buscar/"><i class="fas fa-search-dollar fa-fw"></i> &nbsp; Buscar por fecha</a>
+                            <a href="<?php echo SERVERURL; ?>reservacion-buscar/"><i class="fas fa-box fa-fw"></i> &nbsp; Remisiones</a>
+                        </li>
+                        <li>
+                            <a href="<?php echo SERVERURL; ?>reservacion-buscar/"><i class="fas fa-file-alt fa-fw"></i> &nbsp; Notas de Crédito</a>
                         </li>
                     </ul>
                 </li>
-                <?php
-                if ($_SESSION['nivel_str'] == 1) { ?>
-                    <li>
-                        <a href="#" class="nav-btn-submenu"><i class="fas  fa-user-secret fa-fw"></i> &nbsp; Usuarios <i class="fas fa-chevron-down"></i></a>
-                        <ul>
-                            <li>
-                                <a href="<?php echo SERVERURL; ?>usuario-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; Nuevo usuario</a>
-                            </li>
-                            <li>
-                                <a href="<?php echo SERVERURL; ?>usuario-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Lista de usuarios</a>
-                            </li>
-                            <li>
-                                <a href="<?php echo SERVERURL; ?>usuario-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar usuario</a>
-                            </li>
-                        </ul>
-                    </li>
-                <?php } 
-                if ($_SESSION['nivel_str'] == 1) { ?>
                 <li>
-                    <a href="<?php echo SERVERURL; ?>company/"><i class="fas fa-store-alt fa-fw"></i> &nbsp; Empresa</a>
+                    <a href="#" class="nav-btn-submenu"><i class="fas fa-tools fa-fw"></i> &nbsp; Servicios <i class="fas fa-chevron-down"></i></a>
+                    <ul>
+                    </ul>
                 </li>
-                <?php } ?>
                 <li>
                     <a href="#" class="nav-btn-submenu"><i class="fas fa-cog fa-fw"></i> &nbsp; Administración <i class="fas fa-chevron-down"></i></a>
                     <ul>
@@ -103,9 +91,25 @@
                         <li>
                             <a href="<?php echo SERVERURL; ?>modelo-auto-lista/"><i class="fas fa-list-ul fa-fw"></i> &nbsp; Modelos de Auto</a>
                         </li>
-                    </ul>   
+                    </ul>
                 </li>
+                <?php
+                if ($_SESSION['nivel_str'] == 1) { ?>
+                    <li>
+                        <a href="#" class="nav-btn-submenu"><i class="fas fa-shield-alt fa-fw"></i> &nbsp; Seguridad <i class="fas fa-chevron-down"></i></a>
+                        <ul>
+                            <li>
+                                <a href="<?php echo SERVERURL; ?>usuario-lista/"><i class="fas fa-user fa-fw"></i> &nbsp; Usuarios</a>
+                            </li>
+                        </ul>
+                    </li>
+                <?php } ?>
+                <?php if ($_SESSION['nivel_str'] == 1) { ?>
+                    <li>
+                        <a href="<?php echo SERVERURL; ?>company/"><i class="fas fa-store-alt fa-fw"></i> &nbsp; Empresa</a>
+                    </li>
+                <?php } ?>
             </ul>
         </nav>
     </div>
-</section>	
+</section>

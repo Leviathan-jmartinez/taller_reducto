@@ -139,7 +139,14 @@ class pedidoControlador extends pedidoModelo
             if ($cantidad == "" || !is_numeric($cantidad) || intval($cantidad) <= 0)
                 die(json_encode(["Alerta" => "simple", "Titulo" => "Error!", "Texto" => "Cantidad inválida", "Tipo" => "error"]));
 
-            if (empty($_SESSION['datos_articulo'][$id])) {
+            if (isset($_SESSION['datos_articulo'][$id])) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrio un error inesperado!",
+                    "Texto" =>  "El articulo que intenta agregar ya se encuentra agregado",
+                    "Tipo" => "error"
+                ];
+            } else {
                 $_SESSION['datos_articulo'][$id] = [
                     "ID" => $campos['id_articulo'],
                     "codigo" => $campos['codigo'],
@@ -152,18 +159,9 @@ class pedidoControlador extends pedidoModelo
                     "Texto" =>  "El articulo ha sido agregado",
                     "Tipo" => "success"
                 ];
-                echo json_encode($alerta);
-                exit();
-            } else {
-                $alerta = [
-                    "Alerta" => "simple",
-                    "Titulo" => "Ocurrio un error inesperado!",
-                    "Texto" =>  "El articulo que intenta agregar ya se encuentra agregado",
-                    "Tipo" => "error"
-                ];
-                echo json_encode($alerta);
-                exit();
             }
+            echo json_encode($alerta);
+            exit();
         }
 
         // BUSCAR ARTÍCULO (HTML)
@@ -275,16 +273,16 @@ class pedidoControlador extends pedidoModelo
             ];
             echo json_encode($alerta);
             exit();
-        } 
+        }
         /**agregar detalle */
-        $errores_detalles=0;
+        $errores_detalles = 0;
         foreach ($_SESSION['datos_articulo'] as $article) {
-            
-            $detalle_reg=[
-                "usuario"=> $_SESSION['id_str'],
-                "id"=>$_SESSION['id_str'],
-                "cantidad"=>$article['cantidad']
-                
+
+            $detalle_reg = [
+                "usuario" => $_SESSION['id_str'],
+                "id" => $_SESSION['id_str'],
+                "cantidad" => $article['cantidad']
+
             ];
         }
     }
