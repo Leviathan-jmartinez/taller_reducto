@@ -119,6 +119,41 @@ class pedidoControlador extends pedidoModelo
         echo json_encode($alerta);
     }
     /**fin controlador */
+    /**controlador buscar articulo */
+    public function buscar_articulo_controlador()
+    {
+        // BUSCAR ARTÍCULO (HTML)
+        session_start(['name' => 'STR']);
+        if (isset($_POST['buscar_articulo'])) {
+            $articulo = mainModel::limpiar_string($_POST['buscar_articulo']);
+            if ($articulo == "") return '<div class="alert alert-warning">Debes introducir código o descripción</div>';
+
+            $id_proveedor = $_SESSION['datos_proveedor']['ID'];
+            if (!isset($_SESSION['datos_proveedor']['ID'])) {
+                echo json_encode([
+                    "Alerta" => "simple",
+                    "Titulo" => "Error!",
+                    "Texto" => "No se ha seleccionado un proveedor",
+                    "Tipo" => "error"
+                ]);
+                exit();
+            }
+            $datos_articulo = mainModel::ejecutar_consulta_simple("SELECT * FROM articulos WHERE (codigo like '%$articulo%' OR desc_articulo like '%$articulo%') AND estado=1 AND idproveedores='$id_proveedor' ORDER BY desc_articulo DESC");
+
+            if ($datos_articulo->rowCount() >= 1) {
+                $tabla = '<div class="table-responsive"><table class="table table-hover table-bordered table-sm"><tbody>';
+                foreach ($datos_articulo->fetchAll() as $rows) {
+                    $tabla .= '<tr class="text-center">
+                    <td>' . $rows['codigo'] . ' - ' . $rows['desc_articulo'] . '</td>
+                    <td style="width:100px;"><input type="number" id="cantidad_' . $rows['id_articulo'] . '" class="form-control form-control-sm" value="1" min="1"></td>
+                    <td><button type="button" class="btn btn-primary btn-sm" onclick="agregar_articulo(' . $rows['id_articulo'] . ')"><i class="fas fa-plus-circle"></i></button></td>
+                </tr>';
+                }
+                $tabla .= '</tbody></table></div>';
+                return $tabla;
+            } else return '<div class="alert alert-warning">No se encontraron artículos que coincidan</div>';
+        }
+    }
     /**controlador buscador articulo */
     public function articulo_controlador()
     {
@@ -163,37 +198,6 @@ class pedidoControlador extends pedidoModelo
             echo json_encode($alerta);
             exit();
         }
-
-        // BUSCAR ARTÍCULO (HTML)
-        if (isset($_POST['buscar_articulo'])) {
-            $articulo = mainModel::limpiar_string($_POST['buscar_articulo']);
-            if ($articulo == "") return '<div class="alert alert-warning">Debes introducir código o descripción</div>';
-
-            $id_proveedor = $_SESSION['datos_proveedor']['ID'];
-            if (!isset($_SESSION['datos_proveedor']['ID'])) {
-                echo json_encode([
-                    "Alerta" => "simple",
-                    "Titulo" => "Error!",
-                    "Texto" => "No se ha seleccionado un proveedor",
-                    "Tipo" => "error"
-                ]);
-                exit();
-            }
-            $datos_articulo = mainModel::ejecutar_consulta_simple("SELECT * FROM articulos WHERE (codigo like '%$articulo%' OR desc_articulo like '%$articulo%') AND estado=1 AND idproveedores='$id_proveedor' ORDER BY desc_articulo DESC");
-
-            if ($datos_articulo->rowCount() >= 1) {
-                $tabla = '<div class="table-responsive"><table class="table table-hover table-bordered table-sm"><tbody>';
-                foreach ($datos_articulo->fetchAll() as $rows) {
-                    $tabla .= '<tr class="text-center">
-                    <td>' . $rows['codigo'] . ' - ' . $rows['desc_articulo'] . '</td>
-                    <td style="width:100px;"><input type="number" id="cantidad_' . $rows['id_articulo'] . '" class="form-control form-control-sm" value="1" min="1"></td>
-                    <td><button type="button" class="btn btn-primary btn-sm" onclick="agregar_articulo(' . $rows['id_articulo'] . ')"><i class="fas fa-plus-circle"></i></button></td>
-                </tr>';
-                }
-                $tabla .= '</tbody></table></div>';
-                return $tabla;
-            } else return '<div class="alert alert-warning">No se encontraron artículos que coincidan</div>';
-        }
     }
 
 
@@ -237,53 +241,82 @@ class pedidoControlador extends pedidoModelo
     public function agregar_pedido_controlador()
     {
         session_start(['name' => 'STR']);
-        if ($_SESSION['datos_articulo'] == 0) {
+
+        if (empty($_SESSION['datos_articulo'])) {
             $alerta = [
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "No has seleccionado ningun articulo para el pedido",
+                "Titulo" => "Ocurrió un error!",
+                "Texto" => "No has seleccionado ningun artículo para el pedido",
                 "Tipo" => "error"
             ];
             echo json_encode($alerta);
             exit();
         }
-        /**comprobar proveedor */
+
         if (empty($_SESSION['datos_proveedor'])) {
             $alerta = [
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "No has seleccionado ningun proveedor para el pedido",
+                "Titulo" => "Ocurrió un error!",
+                "Texto" => "No has seleccionado ningun proveedor",
                 "Tipo" => "error"
             ];
             echo json_encode($alerta);
             exit();
         }
-        $datos_pedido_agg = [
-            "usuario" => $_SESSION['id_str'],
-            "proveeodr" => $_SESSION['datos_proveedor']['ID']
 
+        /** Insertar cabecera */
+        $datos_pedido_agg = [
+            "usuario"   => $_SESSION['id_str'],
+            "proveedor" => $_SESSION['datos_proveedor']['ID']
         ];
-        $agregar_pedido = pedidoModelo::agregar_pedidoC_modelo($datos_pedido_agg);
-        if ($agregar_pedido->rowCount() != 1) {
+
+        $idPedidoCabecera = pedidoModelo::agregar_pedidoC_modelo($datos_pedido_agg);
+
+        if ($idPedidoCabecera <= 0) {
             $alerta = [
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "No hemos pedido registrar el pedido, favor intenté nuevamente",
+                "Titulo" => "Ocurrió un error inesperado!",
+                "Texto" => "No pudimos registrar la cabecera del pedido",
                 "Tipo" => "error"
             ];
             echo json_encode($alerta);
             exit();
         }
-        /**agregar detalle */
+
+        /** Insertar detalles */
         $errores_detalles = 0;
         foreach ($_SESSION['datos_articulo'] as $article) {
 
             $detalle_reg = [
-                "usuario" => $_SESSION['id_str'],
-                "id" => $_SESSION['id_str'],
+                "pedidoid" => $idPedidoCabecera,
+                "articulo" => $article['ID'],
                 "cantidad" => $article['cantidad']
+            ];
 
+            $detalleInsert = pedidoModelo::agregar_pedidoD_modelo($detalle_reg);
+
+            if ($detalleInsert->rowCount() != 1) {
+                $errores_detalles++;
+            }
+        }
+
+        if ($errores_detalles > 0) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Error parcial",
+                "Texto" => "El pedido se creó, pero algunos artículos no se guardaron",
+                "Tipo" => "warning"
+            ];
+        } else {
+            $alerta = [
+                "Alerta" => "recargar",
+                "Titulo" => "Pedido guardado!",
+                "Texto" => "El pedido se registró correctamente",
+                "Tipo" => "success"
             ];
         }
+        unset($_SESSION['datos_proveedor']);
+        unset($_SESSION['datos_articulo']);
+        echo json_encode($alerta);
     }
 }

@@ -95,7 +95,7 @@
     }
 
 
-    // AGREGAR ARTÍCULO
+    /** AGREGAR ARTÍCULO
     function agregar_articulo(id) {
         $('#ModalArticulo').modal('hide');
         let cantidad = document.querySelector('#cantidad_' + id).value.trim();
@@ -131,6 +131,37 @@
                     type: 'error',
                     confirmButtonText: 'Aceptar'
                 });
+            });
+    }**/
+    function agregar_articulo(id) {
+        $('#ModalArticulo').modal('hide');
+        let cantidad = document.querySelector('#cantidad_' + id).value.trim();
+
+        let datos = new FormData();
+        datos.append('id_agregar_articulo', id);
+        datos.append('detalle_cantidad', cantidad);
+
+        fetch("<?php echo SERVERURL ?>ajax/pedidoAjax.php", {
+                method: 'POST',
+                body: datos
+            })
+            .then(res => res.json())
+            .then(resp => {
+
+                Swal.fire({
+                    title: resp.Titulo,
+                    text: resp.Texto,
+                    type: resp.Tipo, // <<-- aquí sí usamos el tipo real
+                    confirmButtonText: 'Aceptar'
+                }).then(() => {
+                    if (resp.Alerta === "recargar") {
+                        location.reload();
+                    }
+                });
+            })
+            .catch(err => {
+                console.error("Error:", err);
+                Swal.fire("Error", "No se pudo procesar la petición", "error");
             });
     }
 </script>

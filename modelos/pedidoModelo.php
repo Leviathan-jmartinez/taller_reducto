@@ -6,24 +6,34 @@ class pedidoModelo extends mainModel
     /** modelo agregar pedido*/
     protected static function agregar_pedidoC_modelo($datos)
     {
-        $sql = mainModel::conectar()->prepare("INSERT INTO pedido_cabecera (id_usuario, fecha, id_proveedor, estado) VALUES(:usuario, now(), :proveedor, 1)");
+        $conexion = mainModel::conectar();
+        $sql = $conexion->prepare("INSERT INTO pedido_cabecera (id_usuario, fecha, id_proveedor, estado)
+                               VALUES(:usuario, NOW(), :proveedor, 1)");
         $sql->bindParam(":usuario", $datos['usuario']);
         $sql->bindParam(":proveedor", $datos['proveedor']);
         $sql->execute();
-        return $sql;
+
+        // retornar el ID autoincremental
+        return $conexion->lastInsertId();
     }
+
     /**modelo datos pedido */
     /** modelo agregar pedido detalle*/
 
     protected static function agregar_pedidoD_modelo($datos)
     {
-        $sql = mainModel::conectar()->prepare("INSERT INTO pedido_detalle (idpedido_cabecera, id_articulo, cantidad) VALUES(:pedidoid, :articulo, :cantidad)");
+        $sql = mainModel::conectar()->prepare(
+            "INSERT INTO pedido_detalle (idpedido_cabecera, id_articulo, cantidad)
+         VALUES (:pedidoid, :articulo, :cantidad)"
+        );
+
         $sql->bindParam(":pedidoid", $datos['pedidoid']);
-        $sql->bindParam(":usuario", $datos['usuario']);
+        $sql->bindParam(":articulo", $datos['articulo']);
         $sql->bindParam(":cantidad", $datos['cantidad']);
         $sql->execute();
         return $sql;
     }
+
     /**modelo datos pedido detalle*/
 
     /** modelo eliminar pedido*/
