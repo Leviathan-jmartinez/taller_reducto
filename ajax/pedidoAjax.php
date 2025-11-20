@@ -3,7 +3,7 @@ $peticionAjax = true;
 require_once "../config/APP.php";
 if (
     isset($_POST['buscar_proveedor']) || isset($_POST['id_agregar_proveedor']) || isset($_POST['id_eliminar_proveedor']) || isset($_POST['buscar_articulo'])
-    || isset($_POST['id_agregar_articulo']) || isset($_POST['id_eliminar_articulo']) || isset($_POST['agregar_pedido']) || isset($_POST['limpiar_pedido'])
+    || isset($_POST['id_agregar_articulo']) || isset($_POST['id_eliminar_articulo']) || isset($_POST['agregar_pedido']) || isset($_POST['limpiar_pedido']) || isset($_POST['pedido_id_del'])
 ) {
     /** Instancia al controlador */
     require_once "../controladores/pedidoControlador.php";
@@ -38,6 +38,9 @@ if (
         // Redirigir a la página de nuevo pedido
         header("Location: " . SERVERURL . "pedido-nuevo/");
         exit();
+    }
+    if (isset($_POST['pedido_id_del'])) {
+        echo $inst_pedido->anular_pedido_controlador();
     }
 } else {
     session_start(['name' => 'STR']);

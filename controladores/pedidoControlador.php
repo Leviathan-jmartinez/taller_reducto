@@ -200,9 +200,6 @@ class pedidoControlador extends pedidoModelo
         }
     }
 
-
-
-
     /**controlador eliminar articulo */
     public function eliminar_articulo_controlador()
     {
@@ -317,6 +314,182 @@ class pedidoControlador extends pedidoModelo
         }
         unset($_SESSION['datos_proveedor']);
         unset($_SESSION['datos_articulo']);
+        echo json_encode($alerta);
+    }
+
+    /**Controlador paginar articulos */
+    public function paginador_pedidos_controlador($pagina, $registros, $privilegio, $url, $busqueda)
+    {
+        $pagina = mainModel::limpiar_string($pagina);
+        $registros = mainModel::limpiar_string($registros);
+        $privilegio = mainModel::limpiar_string($privilegio);
+        $busqueda = mainModel::limpiar_string($busqueda);
+
+        $url = mainModel::limpiar_string($url);
+        $url = SERVERURL . $url . "/";
+
+        $tabla = "";
+
+        $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
+        $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
+
+        if (isset($busqueda) && $busqueda != "") {
+            $consulta = "SELECT SQL_CALC_FOUND_ROWS pc.idpedido_cabecera as idpedido_cabecera, pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPe, 
+            pc.id_proveedor as id_proveedor, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
+            p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick FROM pedido_cabecera pc
+            INNER JOIN proveedores p on p.idproveedores = pc.id_proveedor
+            INNER JOIN usuarios u on u.id_usuario = pc.id_usuario
+            WHERE ((ruc LIKE '%$busqueda%' OR idpedido_cabecera LIKE '%$busqueda%')) 
+            ORDER BY fecha ASC LIMIT $inicio,$registros";
+        } else {
+            $consulta = "SELECT SQL_CALC_FOUND_ROWS pc.idpedido_cabecera as idpedido_cabecera, pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPe, 
+            pc.id_proveedor as id_proveedor, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
+            p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick FROM pedido_cabecera pc
+            INNER JOIN proveedores p on p.idproveedores = pc.id_proveedor 
+            INNER JOIN usuarios u on u.id_usuario = pc.id_usuario
+            ORDER BY idpedido_cabecera ASC LIMIT $inicio,$registros";
+        }
+        $conexion = mainModel::conectar();
+        $datos = $conexion->query($consulta);
+        $datos = $datos->fetchAll();
+
+        $total = $conexion->query("SELECT FOUND_ROWS()");
+        $total = (int) $total->fetchColumn();
+
+        $Npaginas = ceil($total / $registros);
+
+        $tabla .= '<div class="table-responsive">
+					<table class="table table-dark table-sm">
+						<thead>
+							<tr class="text-center roboto-medium">
+								<th>#</th>
+								<th>CÓDIGO PEDIDO</th>
+                                <th>PROVEEDOR</th>
+                                <th>FECHA</th>
+                                <th>USUARIO</th>
+                                <th>ESTADO</th>';
+        if ($privilegio == 1 || $privilegio == 2) {
+            $tabla .=           '<th>ELIMINAR</th>';
+        }
+        $tabla .= '
+						</tr>
+						</thead>
+						<tbody>';
+        if ($total >= 1 && $pagina <= $Npaginas) {
+            $contador = $inicio + 1;
+            $reg_inicio = $inicio + 1;
+            foreach ($datos as $rows) {
+                switch ($rows['estadoPe']) {
+                    case 1:
+                        $estadoBadge = '<span class="badge bg-primary">Pendiente</span>';
+                        break;
+                    case 2:
+                        $estadoBadge = '<span class="badge bg-success">Procesado</span>';
+                        break;
+                    case 0:
+                        $estadoBadge = '<span class="badge bg-danger">Anulado</span>';
+                        break;
+                    default:
+                        $estadoBadge = '<span class="badge bg-secondary">Desconocido</span>';
+                }
+                $tabla .= '
+                            <tr class="text-center">
+								<td>' . $contador . '</td>
+								<td>' . $rows['idpedido_cabecera'] . '</td>
+								<td>' . $rows['razon_social'] . '</td>
+								<td>' . date("d-m-Y", strtotime($rows['fecha'])) . '</td>
+                                <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
+                                <td>' . $estadoBadge . '</td>';
+                if ($privilegio == 1 || $privilegio == 2) {
+                    $tabla .= '<td>
+									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/pedidoAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
+                                    <input type="hidden" name="pedido_id_del" value=' . mainModel::encryption($rows['idpedido_cabecera']) . '>
+										<button type="submit" class="btn btn-warning">
+											<i class="far fa-trash-alt"></i>
+										</button>
+									</form>
+								</td>';
+                }
+
+                $tabla .= '</tr>';
+                $contador++;
+            }
+            $reg_final = $contador - 1;
+        } else {
+            if ($total >= 1) {
+                $tabla .= '<tr class="text-center"> <td colspan="6"> <a href="' . $url . '" class="btn btn-reaised btn-primary btn-sm"> Haga click aqui para recargar el listado </a> </td> </tr> ';
+            } else {
+                $tabla .= '<tr class="text-center"> <td colspan="6"> No hay regitros en el sistema</td> </tr> ';
+            }
+        }
+
+        $tabla .= '       </tbody>
+					</table>
+				</div>';
+        if ($total >= 1 && $pagina <= $Npaginas) {
+            $tabla .= '<p class="text-right"> Mostrando registro ' . $reg_inicio . ' al ' . $reg_final . ' de un total de ' . $total . '</p>';
+            $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);
+        }
+        echo $tabla;
+    }
+    /**fin controlador */
+
+    /**Controlador anular pedido */
+    public function anular_pedido_controlador()
+    {
+        $id = mainModel::decryption($_POST['pedido_id_del']);
+        $id = mainModel::limpiar_string($id);
+
+        $check_pedido = mainModel::ejecutar_consulta_simple("SELECT idpedido_cabecera FROM pedido_cabecera WHERE idpedido_cabecera = '$id'");
+        if ($check_pedido->rowCount() < 0) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El pedido que intenta anular no existe en el sistema",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        $check_pedidoestado = mainModel::ejecutar_consulta_simple("SELECT idpedido_cabecera FROM pedido_cabecera WHERE idpedido_cabecera = '$id' AND estado = 2");
+        if ($check_pedidoestado->rowCount() > 0) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El pedido que intenta anular se encuentra procesado",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        session_start(['name' => 'STR']);
+        if ($_SESSION['nivel_str'] > 2) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "No tiene los permisos necesario para realizar esta operación",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        $anularPedido = pedidoModelo::anular_pedido_modelo($id);
+        if ($anularPedido->rowCount() == 1) {
+            $alerta = [
+                "Alerta" => "recargar",
+                "Titulo" => "Pedido Anulado!",
+                "Texto" => "El PEDIDO ha sido anulado correctamente",
+                "Tipo" => "success"
+            ];
+        } else {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "No se pudo anular el PEDIDO seleccionado",
+                "Tipo" => "error"
+            ];
+        }
         echo json_encode($alerta);
     }
 }

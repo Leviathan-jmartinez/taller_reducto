@@ -13,7 +13,7 @@
         <nav class="full-box nav-lateral-menu">
             <ul>
                 <li>
-                    <a href="<?php echo SERVERURL; ?>home/"><i class="fab fa-dashcube fa-fw"></i> &nbsp; Dashboard</a>
+                    <a href="<?php echo SERVERURL; ?>home/"><i class="fab fa-dashcube fa-fw"></i> &nbsp; Panel Principal</a>
                 </li>
 
                 <li>
@@ -52,28 +52,52 @@
                     <a href="#" class="nav-btn-submenu"><i class="fas fa-shopping-cart"></i> &nbsp; Compras <i class="fas fa-chevron-down"></i></a>
                     <ul>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>pedido-nuevo/"><i class="fas fa-file-alt fa-fw"></i> &nbsp; Pedidos</a>
+                            <a href="<?php echo SERVERURL; ?>pedido-lista/"><i class="fas fa-file-alt fa-fw"></i> &nbsp; Pedidos</a>
                         </li>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>reservacion/"><i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; Presupuestos</a>
+                            <a href="<?php echo SERVERURL; ?>presupuesto-lista/"><i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; Presupuestos</a>
                         </li>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>reservacion-pendiente/"><i class="fas fa-file-invoice fa-fw"></i> &nbsp; Ordenes de Compra</a>
+                            <a href="<?php echo SERVERURL; ?>ordencompra-lista/"><i class="fas fa-file-invoice fa-fw"></i> &nbsp; Ordenes de Compra</a>
                         </li>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>reservacion-lista/"><i class="fas fa-shopping-cart fa-fw"></i> &nbsp; Ingreso de Facturas</a>
+                            <a href="<?php echo SERVERURL; ?>facturas-lista/"><i class="fas fa-shopping-cart fa-fw"></i> &nbsp; Ingreso de Facturas</a>
                         </li>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>reservacion-buscar/"><i class="fas fa-box fa-fw"></i> &nbsp; Remisiones</a>
+                            <a href="<?php echo SERVERURL; ?>remisiones-buscar/"><i class="fas fa-box fa-fw"></i> &nbsp; Remisiones</a>
                         </li>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>reservacion-buscar/"><i class="fas fa-file-alt fa-fw"></i> &nbsp; Notas de Crédito</a>
+                            <a href="<?php echo SERVERURL; ?>notas-lista/"><i class="fas fa-file-alt fa-fw"></i> &nbsp; Notas de Crédito y Débito</a>
                         </li>
                     </ul>
                 </li>
                 <li>
                     <a href="#" class="nav-btn-submenu"><i class="fas fa-tools fa-fw"></i> &nbsp; Servicios <i class="fas fa-chevron-down"></i></a>
                     <ul>
+                        <li>
+                            <a href="<?php echo SERVERURL; ?>servicios-nuevo/"> <i class="fas fa-file-signature fa-fw"></i> &nbsp; Solicitud de Servicios
+                            </a>
+                        </li>
+                        <li>
+                            <a href="<?php echo SERVERURL; ?>promociones-lista/"> <i class="fas fa-tags fa-fw"></i> &nbsp; Promociones
+                            </a>
+                        </li>
+                        <li>
+                            <a href="<?php echo SERVERURL; ?>presupuestos-lista/"> <i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; Presupuestos de Trabajo
+                            </a>
+                        </li>
+                        <li>
+                            <a href="<?php echo SERVERURL; ?>ordentrabajo-lista/"> <i class="fas fa-clipboard-check fa-fw"></i> &nbsp; Ordenes de Trabajo
+                            </a>
+                        </li>
+                        <li>
+                            <a href="<?php echo SERVERURL; ?>regservicios-lista/"> <i class="fas fa-cogs fa-fw"></i> &nbsp; Registro de Servicios
+                            </a>
+                        </li>
+                        <li>
+                            <a href="<?php echo SERVERURL; ?>reclamos-lista/">  <i class="fas fa-exclamation-circle fa-fw"></i> &nbsp; Reclamos
+                            </a>
+                        </li>
                     </ul>
                 </li>
                 <li>

@@ -11,13 +11,7 @@
                         <a class="active" href="<?php echo SERVERURL; ?>pedido-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO PEDIDO </a>
                     </li>
                     <li>
-                        <a href="<?php echo SERVERURL; ?>reservacion/"><i class="far fa-calendar-alt"></i> &nbsp; RESERVACIONES</a>
-                    </li>
-                    <li>
-                        <a href="<?php echo SERVERURL; ?>reservacion-pendiente/"><i class="fas fa-hand-holding-usd fa-fw"></i> &nbsp; PRÉSTAMOS</a>
-                    </li>
-                    <li>
-                        <a href="<?php echo SERVERURL; ?>reservacion-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; FINALIZADOS</a>
+                        <a href="<?php echo SERVERURL; ?>pedido-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTADOS DE PEDIDOS</a>
                     </li>
                     <li>
                         <a href="<?php echo SERVERURL; ?>reservacion-buscar/"><i class="fas fa-search-dollar fa-fw"></i> &nbsp; BUSCAR POR FECHA</a>

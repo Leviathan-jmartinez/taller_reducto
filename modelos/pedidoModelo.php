@@ -35,21 +35,6 @@ class pedidoModelo extends mainModel
     }
 
     /**modelo datos pedido detalle*/
-
-    /** modelo eliminar pedido*/
-
-    protected static function eliminar_pedido_modelo($id, $tipo)
-    {
-        if ($tipo == "pedido") {
-            $sql = mainModel::conectar()->prepare("DELETE FROM pedido_cabecera WHERE idpedido_cabecera=:id");
-        } elseif ($tipo == "pedidoDetalle") {
-            $sql = mainModel::conectar()->prepare("DELETE FROM pedido_detalle WHERE idpedido_cabecera=:id");
-        }
-        $sql->bindParam(":id", $id);
-        $sql->execute();
-        return $sql;
-    }
-    /**modelo eliminar pedido */
     /** modelo seleccionar pedido*/
     protected static function datos_pedido_modelo($id, $tipo)
     {
@@ -67,5 +52,15 @@ class pedidoModelo extends mainModel
         return $sql;
     }
 
-    /** */
+    /**modelo anular articulo */
+    protected static function anular_pedido_modelo($id)
+    {
+        $sql = mainModel::conectar()->prepare("UPDATE pedido_cabecera
+        SET estado=0
+        WHERE idpedido_cabecera=:idpedido_cabecera");
+        $sql->bindParam(":idpedido_cabecera", $id);
+        $sql->execute();
+        return $sql;
+    }
+    /**fin modelo */
 }
