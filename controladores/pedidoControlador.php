@@ -347,6 +347,7 @@ class pedidoControlador extends pedidoModelo
             p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick FROM pedido_cabecera pc
             INNER JOIN proveedores p on p.idproveedores = pc.id_proveedor 
             INNER JOIN usuarios u on u.id_usuario = pc.id_usuario
+            WHERE pc.estado != 0
             ORDER BY idpedido_cabecera ASC LIMIT $inicio,$registros";
         }
         $conexion = mainModel::conectar();
