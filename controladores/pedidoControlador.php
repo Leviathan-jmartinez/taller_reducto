@@ -318,12 +318,13 @@ class pedidoControlador extends pedidoModelo
     }
 
     /**Controlador paginar articulos */
-    public function paginador_pedidos_controlador($pagina, $registros, $privilegio, $url, $busqueda)
+    public function paginador_pedidos_controlador($pagina, $registros, $privilegio, $url, $busqueda1, $busqueda2)
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
         $privilegio = mainModel::limpiar_string($privilegio);
-        $busqueda = mainModel::limpiar_string($busqueda);
+        $busqueda1 = mainModel::limpiar_string($busqueda1);
+        $busqueda2 = mainModel::limpiar_string($busqueda2);
 
         $url = mainModel::limpiar_string($url);
         $url = SERVERURL . $url . "/";
@@ -333,13 +334,13 @@ class pedidoControlador extends pedidoModelo
         $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
 
-        if (isset($busqueda) && $busqueda != "") {
+        if (!empty($busqueda1) && !empty($busqueda2)) {
             $consulta = "SELECT SQL_CALC_FOUND_ROWS pc.idpedido_cabecera as idpedido_cabecera, pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPe, 
             pc.id_proveedor as id_proveedor, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
             p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick FROM pedido_cabecera pc
             INNER JOIN proveedores p on p.idproveedores = pc.id_proveedor
             INNER JOIN usuarios u on u.id_usuario = pc.id_usuario
-            WHERE ((ruc LIKE '%$busqueda%' OR idpedido_cabecera LIKE '%$busqueda%')) 
+            WHERE date(fecha) >= '$busqueda1' AND date(fecha) <='$busqueda2'
             ORDER BY fecha ASC LIMIT $inicio,$registros";
         } else {
             $consulta = "SELECT SQL_CALC_FOUND_ROWS pc.idpedido_cabecera as idpedido_cabecera, pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPe, 

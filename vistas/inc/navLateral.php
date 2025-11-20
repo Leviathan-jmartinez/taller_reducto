@@ -16,35 +16,9 @@
                     <a href="<?php echo SERVERURL; ?>home/"><i class="fab fa-dashcube fa-fw"></i> &nbsp; Panel Principal</a>
                 </li>
 
-                <li>
-                    <a href="#" class="nav-btn-submenu"><i class="fas fa-users fa-fw"></i> &nbsp; Clientes <i class="fas fa-chevron-down"></i></a>
-                    <ul>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>cliente-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; Agregar Cliente</a>
-                        </li>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>cliente-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Lista de clientes</a>
-                        </li>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>cliente-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar cliente</a>
-                        </li>
-                    </ul>
-                </li>
 
-                <li>
-                    <a href="#" class="nav-btn-submenu"><i class="fas fa-pallet fa-fw"></i> &nbsp; Articulos <i class="fas fa-chevron-down"></i></a>
-                    <ul>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>articulo-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; Agregar Articulo</a>
-                        </li>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>articulo-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Lista de Articulos</a>
-                        </li>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>articulo-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar Articulo</a>
-                        </li>
-                    </ul>
-                </li>
+
+
                 <li>
                     <a href="<?php echo SERVERURL; ?>inventario-nuevo/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Inventarios</a>
                 </li>
@@ -83,6 +57,10 @@
                             </a>
                         </li>
                         <li>
+                            <a href="<?php echo SERVERURL; ?>descuentos-lista/"> <i class="fas fa-tags fa-fw"></i> &nbsp; Descuentos
+                            </a>
+                        </li>
+                        <li>
                             <a href="<?php echo SERVERURL; ?>presupuestos-lista/"> <i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; Presupuestos de Trabajo
                             </a>
                         </li>
@@ -95,7 +73,7 @@
                             </a>
                         </li>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>reclamos-lista/">  <i class="fas fa-exclamation-circle fa-fw"></i> &nbsp; Reclamos
+                            <a href="<?php echo SERVERURL; ?>reclamos-lista/"> <i class="fas fa-exclamation-circle fa-fw"></i> &nbsp; Reclamos
                             </a>
                         </li>
                     </ul>
@@ -103,6 +81,34 @@
                 <li>
                     <a href="#" class="nav-btn-submenu"><i class="fas fa-cog fa-fw"></i> &nbsp; Administración <i class="fas fa-chevron-down"></i></a>
                     <ul>
+                        <li>
+                            <a href="#" class="nav-btn-submenu"><i class="fas fa-users fa-fw"></i> &nbsp; Clientes <i class="fas fa-chevron-down"></i></a>
+                            <ul>
+                                <li>
+                                    <a href="<?php echo SERVERURL; ?>cliente-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; Agregar Cliente</a>
+                                </li>
+                                <li>
+                                    <a href="<?php echo SERVERURL; ?>cliente-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Lista de clientes</a>
+                                </li>
+                                <li>
+                                    <a href="<?php echo SERVERURL; ?>cliente-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar cliente</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="#" class="nav-btn-submenu"><i class="fas fa-pallet fa-fw"></i> &nbsp; Articulos <i class="fas fa-chevron-down"></i></a>
+                            <ul>
+                                <li>
+                                    <a href="<?php echo SERVERURL; ?>articulo-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; Agregar Articulo</a>
+                                </li>
+                                <li>
+                                    <a href="<?php echo SERVERURL; ?>articulo-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Lista de Articulos</a>
+                                </li>
+                                <li>
+                                    <a href="<?php echo SERVERURL; ?>articulo-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar Articulo</a>
+                                </li>
+                            </ul>
+                        </li>
                         <li>
                             <a href="<?php echo SERVERURL; ?>ciudad-lista/"><i class="fas fa-city"></i> &nbsp; Ciudades</a>
                         </li>
