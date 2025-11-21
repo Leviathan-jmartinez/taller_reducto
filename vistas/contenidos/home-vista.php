@@ -7,8 +7,8 @@
 <!-- Content -->
 <div class="full-box tile-container">
 	<?php require_once "./controladores/clienteControlador.php";
-		$ins_cliente = new clienteControlador;
-		$total_client = $ins_cliente->datos_cliente_controlador("Conteo",0);
+	$ins_cliente = new clienteControlador;
+	$total_client = $ins_cliente->datos_cliente_controlador("Conteo", 0);
 	?>
 	<a href="<?php echo SERVERURL; ?>cliente-lista/" class="tile">
 		<div class="tile-tittle">Clientes</div>
@@ -18,8 +18,8 @@
 		</div>
 	</a>
 	<?php require_once "./controladores/articuloControlador.php";
-		$ins_arti = new articuloControlador;
-		$total_arti = $ins_arti->datos_articulos_controlador("Conteo",0);
+	$ins_arti = new articuloControlador;
+	$total_arti = $ins_arti->datos_articulos_controlador("Conteo", 0);
 	?>
 	<a href="<?php echo SERVERURL; ?>articulo-lista/" class="tile">
 		<div class="tile-tittle">Articulos</div>
@@ -28,14 +28,17 @@
 			<p><?php echo $total_arti->rowCount(); ?> Registrados</p>
 		</div>
 	</a>
-
-	<a href="<?php echo SERVERURL; ?>reservacion/" class="tile">
-		<div class="tile-tittle">Reservaciones</div>
+	<?php require_once "./controladores/pedidoControlador.php";
+	$ins_pedi = new pedidoControlador;
+	$total_pedi = $ins_pedi->datos_pedido_controlador("conteoActivos", 0);
+	?>
+	<a href="<?php echo SERVERURL; ?>Pedidos de Compra/" class="tile">
+		<div class="tile-tittle">Pedidos de Compra</div>
 		<div class="tile-icon">
-			<i class="far fa-calendar-alt fa-fw"></i>
+			<i class="fas fa-shopping-cart"></i>
 			<p>30 Registradas</p>
 		</div>
-	</a>	
+	</a>
 
 	<a href="<?php echo SERVERURL; ?>reservacion-pendiente/" class="tile">
 		<div class="tile-tittle">Prestamos</div>
