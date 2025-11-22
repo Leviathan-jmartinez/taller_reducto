@@ -36,7 +36,7 @@ class pedidoModelo extends mainModel
 
     /**modelo datos pedido detalle*/
     /** modelo seleccionar pedido*/
-    protected static function datos_pedido_modelo($id, $tipo)
+    protected static function datos_pedido_modelo($tipo,$id)
     {
         if ($tipo == "unico") {
             $sql = mainModel::conectar()->prepare("SELECT * FROM pedido_cabecera WHERE idpedido_cabecera=:id");
@@ -52,15 +52,17 @@ class pedidoModelo extends mainModel
         return $sql;
     }
 
-    /**modelo anular articulo */
-    protected static function anular_pedido_modelo($id)
+    /**modelo anular pedido */
+    protected static function anular_pedido_modelo($datos)
     {
         $sql = mainModel::conectar()->prepare("UPDATE pedido_cabecera
-        SET estado=0
+        SET estado=0, updatedby=:updatedby, updated=now()
         WHERE idpedido_cabecera=:idpedido_cabecera");
-        $sql->bindParam(":idpedido_cabecera", $id);
+        $sql->bindParam(":updatedby", $datos['updatedby']);
+        $sql->bindParam(":idpedido_cabecera", $datos['idpedido_cabecera']);
         $sql->execute();
         return $sql;
     }
     /**fin modelo */
+
 }

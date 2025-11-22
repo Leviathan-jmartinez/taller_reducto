@@ -127,17 +127,12 @@ class pedidoControlador extends pedidoModelo
         if (isset($_POST['buscar_articulo'])) {
             $articulo = mainModel::limpiar_string($_POST['buscar_articulo']);
             if ($articulo == "") return '<div class="alert alert-warning">Debes introducir código o descripción</div>';
-
-            $id_proveedor = $_SESSION['datos_proveedor']['ID'];
+        
             if (!isset($_SESSION['datos_proveedor']['ID'])) {
-                echo json_encode([
-                    "Alerta" => "simple",
-                    "Titulo" => "Error!",
-                    "Texto" => "No se ha seleccionado un proveedor",
-                    "Tipo" => "error"
-                ]);
+                return '<div class="alert alert-danger">No se ha seleccionado un proveedor</div>';
                 exit();
             }
+            $id_proveedor = $_SESSION['datos_proveedor']['ID'];
             $datos_articulo = mainModel::ejecutar_consulta_simple("SELECT * FROM articulos WHERE (codigo like '%$articulo%' OR desc_articulo like '%$articulo%') AND estado=1 AND idproveedores='$id_proveedor' ORDER BY desc_articulo DESC");
 
             if ($datos_articulo->rowCount() >= 1) {
@@ -233,6 +228,7 @@ class pedidoControlador extends pedidoModelo
 
         return pedidoModelo::datos_pedido_modelo($tipo, $id);
     }
+
 
     /**controlador agregar pedido */
     public function agregar_pedido_controlador()
@@ -337,7 +333,9 @@ class pedidoControlador extends pedidoModelo
         if (!empty($busqueda1) && !empty($busqueda2)) {
             $consulta = "SELECT SQL_CALC_FOUND_ROWS pc.idpedido_cabecera as idpedido_cabecera, pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPe, 
             pc.id_proveedor as id_proveedor, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
-            p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick FROM pedido_cabecera pc
+            p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick, pc.updated as updated,
+            pc.updatedby as updatedby
+            FROM pedido_cabecera pc
             INNER JOIN proveedores p on p.idproveedores = pc.id_proveedor
             INNER JOIN usuarios u on u.id_usuario = pc.id_usuario
             WHERE date(fecha) >= '$busqueda1' AND date(fecha) <='$busqueda2'
@@ -345,7 +343,9 @@ class pedidoControlador extends pedidoModelo
         } else {
             $consulta = "SELECT SQL_CALC_FOUND_ROWS pc.idpedido_cabecera as idpedido_cabecera, pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPe, 
             pc.id_proveedor as id_proveedor, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
-            p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick FROM pedido_cabecera pc
+            p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick, pc.updated as updated,
+            pc.updatedby as updatedby
+            FROM pedido_cabecera pc
             INNER JOIN proveedores p on p.idproveedores = pc.id_proveedor 
             INNER JOIN usuarios u on u.id_usuario = pc.id_usuario
             WHERE pc.estado != 0
@@ -368,7 +368,7 @@ class pedidoControlador extends pedidoModelo
 								<th>CÓDIGO PEDIDO</th>
                                 <th>PROVEEDOR</th>
                                 <th>FECHA</th>
-                                <th>USUARIO</th>
+                                <th>CREADO POR</th>
                                 <th>ESTADO</th>';
         if ($privilegio == 1 || $privilegio == 2) {
             $tabla .=           '<th>ELIMINAR</th>';
@@ -476,8 +476,12 @@ class pedidoControlador extends pedidoModelo
             echo json_encode($alerta);
             exit();
         }
-        $anularPedido = pedidoModelo::anular_pedido_modelo($id);
-        if ($anularPedido->rowCount() == 1) {
+        $datos_pedido_del = [
+            "updatedby" => $_SESSION['id_str'],
+            "idpedido_cabecera" => $id
+        ];
+
+        if (pedidoModelo::anular_pedido_modelo($datos_pedido_del)) {
             $alerta = [
                 "Alerta" => "recargar",
                 "Titulo" => "Pedido Anulado!",

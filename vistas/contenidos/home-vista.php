@@ -36,7 +36,7 @@
 		<div class="tile-tittle">Pedidos de Compra</div>
 		<div class="tile-icon">
 			<i class="fas fa-shopping-cart"></i>
-			<p>30 Registradas</p>
+			<p><?php echo $total_pedi->rowCount(); ?> Registradas</p>
 		</div>
 	</a>
 

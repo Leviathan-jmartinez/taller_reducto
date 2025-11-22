@@ -5,9 +5,9 @@ class vistasModelo
     protected static function obtenVista_modelo($vistas)
     {
         $lista_blanca = ["home", "articulo-actualizar", "articulo-buscar", "articulo-lista", "articulo-nuevo", 
-        "cliente-actualizar", "cliente-buscar", "cliente-lista", "cliente-nuevo", "company", "reservacion-actualizar", 
-        "pedido-buscar", "reservacion-lista", "pedido-nuevo", "reservacion-pendiente", "reservacion", 
-        "usuario-actualizar", "usuario-buscar", "usuario-lista", "usuario-nuevo","pedido-lista"];
+        "cliente-actualizar", "cliente-buscar", "cliente-lista", "cliente-nuevo", "company",        
+        "usuario-actualizar", "usuario-buscar", "usuario-lista", "usuario-nuevo","pedido-lista","pedido-nuevo","pedido-buscar",
+        "presupuesto-nuevo", "presupuesto-lista","presupuesto-buscar"];
         if (in_array($vistas, $lista_blanca)) {
             if (is_file("./vistas/contenidos/" . $vistas . "-vista.php")) {
                 $contenido = "./vistas/contenidos/" . $vistas . "-vista.php";

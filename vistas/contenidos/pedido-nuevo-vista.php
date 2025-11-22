@@ -46,7 +46,7 @@
                                     <tr class="text-center roboto-medium">
                                         <th>#</th>
                                         <th>CODIGO</th>
-                                        <th>ITEM</th>
+                                        <th>DESCRIPCION</th>
                                         <th>CANTIDAD</th>
                                         <th>ELIMINAR</th>
                                     </tr>
@@ -98,22 +98,24 @@
                             </table>
                         </div>
                     </div>
-                    <form class="FormularioAjax" action="<?php echo SERVERURL ?>ajax/pedidoAjax.php" method="POST" data-form="save" autocomplete="off">
-                        <input type="hidden" name="agregar_pedido" value="1">
-                        <br><br><br>
-                        <p class="text-center" style="margin-top: 40px;">
-                            <button type="submit" class="btn btn-raised btn-info btn-sm"><i class="far fa-save"></i> &nbsp; GUARDAR</button>
-                        </p>
-                    </form>
-                    <form action="<?php echo SERVERURL ?>ajax/pedidoAjax.php" method="POST" data-form="loans" autocomplete="off">
-                        <input type="hidden" name="limpiar_pedido" value="1">
+                    <div style="display: flex; justify-content: center; gap: 25px; margin-top: 30px;">
 
-                        <p class="text-center">
+                        <form class="FormularioAjax" action="<?php echo SERVERURL ?>ajax/pedidoAjax.php" method="POST" data-form="save" autocomplete="off" style="margin:0;">
+                            <input type="hidden" name="agregar_pedido" value="1">
+                            <button type="submit" class="btn btn-raised btn-info btn-sm">
+                                <i class="far fa-save"></i> &nbsp; GUARDAR
+                            </button>
+                        </form>
+
+                        <form action="<?php echo SERVERURL ?>ajax/pedidoAjax.php" method="POST" data-form="loans" autocomplete="off" style="margin:0;">
+                            <input type="hidden" name="limpiar_pedido" value="1">
                             <button type="submit" class="btn btn-raised btn-secondary btn-sm">
                                 <i class="fas fa-paint-roller"></i> &nbsp; LIMPIAR
                             </button>
-                        </p>
-                    </form>
+                        </form>
+
+                    </div>
+
                 </div>
             </div>
 
@@ -164,7 +166,7 @@
                         <div class="modal-body">
                             <div class="container-fluid">
                                 <div class="form-group">
-                                    <label for="input_item" class="bmd-label-floating">Código, Nombre</label>
+                                    <label for="input_item" class="bmd-label-floating">Código, descripción</label>
                                     <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" class="form-control" name="input_articulo" id="input_articulo" maxlength="30">
 
                                 </div>
@@ -218,4 +220,4 @@
 
 
 
-            <?php include_once "./vistas/inc/pedido.php" ?>/
+            <?php include_once "./vistas/inc/pedido.php" ?>
