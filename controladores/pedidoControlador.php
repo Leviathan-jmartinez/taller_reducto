@@ -127,7 +127,7 @@ class pedidoControlador extends pedidoModelo
         if (isset($_POST['buscar_articulo'])) {
             $articulo = mainModel::limpiar_string($_POST['buscar_articulo']);
             if ($articulo == "") return '<div class="alert alert-warning">Debes introducir código o descripción</div>';
-        
+
             if (!isset($_SESSION['datos_proveedor']['ID'])) {
                 return '<div class="alert alert-danger">No se ha seleccionado un proveedor</div>';
                 exit();
@@ -153,8 +153,6 @@ class pedidoControlador extends pedidoModelo
     public function articulo_controlador()
     {
         session_start(['name' => 'STR']);
-        ini_set('log_errors', 1);
-        ini_set('error_log', '/path/to/php-error.log');
         // AGREGAR ARTÍCULO
         if (isset($_POST['id_agregar_articulo'])) {
 
@@ -194,7 +192,7 @@ class pedidoControlador extends pedidoModelo
             exit();
         }
     }
-
+    /**fin controlador */
     /**controlador eliminar articulo */
     public function eliminar_articulo_controlador()
     {
@@ -228,7 +226,7 @@ class pedidoControlador extends pedidoModelo
 
         return pedidoModelo::datos_pedido_modelo($tipo, $id);
     }
-
+    /**fin controlador */
 
     /**controlador agregar pedido */
     public function agregar_pedido_controlador()
@@ -312,7 +310,7 @@ class pedidoControlador extends pedidoModelo
         unset($_SESSION['datos_articulo']);
         echo json_encode($alerta);
     }
-
+    /**fin controlador */
     /**Controlador paginar articulos */
     public function paginador_pedidos_controlador($pagina, $registros, $privilegio, $url, $busqueda1, $busqueda2)
     {
@@ -498,4 +496,5 @@ class pedidoControlador extends pedidoModelo
         }
         echo json_encode($alerta);
     }
+    /**fin controlador */
 }

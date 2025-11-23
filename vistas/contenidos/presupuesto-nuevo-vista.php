@@ -1,6 +1,5 @@
 <?php
-include_once "./vistas/inc/pedido.php";
-include_once "./vistas/inc/scripts.php";
+
 // Iniciar sesión solo si no está activa
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -43,12 +42,12 @@ $tipo = $_SESSION['tipo_presupuesto'] ?? null;
     <?php if ($tipo === 'sin_pedido') { ?>
         <!-- SIN PEDIDO: agregar proveedor y artículos manualmente -->
         <div class="text-center mb-3">
-            <?php if (empty($_SESSION['datos_proveedor'])) { ?>
-                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#Modalproveedor">
+            <?php if (empty($_SESSION['datos_proveedorPre'])) { ?>
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalproveedorPre">
                     <i class="fas fa-user-plus"></i> &nbsp; Agregar Proveedor
                 </button>
             <?php } ?>
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalArticulo">
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalArticuloPre">
                 <i class="fas fa-box-open"></i> &nbsp; Agregar artículo
             </button>
         </div>
@@ -64,12 +63,12 @@ $tipo = $_SESSION['tipo_presupuesto'] ?? null;
     <!-- Mostrar proveedor seleccionado -->
     <div>
         <span class="roboto-medium">PROVEEDOR:</span>
-        <?php if (empty($_SESSION['datos_proveedor'])) { ?>
+        <?php if (empty($_SESSION['datos_proveedorPre'])) { ?>
             <span class="text-danger">&nbsp; <i class="fas fa-exclamation-triangle"></i> Seleccione un Proveedor</span>
         <?php } else { ?>
-            <form class="FormularioAjax" action="<?php echo SERVERURL ?>ajax/pedidoAjax.php" method="POST" data-form="loans" style="display:inline-block;">
-                <input type="hidden" name="id_eliminar_proveedor" value="<?php echo $_SESSION['datos_proveedor']['ID']; ?>">
-                <?php echo $_SESSION['datos_proveedor']['RAZON'] . " (" . $_SESSION['datos_proveedor']['RUC'] . ")"; ?>
+            <form class="FormularioAjax" action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php" method="POST" data-form="loans" style="display:inline-block;">
+                <input type="hidden" name="id_eliminar_proveedorPre" value="<?php echo $_SESSION['datos_proveedorPre']['ID']; ?>">
+                <?php echo $_SESSION['datos_proveedorPre']['RAZON'] . " (" . $_SESSION['datos_proveedorPre']['RUC'] . ")"; ?>
                 <button type="submit" class="btn btn-danger"><i class="fas fa-user-times"></i></button>
             </form>
         <?php } ?>
@@ -91,36 +90,40 @@ $tipo = $_SESSION['tipo_presupuesto'] ?? null;
             </thead>
             <tbody>
                 <?php
-                if (isset($_SESSION['datos_articulo']) && count($_SESSION['datos_articulo']) >= 1) {
-                    $_SESSION['pedido_articulo'] = 0;
+                if (isset($_SESSION['datos_articuloPre']) && count($_SESSION['datos_articuloPre']) >= 1) {
+                    $_SESSION['presupuesto_articulo'] = 0;
+                    $_SESSION['total_pre'] = 0;
                     $contador = 1;
-                    foreach ($_SESSION['datos_articulo'] as $article):
-                        $_SESSION['pedido_articulo'] += $article['cantidad'];
+                    foreach ($_SESSION['datos_articuloPre'] as $article):
+                        $_SESSION['presupuesto_articulo'] += $article['cantidad'];
+                        $_SESSION['total_pre'] += $article['subtotal'];
                 ?>
                         <tr class="text-center">
                             <td><?php echo $contador++; ?></td>
                             <td><?php echo $article['codigo']; ?></td>
                             <td><?php echo $article['descripcion']; ?></td>
                             <td><?php echo $article['cantidad']; ?></td>
-                            <td><?php echo $article['cantidad']; ?></td>
-                            <td><?php echo $article['cantidad']; ?></td>
+                            <td><?php echo number_format($article['precio'], 0, ',', '.'); ?></td>
+                            <td><?php echo number_format($article['subtotal'], 0, ',', '.'); ?></td>
                             <td>
-                                <form class="FormularioAjax" action="<?php echo SERVERURL; ?>ajax/pedidoAjax.php" method="POST" data-form="loans">
-                                    <input type="hidden" name="id_eliminar_articulo" value="<?php echo $article['ID']; ?>">
+                                <form class="FormularioAjax" action="<?php echo SERVERURL; ?>ajax/presupuestoAjax.php" method="POST" data-form="loans">
+                                    <input type="hidden" name="id_eliminar_articuloPre" value="<?php echo $article['ID']; ?>">
                                     <button type="submit" class="btn btn-warning"><i class="far fa-trash-alt"></i></button>
                                 </form>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                     <tr class="text-center bg-light">
-                        <td colspan="2"></td>
                         <td><strong>TOTAL</strong></td>
-                        <td><strong><?php echo $_SESSION['pedido_articulo']; ?> articulos</strong></td>
+                        <td colspan="2"></td>
+                        <td><strong><?php echo $_SESSION['presupuesto_articulo']; ?> unidades</strong></td>
+                        <td></td>
+                        <td><strong><?php echo number_format($_SESSION['total_pre'], 0, ',', '.'); ?> </strong></td>
                         <td></td>
                     </tr>
                 <?php
                 } else {
-                    $_SESSION['pedido_articulo'] = 0;
+                    $_SESSION['presupuesto_articulo'] = 0;
                 ?>
                     <tr class="text-center bg-light">
                         <td colspan="8">No has seleccionado articulos</td>
@@ -147,17 +150,7 @@ $tipo = $_SESSION['tipo_presupuesto'] ?? null;
     </div>
 </div>
 
-<!-- Mostrar modal si no hay selección -->
-<script>
-    $(document).ready(function() {
-        <?php if (empty($_SESSION['tipo_presupuesto'])): ?>
-            $('#ModalTipoPresupuesto').modal({
-                backdrop: 'static',
-                keyboard: false
-            });
-        <?php endif; ?>
-    });
-</script>
+
 
 <!-- Modal de selección inicial -->
 <div class="modal fade" id="ModalTipoPresupuesto" tabindex="-1" role="dialog" aria-hidden="true">
@@ -182,11 +175,11 @@ $tipo = $_SESSION['tipo_presupuesto'] ?? null;
 </div>
 
 <!-- MODAL proveedor -->
-<div class="modal fade" id="Modalproveedor" tabindex="-1" role="dialog" aria-labelledby="Modalproveedor" aria-hidden="true">
+<div class="modal fade" id="ModalproveedorPre" tabindex="-1" role="dialog" aria-labelledby="ModalproveedorPre" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="Modalproveedor">Agregar Proovedor</h5>
+                <h5 class="modal-title" id="ModalproveedorPre">Agregar Proovedor</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -199,13 +192,13 @@ $tipo = $_SESSION['tipo_presupuesto'] ?? null;
                     </div>
                 </div>
                 <br>
-                <div class="container-fluid" id="tabla_proveedor">
+                <div class="container-fluid" id="tabla_proveedorPre">
 
                 </div>
 
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" onclick="buscar_proveedor()"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar</button>
+                <button type="button" class="btn btn-primary" onclick="buscar_proveedorPre()"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar</button>
                 &nbsp; &nbsp;
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
             </div>
@@ -215,11 +208,11 @@ $tipo = $_SESSION['tipo_presupuesto'] ?? null;
 
 
 <!-- MODAL ITEM -->
-<div class="modal fade" id="ModalArticulo" tabindex="-1" role="dialog" aria-labelledby="ModalArticulo" aria-hidden="true">
+<div class="modal fade" id="ModalArticuloPre" tabindex="-1" role="dialog" aria-labelledby="ModalArticuloPre" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="ModalArticulo">Agregar Articulo</h5>
+                <h5 class="modal-title" id="ModalArticuloPre">Agregar Articulo</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -233,12 +226,12 @@ $tipo = $_SESSION['tipo_presupuesto'] ?? null;
                     </div>
                 </div>
                 <br>
-                <div class="container-fluid" id="tabla_articulos">
+                <div class="container-fluid" id="tabla_articulosPre">
                 </div>
 
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" onclick="buscar_articulo()"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar</button>
+                <button type="button" class="btn btn-primary" onclick="buscar_articuloPre()"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar</button>
                 &nbsp; &nbsp;
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
             </div>
@@ -247,34 +240,15 @@ $tipo = $_SESSION['tipo_presupuesto'] ?? null;
 </div>
 
 
-<!-- MODAL AGREGAR ITEM -->
-<div class="modal fade" id="ModalAgregarArticulo" tabindex="-1" role="dialog" aria-labelledby="ModalAgregarArticulo" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <form class="modal-content FormularioAjax" action="<?php echo SERVERURL; ?>ajax/pedidoAjax.php" method="POST" data-form="save" autocomplete="off">
-            <div class="modal-header">
-                <h5 class="modal-title" id="ModalAgregararticulo">Selecciona la cantidad de articulos</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" name="id_agregar_articulo" id="id_agregar_articulo">
-                <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-12 col-md-4">
-                            <div class="form-group">
-                                <label for="detalle_cantidad" class="bmd-label-floating">Cantidad de items</label>
-                                <input type="num" pattern="[0-9]{1,7}" class="form-control" name="detalle_cantidad" id="detalle_cantidad" maxlength="7" required="">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn btn-primary">Agregar</button>
-                &nbsp; &nbsp;
-                <button type="button" class="btn btn-secondary" onclick="modal_buscar_articulo()">Cancelar</button>
-            </div>
-        </form>
-    </div>
-</div>
+
+<?php include_once "./vistas/inc/presupuestoCompra.php";
+include_once "./vistas/inc/scripts.php"; ?>
+
+<!-- Mostrar modal si no hay selección -->
+<script>
+    $(document).ready(function() {
+        <?php if (empty($_SESSION['tipo_presupuesto'])): ?>
+            $('#ModalTipoPresupuesto').modal({});
+        <?php endif; ?>
+    });
+</script>

@@ -186,37 +186,7 @@
             </div>
 
 
-            <!-- MODAL AGREGAR ITEM -->
-            <div class="modal fade" id="ModalAgregarArticulo" tabindex="-1" role="dialog" aria-labelledby="ModalAgregarArticulo" aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                    <form class="modal-content FormularioAjax" action="<?php echo SERVERURL; ?>ajax/pedidoAjax.php" method="POST" data-form="save" autocomplete="off">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="ModalAgregararticulo">Selecciona la cantidad de articulos</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <input type="hidden" name="id_agregar_articulo" id="id_agregar_articulo">
-                            <div class="container-fluid">
-                                <div class="row">
-                                    <div class="col-12 col-md-4">
-                                        <div class="form-group">
-                                            <label for="detalle_cantidad" class="bmd-label-floating">Cantidad de items</label>
-                                            <input type="num" pattern="[0-9]{1,7}" class="form-control" name="detalle_cantidad" id="detalle_cantidad" maxlength="7" required="">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="submit" class="btn btn-primary">Agregar</button>
-                            &nbsp; &nbsp;
-                            <button type="button" class="btn btn-secondary" onclick="modal_buscar_articulo()">Cancelar</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+
 
 
 
