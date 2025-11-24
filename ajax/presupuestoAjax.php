@@ -4,7 +4,7 @@ $peticionAjax = true;
 require_once "../config/APP.php";
 if (
     isset($_POST['buscar_proveedorPre']) || isset($_POST['id_agregar_proveedorPre']) || isset($_POST['id_eliminar_proveedorPre']) || isset($_POST['buscar_articuloPre'])
-    || isset($_POST['id_agregar_articuloPre']) || isset($_POST['id_eliminar_articuloPre']) || isset($_POST['agregar_pedido']) || isset($_POST['limpiar_presupuesto']) || isset($_POST['pedido_id_del'])
+    || isset($_POST['id_agregar_articuloPre']) || isset($_POST['id_eliminar_articuloPre']) || isset($_POST['agregar_presupuesto']) || isset($_POST['limpiar_presupuesto']) || isset($_POST['pedido_id_del'])
 ) {
     /** Instancia al controlador */
     require_once "../controladores/presupuestoControlador.php";
@@ -24,6 +24,9 @@ if (
     }
     if (isset($_POST['id_agregar_articuloPre'])) {
         echo $inst_presu->articulo_controlador();
+    }
+    if (isset($_POST['agregar_presupuesto'])) {
+        echo $inst_presu->agregar_presupuesto_controlador();
     }
     if (isset($_POST['limpiar_presupuesto'])) {
         session_start(['name' => 'STR']);

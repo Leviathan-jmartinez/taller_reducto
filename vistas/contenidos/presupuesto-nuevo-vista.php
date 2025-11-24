@@ -61,18 +61,24 @@ $tipo = $_SESSION['tipo_presupuesto'] ?? null;
     <?php } ?>
 
     <!-- Mostrar proveedor seleccionado -->
-    <div>
+
+    <div class="col-12 col-md-6">
         <span class="roboto-medium">PROVEEDOR:</span>
         <?php if (empty($_SESSION['datos_proveedorPre'])) { ?>
-            <span class="text-danger">&nbsp; <i class="fas fa-exclamation-triangle"></i> Seleccione un Proveedor</span>
+            <span class="text-danger">&nbsp;
+                <i class="fas fa-exclamation-triangle"></i> Seleccione un Proveedor
+            </span>
         <?php } else { ?>
-            <form class="FormularioAjax" action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php" method="POST" data-form="loans" style="display:inline-block;">
+            <form class="FormularioAjax d-inline-block" action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php" method="POST" data-form="loans">
                 <input type="hidden" name="id_eliminar_proveedorPre" value="<?php echo $_SESSION['datos_proveedorPre']['ID']; ?>">
                 <?php echo $_SESSION['datos_proveedorPre']['RAZON'] . " (" . $_SESSION['datos_proveedorPre']['RUC'] . ")"; ?>
                 <button type="submit" class="btn btn-danger"><i class="fas fa-user-times"></i></button>
             </form>
         <?php } ?>
     </div>
+
+    <!-- DERECHA -->
+
 
     <!-- Tabla de artículos -->
     <div class="table-responsive mt-3">
@@ -137,6 +143,12 @@ $tipo = $_SESSION['tipo_presupuesto'] ?? null;
     <div style="display: flex; justify-content: center; gap: 25px; margin-top: 30px;">
         <form class="FormularioAjax" action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php" method="POST" data-form="save" autocomplete="off" style="margin:0;">
             <input type="hidden" name="agregar_presupuesto" value="1">
+            <div class="col-12 col-md-6 text-md-right">
+                <div class="form-group mb-0">
+                    <label for="fecha_vencimientoPre">Fecha Vencimiento</label>
+                    <input type="date" class="form-control" name="fecha_vencimientoPre" id="fecha_vencimientoPre">
+                </div>
+            </div>
             <button type="submit" class="btn btn-raised btn-info btn-sm">
                 <i class="far fa-save"></i> &nbsp; GUARDAR
             </button>

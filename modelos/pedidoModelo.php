@@ -17,9 +17,8 @@ class pedidoModelo extends mainModel
         return $conexion->lastInsertId();
     }
 
-    /**modelo datos pedido */
+    /**fin modelo */
     /** modelo agregar pedido detalle*/
-
     protected static function agregar_pedidoD_modelo($datos)
     {
         $sql = mainModel::conectar()->prepare(
@@ -33,10 +32,10 @@ class pedidoModelo extends mainModel
         $sql->execute();
         return $sql;
     }
-
+    /**fin modelo */
     /**modelo datos pedido detalle*/
     /** modelo seleccionar pedido*/
-    protected static function datos_pedido_modelo($tipo,$id)
+    protected static function datos_pedido_modelo($tipo, $id)
     {
         if ($tipo == "unico") {
             $sql = mainModel::conectar()->prepare("SELECT * FROM pedido_cabecera WHERE idpedido_cabecera=:id");
@@ -64,5 +63,4 @@ class pedidoModelo extends mainModel
         return $sql;
     }
     /**fin modelo */
-
 }
