@@ -230,24 +230,23 @@ class presupuestoControlador extends presupuestoModelo
     public function agregar_presupuesto_controlador()
     {
         session_start(['name' => 'STR']);
-        $fecha_venc = $_POST['fecha_vencimientoPre'];
-
-        if (empty($_SESSION['datos_articuloPre'])) {
-            $alerta = [
-                "Alerta" => "simple",
-                "Titulo" => "Ocurrió un error!",
-                "Texto" => "No has seleccionado ningun artículo para el presupuesto",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
-        }
+        $fecha_venc = $_POST['fecha_vencimientoPre'] ?? null;
 
         if (empty($_SESSION['datos_proveedorPre'])) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrió un error!",
                 "Texto" => "No has seleccionado ningun proveedor",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        if (empty($_SESSION['datos_articuloPre'])) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrió un error!",
+                "Texto" => "No has seleccionado ningun artículo para el presupuesto",
                 "Tipo" => "error"
             ];
             echo json_encode($alerta);
@@ -268,8 +267,8 @@ class presupuestoControlador extends presupuestoModelo
         /** Insertar cabecera */
         $datos_presu_agg = [
             "usuario"   => $_SESSION['id_str'],
-            "proveedor" => $_SESSION['datos_proveedorPre']['ID'],   
-            "total" => $_SESSION['total_pre'],   
+            "proveedor" => $_SESSION['datos_proveedorPre']['ID'],
+            "total" => $_SESSION['total_pre'],
             "fecha_venc" => $fecha_venc
         ];
 
