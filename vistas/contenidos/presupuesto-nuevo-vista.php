@@ -139,24 +139,6 @@ $tipo = $_SESSION['tipo_presupuesto'] ?? null;
         </table>
     </div>
 
-    <!-- Botones GUARDAR y LIMPIAR 
-    <div style="display: flex; justify-content: center; gap: 25px; margin-top: 30px;">
-        <form class="FormularioAjax" action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php" method="POST" data-form="save" autocomplete="off" style="margin:0;">
-            <input type="hidden" name="agregar_presupuesto" value="1">
-            
-            <button type="submit" class="btn btn-raised btn-info btn-sm">
-                <i class="far fa-save"></i> &nbsp; GUARDAR
-            </button>
-        </form>
-        <form action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php" method="POST" data-form="loans" autocomplete="off" style="margin:0;">
-            <input type="hidden" name="limpiar_presupuesto" value="1">
-            <button type="submit" class="btn btn-raised btn-secondary btn-sm">
-                <i class="fas fa-paint-roller"></i> &nbsp; LIMPIAR
-            </button>
-        </form>
-    </div>
-    -->
-
     <div class="container-fluid mt-3">
         <form class="FormularioAjax" action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php"
             method="POST" data-form="save" autocomplete="off">
