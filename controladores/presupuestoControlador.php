@@ -198,7 +198,7 @@ class presupuestoControlador extends presupuestoModelo
 
             if (isset($_SESSION['datos_articuloPre'][$id])) {
                 $alerta = [
-                    "Alerta" => "simple",
+                    "Alerta" => "recargar",
                     "Titulo" => "Ocurrio un error inesperado!",
                     "Texto" => "El artículo que intenta agregar ya se encuentra agregado",
                     "Tipo" => "error"
@@ -209,8 +209,8 @@ class presupuestoControlador extends presupuestoModelo
                     "codigo" => $campos['codigo'],
                     "descripcion" => $campos['desc_articulo'],
                     "cantidad" => $cantidad,
-                    "precio" => $precio,       // <-- agregado
-                    "subtotal" => $subtotal    // <-- agregado
+                    "precio" => $precio,
+                    "subtotal" => $subtotal
                 ];
                 $alerta = [
                     "Alerta" => "recargar",
@@ -219,7 +219,6 @@ class presupuestoControlador extends presupuestoModelo
                     "Tipo" => "success"
                 ];
             }
-
             echo json_encode($alerta);
             exit();
         }
@@ -231,6 +230,8 @@ class presupuestoControlador extends presupuestoModelo
     {
         session_start(['name' => 'STR']);
         $fecha_venc = $_POST['fecha_vencimientoPre'] ?? null;
+
+
 
         if (empty($_SESSION['datos_proveedorPre'])) {
             $alerta = [
@@ -252,7 +253,8 @@ class presupuestoControlador extends presupuestoModelo
             echo json_encode($alerta);
             exit();
         }
-        if (empty($fecha_venc)) {
+
+        if (empty($fecha_venc) || $fecha_venc == null) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Error!",
@@ -325,4 +327,57 @@ class presupuestoControlador extends presupuestoModelo
         echo json_encode($alerta);
     }
     /**fin controlador */
+
+    /**controlador buscar pedido */
+    public function buscar_pedido_controlador()
+    {
+        $pedidoCompra  = mainModel::limpiar_string($_POST['buscar_pedidoPre']);
+
+        if ($pedidoCompra == "") {
+            return '        <div class="alert alert-warning" role="alert">
+                                <p class="text-center mb-0">
+                                    <i class="fas fa-exclamation-triangle fa-2x"></i><br>
+                                    Debes introducir el RUC, RAZON SOCIAL o NUMERO DE PEDIDO
+                                </p>
+                            </div>';
+            exit();
+        }
+        /**seleccionar proveedor */
+        $datosPedido = mainModel::ejecutar_consulta_simple("select pc.idpedido_cabecera as idpedido_cabecera, pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPe, pc.id_proveedor as id_proveedor, pc.updated as updated, pc.updatedby as updatedby, 
+        p.idproveedores as idproveedores, p.id_ciudad as id_ciudad, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, p.estado as estadoPro
+        from pedido_cabecera pc 
+        inner join proveedores p on p.idproveedores = pc.id_proveedor 
+        where (idpedido_cabecera like '%$pedidoCompra%' or razon_social like '%$pedidoCompra%' or ruc like '%$pedidoCompra%') and pc.estado = '1'
+        order by idpedido_cabecera desc");
+
+        if ($datosPedido->rowCount() >= 1) {
+            $datosPedido = $datosPedido->fetchAll();
+            $tabla = '<div class="table-responsive"><table class="table table-hover table-bordered table-sm"><tbody>
+                        <tr class="text-center">
+                            <th>Número de Pedido</th>
+                            <th>Proveedor</th>
+                            <th></th>
+                        </tr>';
+            foreach ($datosPedido as $rows) {
+                $tabla .= '
+                        <tr class="text-center">
+                            <td>' . $rows['idpedido_cabecera'] . '</td>
+                            <td>' . $rows['razon_social'] . '</td>
+                            <td>
+                                <button type="button" class="btn btn-primary" onclick="agregar_proveedorPre(' . $rows['idpedido_cabecera'] . ')"><i class="fas fa-user-plus"></i></button>
+                            </td>
+                        </tr>';
+            }
+            $tabla .= '</tbody></table></div>';
+            return $tabla;
+        } else {
+            return '        <div class="alert alert-warning" role="alert">
+                                <p class="text-center mb-0">
+                                    <i class="fas fa-exclamation-triangle fa-2x"></i><br>
+                                    No hemos encontrado ningún pedido en el sistema que coincida con <strong>“' . $pedidoCompra . '”</strong>
+                                </p>
+                            </div>';
+        }
+    }
+    /**controlador buscador articulo */
 }

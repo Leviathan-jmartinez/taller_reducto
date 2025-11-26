@@ -76,10 +76,6 @@ $tipo = $_SESSION['tipo_presupuesto'] ?? null;
         <?php } ?>
     </div>
 
-
-
-
-
     <!-- Tabla de artículos -->
     <div class="table-responsive mt-3">
         <table class="table table-dark table-sm">
@@ -157,9 +153,13 @@ $tipo = $_SESSION['tipo_presupuesto'] ?? null;
     </div>
     -->
 
+    <!-- CONTENEDOR GENERAL -->
     <div class="container-fluid mt-3">
+
+        <!-- FECHA (dentro del form GUARDAR) -->
         <form class="FormularioAjax" action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php"
             method="POST" data-form="save" autocomplete="off">
+
             <div class="row">
                 <div class="col-12 text-md-left mb-3">
                     <label for="fecha_vencimientoPre">Fecha Vencimiento</label>
@@ -168,19 +168,20 @@ $tipo = $_SESSION['tipo_presupuesto'] ?? null;
                         style="width: 180px;" required>
                 </div>
             </div>
-            <input type="hidden" name="agregar_presupuesto" value="1">
-        </form>
 
-        <!-- Contenedor para los botones lado a lado -->
-        <div class="d-flex justify-content-center gap-2 mt-3">
-            <form action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php" method="POST"
-                data-form="save" autocomplete="off">
-                <input type="hidden" name="agregar_presupuesto" value="1">
+            <input type="hidden" name="agregar_presupuesto" value="1">
+
+            <!-- BOTONES ABAJO CENTRADOS -->
+            <div class="text-center mt-3">
                 <button type="submit" class="btn btn-raised btn-info btn-sm">
                     <i class="far fa-save"></i> &nbsp; GUARDAR
                 </button>
-            </form>
+            </div>
 
+        </form>
+
+        <!-- BOTÓN LIMPIAR (separado, como en tu versión original) -->
+        <div class="text-center mt-3">
             <form action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php" method="POST"
                 data-form="loans" autocomplete="off">
                 <input type="hidden" name="limpiar_presupuesto" value="1">
@@ -189,7 +190,9 @@ $tipo = $_SESSION['tipo_presupuesto'] ?? null;
                 </button>
             </form>
         </div>
+
     </div>
+
 
 </div>
 
@@ -275,6 +278,38 @@ $tipo = $_SESSION['tipo_presupuesto'] ?? null;
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" onclick="buscar_articuloPre()"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar</button>
+                &nbsp; &nbsp;
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- MODAL ITEM -->
+<div class="modal fade" id="ModalBuscarPedido" tabindex="-1" role="dialog" aria-labelledby="ModalBuscarPedido" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ModalBuscarPedido">Agregar Pedido</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="form-group">
+                        <label for="input_item" class="bmd-label-floating">Código, Proveedor</label>
+                        <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" class="form-control" name="input_pedido" id="input_pedido" maxlength="30">
+                    </div>
+                </div>
+                <br>
+                <div class="container-fluid" id="tabla_pedidosPre">
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="buscar_pedidoPre()"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar</button>
                 &nbsp; &nbsp;
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
             </div>

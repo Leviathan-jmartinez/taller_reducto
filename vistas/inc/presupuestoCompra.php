@@ -96,12 +96,12 @@
         $('#ModalArticuloPre').modal('hide');
 
         let cantidad = document.querySelector('#cantidad_' + id).value.trim();
-        let precio = document.querySelector('#precio_' + id).value.trim(); // <-- agregado
+        let precio = document.querySelector('#precio_' + id).value.trim(); 
 
         let datos = new FormData();
         datos.append('id_agregar_articuloPre', id);
         datos.append('detalle_cantidad', cantidad);
-        datos.append('detalle_precio', precio); // <-- agregado
+        datos.append('detalle_precio', precio); 
 
         fetch("<?php echo SERVERURL ?>ajax/presupuestoAjax.php", {
                 method: 'POST',
@@ -125,5 +125,31 @@
                 console.error("Error:", err);
                 Swal.fire("Error", "No se pudo procesar la petición", "error");
             });
+    }
+
+    function buscar_pedidoPre(){
+        let input_pedido = document.querySelector('#input_pedido').value;
+        input_pedido = input_pedido.trim();
+        if (input_pedido != "") {
+            let datos = new FormData();
+            datos.append("buscar_pedidoPre", input_pedido);
+
+            fetch("<?php echo SERVERURL ?>ajax/presupuestoAjax.php", {
+                    method: 'POST',
+                    body: datos
+                })
+                .then(respuesta => respuesta.text())
+                .then(respuesta => {
+                    let tabla_articulo = document.querySelector('#tabla_pedidosPre');
+                    tabla_pedidosPre.innerHTML = respuesta;
+                });
+        } else {
+            Swal.fire({
+                title: 'Ocurrio un error',
+                text: 'Debes introducir el Código o el Nombre del articulo',
+                type: 'error',
+                confirmButtonText: 'Aceptar'
+            });
+        }
     }
 </script>
