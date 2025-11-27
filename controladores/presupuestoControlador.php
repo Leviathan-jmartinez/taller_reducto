@@ -70,9 +70,9 @@ class presupuestoControlador extends presupuestoModelo
         }
         /**iniciar sesion para utilizar variables de sesion */
         session_start(['name' => 'STR']);
-        unset($_SESSION['datos_proveedorPre']);
-        if (empty($_SESSION['datos_proveedorPre'])) {
-            $_SESSION['datos_proveedorPre'] = [
+        unset($_SESSION['Sdatos_proveedorPre']);
+        if (!isset($_SESSION['Sdatos_proveedorPre'])) {
+            $_SESSION['Sdatos_proveedorPre'] = [
                 "ID" => $campos['idproveedores'],
                 "RUC" => $campos['ruc'],
                 "RAZON" => $campos['razon_social'],
@@ -233,7 +233,7 @@ class presupuestoControlador extends presupuestoModelo
 
 
 
-        if (empty($_SESSION['datos_proveedorPre'])) {
+        if (empty($_SESSION['Cdatos_proveedorPre'])) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrió un error!",
@@ -243,7 +243,7 @@ class presupuestoControlador extends presupuestoModelo
             echo json_encode($alerta);
             exit();
         }
-        if (empty($_SESSION['datos_articuloPre'])) {
+        if (empty($_SESSION['Cdatos_articuloPre'])) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrió un error!",

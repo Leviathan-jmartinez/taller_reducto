@@ -153,7 +153,7 @@
         }
     }
 
-    function agregar_proveedorPre(idPedido) {
+    function agregar_proveedorPre_(idPedido) {
         if (!idPedido) return;
 
         // Crear form dinámico para POST

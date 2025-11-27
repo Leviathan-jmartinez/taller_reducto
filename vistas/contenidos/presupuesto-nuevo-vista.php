@@ -42,7 +42,7 @@ $tipo = $_SESSION['tipo_presupuesto'] ?? null;
     <?php if ($tipo === 'sin_pedido') { ?>
         <!-- SIN PEDIDO: agregar proveedor y artículos manualmente -->
         <div class="text-center mb-3">
-            <?php if (empty($_SESSION['datos_proveedorPre'])) { ?>
+            <?php if (empty($_SESSION['Sdatos_proveedorPre'])) { ?>
                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalproveedorPre">
                     <i class="fas fa-user-plus"></i> &nbsp; Agregar Proveedor
                 </button>
@@ -62,95 +62,179 @@ $tipo = $_SESSION['tipo_presupuesto'] ?? null;
         <?php } ?>
     <?php } ?>
 
-    <!-- IZQUIERDA -->
-    <div class="col-12 col-md-6">
-        <span class="roboto-medium">PROVEEDOR:</span>
-        <?php if (empty($_SESSION['datos_proveedorPre'])) { ?>
-            <span class="text-danger">&nbsp;
-                <i class="fas fa-exclamation-triangle"></i> Seleccione un Proveedor
-            </span>
-        <?php } else { ?>
-            <form class="FormularioAjax d-inline-block" action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php" method="POST" data-form="loans">
-                <input type="hidden" name="id_eliminar_proveedorPre" value="<?php echo $_SESSION['datos_proveedorPre']['ID']; ?>">
-                <?php echo $_SESSION['datos_proveedorPre']['RAZON'] . " (" . $_SESSION['datos_proveedorPre']['RUC'] . ")"; ?>
-                <button type="submit" class="btn btn-danger"><i class="fas fa-user-times"></i></button>
-            </form>
-        <?php } ?>
-    </div>
+    <?php if ($tipo === 'sin_pedido' || $tipo == null) { ?>
+        <div class="col-12 col-md-6">
+            <span class="roboto-medium">PROVEEDOR:</span>
+            <?php if (empty($_SESSION['Sdatos_proveedorPre'])) { ?>
+                <span class="text-danger">&nbsp;
+                    <i class="fas fa-exclamation-triangle"></i> Seleccione un Proveedor
+                </span>
+            <?php } else { ?>
+                <form class="FormularioAjax d-inline-block" action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php" method="POST" data-form="loans">
+                    <input type="hidden" name="id_eliminar_proveedorPre" value="<?php echo $_SESSION['Sdatos_proveedorPre']['ID']; ?>">
+                    <?php echo $_SESSION['Sdatos_proveedorPre']['RAZON'] . " (" . $_SESSION['Sdatos_proveedorPre']['RUC'] . ")"; ?>
+                    <button type="submit" class="btn btn-danger"><i class="fas fa-user-times"></i></button>
+                </form>
+            <?php } ?>
+        </div>
+    <?php } elseif ($tipo === 'con_pedido') { ?>
+        <div class="col-12 col-md-6">
+            <span class="roboto-medium">PROVEEDOR:</span>
+            <?php if (empty($_SESSION['Cdatos_proveedorPre'])) { ?>
+                <span class="text-danger">&nbsp;
+                    <i class="fas fa-exclamation-triangle"></i> Seleccione un Proveedor
+                </span>
+            <?php } else { ?>
+                <form class="FormularioAjax d-inline-block" action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php" method="POST" data-form="loans">
+                    <input type="hidden" name="id_eliminar_proveedorPre" value="<?php echo $_SESSION['Cdatos_proveedorPre']['ID']; ?>">
+                    <?php echo $_SESSION['Cdatos_proveedorPre']['RAZON'] . " (" . $_SESSION['Cdatos_proveedorPre']['RUC'] . ")"; ?>
+                    <button type="submit" class="btn btn-danger"><i class="fas fa-user-times"></i></button>
+                </form>
+            <?php } ?>
+        </div>
+    <?php } ?>
 
-    <!-- Tabla de artículos -->
-    <div class="table-responsive mt-3">
-        <table class="table table-dark table-sm">
-            <thead>
-                <tr class="text-center roboto-medium">
-                    <th>#</th>
-                    <th>CODIGO</th>
-                    <th>DESCRIPCION</th>
-                    <th>CANTIDAD</th>
-                    <th>PRECIO UNITARIO</th>
-                    <th>SUBTOTAL</th>
-                    <th>ELIMINAR</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                if (isset($_SESSION['datos_articuloPre']) && count($_SESSION['datos_articuloPre']) >= 1) {
-                    $_SESSION['presupuesto_articulo'] = 0;
-                    $_SESSION['total_pre'] = 0;
-                    $contador = 1;
-                    foreach ($_SESSION['datos_articuloPre'] as $article):
-                        $_SESSION['presupuesto_articulo'] += $article['cantidad'];
-                        $_SESSION['total_pre'] += $article['subtotal'];
-                ?>
-                        <tr class="text-center">
-                            <td><?php echo $contador++; ?></td>
-                            <td><?php echo $article['codigo']; ?></td>
-                            <td><?php echo $article['descripcion']; ?></td>
-                            <td><?php echo $article['cantidad']; ?></td>
-                            <!--<td><?php echo number_format($article['precio'], 0, ',', '.'); ?></td>
+    <?php if ($tipo === 'sin_pedido' || $tipo == null) { ?>
+        <div class="table-responsive mt-3">
+            <table class="table table-dark table-sm">
+                <thead>
+                    <tr class="text-center roboto-medium">
+                        <th>#</th>
+                        <th>CODIGO</th>
+                        <th>DESCRIPCION</th>
+                        <th>CANTIDAD</th>
+                        <th>PRECIO UNITARIO</th>
+                        <th>SUBTOTAL</th>
+                        <th>ELIMINAR</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    if (isset($_SESSION['Sdatos_articuloPre']) && count($_SESSION['Sdatos_articuloPre']) >= 1) {
+                        $_SESSION['presupuesto_articulo'] = 0;
+                        $_SESSION['total_pre'] = 0;
+                        $contador = 1;
+                        foreach ($_SESSION['Sdatos_articuloPre'] as $article):
+                            $_SESSION['presupuesto_articulo'] += $article['cantidad'];
+                            $_SESSION['total_pre'] += $article['subtotal'];
+                    ?>
+                            <tr class="text-center">
+                                <td><?php echo $contador++; ?></td>
+                                <td><?php echo $article['codigo']; ?></td>
+                                <td><?php echo $article['descripcion']; ?></td>
+                                <td><?php echo $article['cantidad']; ?></td>
+                                <!--<td><?php echo number_format($article['precio'], 0, ',', '.'); ?></td>
                             <td><?php echo number_format($article['subtotal'], 0, ',', '.'); ?></td>-->
-                            <td>
-                                <input type="number" min="0" class="form-control precio-articulo"
-                                    data-id="<?php echo $article['ID']; ?>"
-                                    value="<?php echo $article['precio']; ?>">
-                            </td>
-                            <td class="subtotal-articulo" data-id="<?php echo $article['ID']; ?>">
-                                <?php echo number_format($article['subtotal'], 0, ',', '.'); ?>
-                            </td>
+                                <td>
+                                    <input type="number" min="0" class="form-control precio-articulo"
+                                        data-id="<?php echo $article['ID']; ?>"
+                                        value="<?php echo $article['precio']; ?>">
+                                </td>
+                                <td class="subtotal-articulo" data-id="<?php echo $article['ID']; ?>">
+                                    <?php echo number_format($article['subtotal'], 0, ',', '.'); ?>
+                                </td>
 
-                            <td>
-                                <form class="FormularioAjax" action="<?php echo SERVERURL; ?>ajax/presupuestoAjax.php" method="POST" data-form="loans">
-                                    <input type="hidden" name="id_eliminar_articuloPre" value="<?php echo $article['ID']; ?>">
-                                    <button type="submit" class="btn btn-warning"><i class="far fa-trash-alt"></i></button>
-                                </form>
-                            </td>
+                                <td>
+                                    <form class="FormularioAjax" action="<?php echo SERVERURL; ?>ajax/presupuestoAjax.php" method="POST" data-form="loans">
+                                        <input type="hidden" name="id_eliminar_articuloPre" value="<?php echo $article['ID']; ?>">
+                                        <button type="submit" class="btn btn-warning"><i class="far fa-trash-alt"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        <tr class="text-center bg-light">
+                        <tr class="text-center bg-light total-fila">
+                            <td><strong>TOTAL</strong></td>
+                            <td colspan="2"></td>
+                            <td id="total-unidades"><strong><?php echo $_SESSION['presupuesto_articulo']; ?> unidades</strong></td>
+                            <td></td>
+                            <td id="total-general"><strong><?php echo number_format($_SESSION['total_pre'], 0, ',', '.'); ?></strong></td>
+                            <td></td>
                         </tr>
-                    <?php endforeach; ?>
-                    <tr class="text-center bg-light">
-                    <tr class="text-center bg-light total-fila">
-                        <td><strong>TOTAL</strong></td>
-                        <td colspan="2"></td>
-                        <td id="total-unidades"><strong><?php echo $_SESSION['presupuesto_articulo']; ?> unidades</strong></td>
-                        <td></td>
-                        <td id="total-general"><strong><?php echo number_format($_SESSION['total_pre'], 0, ',', '.'); ?></strong></td>
-                        <td></td>
+
+                        </tr>
+                    <?php
+                    } else {
+                        $_SESSION['presupuesto_articulo'] = 0;
+                    ?>
+                        <tr class="text-center bg-light">
+                            <td colspan="8">No has seleccionado articulos</td>
+                        </tr>
+                    <?php } ?>
+                </tbody>
+            </table>
+        </div>
+    <?php } elseif ($tipo === 'con_pedido') { ?>
+        <div class="table-responsive mt-3">
+            <table class="table table-dark table-sm">
+                <thead>
+                    <tr class="text-center roboto-medium">
+                        <th>#</th>
+                        <th>CODIGO</th>
+                        <th>DESCRIPCION</th>
+                        <th>CANTIDAD</th>
+                        <th>PRECIO UNITARIO</th>
+                        <th>SUBTOTAL</th>
+                        <th>ELIMINAR</th>
                     </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    if (isset($_SESSION['Cdatos_articuloPre']) && count($_SESSION['Cdatos_articuloPre']) >= 1) {
+                        $_SESSION['presupuesto_articulo'] = 0;
+                        $_SESSION['total_pre'] = 0;
+                        $contador = 1;
+                        foreach ($_SESSION['Cdatos_articuloPre'] as $article):
+                            $_SESSION['presupuesto_articulo'] += $article['cantidad'];
+                            $_SESSION['total_pre'] += $article['subtotal'];
+                    ?>
+                            <tr class="text-center">
+                                <td><?php echo $contador++; ?></td>
+                                <td><?php echo $article['codigo']; ?></td>
+                                <td><?php echo $article['descripcion']; ?></td>
+                                <td><?php echo $article['cantidad']; ?></td>
+                                <!--<td><?php echo number_format($article['precio'], 0, ',', '.'); ?></td>
+                            <td><?php echo number_format($article['subtotal'], 0, ',', '.'); ?></td>-->
+                                <td>
+                                    <input type="number" min="0" class="form-control precio-articulo"
+                                        data-id="<?php echo $article['ID']; ?>"
+                                        value="<?php echo $article['precio']; ?>">
+                                </td>
+                                <td class="subtotal-articulo" data-id="<?php echo $article['ID']; ?>">
+                                    <?php echo number_format($article['subtotal'], 0, ',', '.'); ?>
+                                </td>
 
-                    </tr>
-                <?php
-                } else {
-                    $_SESSION['presupuesto_articulo'] = 0;
-                ?>
-                    <tr class="text-center bg-light">
-                        <td colspan="8">No has seleccionado articulos</td>
-                    </tr>
-                <?php } ?>
-            </tbody>
-        </table>
-    </div>
+                                <td>
+                                    <form class="FormularioAjax" action="<?php echo SERVERURL; ?>ajax/presupuestoAjax.php" method="POST" data-form="loans">
+                                        <input type="hidden" name="id_eliminar_articuloPre" value="<?php echo $article['ID']; ?>">
+                                        <button type="submit" class="btn btn-warning"><i class="far fa-trash-alt"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        <tr class="text-center bg-light">
+                        <tr class="text-center bg-light total-fila">
+                            <td><strong>TOTAL</strong></td>
+                            <td colspan="2"></td>
+                            <td id="total-unidades"><strong><?php echo $_SESSION['presupuesto_articulo']; ?> unidades</strong></td>
+                            <td></td>
+                            <td id="total-general"><strong><?php echo number_format($_SESSION['total_pre'], 0, ',', '.'); ?></strong></td>
+                            <td></td>
+                        </tr>
 
-
-
+                        </tr>
+                    <?php
+                    } else {
+                        $_SESSION['presupuesto_articulo'] = 0;
+                    ?>
+                        <tr class="text-center bg-light">
+                            <td colspan="8">No has seleccionado articulos</td>
+                        </tr>
+                    <?php } ?>
+                </tbody>
+            </table>
+        </div>
+    <?php } ?>
     <!-- Botones GUARDAR y LIMPIAR 
     <div style="display: flex; justify-content: center; gap: 25px; margin-top: 30px;">
         <form class="FormularioAjax" action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php" method="POST" data-form="save" autocomplete="off" style="margin:0;">
