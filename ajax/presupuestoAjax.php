@@ -4,8 +4,8 @@ $peticionAjax = true;
 require_once "../config/APP.php";
 if (
     isset($_POST['buscar_proveedorPre']) || isset($_POST['id_agregar_proveedorPre']) || isset($_POST['id_eliminar_proveedorPre']) || isset($_POST['buscar_articuloPre'])
-    || isset($_POST['id_agregar_articuloPre']) || isset($_POST['id_eliminar_articuloPre']) || isset($_POST['agregar_presupuesto']) || isset($_POST['limpiar_presupuesto']) 
-    || isset($_POST['buscar_pedidoPre'])
+    || isset($_POST['id_agregar_articuloPre']) || isset($_POST['id_eliminar_articuloPre']) || isset($_POST['agregar_presupuesto']) || isset($_POST['limpiar_presupuesto'])
+    || isset($_POST['buscar_pedidoPre']) || isset($_POST['id_pedido_seleccionado'])
 ) {
     /** Instancia al controlador */
     require_once "../controladores/presupuestoControlador.php";
@@ -31,6 +31,24 @@ if (
     }
     if (isset($_POST['buscar_pedidoPre'])) {
         echo $inst_presu->buscar_pedido_controlador();
+    }
+    if (isset($_POST['id_pedido_seleccionado'])) {
+        echo $inst_presu->cargar_pedido_controlador();
+    }
+    if (isset($_POST['id_actualizar_precio'])) {
+        $idArticulo = $_POST['id_actualizar_precio'];
+        $precio = floatval($_POST['precio']);
+
+        if (isset($_SESSION['datos_articuloPre'])) {
+            foreach ($_SESSION['datos_articuloPre'] as &$art) {
+                if ($art['ID'] == $idArticulo) {
+                    $art['precio'] = $precio;
+                    $art['subtotal'] = $art['cantidad'] * $precio;
+                    break;
+                }
+            }
+        }
+        exit(); // no hace falta redirigir
     }
     if (isset($_POST['limpiar_presupuesto'])) {
         session_start(['name' => 'STR']);

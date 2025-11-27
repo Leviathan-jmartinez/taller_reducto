@@ -380,4 +380,60 @@ class presupuestoControlador extends presupuestoModelo
         }
     }
     /**controlador buscador articulo */
+
+    public function cargar_pedido_controlador()
+    {
+        session_start(['name' => 'STR']);
+
+        $idPedido = mainModel::limpiar_string($_POST['id_pedido_seleccionado'] ?? '');
+        if (empty($idPedido)) {
+            $_SESSION['alerta_presupuesto'] = [
+                "tipo" => "error",
+                "mensaje" => "No se recibió ID de pedido"
+            ];
+            header("Location: " . SERVERURL . "presupuesto-nuevo/");
+            exit();
+        }
+
+        // 1️⃣ Cabecera del pedido (proveedor)
+        $sqlCabecera = mainModel::ejecutar_consulta_simple("
+        SELECT pc.id_proveedor, p.razon_social, p.ruc
+        FROM pedido_cabecera pc
+        INNER JOIN proveedores p ON p.idproveedores = pc.id_proveedor
+        WHERE pc.idpedido_cabecera = '$idPedido'
+    ");
+        $cabecera = $sqlCabecera->fetch();
+        if ($cabecera) {
+            $_SESSION['datos_proveedorPre'] = [
+                "ID" => $cabecera['id_proveedor'],
+                "RAZON" => $cabecera['razon_social'],
+                "RUC" => $cabecera['ruc']
+            ];
+        }
+
+        // 2️⃣ Detalle del pedido (artículos)
+        $sqlDetalle = mainModel::ejecutar_consulta_simple("
+        SELECT pd.id_articulo, pd.cantidad, a.desc_articulo, a.codigo
+        FROM pedido_detalle pd
+        INNER JOIN articulos a ON a.id_articulo = pd.id_articulo
+        WHERE pd.idpedido_cabecera = '$idPedido'
+    ");
+        $detalle = $sqlDetalle->fetchAll();
+
+        $_SESSION['datos_articuloPre'] = [];
+        foreach ($detalle as $row) {
+            $_SESSION['datos_articuloPre'][] = [
+                "ID" => $row['id_articulo'],
+                "codigo" => $row['codigo'],
+                "descripcion" => $row['desc_articulo'],
+                "cantidad" => $row['cantidad'],
+                "precio" => 0,
+                "subtotal" => 0
+            ];
+        }
+
+        // 3️⃣ Redirigir a la página para que se recargue
+        header("Location: " . SERVERURL . "presupuesto-nuevo/");
+        exit();
+    }
 }
