@@ -130,11 +130,11 @@ class presupuestoControlador extends presupuestoModelo
             $articulo = mainModel::limpiar_string($_POST['buscar_articuloPre']);
             if ($articulo == "") return '<div class="alert alert-warning">Debes introducir código o descripción</div>';
 
-            if (!isset($_SESSION['datos_proveedorPre']['ID'])) {
+            if (!isset($_SESSION['Sdatos_proveedorPre']['ID'])) {
                 return '<div class="alert alert-danger">No se ha seleccionado un proveedor</div>';
                 exit();
             }
-            $id_proveedor = $_SESSION['datos_proveedorPre']['ID'];
+            $id_proveedor = $_SESSION['Sdatos_proveedorPre']['ID'];
             $datos_articuloPre = mainModel::ejecutar_consulta_simple("SELECT * FROM articulos WHERE (codigo like '%$articulo%' OR desc_articulo like '%$articulo%') AND estado=1 AND idproveedores='$id_proveedor' ORDER BY desc_articulo DESC");
 
             if ($datos_articuloPre->rowCount() >= 1) {
@@ -196,7 +196,7 @@ class presupuestoControlador extends presupuestoModelo
             $precio = floatval($precio);
             $subtotal = $cantidad * $precio; // <-- opcional, para mostrar o guardar
 
-            if (isset($_SESSION['datos_articuloPre'][$id])) {
+            if (isset($_SESSION['Sdatos_articuloPre'][$id])) {
                 $alerta = [
                     "Alerta" => "recargar",
                     "Titulo" => "Ocurrio un error inesperado!",
@@ -204,7 +204,7 @@ class presupuestoControlador extends presupuestoModelo
                     "Tipo" => "error"
                 ];
             } else {
-                $_SESSION['datos_articuloPre'][$id] = [
+                $_SESSION['Sdatos_articuloPre'][$id] = [
                     "ID" => $campos['id_articulo'],
                     "codigo" => $campos['codigo'],
                     "descripcion" => $campos['desc_articulo'],
@@ -231,100 +231,200 @@ class presupuestoControlador extends presupuestoModelo
         session_start(['name' => 'STR']);
         $fecha_venc = $_POST['fecha_vencimientoPre'] ?? null;
 
-
-
-        if (empty($_SESSION['Cdatos_proveedorPre'])) {
-            $alerta = [
-                "Alerta" => "simple",
-                "Titulo" => "Ocurrió un error!",
-                "Texto" => "No has seleccionado ningun proveedor",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
-        }
-        if (empty($_SESSION['Cdatos_articuloPre'])) {
-            $alerta = [
-                "Alerta" => "simple",
-                "Titulo" => "Ocurrió un error!",
-                "Texto" => "No has seleccionado ningun artículo para el presupuesto",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
-        }
-
-        if (empty($fecha_venc) || $fecha_venc == null) {
-            $alerta = [
-                "Alerta" => "simple",
-                "Titulo" => "Error!",
-                "Texto" => "Debes seleccionar la fecha de vencimiento",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
-        }
-
-
-        /** Insertar cabecera */
-        $datos_presu_agg = [
-            "usuario"   => $_SESSION['id_str'],
-            "proveedor" => $_SESSION['datos_proveedorPre']['ID'],
-            "total" => $_SESSION['total_pre'],
-            "fecha_venc" => $fecha_venc
-        ];
-
-        $idpresupuestoCab = presupuestoModelo::agregar_presupuestoC_modelo($datos_presu_agg);
-
-        if ($idpresupuestoCab <= 0) {
-            $alerta = [
-                "Alerta" => "simple",
-                "Titulo" => "Ocurrió un error inesperado!",
-                "Texto" => "No pudimos registrar la cabecera del pedido",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
-        }
-
-        /** Insertar detalles */
-        $errores_detalles = 0;
-        foreach ($_SESSION['datos_articuloPre'] as $article) {
-
-            $detalle_reg = [
-                "presupuestoid" => $idpresupuestoCab,
-                "articulo" => $article['ID'],
-                "cantidad" => $article['cantidad'],
-                "precio" => $article['precio'],
-                "subtotal" => $article['subtotal']
-            ];
-
-            $detalleInsert = presupuestoModelo::agregar_presupuestoD_modelo($detalle_reg);
-
-            if ($detalleInsert->rowCount() != 1) {
-                $errores_detalles++;
+        if ($_SESSION['tipo_presupuesto'] == "sin_pedido") {
+            if (empty($_SESSION['Sdatos_proveedorPre'])) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrió un error!",
+                    "Texto" => "No has seleccionado ningun proveedor",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
             }
-        }
+            if (empty($_SESSION['Sdatos_articuloPre'])) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrió un error!",
+                    "Texto" => "No has seleccionado ningun artículo para el presupuesto",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
 
-        if ($errores_detalles > 0) {
-            $alerta = [
-                "Alerta" => "simple",
-                "Titulo" => "Error parcial",
-                "Texto" => "El presupuesto se creó, pero algunos artículos no se guardaron",
-                "Tipo" => "warning"
+            if (empty($fecha_venc) || $fecha_venc == null) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Error!",
+                    "Texto" => "Debes seleccionar la fecha de vencimiento",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
+
+
+            /** Insertar cabecera */
+            $datos_presu_agg = [
+                "usuario"   => $_SESSION['id_str'],
+                "proveedor" => $_SESSION['Sdatos_proveedorPre']['ID'],
+                "total" => $_SESSION['total_pre'],
+                "fecha_venc" => $fecha_venc
             ];
-        } else {
-            $alerta = [
-                "Alerta" => "recargar",
-                "Titulo" => "Pedido guardado!",
-                "Texto" => "El presupuesto se registró correctamente",
-                "Tipo" => "success"
+
+            $idpresupuestoCab = presupuestoModelo::agregar_presupuestoC_modelo1($datos_presu_agg);
+
+            if ($idpresupuestoCab <= 0) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrió un error inesperado!",
+                    "Texto" => "No pudimos registrar la cabecera del pedido",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
+
+            /** Insertar detalles */
+            $errores_detalles = 0;
+            foreach ($_SESSION['Sdatos_articuloPre'] as $article) {
+
+                $detalle_reg = [
+                    "presupuestoid" => $idpresupuestoCab,
+                    "articulo" => $article['ID'],
+                    "cantidad" => $article['cantidad'],
+                    "precio" => $article['precio'],
+                    "subtotal" => $article['subtotal']
+                ];
+
+                $detalleInsert = presupuestoModelo::agregar_presupuestoD_modelo($detalle_reg);
+
+                if ($detalleInsert->rowCount() != 1) {
+                    $errores_detalles++;
+                }
+            }
+
+            if ($errores_detalles > 0) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Error parcial",
+                    "Texto" => "El presupuesto se creó, pero algunos artículos no se guardaron",
+                    "Tipo" => "warning"
+                ];
+            } else {
+                $alerta = [
+                    "Alerta" => "recargar",
+                    "Titulo" => "Pedido guardado!",
+                    "Texto" => "El presupuesto se registró correctamente",
+                    "Tipo" => "success"
+                ];
+                unset($_SESSION['tipo_presupuesto']);
+                unset($_SESSION['Sdatos_proveedorPre']);
+                unset($_SESSION['Sdatos_articuloPre']);
+            }
+            echo json_encode($alerta);
+        } elseif ($_SESSION['tipo_presupuesto'] == "con_pedido") {
+            if (empty($_SESSION['Cdatos_proveedorPre'])) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrió un error!",
+                    "Texto" => "No has seleccionado ningun proveedor",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
+            if (empty($_SESSION['Cdatos_articuloPre'])) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrió un error!",
+                    "Texto" => "No has seleccionado ningun artículo para el presupuesto",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
+
+            if (empty($fecha_venc) || $fecha_venc == null) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Error!",
+                    "Texto" => "Debes seleccionar la fecha de vencimiento",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
+            $total = 0;
+
+            foreach ($_SESSION['Cdatos_articuloPre'] as $art) {
+                $total += floatval($art['subtotal']);
+            }
+
+            $_SESSION['total_pre'] = $total;
+
+            /** Insertar cabecera */
+            $datos_presu_agg = [
+                "idPedido"   => $_SESSION['id_pedido_seleccionado'],
+                "usuario"   => $_SESSION['id_str'],
+                "proveedor" => $_SESSION['Cdatos_proveedorPre']['ID'],
+                "total" => $_SESSION['total_pre'],
+                "fecha_venc" => $fecha_venc
             ];
+
+            $idpresupuestoCab = presupuestoModelo::agregar_presupuestoC_modelo2($datos_presu_agg);
+
+            if ($idpresupuestoCab <= 0) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrió un error inesperado!",
+                    "Texto" => "No pudimos registrar la cabecera del pedido",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
+
+            /** Insertar detalles */
+            $errores_detalles = 0;
+            foreach ($_SESSION['Cdatos_articuloPre'] as $article) {
+
+                $detalle_reg = [
+                    "presupuestoid" => $idpresupuestoCab,
+                    "articulo" => $article['ID'],
+                    "cantidad" => $article['cantidad'],
+                    "precio" => $article['precio'],
+                    "subtotal" => $article['subtotal']
+                ];
+
+                $detalleInsert = presupuestoModelo::agregar_presupuestoD_modelo($detalle_reg);
+
+                if ($detalleInsert->rowCount() != 1) {
+                    $errores_detalles++;
+                }
+            }
+
+            if ($errores_detalles > 0) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Error parcial",
+                    "Texto" => "El presupuesto se creó, pero algunos artículos no se guardaron",
+                    "Tipo" => "warning"
+                ];
+            } else {
+                $alerta = [
+                    "Alerta" => "recargar",
+                    "Titulo" => "Pedido guardado!",
+                    "Texto" => "El presupuesto se registró correctamente",
+                    "Tipo" => "success"
+                ];
+            }
+            unset($_SESSION['Cdatos_proveedorPre']);
+            unset($_SESSION['Cdatos_articuloPre']);
+            unset($_SESSION['tipo_presupuesto']);
+            echo json_encode($alerta);
         }
-        unset($_SESSION['datos_proveedorPre']);
-        unset($_SESSION['datos_articuloPre']);
-        unset($_SESSION['tipo_presupuesto']);
-        echo json_encode($alerta);
     }
     /**fin controlador */
 
@@ -364,7 +464,7 @@ class presupuestoControlador extends presupuestoModelo
                             <td>' . $rows['idpedido_cabecera'] . '</td>
                             <td>' . $rows['razon_social'] . '</td>
                             <td>
-                                <button type="button" class="btn btn-primary" onclick="agregar_proveedorPre(' . $rows['idpedido_cabecera'] . ')"><i class="fas fa-user-plus"></i></button>
+                                <button type="button" class="btn btn-primary" onclick="agregar_pedidoPre(' . $rows['idpedido_cabecera'] . ')"><i class="fas fa-user-plus"></i></button>
                             </td>
                         </tr>';
             }
@@ -394,7 +494,7 @@ class presupuestoControlador extends presupuestoModelo
             header("Location: " . SERVERURL . "presupuesto-nuevo/");
             exit();
         }
-
+        $_SESSION['id_pedido_seleccionado'] = $idPedido;
         // 1️⃣ Cabecera del pedido (proveedor)
         $sqlCabecera = mainModel::ejecutar_consulta_simple("
         SELECT pc.id_proveedor, p.razon_social, p.ruc
@@ -404,7 +504,7 @@ class presupuestoControlador extends presupuestoModelo
     ");
         $cabecera = $sqlCabecera->fetch();
         if ($cabecera) {
-            $_SESSION['datos_proveedorPre'] = [
+            $_SESSION['Cdatos_proveedorPre'] = [
                 "ID" => $cabecera['id_proveedor'],
                 "RAZON" => $cabecera['razon_social'],
                 "RUC" => $cabecera['ruc']
@@ -420,9 +520,9 @@ class presupuestoControlador extends presupuestoModelo
     ");
         $detalle = $sqlDetalle->fetchAll();
 
-        $_SESSION['datos_articuloPre'] = [];
+        $_SESSION['Cdatos_articuloPre'] = [];
         foreach ($detalle as $row) {
-            $_SESSION['datos_articuloPre'][] = [
+            $_SESSION['Cdatos_articuloPre'][] = [
                 "ID" => $row['id_articulo'],
                 "codigo" => $row['codigo'],
                 "descripcion" => $row['desc_articulo'],

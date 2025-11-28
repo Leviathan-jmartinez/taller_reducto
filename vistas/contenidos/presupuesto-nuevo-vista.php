@@ -5,12 +5,15 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-// Capturar selección de tipo de presupuesto
-if (isset($_POST['tipo_presupuesto'])) {
-    $_SESSION['tipo_presupuesto'] = $_POST['tipo_presupuesto'];
-}
 
 $tipo = $_SESSION['tipo_presupuesto'] ?? null;
+
+
+if (isset($_POST['tipo_presupuesto'])) {
+    $_SESSION['tipo_presupuesto'] = $_POST['tipo_presupuesto'];
+    $tipo = $_SESSION['tipo_presupuesto'];
+}
+
 ?>
 
 <!-- Page header -->
@@ -53,7 +56,7 @@ $tipo = $_SESSION['tipo_presupuesto'] ?? null;
         </div>
     <?php } elseif ($tipo === 'con_pedido') { ?>
         <!-- CON PEDIDO: buscar pedido en BD -->
-        <?php if (empty($_SESSION['datos_proveedorPre'])) { ?>
+        <?php if (empty($_SESSION['Cdatos_proveedorPre'])) { ?>
             <div class="text-center mb-3">
                 <button type="button" class="btn btn-info" data-toggle="modal" data-target="#ModalBuscarPedido">
                     <i class="fas fa-search"></i> &nbsp; Buscar Pedido
@@ -123,17 +126,8 @@ $tipo = $_SESSION['tipo_presupuesto'] ?? null;
                                 <td><?php echo $article['codigo']; ?></td>
                                 <td><?php echo $article['descripcion']; ?></td>
                                 <td><?php echo $article['cantidad']; ?></td>
-                                <!--<td><?php echo number_format($article['precio'], 0, ',', '.'); ?></td>
-                            <td><?php echo number_format($article['subtotal'], 0, ',', '.'); ?></td>-->
-                                <td>
-                                    <input type="number" min="0" class="form-control precio-articulo"
-                                        data-id="<?php echo $article['ID']; ?>"
-                                        value="<?php echo $article['precio']; ?>">
-                                </td>
-                                <td class="subtotal-articulo" data-id="<?php echo $article['ID']; ?>">
-                                    <?php echo number_format($article['subtotal'], 0, ',', '.'); ?>
-                                </td>
-
+                                <td><?php echo number_format($article['precio'], 0, ',', '.'); ?></td>
+                                <td><?php echo number_format($article['subtotal'], 0, ',', '.'); ?></td>
                                 <td>
                                     <form class="FormularioAjax" action="<?php echo SERVERURL; ?>ajax/presupuestoAjax.php" method="POST" data-form="loans">
                                         <input type="hidden" name="id_eliminar_articuloPre" value="<?php echo $article['ID']; ?>">
@@ -193,12 +187,10 @@ $tipo = $_SESSION['tipo_presupuesto'] ?? null;
                                 <td><?php echo $article['codigo']; ?></td>
                                 <td><?php echo $article['descripcion']; ?></td>
                                 <td><?php echo $article['cantidad']; ?></td>
-                                <!--<td><?php echo number_format($article['precio'], 0, ',', '.'); ?></td>
-                            <td><?php echo number_format($article['subtotal'], 0, ',', '.'); ?></td>-->
                                 <td>
-                                    <input type="number" min="0" class="form-control precio-articulo"
+                                    <input type="text" class="form-control precio-articulo text-center"
                                         data-id="<?php echo $article['ID']; ?>"
-                                        value="<?php echo $article['precio']; ?>">
+                                        value="<?php echo number_format($article['precio'], 0, ',', '.'); ?>">
                                 </td>
                                 <td class="subtotal-articulo" data-id="<?php echo $article['ID']; ?>">
                                     <?php echo number_format($article['subtotal'], 0, ',', '.'); ?>

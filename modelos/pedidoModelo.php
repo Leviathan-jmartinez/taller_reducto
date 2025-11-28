@@ -16,7 +16,6 @@ class pedidoModelo extends mainModel
         // retornar el ID autoincremental
         return $conexion->lastInsertId();
     }
-
     /**fin modelo */
     /** modelo agregar pedido detalle*/
     protected static function agregar_pedidoD_modelo($datos)
@@ -34,7 +33,6 @@ class pedidoModelo extends mainModel
     }
     /**fin modelo */
     /**modelo datos pedido detalle*/
-    /** modelo seleccionar pedido*/
     protected static function datos_pedido_modelo($tipo, $id)
     {
         if ($tipo == "unico") {
@@ -50,7 +48,7 @@ class pedidoModelo extends mainModel
         $sql->execute();
         return $sql;
     }
-
+    /**fin modelo */
     /**modelo anular pedido */
     protected static function anular_pedido_modelo($datos)
     {

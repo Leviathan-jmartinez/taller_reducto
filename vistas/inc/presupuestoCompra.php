@@ -153,7 +153,7 @@
         }
     }
 
-    function agregar_proveedorPre_(idPedido) {
+    function agregar_pedidoPre(idPedido) {
         if (!idPedido) return;
 
         // Crear form dinámico para POST
@@ -171,43 +171,79 @@
         form.submit(); // envía y recarga la página
     }
 
-    function actualizarTotales() {
+    let timer;
+
+    // Función para formatear número a estilo "1.234"
+    function formatearNumero(num) {
+        return num.toLocaleString('de-DE');
+    }
+
+    // Función para quitar puntos y devolver número real
+    function limpiarNumero(str) {
+        return parseFloat(str.replace(/\./g, '')) || 0;
+    }
+
+    function actualizarTotales(enviar = false) {
         let totalUnidades = 0;
         let totalGeneral = 0;
 
         document.querySelectorAll(".precio-articulo").forEach(input => {
             const tr = input.closest("tr");
             const cantidad = parseFloat(tr.querySelector("td:nth-child(4)").innerText) || 0;
-            const precio = parseFloat(input.value) || 0;
+            const precio = limpiarNumero(input.value);
+
             const subtotal = cantidad * precio;
 
             // Actualizar subtotal en la tabla
-            tr.querySelector(".subtotal-articulo").innerText = subtotal.toLocaleString();
+            tr.querySelector(".subtotal-articulo").innerText = formatearNumero(subtotal);
 
             totalUnidades += cantidad;
             totalGeneral += subtotal;
 
-            // Guardar en sesión vía AJAX
-            const idArticulo = input.dataset.id;
-            const formData = new FormData();
-            formData.append("id_actualizar_precio", idArticulo);
-            formData.append("precio", precio);
+            // Guardar en sesión vía AJAX solo si enviar=true
+            if (enviar) {
+                const idArticulo = input.dataset.id;
+                const formData = new FormData();
+                formData.append("id_actualizar_precio", idArticulo);
+                formData.append("precio", precio);
 
-            fetch("<?php echo SERVERURL ?>ajax/presupuestoAjax.php", {
-                method: "POST",
-                body: formData
-            });
+                fetch("<?php echo SERVERURL ?>ajax/presupuestoAjax.php", {
+                    method: "POST",
+                    body: formData
+                });
+            }
         });
 
         // Actualizar fila TOTAL
         document.getElementById("total-unidades").innerText = totalUnidades + " unidades";
-        document.getElementById("total-general").innerText = totalGeneral.toLocaleString();
+        document.getElementById("total-general").innerText = formatearNumero(totalGeneral);
     }
 
-    // Escuchar cambios en los inputs de precio
+    // Escuchar cambios en los inputs de precio con debounce y formateo
     document.addEventListener("input", function(e) {
         if (e.target.classList.contains("precio-articulo")) {
-            actualizarTotales();
+            clearTimeout(timer);
+
+            // Guardamos la posición del cursor
+            let start = e.target.selectionStart;
+
+            // Limpiamos todo menos números y formateamos
+            let valor = e.target.value.replace(/[^\d]/g, '');
+            e.target.value = formatearNumero(valor);
+
+            // Restauramos posición del cursor
+            e.target.setSelectionRange(start, start);
+
+            timer = setTimeout(() => {
+                actualizarTotales(true);
+            }, 400);
         }
+    });
+
+    // Formatear al cargar la página los precios existentes
+    window.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll(".precio-articulo").forEach(input => {
+            input.value = formatearNumero(limpiarNumero(input.value));
+        });
     });
 </script>
