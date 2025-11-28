@@ -39,6 +39,7 @@ if (
         $idArticulo = $_POST['id_actualizar_precio'];
         $precio = floatval($_POST['precio']);
         session_start(['name' => 'STR']);
+
         if (isset($_SESSION['Cdatos_articuloPre'])) {
             foreach ($_SESSION['Cdatos_articuloPre'] as &$art) {
                 if ($art['ID'] == $idArticulo) {
@@ -47,9 +48,14 @@ if (
                     break;
                 }
             }
+            $_SESSION['total_pre'] = 0;
+            foreach ($_SESSION['Cdatos_articuloPre'] as $art) {
+                $_SESSION['total_pre'] += $art['subtotal'];
+            }
         }
         exit();
     }
+
     if (isset($_POST['limpiar_presupuesto'])) {
         session_start(['name' => 'STR']);
         unset($_SESSION['tipo_presupuesto']);

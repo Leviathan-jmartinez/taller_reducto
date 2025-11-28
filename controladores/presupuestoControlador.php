@@ -356,13 +356,6 @@ class presupuestoControlador extends presupuestoModelo
                 echo json_encode($alerta);
                 exit();
             }
-            $total = 0;
-
-            foreach ($_SESSION['Cdatos_articuloPre'] as $art) {
-                $total += floatval($art['subtotal']);
-            }
-
-            $_SESSION['total_pre'] = $total;
 
             /** Insertar cabecera */
             $datos_presu_agg = [
