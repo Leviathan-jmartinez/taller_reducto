@@ -32,7 +32,7 @@
                             <a href="<?php echo SERVERURL; ?>presupuesto-lista/"><i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; Presupuestos</a>
                         </li>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>ordencompra-lista/"><i class="fas fa-file-invoice fa-fw"></i> &nbsp; Ordenes de Compra</a>
+                            <a href="<?php echo SERVERURL; ?>oc-nuevo/"><i class="fas fa-file-invoice fa-fw"></i> &nbsp; Ordenes de Compra</a>
                         </li>
                         <li>
                             <a href="<?php echo SERVERURL; ?>facturas-lista/"><i class="fas fa-shopping-cart fa-fw"></i> &nbsp; Ingreso de Facturas</a>

@@ -53,6 +53,47 @@ class presupuestoModelo extends mainModel
         return $sql;
     }
     /**fin modelo */
+    /**modelo actualizar pedido procesado */
+    protected static function actualizar_pedido_modelo($datos)
+    {
+        $sql = mainModel::conectar()->prepare("UPDATE pedido_cabecera
+        SET estado=2, updatedby=:updatedby, updated=now()
+        WHERE idpedido_cabecera=:idpedido_cabecera");
+        $sql->bindParam(":updatedby", $datos['updatedby']);
+        $sql->bindParam(":idpedido_cabecera", $datos['idpedido_cabecera']);
+        $sql->execute();
+        return $sql;
+    }
+    /**fin modelo */
 
+    /**modelo anular presupuesto */
+    protected static function anular_presupuesto_modelo($datos)
+    {
+        $sql = mainModel::conectar()->prepare("UPDATE presupuesto_compra
+        SET estado=0, updatedby=:updatedby, updated=now()
+        WHERE idpresupuesto_compra=:idpresupuesto_compra");
+        $sql->bindParam(":updatedby", $datos['updatedby']);
+        $sql->bindParam(":idpresupuesto_compra", $datos['idpresupuesto_compra']);
+        $sql->execute();
+        return $sql;
+    }
+    /**fin modelo */
 
+    /**modelo datos presupuesto detalle*/
+    protected static function datos_presupuesto_modelo($tipo, $id)
+    {
+        if ($tipo == "unico") {
+            $sql = mainModel::conectar()->prepare("SELECT * FROM presupuesto_compra WHERE idpresupuesto_compra=:id");
+            $sql->bindParam(":id", $id);
+        } elseif ($tipo == "conteoActivos") {
+            $sql = mainModel::conectar()->prepare("SELECT idpresupuesto_compra FROM presupuesto_compra WHERE estado='1'");
+        } elseif ($tipo == "conteoProcesados") {
+            $sql = mainModel::conectar()->prepare("SELECT idpresupuesto_compra FROM presupuesto_compra WHERE estado='2'");
+        } elseif ($tipo == "conteo") {
+            $sql = mainModel::conectar()->prepare("SELECT idpresupuesto_compra FROM presupuesto_compra");
+        }
+        $sql->execute();
+        return $sql;
+    }
+    /**fin modelo */
 }

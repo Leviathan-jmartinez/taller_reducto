@@ -21,8 +21,8 @@
 
             <div class="container-fluid">
                 <?php
-                require_once "./controladores/pedidoControlador.php";
-                $ins_pedido = new pedidoControlador();
-                echo $ins_pedido->paginador_pedidos_controlador($pagina[1], 15, $_SESSION['nivel_str'], $pagina[0], "","");
+                require_once "./controladores/presupuestoControlador.php";
+                $ins_presupuesto = new presupuestoControlador();
+                echo $ins_presupuesto->paginador_presupuestos_controlador($pagina[1], 15, $_SESSION['nivel_str'], $pagina[0], "","");
                 ?>
             </div>

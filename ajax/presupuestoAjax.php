@@ -5,7 +5,7 @@ require_once "../config/APP.php";
 if (
     isset($_POST['buscar_proveedorPre']) || isset($_POST['id_agregar_proveedorPre']) || isset($_POST['id_eliminar_proveedorPre']) || isset($_POST['buscar_articuloPre'])
     || isset($_POST['id_agregar_articuloPre']) || isset($_POST['id_eliminar_articuloPre']) || isset($_POST['agregar_presupuesto']) || isset($_POST['limpiar_presupuesto'])
-    || isset($_POST['buscar_pedidoPre']) || isset($_POST['id_pedido_seleccionado']) || isset($_POST['id_actualizar_precio'])
+    || isset($_POST['buscar_pedidoPre']) || isset($_POST['id_pedido_seleccionado']) || isset($_POST['id_actualizar_precio']) || isset($_POST['presupuesto_id_del'])
 ) {
     /** Instancia al controlador */
     require_once "../controladores/presupuestoControlador.php";
@@ -55,7 +55,9 @@ if (
         }
         exit();
     }
-
+    if (isset($_POST['presupuesto_id_del'])) {
+        echo $inst_presu->anular_presupuesto_controlador();
+    }
     if (isset($_POST['limpiar_presupuesto'])) {
         session_start(['name' => 'STR']);
         unset($_SESSION['tipo_presupuesto']);
@@ -68,9 +70,6 @@ if (
         // Redirigir a la página de nuevo pedido
         header("Location: " . SERVERURL . "presupuesto-nuevo/");
         exit();
-    }
-    if (isset($_POST['pedido_id_del'])) {
-        echo $inst_pedido->anular_pedido_controlador();
     }
 } else {
     session_start(['name' => 'STR']);

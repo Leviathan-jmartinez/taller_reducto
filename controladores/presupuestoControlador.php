@@ -366,6 +366,12 @@ class presupuestoControlador extends presupuestoModelo
                 "fecha_venc" => $fecha_venc
             ];
 
+            $datos_update_pedido = [
+                "idpedido_cabecera" => $_SESSION['id_pedido_seleccionado'],
+                "updatedby" => $_SESSION['id_str']
+            ];
+
+            $updatePedido = presupuestoModelo::actualizar_pedido_modelo($datos_update_pedido);
             $idpresupuestoCab = presupuestoModelo::agregar_presupuestoC_modelo2($datos_presu_agg);
 
             if ($idpresupuestoCab <= 0) {
@@ -474,6 +480,7 @@ class presupuestoControlador extends presupuestoModelo
     }
     /**controlador buscador articulo */
 
+    /**controlador buscar pedido */
     public function cargar_pedido_controlador()
     {
         session_start(['name' => 'STR']);
@@ -529,4 +536,203 @@ class presupuestoControlador extends presupuestoModelo
         header("Location: " . SERVERURL . "presupuesto-nuevo/");
         exit();
     }
+    /**fin controlador */
+
+    /**Controlador paginar articulos */
+    public function paginador_presupuestos_controlador($pagina, $registros, $privilegio, $url, $busqueda1, $busqueda2)
+    {
+        $pagina = mainModel::limpiar_string($pagina);
+        $registros = mainModel::limpiar_string($registros);
+        $privilegio = mainModel::limpiar_string($privilegio);
+        $busqueda1 = mainModel::limpiar_string($busqueda1);
+        $busqueda2 = mainModel::limpiar_string($busqueda2);
+
+        $url = mainModel::limpiar_string($url);
+        $url = SERVERURL . $url . "/";
+
+        $tabla = "";
+
+        $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
+        $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
+
+        if (!empty($busqueda1) && !empty($busqueda2)) {
+            $consulta = "SELECT  SQL_CALC_FOUND_ROWS pc.idpresupuesto_compra as idpresupuesto_compra, pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPre, 
+            pc.idproveedores as idproveedores, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
+            p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick, pc.updated as updated,
+            pc.updatedby as updatedby
+            FROM presupuesto_compra pc
+            INNER JOIN proveedores p on p.idproveedores = pc.idproveedores
+            INNER JOIN usuarios u on u.id_usuario = pc.id_usuario
+            WHERE date(fecha) >= '$busqueda1' AND date(fecha) <='$busqueda2'
+            ORDER BY fecha ASC LIMIT $inicio,$registros";
+        } else {
+            $consulta = "SELECT  SQL_CALC_FOUND_ROWS pc.idpresupuesto_compra as idpresupuesto_compra, pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPre, 
+            pc.idproveedores as idproveedores, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
+            p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick, pc.updated as updated,
+            pc.updatedby as updatedby
+            FROM presupuesto_compra pc
+            INNER JOIN proveedores p on p.idproveedores = pc.idproveedores
+            INNER JOIN usuarios u on u.id_usuario = pc.id_usuario
+            WHERE pc.estado != 0
+            ORDER BY pc.idpresupuesto_compra ASC LIMIT $inicio,$registros";
+        }
+        $conexion = mainModel::conectar();
+        $datos = $conexion->query($consulta);
+        $datos = $datos->fetchAll();
+
+        $total = $conexion->query("SELECT FOUND_ROWS()");
+        $total = (int) $total->fetchColumn();
+
+        $Npaginas = ceil($total / $registros);
+
+        $tabla .= '<div class="table-responsive">
+					<table class="table table-dark table-sm">
+						<thead>
+							<tr class="text-center roboto-medium">
+								<th>#</th>
+								<th>CÓDIGO PRESUPUESTO</th>
+                                <th>PROVEEDOR</th>
+                                <th>FECHA</th>
+                                <th>CREADO POR</th>
+                                <th>ESTADO</th>';
+        if ($privilegio == 1 || $privilegio == 2) {
+            $tabla .=           '<th>ELIMINAR</th>';
+        }
+        $tabla .= '
+						</tr>
+						</thead>
+						<tbody>';
+        if ($total >= 1 && $pagina <= $Npaginas) {
+            $contador = $inicio + 1;
+            $reg_inicio = $inicio + 1;
+            foreach ($datos as $rows) {
+                switch ($rows['estadoPre']) {
+                    case 1:
+                        $estadoBadge = '<span class="badge bg-primary">Pendiente</span>';
+                        break;
+                    case 2:
+                        $estadoBadge = '<span class="badge bg-success">Procesado</span>';
+                        break;
+                    case 0:
+                        $estadoBadge = '<span class="badge bg-danger">Anulado</span>';
+                        break;
+                    default:
+                        $estadoBadge = '<span class="badge bg-secondary">Desconocido</span>';
+                }
+                $tabla .= '
+                            <tr class="text-center">
+								<td>' . $contador . '</td>
+								<td>' . $rows['idpresupuesto_compra'] . '</td>
+								<td>' . $rows['razon_social'] . '</td>
+								<td>' . date("d-m-Y", strtotime($rows['fecha'])) . '</td>
+                                <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
+                                <td>' . $estadoBadge . '</td>';
+                if ($privilegio == 1 || $privilegio == 2) {
+                    $tabla .= '<td>
+									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/presupuestoAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
+                                    <input type="hidden" name="presupuesto_id_del" value=' . mainModel::encryption($rows['idpresupuesto_compra']) . '>
+										<button type="submit" class="btn btn-warning">
+											<i class="far fa-trash-alt"></i>
+										</button>
+									</form>
+								</td>';
+                }
+
+                $tabla .= '</tr>';
+                $contador++;
+            }
+            $reg_final = $contador - 1;
+        } else {
+            if ($total >= 1) {
+                $tabla .= '<tr class="text-center"> <td colspan="6"> <a href="' . $url . '" class="btn btn-reaised btn-primary btn-sm"> Haga click aqui para recargar el listado </a> </td> </tr> ';
+            } else {
+                $tabla .= '<tr class="text-center"> <td colspan="6"> No hay regitros en el sistema</td> </tr> ';
+            }
+        }
+
+        $tabla .= '       </tbody>
+					</table>
+				</div>';
+        if ($total >= 1 && $pagina <= $Npaginas) {
+            $tabla .= '<p class="text-right"> Mostrando registro ' . $reg_inicio . ' al ' . $reg_final . ' de un total de ' . $total . '</p>';
+            $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);
+        }
+        echo $tabla;
+    }
+    /**fin controlador */
+
+    /**Controlador anular presupuesto */
+    public function anular_presupuesto_controlador()
+    {
+        $id = mainModel::decryption($_POST['presupuesto_id_del']);
+        $id = mainModel::limpiar_string($id);
+
+        $check_presupuesto = mainModel::ejecutar_consulta_simple("SELECT idpresupuesto_compra FROM presupuesto_compra WHERE idpresupuesto_compra = '$id'");
+        if ($check_presupuesto->rowCount() < 0) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El PRESUPUESTO que intenta anular no existe en el sistema",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        $check_presupuestoestado = mainModel::ejecutar_consulta_simple("SELECT idpresupuesto_compra FROM presupuesto_compra WHERE idpresupuesto_compra = '$id' AND estado = 2");
+        if ($check_presupuestoestado->rowCount() > 0) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El PRESUPUESTO que intenta anular se encuentra procesado",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        session_start(['name' => 'STR']);
+        if ($_SESSION['nivel_str'] > 2) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "No tiene los permisos necesario para realizar esta operación",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        $datos_presupuesto_del = [
+            "updatedby" => $_SESSION['id_str'],
+            "idpresupuesto_compra" => $id
+        ];
+
+        if (presupuestoModelo::anular_presupuesto_modelo($datos_presupuesto_del)) {
+            $alerta = [
+                "Alerta" => "recargar",
+                "Titulo" => "Pedido Anulado!",
+                "Texto" => "El PRESUPUESTO ha sido anulado correctamente",
+                "Tipo" => "success"
+            ];
+        } else {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "No se pudo anular el PRESUPUESTO seleccionado",
+                "Tipo" => "error"
+            ];
+        }
+        echo json_encode($alerta);
+    }
+    /**fin controlador */
+
+    public function datos_presupuesto_controlador($tipo, $id)
+    {
+        $tipo  = mainModel::limpiar_string($tipo);
+
+        $id  = mainModel::decryption($id);
+        $id  = mainModel::limpiar_string($id);
+
+        return presupuestoModelo::datos_presupuesto_modelo($tipo, $id);
+    }
+    /**fin controlador */
 }
