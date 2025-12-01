@@ -5,14 +5,19 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-
-$tipo = $_SESSION['tipo_presupuesto'] ?? null;
-
-
-if (isset($_POST['tipo_presupuesto'])) {
-    $_SESSION['tipo_presupuesto'] = $_POST['tipo_presupuesto'];
-    $tipo = $_SESSION['tipo_presupuesto'];
+// Valor por defecto
+if (!isset($_SESSION['tipo_ordencompra'])) {
+    $_SESSION['tipo_ordencompra'] = "con_presupuesto";
 }
+
+$tipo = $_SESSION['tipo_ordencompra'];
+
+// Si se envió un nuevo valor por POST, sobrescribe
+if (isset($_POST['tipo_ordencompra'])) {
+    $_SESSION['tipo_ordencompra'] = $_POST['tipo_ordencompra'];
+    $tipo = $_SESSION['tipo_ordencompra'];
+}
+
 
 ?>
 
@@ -41,7 +46,7 @@ if (isset($_POST['tipo_presupuesto'])) {
 
 
 <!-- Contenido según tipo de presupuesto -->
-<?php if ($tipo === 'sin_pedido') { ?>
+<?php if ($tipo === 'sin_presupuesto') { ?>
     <!-- SIN PEDIDO: agregar proveedor y artículos manualmente -->
     <div class="text-center mb-3">
         <?php if (empty($_SESSION['Sdatos_proveedorPre'])) { ?>
@@ -53,15 +58,6 @@ if (isset($_POST['tipo_presupuesto'])) {
             <i class="fas fa-box-open"></i> &nbsp; Agregar artículo
         </button>
     </div>
-<?php } elseif ($tipo === 'con_pedido') { ?>
-    <!-- CON PEDIDO: buscar pedido en BD -->
-    <?php if (empty($_SESSION['Cdatos_proveedorPre'])) { ?>
-        <div class="text-center mb-3">
-            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#ModalBuscarPedido">
-                <i class="fas fa-search"></i> &nbsp; Buscar Pedido
-            </button>
-        </div>
-    <?php } ?>
 <?php } ?>
 
 
@@ -86,7 +82,7 @@ if (isset($_POST['tipo_presupuesto'])) {
 
                 <!-- BUSCADOR -->
                 <div style="flex: 1; min-width: 250px;">
-                    <label class="form-label fw-bold">Buscar proveedor</label>
+                    <label class="form-label fw-bold">Buscar Presupuesto</label>
                     <input type="text" class="form-control" placeholder="Ej: Ejemplo SRL…">
                 </div>
 
