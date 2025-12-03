@@ -72,7 +72,7 @@
                     <?php
                     require_once "./controladores/presupuestoControlador.php";
                     $ins_presupuesto = new presupuestoControlador();
-                    echo $ins_presupuesto->paginador_presupuestos_controlador($pagina[1], 15, $_SESSION['nivel_str'], $pagina[0], $_SESSION['fecha_inicio_presupuesto'],$_SESSION['fecha_final_presupuesto']);
+                    echo $ins_presupuesto->paginador_presupuestos_controlador($pagina[1], 15, $_SESSION['nivel_str'], $pagina[0], $_SESSION['fecha_inicio_presupuesto'], $_SESSION['fecha_final_presupuesto']);
                     ?>
                 </div>
 

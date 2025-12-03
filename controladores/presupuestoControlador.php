@@ -426,9 +426,7 @@ class presupuestoControlador extends presupuestoModelo
         }
     }
     /**fin controlador */
-
-     
-
+    
     /**controlador buscar pedido */
     public function cargar_pedido_controlador()
     {

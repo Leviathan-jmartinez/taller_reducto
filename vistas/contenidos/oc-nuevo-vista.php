@@ -19,6 +19,9 @@ if (isset($_POST['tipo_ordencompra'])) {
 }
 
 
+$busqueda = $_SESSION['busqueda_presupuesto'] ?? '';
+
+
 ?>
 
 <!-- Page header -->
@@ -75,77 +78,44 @@ if (isset($_POST['tipo_ordencompra'])) {
 <div class="container-fluid oc-wrapper">
 
     <!-- HEADER / BARRA SUPERIOR -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
 
-            <div class="oc-header">
 
-                <!-- BUSCADOR -->
-                <div style="flex: 1; min-width: 250px;">
-                    <label class="form-label fw-bold">Buscar Presupuesto</label>
-                    <input type="text" class="form-control" placeholder="Ej: Ejemplo SRL…">
+    <form id="formSearch" autocomplete="off">
+        <input type="hidden" name="modulo" value="presupuesto_compra">
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="oc-header">
+
+                    <div style="flex: 1; min-width: 250px;">
+                        <label for="inputSearch" class="bmd-label-floating">
+                            ¿Qué cliente estás buscando?
+                        </label>
+                        <input type="text"
+                            class="form-control"
+                            name="busqueda" 
+                            id="inputSearch"
+                            placeholder="Ej: Ejemplo SRL…"
+                            value="<?php echo htmlspecialchars($busqueda); ?>">
+                    </div>
+
+                    <div class="oc-actions">
+                        <button type="submit" class="btn btn-dark">Filtrar</button>
+
+                        <button class="btn btn-primary btn-lg" type="button">
+                            + OC sin presupuesto
+                        </button>
+                    </div>
+
                 </div>
-
-                <!-- ACCIONES -->
-                <div class="oc-actions">
-                    <button class="btn btn-dark">
-                        Filtrar
-                    </button>
-
-                    <button class="btn btn-primary btn-lg">
-                        + OC sin presupuesto
-                    </button>
-                </div>
-
             </div>
         </div>
-    </div>
+    </form>
 
-    <!-- TABLA -->
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-dark table-hover text-center align-middle oc-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 80px;">N°</th>
-                            <th>Proveedor</th>
-                            <th>Fecha</th>
-                            <th>Total</th>
-                            <th>Estado</th>
-                            <th>Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (empty($_SESSION['Sdatos_proveedorPre'])) { ?>
-                            <tr>
-                                <td colspan="6" class="text-muted py-4">
-                                    Sin presupuestos disponibles
-                                </td>
-                            </tr>
-                        <?php } else { ?>
-                            <tr>
-                                <td>00125</td>
-                                <td>Ejemplo SRL</td>
-                                <td>2025-11-28</td>
-                                <td>1.250.000 Gs</td>
-                                <td>
-                                    <span class="badge bg-success">
-                                        Aprobado
-                                    </span>
-                                </td>
-                                <td>
-                                    <button class="btn btn-primary btn-sm">
-                                        Generar OC
-                                    </button>
-                                </td>
-                            </tr>
-                        <?php } ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+    <!-- Contenedor donde se cargará la tabla -->
+    <div id="tablaPresupuestos"></div>
+
+
 </div>
 
 
@@ -195,7 +165,6 @@ if (isset($_POST['tipo_ordencompra'])) {
                 <div class="container-fluid" id="tabla_proveedorPre">
 
                 </div>
-
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" onclick="buscar_proveedorPre()"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar</button>
@@ -270,3 +239,26 @@ if (isset($_POST['tipo_ordencompra'])) {
         </div>
     </div>
 </div>
+
+<script>
+    document.querySelector("#formSearch").addEventListener("submit", function(e) {
+        e.preventDefault();
+        let busqueda = document.querySelector("#inputSearch").value;
+        let form = new FormData();
+        form.append("busqueda", busqueda);
+
+        fetch("ajax/buscadorPresupuestoAjax.php", {
+                method: "POST",
+                body: form
+            })
+            .then(res => res.text())
+            .then(html => {
+                document.querySelector("#tablaPresupuestos").innerHTML = html;
+            });
+
+        // Cambiar URL para que la búsqueda se mantenga al recargar
+        const url = new URL(window.location);
+        url.searchParams.set('busqueda', busqueda);
+        window.history.replaceState({}, '', url);
+    });
+</script>

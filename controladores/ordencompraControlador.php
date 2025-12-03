@@ -5,58 +5,127 @@ if ($peticionAjax) {
     require_once "./modelos/ordencompraModelo.php";
 }
 
-class pedidoControlador extends pedidoModelo
+class ordencompraControlador extends ordencompraModelo
 {
-    /**controlador buscar pedido */
-    public function buscar_presupuesto_controlador()
+    /**Controlador paginar articulos */
+    public function paginador_presupuestos_controlador($pagina, $registros, $privilegio, $url, $busqueda)
     {
-        $pedidoCompra  = mainModel::limpiar_string($_POST['buscar_presupuesto']);
+        $pagina = mainModel::limpiar_string($pagina);
+        $registros = mainModel::limpiar_string($registros);
+        $privilegio = mainModel::limpiar_string($privilegio);
+        $busqueda1 = mainModel::limpiar_string($busqueda);
+        
+        $url = mainModel::limpiar_string($url);
+        $url = SERVERURL . $url . "/";
 
-        if ($pedidoCompra == "") {
-            return '        <div class="alert alert-warning" role="alert">
-                                <p class="text-center mb-0">
-                                    <i class="fas fa-exclamation-triangle fa-2x"></i><br>
-                                    Debes introducir el RUC, RAZON SOCIAL o NUMERO DE PEDIDO
-                                </p>
-                            </div>';
-            exit();
-        }
-        /**seleccionar proveedor */
-        $datosPedido = mainModel::ejecutar_consulta_simple("select pc.idpedido_cabecera as idpedido_cabecera, pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPe, pc.id_proveedor as id_proveedor, pc.updated as updated, pc.updatedby as updatedby, 
-        p.idproveedores as idproveedores, p.id_ciudad as id_ciudad, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, p.estado as estadoPro
-        from pedido_cabecera pc 
-        inner join proveedores p on p.idproveedores = pc.id_proveedor 
-        where (idpedido_cabecera like '%$pedidoCompra%' or razon_social like '%$pedidoCompra%' or ruc like '%$pedidoCompra%') and pc.estado = '1'
-        order by idpedido_cabecera desc");
+        $tabla = "";
 
-        if ($datosPedido->rowCount() >= 1) {
-            $datosPedido = $datosPedido->fetchAll();
-            $tabla = '<div class="table-responsive"><table class="table table-hover table-bordered table-sm"><tbody>
-                        <tr class="text-center">
-                            <th>Número de Pedido</th>
-                            <th>Proveedor</th>
-                            <th></th>
-                        </tr>';
-            foreach ($datosPedido as $rows) {
-                $tabla .= '
-                        <tr class="text-center">
-                            <td>' . $rows['idpedido_cabecera'] . '</td>
-                            <td>' . $rows['razon_social'] . '</td>
-                            <td>
-                                <button type="button" class="btn btn-primary" onclick="agregar_pedidoPre(' . $rows['idpedido_cabecera'] . ')"><i class="fas fa-user-plus"></i></button>
-                            </td>
-                        </tr>';
-            }
-            $tabla .= '</tbody></table></div>';
-            return $tabla;
+        $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
+        $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
+
+        if (!empty($busqueda)) {
+            $consulta = "SELECT  SQL_CALC_FOUND_ROWS pc.idpresupuesto_compra as idpresupuesto_compra, pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPre, 
+            pc.idproveedores as idproveedores, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
+            p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick, pc.updated as updated,
+            pc.updatedby as updatedby
+            FROM presupuesto_compra pc
+            INNER JOIN proveedores p on p.idproveedores = pc.idproveedores
+            INNER JOIN usuarios u on u.id_usuario = pc.id_usuario
+            WHERE (pc.idpresupuesto_compra LIKE '%$busqueda%' OR p.razon_social LIKE '%$busqueda%' OR p.ruc LIKE '%$busqueda%') AND pc.estado = 1
+            ORDER BY fecha ASC LIMIT $inicio,$registros";
         } else {
-            return '        <div class="alert alert-warning" role="alert">
-                                <p class="text-center mb-0">
-                                    <i class="fas fa-exclamation-triangle fa-2x"></i><br>
-                                    No hemos encontrado ningún pedido en el sistema que coincida con <strong>“' . $pedidoCompra . '”</strong>
-                                </p>
-                            </div>';
+            $consulta = "SELECT  SQL_CALC_FOUND_ROWS pc.idpresupuesto_compra as idpresupuesto_compra, pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPre, 
+            pc.idproveedores as idproveedores, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
+            p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick, pc.updated as updated,
+            pc.updatedby as updatedby
+            FROM presupuesto_compra pc
+            INNER JOIN proveedores p on p.idproveedores = pc.idproveedores
+            INNER JOIN usuarios u on u.id_usuario = pc.id_usuario
+            WHERE pc.estado != 0
+            ORDER BY pc.idpresupuesto_compra ASC LIMIT $inicio,$registros";
         }
+        $conexion = mainModel::conectar();
+        $datos = $conexion->query($consulta);
+        $datos = $datos->fetchAll();
+
+        $total = $conexion->query("SELECT FOUND_ROWS()");
+        $total = (int) $total->fetchColumn();
+
+        $Npaginas = ceil($total / $registros);
+
+        $tabla .= '<div class="table-responsive">
+					<table class="table table-dark table-sm">
+						<thead>
+							<tr class="text-center roboto-medium">
+								<th>#</th>
+								<th>CÓDIGO PRESUPUESTO</th>
+                                <th>PROVEEDOR</th>
+                                <th>FECHA</th>
+                                <th>CREADO POR</th>
+                                <th>ESTADO</th>';
+        if ($privilegio == 1 || $privilegio == 2) {
+            $tabla .=           '<th>ELIMINAR</th>';
+        }
+        $tabla .= '
+						</tr>
+						</thead>
+						<tbody>';
+        if ($total >= 1 && $pagina <= $Npaginas) {
+            $contador = $inicio + 1;
+            $reg_inicio = $inicio + 1;
+            foreach ($datos as $rows) {
+                switch ($rows['estadoPre']) {
+                    case 1:
+                        $estadoBadge = '<span class="badge bg-primary">Pendiente</span>';
+                        break;
+                    case 2:
+                        $estadoBadge = '<span class="badge bg-success">Procesado</span>';
+                        break;
+                    case 0:
+                        $estadoBadge = '<span class="badge bg-danger">Anulado</span>';
+                        break;
+                    default:
+                        $estadoBadge = '<span class="badge bg-secondary">Desconocido</span>';
+                }
+                $tabla .= '
+                            <tr class="text-center">
+								<td>' . $contador . '</td>
+								<td>' . $rows['idpresupuesto_compra'] . '</td>
+								<td>' . $rows['razon_social'] . '</td>
+								<td>' . date("d-m-Y", strtotime($rows['fecha'])) . '</td>
+                                <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
+                                <td>' . $estadoBadge . '</td>';
+                if ($privilegio == 1 || $privilegio == 2) {
+                    $tabla .= '<td>
+									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/presupuestoAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
+                                    <input type="hidden" name="presupuesto_id_del" value=' . mainModel::encryption($rows['idpresupuesto_compra']) . '>
+										<button type="submit" class="btn btn-warning">
+											<i class="far fa-trash-alt"></i>
+										</button>
+									</form>
+								</td>';
+                }
+
+                $tabla .= '</tr>';
+                $contador++;
+            }
+            $reg_final = $contador - 1;
+        } else {
+            if ($total >= 1) {
+                $tabla .= '<tr class="text-center"> <td colspan="6"> <a href="' . $url . '" class="btn btn-reaised btn-primary btn-sm"> Haga click aqui para recargar el listado </a> </td> </tr> ';
+            } else {
+                $tabla .= '<tr class="text-center"> <td colspan="6"> No hay regitros en el sistema</td> </tr> ';
+            }
+        }
+
+        $tabla .= '       </tbody>
+					</table>
+				</div>';
+        if ($total >= 1 && $pagina <= $Npaginas) {
+            $tabla .= '<p class="text-right"> Mostrando registro ' . $reg_inicio . ' al ' . $reg_final . ' de un total de ' . $total . '</p>';
+            $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);
+        }
+        echo $tabla;
     }
     /**fin controlador */
 }
