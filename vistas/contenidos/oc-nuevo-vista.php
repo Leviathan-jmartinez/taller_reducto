@@ -19,8 +19,6 @@ if (isset($_POST['tipo_ordencompra'])) {
 }
 
 
-$busqueda = $_SESSION['busqueda_presupuesto'] ?? '';
-
 
 ?>
 
@@ -80,40 +78,77 @@ $busqueda = $_SESSION['busqueda_presupuesto'] ?? '';
     <!-- HEADER / BARRA SUPERIOR -->
 
 
-    <form id="formSearch" autocomplete="off">
-        <input type="hidden" name="modulo" value="presupuesto_compra">
+    <!-- <form id="formSearch" autocomplete="off">-->
+    <?php if (!isset($_SESSION['busqueda_ordencompra']) && empty($_SESSION['busqueda_ordencompra'])) { ?>
+        <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="default" autocomplete="off">
+            <input type="hidden" name="modulo" value="ordencompra">
+            <!--<input type="hidden" name="modulo" value="presupuesto_compra">-->
 
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <div class="oc-header">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="oc-header">
 
-                    <div style="flex: 1; min-width: 250px;">
-                        <label for="inputSearch" class="bmd-label-floating">
-                            ¿Qué cliente estás buscando?
-                        </label>
-                        <input type="text"
-                            class="form-control"
-                            name="busqueda" 
-                            id="inputSearch"
-                            placeholder="Ej: Ejemplo SRL…"
-                            value="<?php echo htmlspecialchars($busqueda); ?>">
+                        <div style="flex: 1; min-width: 250px;">
+                            <label for="inputSearch" class="bmd-label-floating">
+                                ¿Qué cliente estás buscando?
+                            </label>
+                            <input type="text"
+                                class="form-control"
+                                name="busqueda_inicial"
+                                id="inputSearch"
+                                placeholder="Ej: Ejemplo SRL…">
+                        </div>
+
+                        <div class="oc-actions">
+                            <button type="submit" class="btn btn-dark">Filtrar</button>
+
+                            <button class="btn btn-primary btn-lg" type="button">
+                                + OC sin presupuesto
+                            </button>
+                        </div>
+
                     </div>
-
-                    <div class="oc-actions">
-                        <button type="submit" class="btn btn-dark">Filtrar</button>
-
-                        <button class="btn btn-primary btn-lg" type="button">
-                            + OC sin presupuesto
-                        </button>
-                    </div>
-
                 </div>
             </div>
-        </div>
-    </form>
+        </form>
+    <?php } else { ?>
+        <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="default" autocomplete="off">
+            <input type="hidden" name="modulo" value="ordencompra">
+            <input type="hidden" name="eliminar_busqueda" value="eliminar">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="oc-header">
 
-    <!-- Contenedor donde se cargará la tabla -->
-    <div id="tablaPresupuestos"></div>
+                        <div style="flex: 1; min-width: 250px;">
+                            <label for="inputSearch" class="bmd-label-floating">
+                                Resultado de Búsqueda &nbsp;
+                            </label>
+                            <input
+                                class="form-control"
+                                placeholder="<?php echo $_SESSION['busqueda_ordencompra'] ?>">
+                        </div>
+
+                        <div class="oc-actions">
+                            <button type="submit" class="btn btn-raised btn-danger"><i class="far fa-trash-alt"></i> &nbsp; ELIMINAR BÚSQUEDA</button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <div class="container-fluid">
+            <?php
+            require_once "./controladores/ordencompraControlador.php";
+            $ins_ordencompra = new ordencompraControlador();
+            echo $ins_ordencompra->paginador_presupuestos_controlador($pagina[1], 15, $_SESSION['nivel_str'], $pagina[0], $_SESSION['busqueda_ordencompra']);
+            ?>
+        </div>
+    <?php
+    }
+    ?>
+    <!-- Contenedor donde se cargará la tabla 
+    <div id="tablaPresupuestos"></div>-->
 
 
 </div>
@@ -123,26 +158,50 @@ $busqueda = $_SESSION['busqueda_presupuesto'] ?? '';
 
 
 <!-- Modal de selección inicial -->
-<div class="modal fade" id="ModalTipoPresupuesto" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-        <div class="modal-content text-center">
-            <div class="modal-header">
-                <h5 class="modal-title">Seleccione tipo de presupuesto</h5>
+<!-- Modal Detalle de Presupuesto -->
+<div class="modal fade" id="modalDetallePresupuesto" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">ORDEN DE COMPRA</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
+
             <div class="modal-body">
-                <form method="POST">
-                    <button type="submit" name="tipo_presupuesto" value="sin_pedido" class="btn btn-primary m-2">Sin pedido</button>
-                    <button type="submit" name="tipo_presupuesto" value="con_pedido" class="btn btn-success m-2">Con pedido</button>
+
+                <!-- Buscador interno -->
+                <input type="text" id="filtroProductos" class="form-control mb-3" placeholder="Filtrar por código o descripción…">
+
+                <form id="formOcProductos">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped text-center">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Descripción</th>
+                                    <th>Precio</th>
+                                    <th>Disponible</th>
+                                    <th>Cargar Cantidad</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyDetallePresupuesto">
+                                <!-- AJAX carga aquí -->
+                            </tbody>
+                        </table>
+                    </div>
                 </form>
+
             </div>
-            <div class="modal-footer justify-content-center">
-                <button type="button" class="btn btn-raised btn-danger btn-sm" onclick="window.location.href='<?php echo SERVERURL; ?>presupuesto-lista/'">
-                    Cancelar
-                </button>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" id="btnGuardarOC">Generar Orden de Compra</button>
             </div>
+
         </div>
     </div>
 </div>
+
 
 <!-- MODAL proveedor -->
 <div class="modal fade" id="ModalproveedorPre" tabindex="-1" role="dialog" aria-labelledby="ModalproveedorPre" aria-hidden="true">
@@ -241,24 +300,60 @@ $busqueda = $_SESSION['busqueda_presupuesto'] ?? '';
 </div>
 
 <script>
-    document.querySelector("#formSearch").addEventListener("submit", function(e) {
-        e.preventDefault();
-        let busqueda = document.querySelector("#inputSearch").value;
-        let form = new FormData();
-        form.append("busqueda", busqueda);
+    document.addEventListener("click", function(e) {
+        if (e.target.classList.contains("generar-oc-btn")) {
+            let id = e.target.getAttribute("data-id");
 
-        fetch("ajax/buscadorPresupuestoAjax.php", {
+            // Guardar el ID global para usarlo en btnGuardarOC
+            window.idPresupuestoActual = id;
+
+            fetch("<?php echo SERVERURL; ?>ajax/presupuestoDetalleAjax.php", {
+                    method: "POST",
+                    body: new URLSearchParams({
+                        idpresupuesto: id
+                    })
+                })
+                .then(res => res.text())
+                .then(html => {
+                    document.querySelector("#tbodyDetallePresupuesto").innerHTML = html;
+                    new bootstrap.Modal(document.getElementById("modalDetallePresupuesto")).show();
+                });
+        }
+    });
+
+    document.getElementById("filtroProductos").addEventListener("keyup", function() {
+        let filtro = this.value.toLowerCase();
+        document.querySelectorAll("#tbodyDetallePresupuesto tr").forEach(row => {
+            row.style.display = row.innerText.toLowerCase().includes(filtro) ? "" : "none";
+        });
+    });
+
+    document.getElementById("btnGuardarOC").addEventListener("click", function() {
+
+        let form = document.getElementById("formOcProductos");
+        let datos = new FormData(form);
+
+        // Aquí le pasamos el ID del presupuesto seleccionado
+        datos.append("idpresupuesto", window.idPresupuestoActual);
+
+        // Si quieres, también puedes pasar módulo u otros datos
+        datos.append("modulo", "ordencompra");
+
+        fetch("<?php echo SERVERURL; ?>ajax/ordencompraAjax.php", {
                 method: "POST",
-                body: form
+                body: datos
             })
-            .then(res => res.text())
-            .then(html => {
-                document.querySelector("#tablaPresupuestos").innerHTML = html;
-            });
+            .then(r => r.text())
+            .then(r => {
 
-        // Cambiar URL para que la búsqueda se mantenga al recargar
-        const url = new URL(window.location);
-        url.searchParams.set('busqueda', busqueda);
-        window.history.replaceState({}, '', url);
+                if (r.includes("ok:")) {
+                    let idOC = r.replace("ok:", "");
+                    Swal.fire("OC generada", "N° " + idOC, "success").then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire("Error", r, "error");
+                }
+            });
     });
 </script>

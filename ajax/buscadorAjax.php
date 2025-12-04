@@ -9,7 +9,7 @@ if (isset($_POST['busqueda_inicial']) || isset($_POST['eliminar_busqueda'])  || 
         "articulo" => "articulo-buscar",
         "pedido" => "pedido-buscar",
         "presupuesto" => "presupuesto-buscar",
-        "ordencompra" => "ordencompra-buscar"
+        "ordencompra" => "oc-nuevo"
     ];
     if (isset($_POST['modulo'])) {
         $modulo = $_POST['modulo'];
