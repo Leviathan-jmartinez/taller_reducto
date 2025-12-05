@@ -498,8 +498,7 @@ class presupuestoControlador extends presupuestoModelo
         SELECT pc.id_proveedor, p.razon_social, p.ruc
         FROM pedido_cabecera pc
         INNER JOIN proveedores p ON p.idproveedores = pc.id_proveedor
-        WHERE pc.idpedido_cabecera = '$idPedido'
-    ");
+        WHERE pc.idpedido_cabecera = '$idPedido'");
         $cabecera = $sqlCabecera->fetch();
         if ($cabecera) {
             $_SESSION['Cdatos_proveedorPre'] = [
@@ -514,8 +513,7 @@ class presupuestoControlador extends presupuestoModelo
         SELECT pd.id_articulo, pd.cantidad, a.desc_articulo, a.codigo
         FROM pedido_detalle pd
         INNER JOIN articulos a ON a.id_articulo = pd.id_articulo
-        WHERE pd.idpedido_cabecera = '$idPedido'
-    ");
+        WHERE pd.idpedido_cabecera = '$idPedido'");
         $detalle = $sqlDetalle->fetchAll();
 
         $_SESSION['Cdatos_articuloPre'] = [];
