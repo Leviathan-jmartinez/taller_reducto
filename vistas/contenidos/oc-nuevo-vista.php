@@ -19,7 +19,6 @@ if (isset($_POST['tipo_ordencompra'])) {
 }
 
 
-
 ?>
 
 <!-- Page header -->
@@ -77,80 +76,88 @@ if (isset($_POST['tipo_ordencompra'])) {
 
     <!-- HEADER / BARRA SUPERIOR -->
 
+    <?php if ($tipo === 'con_presupuesto') { ?>
+        <!-- <form id="formSearch" autocomplete="off">-->
+        <?php if (!isset($_SESSION['busqueda_ordencompra']) && empty($_SESSION['busqueda_ordencompra'])) { ?>
+            <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="default" autocomplete="off">
+                <input type="hidden" name="modulo" value="ordencompra">
+                <!--<input type="hidden" name="modulo" value="presupuesto_compra">-->
 
-    <!-- <form id="formSearch" autocomplete="off">-->
-    <?php if (!isset($_SESSION['busqueda_ordencompra']) && empty($_SESSION['busqueda_ordencompra'])) { ?>
-        <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="default" autocomplete="off">
-            <input type="hidden" name="modulo" value="ordencompra">
-            <!--<input type="hidden" name="modulo" value="presupuesto_compra">-->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="oc-header">
 
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <div class="oc-header">
+                            <div style="flex: 1; min-width: 250px;">
+                                <label for="inputSearch" class="bmd-label-floating">
+                                    ¿Qué cliente estás buscando?
+                                </label>
+                                <input type="text"
+                                    class="form-control"
+                                    name="busqueda_inicial"
+                                    id="inputSearch"
+                                    placeholder="Ej: Ejemplo SRL…">
+                            </div>
 
-                        <div style="flex: 1; min-width: 250px;">
-                            <label for="inputSearch" class="bmd-label-floating">
-                                ¿Qué cliente estás buscando?
-                            </label>
-                            <input type="text"
-                                class="form-control"
-                                name="busqueda_inicial"
-                                id="inputSearch"
-                                placeholder="Ej: Ejemplo SRL…">
-                        </div>
+                            <div class="oc-actions">
+                                <button type="submit" class="btn btn-dark">Filtrar</button>
+            </form>
+            <form action="" method="POST" style="display:inline;">
+                <input type="hidden" name="tipo_ordencompra" value="sin_presupuesto">
+                <button class="btn btn-primary btn-lg" type="submit">
+                    + OC sin presupuesto
+                </button>
+            </form>
+</div>
+</div>
 
-                        <div class="oc-actions">
-                            <button type="submit" class="btn btn-dark">Filtrar</button>
+</div>
+</div>
 
-                            <button class="btn btn-primary btn-lg" type="button">
-                                + OC sin presupuesto
-                            </button>
-                        </div>
 
+
+<?php } else { ?>
+    <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="default" autocomplete="off">
+        <input type="hidden" name="modulo" value="ordencompra">
+        <input type="hidden" name="eliminar_busqueda" value="eliminar">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="oc-header">
+
+                    <div style="flex: 1; min-width: 250px;">
+                        <label for="inputSearch" class="bmd-label-floating">
+                            Resultado de Búsqueda &nbsp;
+                        </label>
+                        <input
+                            class="form-control"
+                            placeholder="<?php echo $_SESSION['busqueda_ordencompra'] ?>">
                     </div>
+
+                    <div class="oc-actions">
+                        <button type="submit" class="btn btn-raised btn-danger"><i class="far fa-trash-alt"></i> &nbsp; ELIMINAR BÚSQUEDA</button>
+                    </div>
+
                 </div>
             </div>
-        </form>
-    <?php } else { ?>
-        <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="default" autocomplete="off">
-            <input type="hidden" name="modulo" value="ordencompra">
-            <input type="hidden" name="eliminar_busqueda" value="eliminar">
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <div class="oc-header">
+        </div>
+    </form>
 
-                        <div style="flex: 1; min-width: 250px;">
-                            <label for="inputSearch" class="bmd-label-floating">
-                                Resultado de Búsqueda &nbsp;
-                            </label>
-                            <input
-                                class="form-control"
-                                placeholder="<?php echo $_SESSION['busqueda_ordencompra'] ?>">
-                        </div>
-
-                        <div class="oc-actions">
-                            <button type="submit" class="btn btn-raised btn-danger"><i class="far fa-trash-alt"></i> &nbsp; ELIMINAR BÚSQUEDA</button>
-                        </div>
-
-                    </div>
-                </div>
-            </div>
-        </form>
-
-        <div class="container-fluid">
-            <?php
+    <div class="container-fluid">
+        <?php
             require_once "./controladores/ordencompraControlador.php";
             $ins_ordencompra = new ordencompraControlador();
             echo $ins_ordencompra->paginador_presupuestos_controlador($pagina[1], 15, $_SESSION['nivel_str'], $pagina[0], $_SESSION['busqueda_ordencompra']);
-            ?>
-        </div>
-    <?php
-    }
-    ?>
+        ?>
+    </div>
+<?php
+        }
+?>
+<?php } else { ?>
     <!-- Contenedor donde se cargará la tabla 
     <div id="tablaPresupuestos"></div>-->
 
-
+<?php
+    }
+?>
 </div>
 
 
@@ -170,18 +177,29 @@ if (isset($_POST['tipo_ordencompra'])) {
 
             <div class="modal-body">
 
-                <!-- Buscador interno -->
-                <input type="text" id="filtroProductos" class="form-control mb-3" placeholder="Filtrar por código o descripción…">
 
                 <form id="formOcProductos">
+                    <div class="row align-items-end">
+                        <div class="col-md-8 mb-3">
+                            <input type="text" id="filtroProductos" class="form-control"
+                                placeholder="Filtrar por código o descripción…">
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label for="fecha_entrega" class="form-label">Fecha Entrega</label>
+                            <input type="date" class="form-control"
+                                name="fecha_entrega" id="fecha_entrega"
+                                value="<?php echo date('Y-m-d'); ?>"
+                                required>
+                        </div>
+                    </div>
                     <div class="table-responsive">
-                        <table class="table table-bordered table-striped text-center">
+                        <table class="table table-dark table-sm text-center">
                             <thead>
                                 <tr>
                                     <th>Código</th>
                                     <th>Descripción</th>
                                     <th>Precio</th>
-                                    <th>Disponible</th>
                                     <th>Cargar Cantidad</th>
                                 </tr>
                             </thead>

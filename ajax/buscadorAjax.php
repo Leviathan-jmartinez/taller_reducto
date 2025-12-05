@@ -9,7 +9,8 @@ if (isset($_POST['busqueda_inicial']) || isset($_POST['eliminar_busqueda'])  || 
         "articulo" => "articulo-buscar",
         "pedido" => "pedido-buscar",
         "presupuesto" => "presupuesto-buscar",
-        "ordencompra" => "oc-nuevo"
+        "ordencompra" => "oc-nuevo",
+        "ordencompra2" => "oc-buscar"
     ];
     if (isset($_POST['modulo'])) {
         $modulo = $_POST['modulo'];
@@ -23,7 +24,7 @@ if (isset($_POST['busqueda_inicial']) || isset($_POST['eliminar_busqueda'])  || 
             echo json_encode($alerta);
             exit();
         }
-        if ($modulo == "pedido" || $modulo == "presupuesto") {
+        if ($modulo == "pedido" || $modulo == "presupuesto" || $modulo == "ordencompra2") {
             $fecha_inicio = "fecha_inicio_" . $modulo;
             $fecha_final = "fecha_final_" . $modulo;
 

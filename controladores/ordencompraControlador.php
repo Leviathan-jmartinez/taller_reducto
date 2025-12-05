@@ -125,21 +125,14 @@ class ordencompraControlador extends ordencompraModelo
     {
         session_start(['name' => 'STR']);
 
-        // -----------------------------
-        // 1) Activar errores de PHP
-        // -----------------------------
-        ini_set('display_errors', 1);
-        ini_set('display_startup_errors', 1);
-        error_reporting(E_ALL);
 
         // -----------------------------
         // 2) Obtener y sanear POST
         // -----------------------------
         $idpresupuesto = $_POST['idpresupuesto'] ?? null;
         $cantidades = $_POST['cantidades'] ?? [];
-        var_dump($cantidades);
-        exit();
-        // Si viene como array, tomar el primer valor
+        $fecha_entrega = $_POST['fecha_entrega'] ?? null;
+
         if (is_array($idpresupuesto)) {
             $idpresupuesto = $idpresupuesto[0] ?? null;
         }
@@ -151,14 +144,10 @@ class ordencompraControlador extends ordencompraModelo
         // -----------------------------
         if (!$idpresupuesto || $idpresupuesto === "undefined" || !is_numeric($idpresupuesto)) {
             echo "error:no_id_valido";
-            var_dump($_POST); // Depuración POST
-            exit();
         }
 
         if (empty($cantidades)) {
             echo "error:no_cantidades";
-            var_dump($_POST); // Depuración POST
-            exit();
         }
 
         $conexion = mainModel::conectar();
@@ -167,7 +156,7 @@ class ordencompraControlador extends ordencompraModelo
         // 4) Obtener cabecera del presupuesto
         // -----------------------------
         $consultaPre = $conexion->prepare("
-        SELECT idproveedores, id_usuario
+        SELECT idpresupuesto_compra,idproveedores, id_usuario
         FROM presupuesto_compra
         WHERE idpresupuesto_compra = :id
     ");
@@ -176,18 +165,17 @@ class ordencompraControlador extends ordencompraModelo
 
         if (!$pre) {
             echo "error:presupuesto_no_existe";
-            var_dump($idpresupuesto);
-            exit();
         }
 
-        var_dump($pre); // Depuración cabecera
 
         // -----------------------------
         // 5) Crear cabecera de OC
         // -----------------------------
         $datos_oc_cab = [
             "proveedor" => $pre['idproveedores'],
-            "usuario"   => $_SESSION['id_str'] // id del usuario logueado
+            "presupuestoid" => $pre['idpresupuesto_compra'],
+            "usuario"   => $_SESSION['id_str'],
+            "fecha_entrega"   => $fecha_entrega
         ];
 
         $idOC = ordenCompraModelo::agregar_ocC_modelo($datos_oc_cab);
@@ -197,7 +185,6 @@ class ordencompraControlador extends ordencompraModelo
             exit();
         }
 
-        var_dump($idOC); // Depuración ID OC
 
         // -----------------------------
         // 6) Obtener detalle del presupuesto
@@ -209,15 +196,10 @@ class ordencompraControlador extends ordencompraModelo
     ");
         $consultaDet->execute([":id" => $idpresupuesto]);
         $detallePre = $consultaDet->fetchAll(PDO::FETCH_ASSOC);
-        var_dump($detallePre);
-        exit();
         if (empty($detallePre)) {
             echo "error:detalle_vacio";
             exit();
         }
-
-        var_dump($detallePre); // Depuración detalle
-
         // -----------------------------
         // 7) Insertar detalle de OC
         // -----------------------------
@@ -238,10 +220,12 @@ class ordencompraControlador extends ordencompraModelo
                 "pendiente" => $cantidades[$idArt]
             ];
 
-            $insert = ordenCompraModelo::agregar_ocD_modelo($datos_det);
+            if (!isset($item["precio"])) {
+                var_dump("ERROR: precio no existe en item", $item);
+                exit();
+            }
 
-            // Depuración inserción
-            var_dump($datos_det, $insert->rowCount());
+            $insert = ordenCompraModelo::agregar_ocD_modelo($datos_det);
 
             if ($insert->rowCount() != 1) {
                 $errores++;
@@ -256,9 +240,195 @@ class ordencompraControlador extends ordencompraModelo
         } else {
             echo "ok:" . $idOC;
         }
-
-        var_dump($errores, $idOC); // Depuración final
     }
+    /**fin controlador */
 
+    /**Controlador paginar ordencompra */
+    public function paginador_ordencompra_controlador($pagina, $registros, $privilegio, $url, $busqueda1, $busqueda2)
+    {
+        $pagina = mainModel::limpiar_string($pagina);
+        $registros = mainModel::limpiar_string($registros);
+        $privilegio = mainModel::limpiar_string($privilegio);
+        $busqueda1 = mainModel::limpiar_string($busqueda1);
+        $busqueda2 = mainModel::limpiar_string($busqueda2);
+        $url = mainModel::limpiar_string($url);
+        $url = SERVERURL . $url . "/";
+
+        $tabla = "";
+
+        $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
+        $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
+
+        if (!empty($busqueda1) && !empty($busqueda2)) {
+            $consulta = "SELECT SQL_CALC_FOUND_ROWS oc.idorden_compra as idorden_compra, oc.idproveedores as idproveedores, oc.id_usuario as id_usuario, oc.fecha as fecha, oc.estado as estodoOC, 
+            oc.fecha_entrega as fecha_entrega, oc.presupuestoid as presupuestoid, oc.updated as updated, oc.updatedby as updatedby, p.idproveedores as idproveedores, p.id_ciudad as id_ciudad, p.razon_social as razon_social, 
+            p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, p.estado as estadoPro, 
+            u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick
+            from orden_compra oc 
+            INNER JOIN proveedores p on p.idproveedores = oc.idproveedores 
+            INNER JOIN usuarios u on u.id_usuario = oc.id_usuario
+            WHERE date(fecha) >= '$busqueda1' AND date(fecha) <='$busqueda2'
+            ORDER BY idorden_compra desc LIMIT $inicio,$registros";
+        } else {
+            $consulta = "SELECT SQL_CALC_FOUND_ROWS oc.idorden_compra as idorden_compra, oc.idproveedores as idproveedores, oc.id_usuario as id_usuario, oc.fecha as fecha, oc.estado as estodoOC, 
+            oc.fecha_entrega as fecha_entrega, oc.presupuestoid as presupuestoid, oc.updated as updated, oc.updatedby as updatedby, p.idproveedores as idproveedores, p.id_ciudad as id_ciudad, p.razon_social as razon_social, 
+            p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, p.estado as estadoPro, 
+            u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick
+            from orden_compra oc 
+            INNER JOIN proveedores p on p.idproveedores = oc.idproveedores 
+            INNER JOIN usuarios u on u.id_usuario = oc.id_usuario
+            WHERE oc.estado != 0
+            ORDER BY idorden_compra desc LIMIT $inicio,$registros";
+        }
+        $conexion = mainModel::conectar();
+        $datos = $conexion->query($consulta);
+        $datos = $datos->fetchAll();
+
+        $total = $conexion->query("SELECT FOUND_ROWS()");
+        $total = (int) $total->fetchColumn();
+
+        $Npaginas = ceil($total / $registros);
+
+        $tabla .= '<div class="table-responsive">
+					<table class="table table-dark table-sm">
+						<thead>
+							<tr class="text-center roboto-medium">
+								<th>#</th>
+								<th>CÓDIGO OC</th>
+                                <th>PROVEEDOR</th>
+                                <th>FECHA CREACION</th>
+                                <th>FECHA ENTREGA</th>
+                                <th>CREADO POR</th>
+                                <th>ESTADO</th>';
+        if ($privilegio == 1 || $privilegio == 2) {
+            $tabla .=           '<th>ELIMINAR</th>';
+        }
+        $tabla .= '
+						</tr>
+						</thead>
+						<tbody>';
+        if ($total >= 1 && $pagina <= $Npaginas) {
+            $contador = $inicio + 1;
+            $reg_inicio = $inicio + 1;
+            foreach ($datos as $rows) {
+                switch ($rows['estodoOC']) {
+                    case 1:
+                        $estadoBadge = '<span class="badge bg-primary">Pendiente</span>';
+                        break;
+                    case 2:
+                        $estadoBadge = '<span class="badge bg-success">Procesado</span>';
+                        break;
+                    case 0:
+                        $estadoBadge = '<span class="badge bg-danger">Anulado</span>';
+                        break;
+                    default:
+                        $estadoBadge = '<span class="badge bg-secondary">Desconocido</span>';
+                }
+                $tabla .= '
+                            <tr class="text-center">
+								<td>' . $contador . '</td>
+								<td>' . $rows['idorden_compra'] . '</td>
+								<td>' . $rows['razon_social'] . '</td>
+								<td>' . date("d-m-Y", strtotime($rows['fecha'])) . '</td>
+								<td>' . date("d-m-Y", strtotime($rows['fecha_entrega'])) . '</td>
+                                <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
+                                <td>' . $estadoBadge . '</td>';
+                if ($privilegio == 1 || $privilegio == 2) {
+                    $tabla .= '<td>
+									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/ordencompraAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
+                                    <input type="hidden" name="ordencompra_id_del" value=' . mainModel::encryption($rows['idorden_compra']) . '>
+										<button type="submit" class="btn btn-warning">
+											<i class="far fa-trash-alt"></i>
+										</button>
+									</form>
+								</td>';
+                }
+
+                $tabla .= '</tr>';
+                $contador++;
+            }
+            $reg_final = $contador - 1;
+        } else {
+            if ($total >= 1) {
+                $tabla .= '<tr class="text-center"> <td colspan="6"> <a href="' . $url . '" class="btn btn-reaised btn-primary btn-sm"> Haga click aqui para recargar el listado </a> </td> </tr> ';
+            } else {
+                $tabla .= '<tr class="text-center"> <td colspan="6"> No hay regitros en el sistema</td> </tr> ';
+            }
+        }
+
+        $tabla .= '       </tbody>
+					</table>
+				</div>';
+        if ($total >= 1 && $pagina <= $Npaginas) {
+            $tabla .= '<p class="text-right"> Mostrando registro ' . $reg_inicio . ' al ' . $reg_final . ' de un total de ' . $total . '</p>';
+            $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);
+        }
+        echo $tabla;
+    }
+    /**fin controlador */
+
+
+    /**Controlador anular ordencompra */
+    public function anular_ordencompra_controlador()
+    {
+        $id = mainModel::decryption($_POST['ordencompra_id_del']);
+        $id = mainModel::limpiar_string($id);
+
+        $check_presupuesto = mainModel::ejecutar_consulta_simple("SELECT idorden_compra FROM orden_compra WHERE idorden_compra = '$id'");
+        if ($check_presupuesto->rowCount() < 0) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "La ORDEN DE COMPRA que intenta anular no existe en el sistema",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        $check_presupuestoestado = mainModel::ejecutar_consulta_simple("SELECT idorden_compra FROM orden_compra WHERE idorden_compra = '$id' AND estado = 2");
+        if ($check_presupuestoestado->rowCount() > 0) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "La ORDEN DE COMPRA que intenta anular se encuentra procesado",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        session_start(['name' => 'STR']);
+        if ($_SESSION['nivel_str'] > 2) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "No tiene los permisos necesario para realizar esta operación",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+        $datos_oc_del = [
+            "updatedby" => $_SESSION['id_str'],
+            "idorden_compra" => $id
+        ];
+
+        if (ordencompraModelo::anular_ordencompra_modelo($datos_oc_del)) {
+            $alerta = [
+                "Alerta" => "recargar",
+                "Titulo" => "Pedido Anulado!",
+                "Texto" => "La ORDEN DE COMPRA ha sido anulada correctamente",
+                "Tipo" => "success"
+            ];
+        } else {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "No se pudo anular la ORDEN DE COMPRA seleccionada, por favor intente nuevamente",
+                "Tipo" => "error"
+            ];
+        }
+        echo json_encode($alerta);
+    }
     /**fin controlador */
 }
