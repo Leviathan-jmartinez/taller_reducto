@@ -3,8 +3,8 @@ require_once "mainModel.php";
 
 class ordencompraModelo extends mainModel
 {
-    /** modelo agregar presupuesto cabecera con pedido*/
-    protected static function agregar_ocC_modelo($datos)
+    /** modelo agregar presupuesto cabecera con presupuesto*/
+    protected static function agregar_ocC_modelo1($datos)
     {
         $conexion = mainModel::conectar();
         $sql = $conexion->prepare("INSERT INTO orden_compra 
@@ -13,6 +13,23 @@ class ordencompraModelo extends mainModel
 
         $sql->bindParam(":proveedor", $datos['proveedor']);
         $sql->bindParam(":presupuestoid", $datos['presupuestoid']);
+        $sql->bindParam(":usuario", $datos['usuario']);
+        $sql->bindParam(":fecha_entrega", $datos['fecha_entrega']);
+
+        $sql->execute();
+
+        return $conexion->lastInsertId();
+    }
+    /**fin modelo */
+    /** modelo agregar presupuesto cabecera sin presupuesto*/
+    protected static function agregar_ocC_modelo2($datos)
+    {
+        $conexion = mainModel::conectar();
+        $sql = $conexion->prepare("INSERT INTO orden_compra 
+        (idproveedores, id_usuario, fecha, estado, fecha_entrega)
+        VALUES (:proveedor, :usuario, NOW(), 1, :fecha_entrega)");
+
+        $sql->bindParam(":proveedor", $datos['proveedor']);
         $sql->bindParam(":usuario", $datos['usuario']);
         $sql->bindParam(":fecha_entrega", $datos['fecha_entrega']);
 

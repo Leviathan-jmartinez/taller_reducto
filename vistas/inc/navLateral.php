@@ -35,7 +35,7 @@
                             <a href="<?php echo SERVERURL; ?>oc-nuevo/"><i class="fas fa-file-invoice fa-fw"></i> &nbsp; Ordenes de Compra</a>
                         </li>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>facturas-lista/"><i class="fas fa-shopping-cart fa-fw"></i> &nbsp; Ingreso de Facturas</a>
+                            <a href="<?php echo SERVERURL; ?>factura-nuevo/"><i class="fas fa-shopping-cart fa-fw"></i> &nbsp; Ingreso de Facturas</a>
                         </li>
                         <li>
                             <a href="<?php echo SERVERURL; ?>remisiones-buscar/"><i class="fas fa-box fa-fw"></i> &nbsp; Remisiones</a>

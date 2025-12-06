@@ -49,14 +49,28 @@ if (isset($_POST['tipo_ordencompra'])) {
 <?php if ($tipo === 'sin_presupuesto') { ?>
     <!-- SIN PEDIDO: agregar proveedor y artículos manualmente -->
     <div class="text-center mb-3">
-        <?php if (empty($_SESSION['Sdatos_proveedorPre'])) { ?>
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalproveedorPre">
+        <?php if (empty($_SESSION['Sdatos_proveedorOC'])) { ?>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalproveedorOC">
                 <i class="fas fa-user-plus"></i> &nbsp; Agregar Proveedor
             </button>
         <?php } ?>
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalArticuloPre">
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalArticuloOC">
             <i class="fas fa-box-open"></i> &nbsp; Agregar artículo
         </button>
+    </div>
+    <div class="col-12 col-md-6">
+        <span class="roboto-medium">PROVEEDOR:</span>
+        <?php if (empty($_SESSION['Sdatos_proveedorOC'])) { ?>
+            <span class="text-danger">&nbsp;
+                <i class="fas fa-exclamation-triangle"></i> Seleccione un Proveedor
+            </span>
+        <?php } else { ?>
+            <form class="FormularioAjax d-inline-block" action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php" method="POST" data-form="loans">
+                <input type="hidden" name="id_eliminar_proveedorOC" value="<?php echo $_SESSION['Sdatos_proveedorOC']['ID']; ?>">
+                <?php echo $_SESSION['Sdatos_proveedorOC']['RAZON'] . " (" . $_SESSION['Sdatos_proveedorOC']['RUC'] . ")"; ?>
+                <button type="submit" class="btn btn-danger"><i class="fas fa-user-times"></i></button>
+            </form>
+        <?php } ?>
     </div>
 <?php } ?>
 
@@ -152,9 +166,105 @@ if (isset($_POST['tipo_ordencompra'])) {
         }
 ?>
 <?php } else { ?>
-    <!-- Contenedor donde se cargará la tabla 
-    <div id="tablaPresupuestos"></div>-->
+    <div class="table-responsive mt-3">
+        <table class="table table-dark table-sm">
+            <thead>
+                <tr class="text-center roboto-medium">
+                    <th>#</th>
+                    <th>CODIGO</th>
+                    <th>DESCRIPCION</th>
+                    <th>CANTIDAD</th>
+                    <th>PRECIO UNITARIO</th>
+                    <th>SUBTOTAL</th>
+                    <th>ELIMINAR</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                if (isset($_SESSION['Sdatos_articuloOC']) && count($_SESSION['Sdatos_articuloOC']) >= 1) {
+                    $_SESSION['oc_articulo'] = 0;
+                    $_SESSION['total_oc'] = 0;
+                    $contador = 1;
+                    foreach ($_SESSION['Sdatos_articuloOC'] as $article):
+                        $_SESSION['oc_articulo'] += $article['cantidad'];
+                        $_SESSION['total_oc'] += $article['subtotal'];
+                ?>
+                        <tr class="text-center">
+                            <td><?php echo $contador++; ?></td>
+                            <td><?php echo $article['codigo']; ?></td>
+                            <td><?php echo $article['descripcion']; ?></td>
+                            <td><?php echo $article['cantidad']; ?></td>
+                            <td><?php echo number_format($article['precio'], 0, ',', '.'); ?></td>
+                            <td><?php echo number_format($article['subtotal'], 0, ',', '.'); ?></td>
+                            <td>
+                                <form class="FormularioAjax" action="<?php echo SERVERURL; ?>ajax/ordencompraAjax.php" method="POST" data-form="loans">
+                                    <input type="hidden" name="id_eliminar_articuloOC" value="<?php echo $article['ID']; ?>">
+                                    <button type="submit" class="btn btn-warning"><i class="far fa-trash-alt"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                    <tr class="text-center bg-light">
+                    <tr class="text-center bg-light total-fila">
+                        <td><strong>TOTAL</strong></td>
+                        <td colspan="2"></td>
+                        <td id="total-unidades"><strong><?php echo $_SESSION['oc_articulo']; ?> unidades</strong></td>
+                        <td></td>
+                        <td id="total-general"><strong><?php echo number_format($_SESSION['total_oc'], 0, ',', '.'); ?></strong></td>
+                        <td></td>
+                    </tr>
 
+                    </tr>
+                <?php
+                } else {
+                    $_SESSION['oc_articulo'] = 0;
+                ?>
+                    <tr class="text-center bg-light">
+                        <td colspan="8">No has seleccionado articulos</td>
+                    </tr>
+                <?php } ?>
+            </tbody>
+        </table>
+    </div>
+    <div class="container-fluid mt-3">
+
+        <!-- FECHA (dentro del form GUARDAR) -->
+        <form class="FormularioAjax" action="<?php echo SERVERURL ?>ajax/ordencompraAjax.php"
+            method="POST" data-form="save" autocomplete="off">
+
+            <div class="row">
+                <div class="col-12 text-md-left mb-3">
+                    <label for="fecha_entrega">Fecha Entrega:  <label>
+                            <input type="date" class="form-control d-inline-block"
+                                name="fecha_entrega" id="fecha_entrega" value= "<?php echo date('Y-m-d'); ?>"
+                                style="width: 180px;" required>
+                            
+                </div>
+            </div>
+
+            <input type="hidden" name="agregar_ordencompra" value="1">
+
+            <!-- BOTONES ABAJO CENTRADOS -->
+            <div class="text-center mt-3">
+                <button type="submit" class="btn btn-raised btn-info btn-sm">
+                    <i class="far fa-save"></i> &nbsp; GUARDAR
+                </button>
+            </div>
+
+        </form>
+
+        <!-- BOTÓN LIMPIAR (separado, como en tu versión original) -->
+        <div class="text-center mt-3">
+            <form action="<?php echo SERVERURL ?>ajax/ordencompraAjax.php" method="POST"
+                data-form="loans" autocomplete="off">
+                <input type="hidden" name="limpiar_ordencompra" value="1">
+                <button type="submit" class="btn btn-raised btn-secondary btn-sm">
+                    <i class="fas fa-paint-roller"></i> &nbsp; LIMPIAR
+                </button>
+            </form>
+        </div>
+
+    </div>
 <?php
     }
 ?>
@@ -222,11 +332,11 @@ if (isset($_POST['tipo_ordencompra'])) {
 
 
 <!-- MODAL proveedor -->
-<div class="modal fade" id="ModalproveedorPre" tabindex="-1" role="dialog" aria-labelledby="ModalproveedorPre" aria-hidden="true">
+<div class="modal fade" id="ModalproveedorOC" tabindex="-1" role="dialog" aria-labelledby="ModalproveedorOC" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="ModalproveedorPre">Agregar Proovedor</h5>
+                <h5 class="modal-title" id="ModalproveedorOC">Agregar Proovedor</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -239,12 +349,12 @@ if (isset($_POST['tipo_ordencompra'])) {
                     </div>
                 </div>
                 <br>
-                <div class="container-fluid" id="tabla_proveedorPre">
+                <div class="container-fluid" id="tabla_proveedorOC">
 
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" onclick="buscar_proveedorPre()"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar</button>
+                <button type="button" class="btn btn-primary" onclick="buscar_proveedorOC()"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar</button>
                 &nbsp; &nbsp;
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
             </div>
@@ -254,11 +364,11 @@ if (isset($_POST['tipo_ordencompra'])) {
 
 
 <!-- MODAL ITEM -->
-<div class="modal fade" id="ModalArticuloPre" tabindex="-1" role="dialog" aria-labelledby="ModalArticuloPre" aria-hidden="true">
+<div class="modal fade" id="ModalArticuloOC" tabindex="-1" role="dialog" aria-labelledby="ModalArticuloOC" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="ModalArticuloPre">Agregar Articulo</h5>
+                <h5 class="modal-title" id="ModalArticuloOC">Agregar Articulo</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -272,12 +382,12 @@ if (isset($_POST['tipo_ordencompra'])) {
                     </div>
                 </div>
                 <br>
-                <div class="container-fluid" id="tabla_articulosPre">
+                <div class="container-fluid" id="tabla_articulosOC">
                 </div>
 
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" onclick="buscar_articuloPre()"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar</button>
+                <button type="button" class="btn btn-primary" onclick="buscar_articuloOC()"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar</button>
                 &nbsp; &nbsp;
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
             </div>
@@ -286,7 +396,7 @@ if (isset($_POST['tipo_ordencompra'])) {
 </div>
 
 
-<!-- MODAL ITEM -->
+<!-- MODAL BUSCAR PEDIDO -->
 <div class="modal fade" id="ModalBuscarPedido" tabindex="-1" role="dialog" aria-labelledby="ModalBuscarPedido" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -316,6 +426,9 @@ if (isset($_POST['tipo_ordencompra'])) {
         </div>
     </div>
 </div>
+
+<?php include_once "./vistas/inc/ordencompra.php";
+include_once "./vistas/inc/scripts.php"; ?>
 
 <script>
     document.addEventListener("click", function(e) {

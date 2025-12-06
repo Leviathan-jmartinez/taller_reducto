@@ -158,8 +158,7 @@ class ordencompraControlador extends ordencompraModelo
         $consultaPre = $conexion->prepare("
         SELECT idpresupuesto_compra,idproveedores, id_usuario
         FROM presupuesto_compra
-        WHERE idpresupuesto_compra = :id
-    ");
+        WHERE idpresupuesto_compra = :id");
         $consultaPre->execute([":id" => $idpresupuesto]);
         $pre = $consultaPre->fetch(PDO::FETCH_ASSOC);
 
@@ -178,7 +177,7 @@ class ordencompraControlador extends ordencompraModelo
             "fecha_entrega"   => $fecha_entrega
         ];
 
-        $idOC = ordenCompraModelo::agregar_ocC_modelo($datos_oc_cab);
+        $idOC = ordenCompraModelo::agregar_ocC_modelo1($datos_oc_cab);
 
         if ($idOC <= 0) {
             echo "error:oc_cabecera";
@@ -192,8 +191,7 @@ class ordencompraControlador extends ordencompraModelo
         $consultaDet = $conexion->prepare("
         SELECT id_articulo, precio
         FROM presupuesto_detalle
-        WHERE idpresupuesto_compra = :id
-    ");
+        WHERE idpresupuesto_compra = :id");
         $consultaDet->execute([":id" => $idpresupuesto]);
         $detallePre = $consultaDet->fetchAll(PDO::FETCH_ASSOC);
         if (empty($detallePre)) {
@@ -242,6 +240,106 @@ class ordencompraControlador extends ordencompraModelo
         }
     }
     /**fin controlador */
+
+    /**controlador agregar orden de compra */
+    public function agregar_oc_controlador()
+    {
+        session_start(['name' => 'STR']);
+        $fecha_entrega = $_POST['fecha_entrega'] ?? null;
+
+        if ($_SESSION['tipo_ordencompra'] == "sin_presupuesto") {
+            if (empty($_SESSION['Sdatos_proveedorOC'])) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrió un error!",
+                    "Texto" => "No has seleccionado ningun proveedor",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
+            if (empty($_SESSION['Sdatos_articuloOC'])) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrió un error!",
+                    "Texto" => "No has seleccionado ningun artículo para la orden de compra",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
+
+            if (empty($fecha_entrega) || $fecha_entrega == null) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Error!",
+                    "Texto" => "Debes seleccionar la fecha de entrega",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
+
+
+            /** Insertar cabecera */
+            $datos_OC_agg = [
+                "usuario"   => $_SESSION['id_str'],
+                "proveedor" => $_SESSION['Sdatos_proveedorOC']['ID'],
+                "fecha_entrega" => $fecha_entrega
+            ];
+
+            $idocCab = ordencompraModelo::agregar_ocC_modelo2($datos_OC_agg);
+
+            if ($idocCab <= 0) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrió un error inesperado!",
+                    "Texto" => "No pudimos registrar la cabecera del pedido",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
+
+            /** Insertar detalles */
+            $errores_detalles = 0;
+            foreach ($_SESSION['Sdatos_articuloOC'] as $article) {
+
+                $detalle_reg = [
+                    "ocid" => $idocCab,
+                    "articulo" => $article['ID'],
+                    "cantidad" => $article['cantidad'],
+                    "precio" => $article['precio'],
+                    "pendiente" => $article['cantidad']
+                ];
+
+                $detalleInsert = ordencompraModelo::agregar_ocD_modelo($detalle_reg);
+
+                if ($detalleInsert->rowCount() != 1) {
+                    $errores_detalles++;
+                }
+            }
+
+            if ($errores_detalles > 0) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Error parcial",
+                    "Texto" => "La OC se creó, pero algunos artículos no se guardaron",
+                    "Tipo" => "warning"
+                ];
+            } else {
+                $alerta = [
+                    "Alerta" => "recargar",
+                    "Titulo" => "Pedido guardado!",
+                    "Texto" => "La Orden compra se genero correctamente",
+                    "Tipo" => "success"
+                ];
+                $_SESSION['tipo_ordencompra'] = "con_presupuesto";
+                unset($_SESSION['Sdatos_proveedorOC'], $_SESSION['Sdatos_articuloOC']);
+            }
+            echo json_encode($alerta);
+        }
+    }
 
     /**Controlador paginar ordencompra */
     public function paginador_ordencompra_controlador($pagina, $registros, $privilegio, $url, $busqueda1, $busqueda2)
@@ -429,6 +527,200 @@ class ordencompraControlador extends ordencompraModelo
             ];
         }
         echo json_encode($alerta);
+    }
+    /**fin controlador */
+
+    /**controlador buscador proveedor */
+    public function buscar_proveedor_controlador()
+    {
+        $proveedor  = mainModel::limpiar_string($_POST['buscar_proveedorOC']);
+
+        if ($proveedor == "") {
+            return '        <div class="alert alert-warning" role="alert">
+                                <p class="text-center mb-0">
+                                    <i class="fas fa-exclamation-triangle fa-2x"></i><br>
+                                    Debes introducir el RUC o RAZON SOCIAL
+                                </p>
+                            </div>';
+            exit();
+        }
+        /**seleccionar proveedor */
+        $datos_proveedor = mainModel::ejecutar_consulta_simple("SELECT * FROM proveedores where ruc like '%$proveedor%' or razon_social like '%$proveedor%' or 
+        telefono like '%$proveedor%' order by razon_social desc");
+
+        if ($datos_proveedor->rowCount() >= 1) {
+            $datos_proveedor = $datos_proveedor->fetchAll();
+            $tabla = '<div class="table-responsive"><table class="table table-hover table-bordered table-sm"><tbody>';
+            foreach ($datos_proveedor as $rows) {
+                $tabla .= '
+                        <tr class="text-center">
+                            <td>' . $rows['ruc'] . ' ' . $rows['razon_social'] . '</td>
+                            <td>
+                                <button type="button" class="btn btn-primary" onclick="agregar_proveedorOC(' . $rows['idproveedores'] . ')"><i class="fas fa-user-plus"></i></button>
+                            </td>
+                        </tr>';
+            }
+            $tabla .= '</tbody></table></div>';
+            return $tabla;
+        } else {
+            return '        <div class="alert alert-warning" role="alert">
+                                <p class="text-center mb-0">
+                                    <i class="fas fa-exclamation-triangle fa-2x"></i><br>
+                                    No hemos encontrado ningún proveedor en el sistema que coincida con <strong>“' . $proveedor . '”</strong>
+                                </p>
+                            </div>';
+        }
+    }
+    /**fin controlador */
+
+    /**Controlador agregar proveedor */
+    public function agregar_proveedor_controlador()
+    {
+        $id  = mainModel::limpiar_string($_POST['id_agregar_proveedorOC']);
+
+        $check_proveedor = mainModel::ejecutar_consulta_simple("select * from proveedores where idproveedores = '$id' ");
+        if ($check_proveedor->rowCount() <= 0) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "No hemos podido encontrar el proveedor en el sistema",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        } else {
+            $campos = $check_proveedor->fetch();
+        }
+        /**iniciar sesion para utilizar variables de sesion */
+        session_start(['name' => 'STR']);
+        unset($_SESSION['Sdatos_proveedorOC']);
+        if (!isset($_SESSION['Sdatos_proveedorOC'])) {
+            $_SESSION['Sdatos_proveedorOC'] = [
+                "ID" => $campos['idproveedores'],
+                "RUC" => $campos['ruc'],
+                "RAZON" => $campos['razon_social'],
+                "TELEFONO" => $campos['telefono']
+            ];
+            $alerta = [
+                "Alerta" => "recargar",
+                "Titulo" => "Proveedor Agregado!",
+                "Texto" => "Proveedor agregado correctamente al pedido",
+                "Tipo" => "success"
+            ];
+            echo json_encode($alerta);
+        } else {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "No hemos podido agregar el proveedor al pedido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+        }
+    }
+    /**fin controlador */
+
+    /**controlador buscar articulo */
+    public function buscar_articulo_controlador()
+    {
+        // BUSCAR ARTÍCULO (HTML)
+        session_start(['name' => 'STR']);
+        if (isset($_POST['buscar_articuloOC'])) {
+            $articulo = mainModel::limpiar_string($_POST['buscar_articuloOC']);
+            if ($articulo == "") return '<div class="alert alert-warning">Debes introducir código o descripción</div>';
+
+            if (!isset($_SESSION['Sdatos_proveedorOC']['ID'])) {
+                return '<div class="alert alert-danger">No se ha seleccionado un proveedor</div>';
+                exit();
+            }
+            $id_proveedor = $_SESSION['Sdatos_proveedorOC']['ID'];
+            $datos_articuloPre = mainModel::ejecutar_consulta_simple("SELECT * FROM articulos WHERE (codigo like '%$articulo%' OR desc_articulo like '%$articulo%') AND estado=1 AND idproveedores='$id_proveedor' ORDER BY desc_articulo DESC");
+
+            if ($datos_articuloPre->rowCount() >= 1) {
+                $tabla = '<div class="table-responsive"><table class="table table-hover table-bordered table-sm"><tbody>';
+                foreach ($datos_articuloPre->fetchAll() as $rows) {
+                    $tabla .= '<tr class="text-center">
+                    <td>' . $rows['codigo'] . ' - ' . $rows['desc_articulo'] . '</td>
+                    
+                    <!-- Cantidad -->
+                    <td style="width:100px;">
+                        <input type="number" id="cantidad_' . $rows['id_articulo'] . '" class="form-control form-control-sm" value="1" min="1">
+                    </td>
+
+                    <!-- Precio -->
+                    <td style="width:100px;">
+                        <input type="number" id="precio_' . $rows['id_articulo'] . '" class="form-control form-control-sm" step="0.01" min="0">
+                    </td>
+
+                    <!-- Botón agregar -->
+                    <td>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="agregar_articuloOC(' . $rows['id_articulo'] . ')">
+                            <i class="fas fa-plus-circle"></i>
+                        </button>
+                    </td>
+                </tr>';
+                }
+                $tabla .= '</tbody></table></div>';
+                return $tabla;
+            } else return '<div class="alert alert-warning">No se encontraron artículos que coincidan</div>';
+        }
+    }
+    /**controlador buscador articulo */
+
+    /**controlador buscador articulo */
+    public function articulo_controlador()
+    {
+        session_start(['name' => 'STR']);
+        // AGREGAR ARTÍCULO
+        if (isset($_POST['id_agregar_articuloOC'])) {
+
+            $id = mainModel::limpiar_string($_POST['id_agregar_articuloOC']);
+            $cantidad = mainModel::limpiar_string($_POST['detalle_cantidad']);
+            $precio = mainModel::limpiar_string($_POST['detalle_precio']); // <-- nuevo
+
+            // Validaciones
+            $check_articulo = mainModel::ejecutar_consulta_simple("SELECT * FROM articulos WHERE id_articulo='$id' AND estado=1");
+            if ($check_articulo->rowCount() <= 0)
+                die(json_encode(["Alerta" => "simple", "Titulo" => "Error!", "Texto" => "No se encontró el artículo", "Tipo" => "error"]));
+
+            $campos = $check_articulo->fetch();
+
+            if ($cantidad == "" || !is_numeric($cantidad) || intval($cantidad) <= 0)
+                die(json_encode(["Alerta" => "simple", "Titulo" => "Error!", "Texto" => "Cantidad inválida", "Tipo" => "error"]));
+
+            if ($precio == "" || !is_numeric($precio) || floatval($precio) < 0)
+                die(json_encode(["Alerta" => "simple", "Titulo" => "Error!", "Texto" => "Precio inválido", "Tipo" => "error"]));
+
+            $cantidad = intval($cantidad);
+            $precio = floatval($precio);
+            $subtotal = $cantidad * $precio; // <-- opcional, para mostrar o guardar
+
+            if (isset($_SESSION['Sdatos_articuloOC'][$id])) {
+                $alerta = [
+                    "Alerta" => "recargar",
+                    "Titulo" => "Ocurrio un error inesperado!",
+                    "Texto" => "El artículo que intenta agregar ya se encuentra agregado",
+                    "Tipo" => "error"
+                ];
+            } else {
+                $_SESSION['Sdatos_articuloOC'][$id] = [
+                    "ID" => $campos['id_articulo'],
+                    "codigo" => $campos['codigo'],
+                    "descripcion" => $campos['desc_articulo'],
+                    "cantidad" => $cantidad,
+                    "precio" => $precio,
+                    "subtotal" => $subtotal
+                ];
+                $alerta = [
+                    "Alerta" => "recargar",
+                    "Titulo" => "Artículo agregado!",
+                    "Texto" => "El artículo ha sido agregado",
+                    "Tipo" => "success"
+                ];
+            }
+            echo json_encode($alerta);
+            exit();
+        }
     }
     /**fin controlador */
 }
