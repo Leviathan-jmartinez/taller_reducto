@@ -97,35 +97,134 @@ class compraControlador extends compraModelo
 
         // 2️⃣ Detalle del pedido (artículos)
         $sqlDetalle = mainModel::ejecutar_consulta_simple("
-        SELECT ocd.id_articulo, ocd.cantidad_pendiente, a.desc_articulo, a.codigo, ocd.precio_unitario, ti.tipo_impuesto_descri, ti.ratevalueiva
+        SELECT ocd.id_articulo, ocd.cantidad_pendiente, a.desc_articulo, a.codigo, ocd.precio_unitario, ti.tipo_impuesto_descri, ti.ratevalueiva, ti.divisor
         FROM orden_compra_detalle ocd
         INNER JOIN articulos a ON a.id_articulo = ocd.id_articulo
         INNER JOIN tipo_impuesto ti ON ti.idiva = a.idiva
         WHERE ocd.idorden_compra = '$idoccompra'");
         $detalle = $sqlDetalle->fetchAll();
 
-        $_SESSION['Cdatos_articuloOC'] = [];
-        foreach ($detalle as $row) {
+        $_SESSION['Cdatos_articuloOC'] = $_SESSION['Cdatos_articuloOC'] ?? [];
+        foreach ($detalle as $i => $row) {
             $subtotal = $row['cantidad_pendiente'] * $row['precio_unitario'];
-            $iva = $subtotal * $row['ratevalueiva'];
+            $iva = $subtotal / $row['divisor'];
 
-            $_SESSION['Cdatos_articuloOC'][] = [
+            // Si ya existe en la sesión (modificado), no sobreescribas cantidad y precio
+            $cantidad = $_SESSION['Cdatos_articuloOC'][$i]['cantidad'] ?? $row['cantidad_pendiente'];
+            $precio   = $_SESSION['Cdatos_articuloOC'][$i]['precio'] ?? $row['precio_unitario'];
+            $subtotal = $cantidad * $precio;
+            $iva = $subtotal / $row['divisor'];
+
+            $_SESSION['Cdatos_articuloOC'][$i] = [
                 "ID" => $row['id_articulo'],
                 "codigo" => $row['codigo'],
                 "descripcion" => $row['desc_articulo'],
-                "cantidad" => $row['cantidad_pendiente'],
-                "precio" => $row['precio_unitario'],
+                "cantidad" => $cantidad,
+                "precio" => $precio,
                 "subtotal" => $subtotal,
                 "iva_descri" => $row['tipo_impuesto_descri'],
                 "iva" => $iva,
+                "ratevalueiva" => $row['ratevalueiva'],
+                "divisor" => $row['divisor']
             ];
         }
+
 
         // 3️⃣ Redirigir a la página para que se recargue
         header("Location: " . SERVERURL . "factura-nuevo/");
         exit();
     }
     /**fin controlador */
+
+    public function guardar_compra_controlador()
+    {
+        session_start(['name' => 'STR']);
+
+        if (empty($_SESSION['Cdatos_articuloOC'])) {
+            return [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "No hay detalles para guardar la compra.",
+                "Tipo" => "error"
+            ];
+        }
+
+        /* ===============================
+           DATOS DE LA CABECERA
+        ================================= */
+        $datosCab = [
+            "proveedor"           => $_SESSION['datos_proveedorOC']['ID'],
+            "usuario"             => $_SESSION['id_str'],
+            "nro_factura"         => $_POST['nro_factura'],
+            "fecha_factura"       => $_POST['fecha_factura'],
+            "timbrado"            => $_POST['timbrado'],
+            "vencimiento_timbrado"=> $_POST['vencimiento_timbrado'],
+            "estado"              => "ACTIVO",
+            "total"               => $_POST['total_factura'],
+            "condicion"           => $_POST['condicion'],
+            "intervalo"           => $_POST['intervalo'],
+            "idoc"                => $_SESSION['id_oc_seleccionado']
+        ];
+
+        $guardarCab = compraModelo::insertar_compra_cabecera_modelo($datosCab);
+
+        if ($guardarCab->rowCount() < 1) {
+            return [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "No se pudo guardar la cabecera de la compra.",
+                "Tipo" => "error"
+            ];
+        }
+
+        /* Obtener ID generado */
+        $idcab = mainModel::conectar()->lastInsertId();
+
+
+        /* ===============================
+           GUARDAR DETALLES
+        ================================= */
+        $errores = 0;
+
+        foreach ($_SESSION['Cdatos_articuloOC'] as $item) {
+
+            $detalle = [
+                "idcab"       => $idcab,
+                "id_articulo" => $item['ID'],
+                "precio"      => $item['precio'],
+                "cantidad"    => $item['cantidad'],
+                "subtotal"    => $item['subtotal'],
+                "iva"         => $item['iva']
+            ];
+
+            $guardarDet = compraModelo::insertar_compra_detalle_modelo($detalle);
+
+            if ($guardarDet->rowCount() < 1) {
+                $errores++;
+            }
+        }
+
+        if ($errores > 0) {
+            return [
+                "Alerta" => "simple",
+                "Titulo" => "Error parcial",
+                "Texto" => "La compra se guardó, pero algunos detalles no pudieron insertarse.",
+                "Tipo" => "warning"
+            ];
+        }
+
+        /* LIMPIAR SESIÓN */
+        unset($_SESSION['Cdatos_articuloOC']);
+        unset($_SESSION['datos_proveedorOC']);
+        unset($_SESSION['id_oc_seleccionado']);
+
+        return [
+            "Alerta" => "recargar",
+            "Titulo" => "Compra registrada",
+            "Texto" => "La compra se guardó correctamente.",
+            "Tipo" => "success"
+        ];
+    }
 
     /**controlador buscador proveedor */
     public function buscar_proveedor_controlador()

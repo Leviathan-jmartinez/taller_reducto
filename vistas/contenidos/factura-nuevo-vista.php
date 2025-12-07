@@ -18,9 +18,7 @@ if (isset($_POST['factura_tipo'])) {
     $tipo = $_SESSION['factura_tipo'];
 }
 
-
 ?>
-
 
 <div class="container-fluid">
     <form class="form-neon FormularioAjax"
@@ -58,6 +56,8 @@ if (isset($_POST['factura_tipo'])) {
 
             <legend><i class="fas fa-file-invoice-dollar"></i> &nbsp; Registrar nueva factura</legend>
             <p class="text-muted mb-4">Complete los campos para cargar una nueva factura.</p>
+
+            <!-- FECHAS Y DATOS DE PROVEEDOR -->
             <div class="row">
                 <div class="col-md-4">
                     <div class="form-group">
@@ -78,6 +78,7 @@ if (isset($_POST['factura_tipo'])) {
                     </div>
                 </div>
             </div>
+
             <div class="row">
                 <div class="col-md-4">
                     <div class="form-group">
@@ -111,8 +112,8 @@ if (isset($_POST['factura_tipo'])) {
                         <label for="proveedor" class="bmd-label-floating">Condicion de Venta</label>
                         <select class="form-control" name="proveedor" id="proveedor" required>
                             <option value="" selected disabled>Seleccione un proveedor</option>
-                            <option value="" selected >Contado</option>
-                            <option value="" selected >Crédito</option>
+                            <option value="" selected>Contado</option>
+                            <option value="" selected>Crédito</option>
                         </select>
                     </div>
                 </div>
@@ -134,48 +135,30 @@ if (isset($_POST['factura_tipo'])) {
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- Ejemplo de fila: duplicar o generar dinámicamente según convenga -->
                             <?php if (!empty($_SESSION['Cdatos_articuloOC'])): ?>
-                                <?php foreach ($_SESSION['Cdatos_articuloOC'] as $item): ?>
-                                    <tr>
-                                        <!-- Producto -->
-                                        <td class="text-left">
-                                            <?= htmlspecialchars($item['descripcion']); ?>
-                                        </td>
-
-
-                                        <!-- Cantidad -->
+                                <?php foreach ($_SESSION['Cdatos_articuloOC'] as $i => $item): ?>
+                                    <tr
+                                        data-index="<?= $i; ?>"
+                                        data-rate="<?= $item['ratevalueiva']; ?>"
+                                        data-divisor="<?= $item['divisor']; ?>">
+                                        <td class="text-left"><?= htmlspecialchars($item['descripcion']); ?></td>
                                         <td class="text-center">
                                             <input type="number" min="0" step="1"
                                                 name="cantidades[]"
                                                 class="form-control text-center cantidad"
                                                 value="<?= $item['cantidad']; ?>" required>
                                         </td>
-
-                                        <!-- Precio -->
                                         <td class="text-center">
                                             <input type="number"
                                                 name="precios[]"
                                                 class="form-control text-center precio"
-                                                value="<?= number_format($item['precio'], 0, '.', ''); ?>"
+                                                value="<?= number_format($item['precio'], 0, ',', '.'); ?>"
                                                 step="0.01"
                                                 required>
                                         </td>
-
-                                        <!-- Subtotal -->
-                                        <td class="text-center subtotal">
-                                            <?= number_format($item['subtotal'], 0, '.', ''); ?>
-                                        </td>
-
-                                        <!-- IVA selector -->
-                                        <td class="text-center">
-                                            <?= htmlspecialchars($item['iva_descri']); ?>
-                                        </td>
-
-                                        <!-- IVA Monto -->
-                                        <td class="text-center iva-monto">
-                                            <?= number_format($item['iva'], 0, '.', ''); ?>
-                                        </td>
+                                        <td class="text-center subtotal"><?= number_format($item['subtotal'], 0, '.', '.'); ?></td>
+                                        <td class="text-center"><?= htmlspecialchars($item['iva_descri']); ?></td>
+                                        <td class="text-center iva-monto"><?= number_format($item['iva'], 0, ',', '.'); ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php endif; ?>
@@ -188,39 +171,31 @@ if (isset($_POST['factura_tipo'])) {
             <div class="row mt-3">
                 <div class="col-12">
                     <div class="d-flex align-items-start justify-content-between p-3 border rounded">
-
-
                         <div class="text-center mx-2">
                             <small class="text-muted">IVA 5%</small><br>
                             <span id="iva5">0.00</span>
                         </div>
-
                         <div class="text-center mx-2">
                             <small class="text-muted">IVA 10%</small><br>
                             <span id="iva10">0.00</span>
                         </div>
-
-
                         <div class="text-center mx-2 font-weight-bold">
                             <small class="text-muted">Total IVA</small><br>
                             <span id="total-iva">0.00</span>
                         </div>
-
                         <div class="text-center mx-2 font-weight-bold">
                             <small class="text-muted">Subtotal</small><br>
                             <span id="subtotal-general">0.00</span>
                         </div>
-
                         <div class="text-center mx-2 font-weight-bold">
                             <small class="text-muted">Total Factura</small><br>
                             <span id="total-factura">0.00</span>
                         </div>
-
                     </div>
                 </div>
             </div>
 
-            <!-- Hidden para enviar totales al backend -->
+            <!-- Hidden inputs -->
             <input type="hidden" name="subtotal_general" id="input-subtotal-general" value="0.00">
             <input type="hidden" name="iva_total" id="input-iva-total" value="0.00">
             <input type="hidden" name="total_factura" id="input-total-factura" value="0.00">
@@ -235,11 +210,9 @@ if (isset($_POST['factura_tipo'])) {
                     <i class="fas fa-save"></i> &nbsp; Guardar factura
                 </button>
             </p>
-
         </div>
     </form>
 </div>
-
 
 <!-- MODAL BUSCAR OC -->
 <div class="modal fade" id="ModalBuscarOC" tabindex="-1" role="dialog" aria-labelledby="ModalBuscarOC" aria-hidden="true">
@@ -272,4 +245,99 @@ if (isset($_POST['factura_tipo'])) {
     </div>
 </div>
 
+
+
 <?php include "./vistas/inc/compra.php"; ?>
+
+<!-- SCRIPT JS -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+
+        // Temporizadores por fila para debounce
+        const timers = {};
+
+        function recalcularYActualizar(fila) {
+            let index = fila.dataset.index;
+
+            // Leer valores
+            let cantidad = parseFloat(fila.querySelector(".cantidad").value) || 0;
+            let precioTexto = fila.querySelector(".precio").value;
+            let precio = parseFloat(precioTexto.replace(/\./g, '').replace(',', '.')) || 0;
+
+            // Subtotal e IVA
+            let subtotal = cantidad * precio;
+            fila.querySelector(".subtotal").innerText = subtotal.toLocaleString('es-ES');
+            let divisor = parseFloat(fila.dataset.divisor);
+            let iva = divisor > 0 ? subtotal / divisor : 0;
+            fila.querySelector(".iva-monto").innerText = iva.toLocaleString('es-ES');
+
+            // Totales generales en pantalla
+            recalcularTotalesGenerales();
+
+            // Debounce: actualizar sesión después de 500ms de inactividad
+            clearTimeout(timers[index]);
+            timers[index] = setTimeout(() => {
+                fetch("<?php echo SERVERURL; ?>ajax/compraAjax.php", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded"
+                        },
+                        body: new URLSearchParams({
+                            index: index,
+                            cantidad: cantidad,
+                            precio: precio,
+                            subtotal: subtotal,
+                            iva: iva
+                        })
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        console.log("SESSION ACTUALIZADA:", data);
+                    });
+            }, 500); // 0.5s
+        }
+
+        function recalcularTotalesGenerales() {
+            let iva5 = 0,
+                iva10 = 0,
+                subtotalGeneral = 0;
+            document.querySelectorAll("#tabla-detalle tbody tr").forEach(fila => {
+                let sub = parseFloat(fila.querySelector(".subtotal").innerText.replace(/\./g, '').replace(',', '.')) || 0;
+                let iva = parseFloat(fila.querySelector(".iva-monto").innerText.replace(/\./g, '').replace(',', '.')) || 0;
+                let rate = parseFloat(fila.dataset.rate);
+                if (rate === 0.05) iva5 += iva;
+                if (rate === 0.10) iva10 += iva;
+                subtotalGeneral += sub;
+            });
+
+            let totalIVA = iva5 + iva10;
+            let totalFactura = subtotalGeneral;
+
+            document.getElementById("iva5").innerText = iva5.toLocaleString('es-ES');
+            document.getElementById("iva10").innerText = iva10.toLocaleString('es-ES');
+            document.getElementById("total-iva").innerText = totalIVA.toLocaleString('es-ES');
+            document.getElementById("subtotal-general").innerText = subtotalGeneral.toLocaleString('es-ES');
+            document.getElementById("total-factura").innerText = totalFactura.toLocaleString('es-ES');
+
+            document.getElementById("input-subtotal-general").value = subtotalGeneral.toFixed(0);
+            document.getElementById("input-iva-total").value = totalIVA.toFixed(0);
+            document.getElementById("input-total-factura").value = totalFactura.toFixed(0);
+            document.getElementById("input-iva5").value = iva5.toFixed(0);
+            document.getElementById("input-iva10").value = iva10.toFixed(0);
+        }
+
+        // Inicializar totales al cargar
+        document.querySelectorAll("#tabla-detalle tbody tr").forEach(fila => {
+            recalcularTotalesGenerales();
+        });
+
+        // Detectar cambios en inputs con debounce
+        document.addEventListener("input", function(e) {
+            if (e.target.classList.contains("cantidad") || e.target.classList.contains("precio")) {
+                let fila = e.target.closest("tr");
+                recalcularYActualizar(fila);
+            }
+        });
+
+    });
+</script>
