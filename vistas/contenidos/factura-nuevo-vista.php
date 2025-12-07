@@ -88,17 +88,21 @@ if (isset($_POST['factura_tipo'])) {
                 <div class="col-md-4">
                     <div class="form-group">
                         <label class="bmd-label-floating">Proveedor</label>
-                        <?php if (empty($_SESSION['Sdatos_proveedorOC'])) { ?>
+                        <?php if (empty($_SESSION['datos_proveedorOC'])) { ?>
                             <div class="d-flex align-items-center text-danger mt-3">
                                 <i class="fas fa-exclamation-triangle mr-2"></i>
                                 <span>Seleccione un proveedor</span>
                             </div>
                         <?php } else { ?>
-                            <form class="FormularioAjax d-inline-block" action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php" method="POST" data-form="loans">
-                                <input type="hidden" name="id_eliminar_proveedorOC" value="<?php echo $_SESSION['Sdatos_proveedorOC']['ID']; ?>">
-                                <?php echo $_SESSION['Sdatos_proveedorOC']['RAZON'] . " (" . $_SESSION['Sdatos_proveedorOC']['RUC'] . ")"; ?>
-                                <button type="submit" class="btn btn-danger"><i class="fas fa-user-times"></i></button>
-                            </form>
+                            <div class="d-flex align-items-center mt-3">
+                                <form class="FormularioAjax d-inline-block" action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php" method="POST" data-form="loans">
+                                    <input type="hidden" name="id_eliminar_proveedorOC" value="<?php echo $_SESSION['datos_proveedorOC']['ID']; ?>">
+                                    <?php echo $_SESSION['datos_proveedorOC']['RAZON'] . " (" . $_SESSION['datos_proveedorOC']['RUC'] . ")"; ?>
+                                    <?php if ($tipo === 'sin_oc') { ?>
+                                        <button type="submit" class="btn btn-danger"><i class="fas fa-user-times"></i></button>
+                                    <?php } ?>
+                                </form>
+                            </div>
                         <?php } ?>
                     </div>
                 </div>
@@ -107,8 +111,8 @@ if (isset($_POST['factura_tipo'])) {
                         <label for="proveedor" class="bmd-label-floating">Condicion de Venta</label>
                         <select class="form-control" name="proveedor" id="proveedor" required>
                             <option value="" selected disabled>Seleccione un proveedor</option>
-                            <option value="" selected disabled>Contado</option>
-                            <option value="" selected disabled>Crédito</option>
+                            <option value="" selected >Contado</option>
+                            <option value="" selected >Crédito</option>
                         </select>
                     </div>
                 </div>
@@ -127,51 +131,54 @@ if (isset($_POST['factura_tipo'])) {
                                 <th class="text-center" style="width:12%;">Subtotal</th>
                                 <th class="text-center" style="width:10%;">IVA</th>
                                 <th class="text-center" style="width:12%;">IVA monto</th>
-                                <th class="text-center" style="width:12%;">Total línea</th>
                             </tr>
                         </thead>
                         <tbody>
                             <!-- Ejemplo de fila: duplicar o generar dinámicamente según convenga -->
-                            <tr>
-                                <td class="text-center">
-                                    <select name="productos[]" class="form-control text-center producto-select" required>
-                                        <option value="" disabled selected>Seleccionar producto</option>
-                                        <?php foreach ($productos as $p): ?>
-                                            <option value="<?php echo $p['id']; ?>">
-                                                <?php echo htmlspecialchars($p['descripcion']); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </td>
+                            <?php if (!empty($_SESSION['Cdatos_articuloOC'])): ?>
+                                <?php foreach ($_SESSION['Cdatos_articuloOC'] as $item): ?>
+                                    <tr>
+                                        <!-- Producto -->
+                                        <td class="text-left">
+                                            <?= htmlspecialchars($item['descripcion']); ?>
+                                        </td>
 
-                                <td class="text-center">
-                                    <input type="number" min="0" step="1"
-                                        name="cantidades[]"
-                                        class="form-control text-center cantidad"
-                                        value="1" required>
-                                </td>
 
-                                <td class="text-center">
-                                    <input type="number" min="0" step="0.01"
-                                        name="precios[]"
-                                        class="form-control text-center precio"
-                                        value="0.00" required>
-                                </td>
+                                        <!-- Cantidad -->
+                                        <td class="text-center">
+                                            <input type="number" min="0" step="1"
+                                                name="cantidades[]"
+                                                class="form-control text-center cantidad"
+                                                value="<?= $item['cantidad']; ?>" required>
+                                        </td>
 
-                                <td class="text-center subtotal">
-                                    0.00
-                                </td>
+                                        <!-- Precio -->
+                                        <td class="text-center">
+                                            <input type="number"
+                                                name="precios[]"
+                                                class="form-control text-center precio"
+                                                value="<?= number_format($item['precio'], 0, '.', ''); ?>"
+                                                step="0.01"
+                                                required>
+                                        </td>
 
-                                <td class="text-center">
-                                    <select name="iva_line[]" class="form-control text-center iva-line">
-                                        <option value="10">10%</option>
-                                        <option value="5">5%</option>
-                                        <option value="0" selected>Exento</option>
-                                    </select>
-                                </td>
-                                <td class="text-center iva-monto">0.00</td>
-                                <td class="text-center total-linea">0.00</td>
-                            </tr>
+                                        <!-- Subtotal -->
+                                        <td class="text-center subtotal">
+                                            <?= number_format($item['subtotal'], 0, '.', ''); ?>
+                                        </td>
+
+                                        <!-- IVA selector -->
+                                        <td class="text-center">
+                                            <?= htmlspecialchars($item['iva_descri']); ?>
+                                        </td>
+
+                                        <!-- IVA Monto -->
+                                        <td class="text-center iva-monto">
+                                            <?= number_format($item['iva'], 0, '.', ''); ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
@@ -248,7 +255,7 @@ if (isset($_POST['factura_tipo'])) {
                 <div class="container-fluid">
                     <div class="form-group">
                         <label for="input_item" class="bmd-label-floating">Código, Proveedor, Número OC</label>
-                        <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" class="form-control" name="input_OC" id="input_OC" maxlength="30">
+                        <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" class="form-control" name="input_oc" id="input_oc" maxlength="30">
                     </div>
                 </div>
                 <br>
@@ -264,3 +271,5 @@ if (isset($_POST['factura_tipo'])) {
         </div>
     </div>
 </div>
+
+<?php include "./vistas/inc/compra.php"; ?>

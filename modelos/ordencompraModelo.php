@@ -43,7 +43,7 @@ class ordencompraModelo extends mainModel
     {
         $sql = mainModel::conectar()->prepare("
         INSERT INTO orden_compra_detalle
-        (idorden_compra, id_articulo, cantidad, precio, cantidad_pendiente)
+        (idorden_compra, id_articulo, cantidad, precio_unitario, cantidad_pendiente)
         VALUES (:ocid, :articulo, :cantidad, :precio, :pendiente)");
 
         $sql->bindParam(":ocid", $datos['ocid']);
