@@ -8,7 +8,8 @@ class compraModelo extends mainModel
     ================================= */
     protected static function insertar_compra_cabecera_modelo($datos)
     {
-        $sql = mainModel::conectar()->prepare("
+        $conexion = mainModel::conectar();
+        $sql = $conexion->prepare("
             INSERT INTO compra_cabecera
             (idproveedores, id_usuario, fecha, nro_factura, fecha_factura, nro_timbrado, vencimiento_timbrado, estado, total_compra, condicion, compra_intervalo, idOcompra)
             VALUES (:proveedor, :usuario, NOW(), :nro_factura, :fecha_factura, :timbrado, :vto_timbrado, :estado, :total, :condicion, :intervalo, :idoc)
@@ -27,7 +28,11 @@ class compraModelo extends mainModel
         $sql->bindParam(":idoc", $datos['idoc']);
 
         $sql->execute();
-        return $sql;
+        return [
+            "stmt" => $sql,
+            "conexion" => $conexion,
+            "last_id" => $conexion->lastInsertId()
+        ];
     }
 
     /* ===============================

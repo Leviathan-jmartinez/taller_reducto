@@ -22,12 +22,12 @@ if (isset($_POST['factura_tipo'])) {
 
 <div class="container-fluid">
     <form class="form-neon FormularioAjax"
-        action="<?php echo SERVERURL; ?>ajax/facturaAjax.php"
+        action="<?php echo SERVERURL; ?>ajax/compraAjax.php"
         method="POST"
         autocomplete="off"
         enctype="multipart/form-data">
 
-        <input type="hidden" name="modulo" value="factura">
+        <input type="hidden" name="accion" value="guardar_compra">
 
         <div class="container-fluid form-neon" style="margin-top: 30px;">
 
@@ -36,7 +36,7 @@ if (isset($_POST['factura_tipo'])) {
                 <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#ModalBuscarOC">
                     <i class="fas fa-search"></i> &nbsp; Cargar con Orden de Compra
                 </button>
-                <a href="<?php echo SERVERURL; ?>factura/nueva" class="btn btn-secondary">
+                <a href="<?php echo SERVERURL; ?>factura-nuevo" class="btn btn-secondary">
                     <i class="fas fa-file"></i> Sin Orden de Compra
                 </a>
             </div>
@@ -62,7 +62,7 @@ if (isset($_POST['factura_tipo'])) {
                 <div class="col-md-4">
                     <div class="form-group">
                         <label class="bmd-label-floating">Timbrado</label>
-                        <input class="form-control" name="fecha_emision" required>
+                        <input class="form-control" name="timbrado" required>
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -74,7 +74,7 @@ if (isset($_POST['factura_tipo'])) {
                 <div class="col-md-4">
                     <div class="form-group">
                         <label class="bmd-label-floating">Vencimiento Timbrado</label>
-                        <input type="date" class="form-control" name="fecha_emision" required>
+                        <input type="date" class="form-control" name="vencimiento_timbrado" required>
                     </div>
                 </div>
             </div>
@@ -107,13 +107,25 @@ if (isset($_POST['factura_tipo'])) {
                         <?php } ?>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-2">
                     <div class="form-group">
-                        <label for="proveedor" class="bmd-label-floating">Condicion de Venta</label>
-                        <select class="form-control" name="proveedor" id="proveedor" required>
-                            <option value="" selected disabled>Seleccione un proveedor</option>
-                            <option value="" selected>Contado</option>
-                            <option value="" selected>Crédito</option>
+                        <label for="condicion" class="bmd-label-floating">Condición de Venta</label>
+                        <select class="form-control" name="condicion" id="condicion" required>
+                            <option value="" selected disabled>Seleccione condición</option>
+                            <option value="contado" selected>Contado</option>
+                            <option value="credito" selected>Crédito</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label for="intervalo" class="bmd-label-floating">Intervalo</label>
+                        <select class="form-control" name="intervalo" id="intervalo" required>
+                            <option value="" selected disabled>Seleccione intervalo</option>
+                            <option value="1" selected>1</option>
+                            <option value="30" selected>30</option>
+                            <option value="60" selected>60</option>
+                            <option value="90" selected>90</option>
                         </select>
                     </div>
                 </div>
@@ -248,96 +260,3 @@ if (isset($_POST['factura_tipo'])) {
 
 
 <?php include "./vistas/inc/compra.php"; ?>
-
-<!-- SCRIPT JS -->
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-
-        // Temporizadores por fila para debounce
-        const timers = {};
-
-        function recalcularYActualizar(fila) {
-            let index = fila.dataset.index;
-
-            // Leer valores
-            let cantidad = parseFloat(fila.querySelector(".cantidad").value) || 0;
-            let precioTexto = fila.querySelector(".precio").value;
-            let precio = parseFloat(precioTexto.replace(/\./g, '').replace(',', '.')) || 0;
-
-            // Subtotal e IVA
-            let subtotal = cantidad * precio;
-            fila.querySelector(".subtotal").innerText = subtotal.toLocaleString('es-ES');
-            let divisor = parseFloat(fila.dataset.divisor);
-            let iva = divisor > 0 ? subtotal / divisor : 0;
-            fila.querySelector(".iva-monto").innerText = iva.toLocaleString('es-ES');
-
-            // Totales generales en pantalla
-            recalcularTotalesGenerales();
-
-            // Debounce: actualizar sesión después de 500ms de inactividad
-            clearTimeout(timers[index]);
-            timers[index] = setTimeout(() => {
-                fetch("<?php echo SERVERURL; ?>ajax/compraAjax.php", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/x-www-form-urlencoded"
-                        },
-                        body: new URLSearchParams({
-                            index: index,
-                            cantidad: cantidad,
-                            precio: precio,
-                            subtotal: subtotal,
-                            iva: iva
-                        })
-                    })
-                    .then(r => r.json())
-                    .then(data => {
-                        console.log("SESSION ACTUALIZADA:", data);
-                    });
-            }, 500); // 0.5s
-        }
-
-        function recalcularTotalesGenerales() {
-            let iva5 = 0,
-                iva10 = 0,
-                subtotalGeneral = 0;
-            document.querySelectorAll("#tabla-detalle tbody tr").forEach(fila => {
-                let sub = parseFloat(fila.querySelector(".subtotal").innerText.replace(/\./g, '').replace(',', '.')) || 0;
-                let iva = parseFloat(fila.querySelector(".iva-monto").innerText.replace(/\./g, '').replace(',', '.')) || 0;
-                let rate = parseFloat(fila.dataset.rate);
-                if (rate === 0.05) iva5 += iva;
-                if (rate === 0.10) iva10 += iva;
-                subtotalGeneral += sub;
-            });
-
-            let totalIVA = iva5 + iva10;
-            let totalFactura = subtotalGeneral;
-
-            document.getElementById("iva5").innerText = iva5.toLocaleString('es-ES');
-            document.getElementById("iva10").innerText = iva10.toLocaleString('es-ES');
-            document.getElementById("total-iva").innerText = totalIVA.toLocaleString('es-ES');
-            document.getElementById("subtotal-general").innerText = subtotalGeneral.toLocaleString('es-ES');
-            document.getElementById("total-factura").innerText = totalFactura.toLocaleString('es-ES');
-
-            document.getElementById("input-subtotal-general").value = subtotalGeneral.toFixed(0);
-            document.getElementById("input-iva-total").value = totalIVA.toFixed(0);
-            document.getElementById("input-total-factura").value = totalFactura.toFixed(0);
-            document.getElementById("input-iva5").value = iva5.toFixed(0);
-            document.getElementById("input-iva10").value = iva10.toFixed(0);
-        }
-
-        // Inicializar totales al cargar
-        document.querySelectorAll("#tabla-detalle tbody tr").forEach(fila => {
-            recalcularTotalesGenerales();
-        });
-
-        // Detectar cambios en inputs con debounce
-        document.addEventListener("input", function(e) {
-            if (e.target.classList.contains("cantidad") || e.target.classList.contains("precio")) {
-                let fila = e.target.closest("tr");
-                recalcularYActualizar(fila);
-            }
-        });
-
-    });
-</script>

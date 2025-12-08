@@ -138,8 +138,6 @@ class compraControlador extends compraModelo
 
     public function guardar_compra_controlador()
     {
-        session_start(['name' => 'STR']);
-
         if (empty($_SESSION['Cdatos_articuloOC'])) {
             return [
                 "Alerta" => "simple",
@@ -155,11 +153,11 @@ class compraControlador extends compraModelo
         $datosCab = [
             "proveedor"           => $_SESSION['datos_proveedorOC']['ID'],
             "usuario"             => $_SESSION['id_str'],
-            "nro_factura"         => $_POST['nro_factura'],
-            "fecha_factura"       => $_POST['fecha_factura'],
+            "nro_factura"         => $_POST['factura_numero'],
+            "fecha_factura"       => $_POST['fecha_emision'],
             "timbrado"            => $_POST['timbrado'],
-            "vencimiento_timbrado"=> $_POST['vencimiento_timbrado'],
-            "estado"              => "ACTIVO",
+            "vencimiento_timbrado" => $_POST['vencimiento_timbrado'],
+            "estado"              => "1",
             "total"               => $_POST['total_factura'],
             "condicion"           => $_POST['condicion'],
             "intervalo"           => $_POST['intervalo'],
@@ -168,7 +166,7 @@ class compraControlador extends compraModelo
 
         $guardarCab = compraModelo::insertar_compra_cabecera_modelo($datosCab);
 
-        if ($guardarCab->rowCount() < 1) {
+        if ($guardarCab["stmt"]->rowCount() < 1) {
             return [
                 "Alerta" => "simple",
                 "Titulo" => "Error",
@@ -177,8 +175,7 @@ class compraControlador extends compraModelo
             ];
         }
 
-        /* Obtener ID generado */
-        $idcab = mainModel::conectar()->lastInsertId();
+        $idcab = $guardarCab["last_id"];
 
 
         /* ===============================
