@@ -48,8 +48,29 @@ if (isset($_POST['index'])) {
 
     if (isset($_SESSION['Cdatos_articuloOC'][$i])) {
 
-        $_SESSION['Cdatos_articuloOC'][$i]['cantidad'] = floatval($_POST['cantidad']);
-        $_SESSION['Cdatos_articuloOC'][$i]['precio']   = floatval($_POST['precio']);
+        $cantidad = floatval($_POST['cantidad']);
+        $precio   = floatval($_POST['precio']);
+
+        // ❌ BLOQUEAR CANTIDADES O PRECIOS EN CERO
+        if ($cantidad <= 0) {
+            echo json_encode([
+                "status" => "error",
+                "msg" => "La cantidad no puede ser cero"
+            ]);
+            exit();
+        }
+
+        if ($precio <= 0) {
+            echo json_encode([
+                "status" => "error",
+                "msg" => "El precio no puede ser cero"
+            ]);
+            exit();
+        }
+
+        // ✔️ ACTUALIZAR SESIÓN SOLO SI LOS DATOS SON VÁLIDOS
+        $_SESSION['Cdatos_articuloOC'][$i]['cantidad'] = $cantidad;
+        $_SESSION['Cdatos_articuloOC'][$i]['precio']   = $precio;
         $_SESSION['Cdatos_articuloOC'][$i]['subtotal'] = floatval($_POST['subtotal']);
         $_SESSION['Cdatos_articuloOC'][$i]['iva']      = floatval($_POST['iva']);
 
@@ -60,6 +81,7 @@ if (isset($_POST['index'])) {
     echo json_encode(["status" => "error", "msg" => "Índice no existe"]);
     exit();
 }
+
 
 /* ===============================
    GUARDAR COMPRA

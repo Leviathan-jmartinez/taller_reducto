@@ -184,7 +184,9 @@ class compraControlador extends compraModelo
         $errores = 0;
 
         foreach ($_SESSION['Cdatos_articuloOC'] as $item) {
-
+            if ($item['cantidad'] <= 0) {
+                continue;
+            }
             $detalle = [
                 "idcab"       => $idcab,
                 "id_articulo" => $item['ID'],
