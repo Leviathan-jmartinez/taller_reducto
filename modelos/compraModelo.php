@@ -56,4 +56,74 @@ class compraModelo extends mainModel
         $sql->execute();
         return $sql;
     }
+
+    protected function upsert_stock_modelo($datos)
+    {
+
+        $sql = "INSERT INTO stock (
+                iddeposito,
+                id_articulo,
+                stockcant_max,
+                stockcant_min,
+                stockDisponible,
+                stockUltActualizacion,
+                stockUsuActualizacion,
+                stockultimoIdActualizacion
+            ) VALUES (
+                :iddeposito,
+                :id_articulo,
+                200,
+                15,
+                :stockDisponible,
+                :stockUltActualizacion,
+                :stockUsuActualizacion,
+                :stockultimoIdActualizacion
+            )
+            ON DUPLICATE KEY UPDATE
+                stockDisponible = VALUES(stockDisponible),
+                stockUltActualizacion = VALUES(stockUltActualizacion),
+                stockUsuActualizacion = VALUES(stockUsuActualizacion),
+                stockultimoIdActualizacion = VALUES(stockultimoIdActualizacion),
+                stockcant_max = 200,
+                stockcant_min = 15";
+
+        $conexion = mainModel::conectar();
+        $stmt = $conexion->prepare($sql);
+
+        $stmt->bindParam(":iddeposito", $datos['iddeposito'], PDO::PARAM_INT);
+        $stmt->bindParam(":id_articulo", $datos['id_articulo'], PDO::PARAM_INT);
+        $stmt->bindParam(":stockDisponible", $datos['stockDisponible']);
+        $stmt->bindParam(":stockUltActualizacion", $datos['stockUltActualizacion']);
+        $stmt->bindParam(":stockUsuActualizacion", $datos['stockUsuActualizacion'], PDO::PARAM_INT);
+        $stmt->bindParam(":stockultimoIdActualizacion", $datos['stockultimoIdActualizacion'], PDO::PARAM_INT);
+
+        $stmt->execute();
+        return $stmt;
+    }
+
+    protected function obtener_stock_actual_modelo($iddeposito, $id_articulo)
+{
+    $sql = "SELECT stockDisponible 
+            FROM stock 
+            WHERE iddeposito = :iddeposito 
+              AND id_articulo = :id_articulo 
+            LIMIT 1";
+
+    $conexion = mainModel::conectar();
+    $stmt = $conexion->prepare($sql);
+
+    $stmt->bindParam(":iddeposito", $iddeposito, PDO::PARAM_INT);
+    $stmt->bindParam(":id_articulo", $id_articulo, PDO::PARAM_INT);
+
+    $stmt->execute();
+
+    if ($stmt->rowCount() > 0) {
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+        return floatval($data["stockDisponible"]);
+    }
+
+    // No existe -> stock = 0
+    return 0;
+}
+
 }

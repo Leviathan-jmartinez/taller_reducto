@@ -68,7 +68,6 @@ class compraControlador extends compraModelo
     /**controlador cargar oc */
     public function cargar_oc_controlador()
     {
-        session_start(['name' => 'STR']);
 
         $idoccompra = mainModel::limpiar_string($_POST['id_oc_seleccionado'] ?? '');
         if (empty($idoccompra)) {
@@ -106,15 +105,16 @@ class compraControlador extends compraModelo
 
         $_SESSION['Cdatos_articuloOC'] = $_SESSION['Cdatos_articuloOC'] ?? [];
         foreach ($detalle as $i => $row) {
-            $subtotal = $row['cantidad_pendiente'] * $row['precio_unitario'];
-            $iva = $subtotal / $row['divisor'];
 
             // Si ya existe en la sesión (modificado), no sobreescribas cantidad y precio
             $cantidad = $_SESSION['Cdatos_articuloOC'][$i]['cantidad'] ?? $row['cantidad_pendiente'];
             $precio   = $_SESSION['Cdatos_articuloOC'][$i]['precio'] ?? $row['precio_unitario'];
             $subtotal = $cantidad * $precio;
-            $iva = $subtotal / $row['divisor'];
-
+            if ($row['divisor'] == 0){
+                $iva = 0;
+            }else{
+                $iva = $subtotal / $row['divisor'];
+            }
             $_SESSION['Cdatos_articuloOC'][$i] = [
                 "ID" => $row['id_articulo'],
                 "codigo" => $row['codigo'],
@@ -148,8 +148,8 @@ class compraControlador extends compraModelo
         }
 
         /* ===============================
-           DATOS DE LA CABECERA
-        ================================= */
+       DATOS DE LA CABECERA
+    ================================= */
         $datosCab = [
             "proveedor"           => $_SESSION['datos_proveedorOC']['ID'],
             "usuario"             => $_SESSION['id_str'],
@@ -179,14 +179,17 @@ class compraControlador extends compraModelo
 
 
         /* ===============================
-           GUARDAR DETALLES
-        ================================= */
+       GUARDAR DETALLES + ACTUALIZAR STOCK
+    ================================= */
         $errores = 0;
 
         foreach ($_SESSION['Cdatos_articuloOC'] as $item) {
+
             if ($item['cantidad'] <= 0) {
                 continue;
             }
+
+            /* Guardar detalle */
             $detalle = [
                 "idcab"       => $idcab,
                 "id_articulo" => $item['ID'],
@@ -200,9 +203,36 @@ class compraControlador extends compraModelo
 
             if ($guardarDet->rowCount() < 1) {
                 $errores++;
+                continue;
             }
+
+            /* ================================================
+           ACTUALIZAR/INSERTAR STOCK DEL ARTÍCULO COMPRADO
+        =================================================== */
+
+            // El depósito probablemente lo recibís de la OC o asignación fija.
+            // Si tenés otro origen decime y lo ajusto.
+            $iddeposito = 1;
+
+            // SUMAR al stock actual:
+            $stockActual = compraModelo::obtener_stock_actual_modelo($iddeposito, $item['ID']);
+
+            $nuevoStock = $stockActual + $item['cantidad'];
+
+            $datos_stock = [
+                "iddeposito"                => $iddeposito,
+                "id_articulo"               => $item['ID'],
+                "stockDisponible"           => $nuevoStock,
+                "stockUltActualizacion"     => date("Y-m-d H:i:s"),
+                "stockUsuActualizacion"     => $_SESSION['id_str'],
+                "stockultimoIdActualizacion" => $idcab   // última compra que lo afectó
+            ];
+
+            compraModelo::upsert_stock_modelo($datos_stock);
         }
 
+
+        /* ERROR PARCIAL EN DETALLES */
         if ($errores > 0) {
             return [
                 "Alerta" => "simple",
@@ -211,6 +241,7 @@ class compraControlador extends compraModelo
                 "Tipo" => "warning"
             ];
         }
+
 
         /* LIMPIAR SESIÓN */
         unset($_SESSION['Cdatos_articuloOC']);
@@ -224,6 +255,7 @@ class compraControlador extends compraModelo
             "Tipo" => "success"
         ];
     }
+
 
     /**controlador buscador proveedor */
     public function buscar_proveedor_controlador()
