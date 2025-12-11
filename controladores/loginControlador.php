@@ -66,6 +66,7 @@ class loginControlador extends loginModelo {
             $_SESSION['apellido_str']=$row['usu_apellido'];
             $_SESSION['nivel_str']=$row['usu_nivel'];
             $_SESSION['nick_str']=$row['usu_nick'];
+            $_SESSION['nick_sucursal']=$row['sucursalid'];
             /**procesar con md5 */
             $_SESSION['token_str']=md5(uniqid(mt_rand(),true));
             return header("Location: ".SERVERURL."home/");

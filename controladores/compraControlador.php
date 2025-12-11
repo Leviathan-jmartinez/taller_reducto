@@ -110,9 +110,9 @@ class compraControlador extends compraModelo
             $cantidad = $_SESSION['Cdatos_articuloOC'][$i]['cantidad'] ?? $row['cantidad_pendiente'];
             $precio   = $_SESSION['Cdatos_articuloOC'][$i]['precio'] ?? $row['precio_unitario'];
             $subtotal = $cantidad * $precio;
-            if ($row['divisor'] == 0){
+            if ($row['divisor'] == 0) {
                 $iva = 0;
-            }else{
+            } else {
                 $iva = $subtotal / $row['divisor'];
             }
             $_SESSION['Cdatos_articuloOC'][$i] = [
@@ -177,17 +177,14 @@ class compraControlador extends compraModelo
 
         $idcab = $guardarCab["last_id"];
 
-
         /* ===============================
        GUARDAR DETALLES + ACTUALIZAR STOCK
     ================================= */
         $errores = 0;
+        $iddeposito = 1;
 
         foreach ($_SESSION['Cdatos_articuloOC'] as $item) {
-
-            if ($item['cantidad'] <= 0) {
-                continue;
-            }
+            if ($item['cantidad'] <= 0) continue;
 
             /* Guardar detalle */
             $detalle = [
@@ -200,23 +197,32 @@ class compraControlador extends compraModelo
             ];
 
             $guardarDet = compraModelo::insertar_compra_detalle_modelo($detalle);
-
             if ($guardarDet->rowCount() < 1) {
                 $errores++;
                 continue;
             }
 
             /* ================================================
-           ACTUALIZAR/INSERTAR STOCK DEL ARTÍCULO COMPRADO
+           INSERTAR MOVIMIENTO STOCK
         =================================================== */
+            $mov = [
+                "local"        => $_SESSION['nick_sucursal'],
+                "tipo"         => "RECEPCION COMPRA",
+                "producto"     => $item['ID'],
+                "cantidad"     => $item['cantidad'],
+                "precioVenta"  => 0,
+                "costo"        => $item['precio'],
+                "nroTicket"    => $_POST['factura_numero'],
+                "pos"          => null,
+                "usuario"      => $_SESSION['id_str'],
+                "signo"        => 1,
+                "referencia"   => $idcab
+            ];
 
-            // El depósito probablemente lo recibís de la OC o asignación fija.
-            // Si tenés otro origen decime y lo ajusto.
-            $iddeposito = 1;
+            compraModelo::agregar_movimiento_stock($mov);
 
-            // SUMAR al stock actual:
+            // SUMAR al stock actual
             $stockActual = compraModelo::obtener_stock_actual_modelo($iddeposito, $item['ID']);
-
             $nuevoStock = $stockActual + $item['cantidad'];
 
             $datos_stock = [
@@ -225,23 +231,49 @@ class compraControlador extends compraModelo
                 "stockDisponible"           => $nuevoStock,
                 "stockUltActualizacion"     => date("Y-m-d H:i:s"),
                 "stockUsuActualizacion"     => $_SESSION['id_str'],
-                "stockultimoIdActualizacion" => $idcab   // última compra que lo afectó
+                "stockultimoIdActualizacion" => $idcab
             ];
 
             compraModelo::upsert_stock_modelo($datos_stock);
         }
 
+        /* ===============================
+       GENERAR CUENTAS A PAGAR
+    ================================= */
+        $condicion = $_POST['condicion'];
+        $intervalo = intval($_POST['intervalo']);
+        $cuotas    = intval($_POST['cuotas']);
+        $total     = floatval($_POST['total_factura']);
+
+        if ($condicion === 'contado') $cuotas = 1;
+        $monto_cuota = round($total / $cuotas, 2);
+        $errores_cuentas = 0;
+
+        for ($i = 1; $i <= $cuotas; $i++) {
+            $fecha_vencimiento = date('Y-m-d', strtotime("+" . ($intervalo * $i) . " days"));
+
+            $datos_cuenta = [
+                "idcompra"        => $idcab,
+                "monto"           => $monto_cuota,
+                "saldo"           => $monto_cuota,
+                "cuotas"          => $i,
+                "fecha_vencimiento" => $fecha_vencimiento,
+                "estado"          => 1
+            ];
+
+            $guardarCuenta = compraModelo::insertar_cuentas_a_pagar_modelo($datos_cuenta);
+            if ($guardarCuenta->rowCount() < 1) $errores_cuentas++;
+        }
 
         /* ERROR PARCIAL EN DETALLES */
-        if ($errores > 0) {
+        if ($errores > 0 || $errores_cuentas > 0) {
             return [
                 "Alerta" => "simple",
                 "Titulo" => "Error parcial",
-                "Texto" => "La compra se guardó, pero algunos detalles no pudieron insertarse.",
+                "Texto" => "La compra se guardó, pero algunos detalles o cuentas a pagar no pudieron insertarse.",
                 "Tipo" => "warning"
             ];
         }
-
 
         /* LIMPIAR SESIÓN */
         unset($_SESSION['Cdatos_articuloOC']);
@@ -255,6 +287,7 @@ class compraControlador extends compraModelo
             "Tipo" => "success"
         ];
     }
+
 
 
     /**controlador buscador proveedor */

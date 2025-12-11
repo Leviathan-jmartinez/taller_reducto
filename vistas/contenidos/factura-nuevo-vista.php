@@ -86,7 +86,7 @@ if (isset($_POST['factura_tipo'])) {
                         <input type="date" class="form-control" name="fecha_emision" required>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="form-group">
                         <label class="bmd-label-floating">Proveedor</label>
                         <?php if (empty($_SESSION['datos_proveedorOC'])) { ?>
@@ -120,13 +120,13 @@ if (isset($_POST['factura_tipo'])) {
                 <div class="col-md-2">
                     <div class="form-group">
                         <label for="intervalo" class="bmd-label-floating">Intervalo</label>
-                        <select class="form-control" name="intervalo" id="intervalo" required>
-                            <option value="" selected disabled>Seleccione intervalo</option>
-                            <option value="1" selected>1</option>
-                            <option value="30" selected>30</option>
-                            <option value="60" selected>60</option>
-                            <option value="90" selected>90</option>
-                        </select>
+                        <input type="text" class="form-control" name="intervalo" id="intervalo" required>
+                    </div>
+                </div>
+                <div class="col-md-1">
+                    <div class="form-group">
+                        <label for="cuotas" class="bmd-label-floating">Cuotas</label>
+                        <input type="number" class="form-control" name="cuotas" id="cuotas" required>
                     </div>
                 </div>
             </div>

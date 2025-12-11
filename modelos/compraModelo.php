@@ -56,7 +56,9 @@ class compraModelo extends mainModel
         $sql->execute();
         return $sql;
     }
-
+    /* ==============================
+         Insertar o actualizar stock
+    ============================== */
     protected function upsert_stock_modelo($datos)
     {
 
@@ -100,30 +102,104 @@ class compraModelo extends mainModel
         $stmt->execute();
         return $stmt;
     }
-
+    /* ==============================
+       obtener stock actual
+    ============================== */
     protected function obtener_stock_actual_modelo($iddeposito, $id_articulo)
-{
-    $sql = "SELECT stockDisponible 
+    {
+        $sql = "SELECT stockDisponible 
             FROM stock 
             WHERE iddeposito = :iddeposito 
               AND id_articulo = :id_articulo 
             LIMIT 1";
 
-    $conexion = mainModel::conectar();
-    $stmt = $conexion->prepare($sql);
+        $conexion = mainModel::conectar();
+        $stmt = $conexion->prepare($sql);
 
-    $stmt->bindParam(":iddeposito", $iddeposito, PDO::PARAM_INT);
-    $stmt->bindParam(":id_articulo", $id_articulo, PDO::PARAM_INT);
+        $stmt->bindParam(":iddeposito", $iddeposito, PDO::PARAM_INT);
+        $stmt->bindParam(":id_articulo", $id_articulo, PDO::PARAM_INT);
 
-    $stmt->execute();
+        $stmt->execute();
 
-    if ($stmt->rowCount() > 0) {
-        $data = $stmt->fetch(PDO::FETCH_ASSOC);
-        return floatval($data["stockDisponible"]);
+        if ($stmt->rowCount() > 0) {
+            $data = $stmt->fetch(PDO::FETCH_ASSOC);
+            return floatval($data["stockDisponible"]);
+        }
+
+        // No existe -> stock = 0
+        return 0;
+    }
+    /* ==============================
+       Insertar movimiento de stock
+    ============================== */
+    protected static function agregar_movimiento_stock($detalle)
+    {
+
+        $sql = mainModel::conectar()->prepare("
+        INSERT INTO sucmovimientostock
+        (
+            LocalId,
+            TipoMovStockId,
+            MovStockProductoId,
+            MovStockCantidad,
+            MovStockPrecioVenta,
+            MovStockCosto,
+            MovStockFechaHora,
+            MovStockNroTicket,
+            MovStockPOS,
+            MovStockUsuario,
+            MovStockSigno,
+            MovStockReferencia
+        ) VALUES (
+            :local,
+            :tipo,
+            :producto,
+            :cantidad,
+            :precioVenta,
+            :costo,
+            NOW(),
+            :nroTicket,
+            :pos,
+            :usuario,
+            :signo,
+            :referencia
+        )");
+
+        // Bind de parámetros
+        $sql->bindParam(":local",        $detalle['local']);
+        $sql->bindParam(":tipo",         $detalle['tipo']);          // por ejemplo "COMPRA"
+        $sql->bindParam(":producto",     $detalle['producto']);      // id_articulo
+        $sql->bindParam(":cantidad",     $detalle['cantidad']);      // cantidad recibida
+        $sql->bindParam(":precioVenta",  $detalle['precioVenta']);   // 0 si no aplica
+        $sql->bindParam(":costo",        $detalle['costo']);         // costo de compra
+        $sql->bindParam(":nroTicket",    $detalle['nroTicket']);     // factura
+        $sql->bindParam(":pos",          $detalle['pos']);           // puede ir NULL
+        $sql->bindParam(":usuario",      $detalle['usuario']);       // id usuario
+        $sql->bindParam(":signo",        $detalle['signo']);         // 1 para compra
+        $sql->bindParam(":referencia",   $detalle['referencia']);    // ID de OC
+
+        $sql->execute();
+        return $sql;
     }
 
-    // No existe -> stock = 0
-    return 0;
-}
+    /* ==============================
+       Insertar cuentas a pagar
+    ============================== */
+    public static function insertar_cuentas_a_pagar_modelo($datos)
+    {
+        $sql = mainModel::conectar()->prepare("
+            INSERT INTO cuentas_a_pagar
+            (idcompra_cabecera, monto, saldo, nro_cuotas, fecha_vencimiento, estado)
+            VALUES (:idcompra, :monto, :saldo, :cuotas, :fecha, :estado)");
 
+        $sql->bindParam(':idcompra', $datos['idcompra']);
+        $sql->bindParam(':monto', $datos['monto']);
+        $sql->bindParam(':saldo', $datos['saldo']);
+        $sql->bindParam(':cuotas', $datos['cuotas']);
+        $sql->bindParam(':fecha', $datos['fecha_vencimiento']);
+        $sql->bindParam(':estado', $datos['estado']);
+
+        $sql->execute();
+        return $sql;
+    }
 }
