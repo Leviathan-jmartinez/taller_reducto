@@ -454,7 +454,6 @@ class compraControlador extends compraModelo
     /**controlador buscador articulo */
     public function articulo_controlador()
     {
-        session_start(['name' => 'STR']);
         // AGREGAR ARTÍCULO
         if (isset($_POST['id_agregar_articuloPre'])) {
 
