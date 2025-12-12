@@ -39,6 +39,37 @@ if (isset($_POST['limpiar_presupuesto'])) {
     header("Location: " . SERVERURL . "presupuesto-nuevo/");
     exit();
 }
+/* ===============================
+   Buscar PROVEEDOR
+================================ */
+if (isset($_POST['buscar_proveedorCO'])) {
+    echo $inst_compra->buscar_proveedor_controlador();
+    exit();
+}
+
+/* ===============================
+   AGREGAR PROVEEDOR
+================================ */
+if (isset($_POST['id_agregar_proveedorCO'])) {
+    echo $inst_compra->agregar_proveedor_controlador();
+    exit();
+}
+/* ===============================
+   Buscar ARTÍCULO
+================================ */
+if (isset($_POST['buscar_articuloCO'])) {
+    echo $inst_compra->buscar_articulo_controlador();
+    exit();
+}
+
+/* ===============================
+   AGREGAR ARTÍCULO
+================================ */
+if (isset($_POST['id_agregar_articuloCO'])) {
+    echo $inst_compra->articulo_controlador();
+    exit();
+}
+
 
 /* ===============================
    ACTUALIZAR DETALLES EN SESIÓN

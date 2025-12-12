@@ -1,8 +1,6 @@
             <!-- Page header -->
             <div class="full-box page-header">
-                <h3 class="text-left">
-                    <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR PRESUPUESTO POR FECHA
-                </h3>
+                
             </div>
 
             <div class="container-fluid">

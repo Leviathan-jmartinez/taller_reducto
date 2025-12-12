@@ -1,3 +1,5 @@
+<script src="<?php echo SERVERURL; ?>vistas/js/jquery-3.6.0.min.js"></script>
+
 <script>
     function buscar_OC() {
         let input_oc = document.querySelector('#input_oc').value;
@@ -132,4 +134,136 @@
         });
 
     });
+
+    $(document).on("click", "#btnSinOC", function(e) {
+        e.preventDefault(); // evita que el formulario capture el click
+        e.stopPropagation(); // evita que FormularioAjax lo capture
+
+        $.post("", {
+            factura_tipo: "sin_oc"
+        }, function(resp) {
+            window.location.href = "<?php echo SERVERURL; ?>factura-nuevo";
+            // aquí SERVERURL apunta a index.php?vistas=factura-nuevo
+        });
+    });
+
+    function buscar_proveedorCO() {
+        let input_proveedor = document.querySelector('#input_proveedor').value;
+        input_proveedor = input_proveedor.trim();
+        if (input_proveedor != "") {
+            let datos = new FormData();
+            datos.append("buscar_proveedorCO", input_proveedor);
+
+            fetch("<?php echo SERVERURL ?>ajax/compraAjax.php", {
+                    method: 'POST',
+                    body: datos
+                })
+                .then(respuesta => respuesta.text())
+                .then(respuesta => {
+                    let tabla_proveedorCO = document.querySelector('#tabla_proveedorCO');
+                    tabla_proveedorCO.innerHTML = respuesta;
+                });
+        } else {
+            Swal.fire({
+                title: 'Ocurrio un error',
+                text: 'Debes introducir el RUC o RAZON SOCIAL',
+                type: 'error',
+                confirmButtonText: 'Aceptar'
+            });
+        }
+    }
+
+    /**agregar proveedor */
+    function agregar_proveedorCO(id) {
+        $('#ModalproveedorCO').modal('hide');
+
+        Swal.fire({
+            title: '¿Quieres agregar este proveedor?',
+            text: 'Se va agregar este proveedor al pedido',
+            type: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#008000',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Si, agregar',
+            cancelButtonText: 'No, Cancelar'
+        }).then((result) => {
+            if (result.value) {
+                let datos = new FormData();
+                datos.append("id_agregar_proveedorCO", id);
+
+                fetch("<?php echo SERVERURL ?>ajax/compraAjax.php", {
+                        method: 'POST',
+                        body: datos
+                    })
+                    .then(respuesta => respuesta.json())
+                    .then(respuesta => {
+                        return alertasAjax(respuesta);
+                    });
+            } else {
+                $('#ModalproveedorCO').modal('show');
+            }
+        });
+    }
+
+    function buscar_articuloCO() {
+        let input_articulo = document.querySelector('#input_articulo').value;
+        input_articulo = input_articulo.trim();
+        if (input_articulo != "") {
+            let datos = new FormData();
+            datos.append("buscar_articuloCO", input_articulo);
+
+            fetch("<?php echo SERVERURL ?>ajax/compraAjax.php", {
+                    method: 'POST',
+                    body: datos
+                })
+                .then(respuesta => respuesta.text())
+                .then(respuesta => {
+                    let tabla_articuloCO = document.querySelector('#tabla_articuloCO');
+                    tabla_articuloCO.innerHTML = respuesta;
+                });
+        } else {
+            Swal.fire({
+                title: 'Ocurrio un error',
+                text: 'Debes introducir el CÓDIGO o NOMBRE del artículo',
+                type: 'error',
+                confirmButtonText: 'Aceptar'
+            });
+        }
+    }
+
+    function agregar_articuloCO(id) {
+        $('#ModalArticuloCO').modal('hide');
+
+        let cantidad = document.querySelector('#cantidad_' + id).value.trim();
+        let precio = document.querySelector('#precio_' + id).value.trim();
+
+        let datos = new FormData();
+        datos.append('id_agregar_articuloCO', id);
+        datos.append('detalle_cantidad', cantidad);
+        datos.append('detalle_precio', precio);
+
+        fetch("<?php echo SERVERURL ?>ajax/compraAjax.php", {
+                method: 'POST',
+                body: datos
+            })
+            .then(res => res.json())
+            .then(resp => {
+
+                Swal.fire({
+                    title: resp.Titulo,
+                    text: resp.Texto,
+                    type: resp.Tipo,
+                    confirmButtonText: 'Aceptar'
+                }).then(() => {
+                    if (resp.Alerta === "recargar") {
+                        location.reload();
+                    }
+                });
+            })
+            .catch(err => {
+                console.error("Error:", err);
+                Swal.fire("Error", "No se pudo procesar la petición", "error");
+            });
+    }
+    
 </script>

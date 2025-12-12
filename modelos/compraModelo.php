@@ -185,7 +185,7 @@ class compraModelo extends mainModel
     /* ==============================
        Insertar cuentas a pagar
     ============================== */
-    public static function insertar_cuentas_a_pagar_modelo($datos)
+    protected static function insertar_cuentas_a_pagar_modelo($datos)
     {
         $sql = mainModel::conectar()->prepare("
             INSERT INTO cuentas_a_pagar
@@ -202,4 +202,15 @@ class compraModelo extends mainModel
         $sql->execute();
         return $sql;
     }
+
+    protected static function anular_presupuesto_modelo($datos)
+    {
+        $sql = mainModel::conectar()->prepare("UPDATE compra_cabecera SET estado = 'Anulado' WHERE idcompra_cabecera = :idpresupuesto_compra");
+
+        $sql->bindParam(":idpresupuesto_compra", $datos['idpresupuesto_compra']);
+
+        $sql->execute();
+        return $sql;
+    }
+
 }
