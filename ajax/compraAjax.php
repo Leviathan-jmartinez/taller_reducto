@@ -70,6 +70,31 @@ if (isset($_POST['id_agregar_articuloCO'])) {
     exit();
 }
 
+/* ===============================
+   Anular COMPRA
+================================ */
+if (isset($_POST['compra_id_del'])) {
+    echo $inst_compra->anular_compra_controlador();
+    exit();
+}
+
+if (isset($_POST['cancelar'])) {
+    // Limpiar solo las variables de la compra
+    unset($_SESSION['Cdatos_articuloCO']);
+    unset($_SESSION['datos_proveedorCO']);
+    unset($_SESSION['id_oc_seleccionado']);
+    if($_SESSION['factura_tipo'] == "sin_oc"){
+        $_SESSION['factura_tipo'] = "con_oc";
+    }
+    // Retornar respuesta JSON
+    echo json_encode([
+        "Alerta" => "recargar",
+        "Titulo" => "Operación cancelada",
+        "Texto" => "Se han limpiado las variables de sesión.",
+        "Tipo"   => "success"
+    ]);
+    exit(); // importantísimo: salir antes de procesar cualquier otro código
+}
 
 /* ===============================
    ACTUALIZAR DETALLES EN SESIÓN
@@ -77,7 +102,7 @@ if (isset($_POST['id_agregar_articuloCO'])) {
 if (isset($_POST['index'])) {
     $i = intval($_POST['index']);
 
-    if (isset($_SESSION['Cdatos_articuloOC'][$i])) {
+    if (isset($_SESSION['Cdatos_articuloCO'][$i])) {
 
         $cantidad = floatval($_POST['cantidad']);
         $precio   = floatval($_POST['precio']);
@@ -100,10 +125,10 @@ if (isset($_POST['index'])) {
         }
 
         // ✔️ ACTUALIZAR SESIÓN SOLO SI LOS DATOS SON VÁLIDOS
-        $_SESSION['Cdatos_articuloOC'][$i]['cantidad'] = $cantidad;
-        $_SESSION['Cdatos_articuloOC'][$i]['precio']   = $precio;
-        $_SESSION['Cdatos_articuloOC'][$i]['subtotal'] = floatval($_POST['subtotal']);
-        $_SESSION['Cdatos_articuloOC'][$i]['iva']      = floatval($_POST['iva']);
+        $_SESSION['Cdatos_articuloCO'][$i]['cantidad'] = $cantidad;
+        $_SESSION['Cdatos_articuloCO'][$i]['precio']   = $precio;
+        $_SESSION['Cdatos_articuloCO'][$i]['subtotal'] = floatval($_POST['subtotal']);
+        $_SESSION['Cdatos_articuloCO'][$i]['iva']      = floatval($_POST['iva']);
 
         echo json_encode(["status" => "ok"]);
         exit();

@@ -14,89 +14,79 @@
 
 <?php
 // Preparar datetime completos para enviar
-$fecha_inicio = $_SESSION['fecha_inicio_factura'] ?? '';
-$fecha_final  = $_SESSION['fecha_final_factura'] ?? '';
+$fecha_inicio = $_SESSION['fecha_inicio_compra'] ?? '';
+$fecha_final  = $_SESSION['fecha_final_compra'] ?? '';
 $fecha_inicio_dt = $fecha_inicio ? $fecha_inicio . ' 00:00:00' : '';
 $fecha_final_dt  = $fecha_final  ? $fecha_final  . ' 23:59:59' : '';
+
 ?>
 
-<div class="container-fluid">
-    <form id="form_busqueda_factura" class="form-neon" method="POST" autocomplete="off">
-        <input type="hidden" name="modulo" value="factura">
+<?php if (!$fecha_inicio && !$fecha_final) { ?>
+    <div class="container-fluid">
+        <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="default" autocomplete="off">
+            <input type="hidden" name="modulo" value="compra">
 
-        <div class="container-fluid">
-            <div class="row justify-content-md-center">
+            <!-- Inputs ocultos para enviar datetime completo -->
+            <input type="hidden" name="fecha_inicio_dt" value="">
+            <input type="hidden" name="fecha_final_dt" value="">
 
-                <!-- Fecha Inicio -->
-                <div class="col-12 col-md-3">
-                    <div class="form-group">
-                        <label for="fecha_inicio">Fecha inicio</label>
-                        <input type="date" class="form-control" name="fecha_inicio" id="fecha_inicio" value="<?php echo $fecha_inicio; ?>">
+            <div class="container-fluid">
+                <div class="row justify-content-md-center">
+                    <div class="col-12 col-md-4">
+                        <div class="form-group">
+                            <label for="busqueda_inicio_compra">Fecha inicial (día/mes/año)</label>
+                            <input type="date" class="form-control" name="fecha_inicio" id="fecha_inicio" maxlength="30">
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="form-group">
+                            <label for="busqueda_final_compra">Fecha final (día/mes/año)</label>
+                            <input type="date" class="form-control" name="fecha_final" id="fecha_final" maxlength="30">
+                        </div>
+                    </div>
+                    <div class="col-12 text-center" style="margin-top: 40px;">
+                        <button type="submit" class="btn btn-raised btn-info"><i class="fas fa-search"></i> &nbsp; BUSCAR</button>
                     </div>
                 </div>
-
-                <!-- Fecha Final -->
-                <div class="col-12 col-md-3">
-                    <div class="form-group">
-                        <label for="fecha_final">Fecha final</label>
-                        <input type="date" class="form-control" name="fecha_final" id="fecha_final" value="<?php echo $fecha_final; ?>">
-                    </div>
-                </div>
-
-                <!-- Número de factura -->
-                <div class="col-12 col-md-3">
-                    <div class="form-group">
-                        <label for="nro_factura">Número de factura</label>
-                        <input type="text" class="form-control" name="nro_factura" id="nro_factura" placeholder="Ej: 001-000123">
-                    </div>
-                </div>
-                <?php
-                require_once "./controladores/compraControlador.php";
-                $ins_compra = new compraControlador();
-                $proveedores = $ins_compra->obtenerProveedores();
-                ?>
-                <!-- Proveedor -->
-                <div class="col-12 col-md-3">
-                    <div class="form-group">
-                        <label for="idproveedor">Proveedor</label>
-                        <select name="idproveedor" id="idproveedor" class="form-control">
-                            <option value="">-- Todos --</option>
-                            <?php foreach ($proveedores as $p): ?>
-                                <option value="<?php echo $p['idproveedores']; ?>"><?php echo $p['razon_social']; ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- Botón buscar -->
-                <div class="col-12 text-center" style="margin-top: 20px;">
-                    <button type="submit" class="btn btn-raised btn-info"><i class="fas fa-search"></i> &nbsp; BUSCAR</button>
-                    <?php if ($fecha_inicio || $fecha_final): ?>
-                        <button type="button" id="btn_eliminar_busqueda" class="btn btn-raised btn-danger"><i class="far fa-trash-alt"></i> &nbsp; ELIMINAR BÚSQUEDA</button>
-                    <?php endif; ?>
-                </div>
-
             </div>
-        </div>
-    </form>
-</div>
+        </form>
+    </div>
 
-<!-- Tabla de resultados -->
-<div class="container-fluid mt-4" id="tabla_resultados">
-    <?php
-    if ($fecha_inicio || $fecha_final) {
+<?php } else { ?>
+    <div class="container-fluid">
+        <form class="FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
+            <input type="hidden" name="modulo" value="compra">
+            <input type="hidden" name="eliminar_busqueda" value="eliminar">
+
+            <!-- Inputs ocultos con datetime completo -->
+            <input type="hidden" name="fecha_inicio_dt" value="<?php echo $fecha_inicio_dt; ?>">
+            <input type="hidden" name="fecha_final_dt" value="<?php echo $fecha_final_dt; ?>">
+
+            <div class="container-fluid">
+                <div class="row justify-content-md-center">
+                    <div class="col-12 col-md-6">
+                        <p class="text-center" style="font-size: 20px;">
+                            Fecha de búsqueda: <strong><?php echo $fecha_inicio ?> &nbsp; a &nbsp; <?php echo $fecha_final ?></strong>
+                        </p>
+                    </div>
+                    <div class="col-12 text-center" style="margin-top: 20px;">
+                        <button type="submit" class="btn btn-raised btn-danger"><i class="far fa-trash-alt"></i> &nbsp; ELIMINAR BÚSQUEDA</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+
+
+    <div class="container-fluid">
+        <?php
         require_once "./controladores/compraControlador.php";
-        $ins_compra = new compraControlador();
-        echo $ins_compra->paginador_factura_controlador(
-            $pagina[1] ?? 1,
-            15,
-            $_SESSION['nivel_str'],
-            $pagina[0] ?? 'factura-buscar',
-            $fecha_inicio,
-            $fecha_final
-        );
-    }
-    ?>
-</div>
+        $compra = new compraControlador();
+        echo $compra->paginador_compra_controlador($pagina[1], 15, $_SESSION['nivel_str'], $pagina[0], $_SESSION['fecha_inicio_compra'], $_SESSION['fecha_final_compra']);
+        ?>
+    </div>
 
-<script src="<?php echo SERVERURL; ?>vistas/inc/compra.php"></script>
+<?php
+}
+?>

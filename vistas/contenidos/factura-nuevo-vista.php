@@ -173,7 +173,8 @@ $tipo = $_SESSION['factura_tipo'];
                                             <input type="number" min="0" step="1"
                                                 name="cantidades[]"
                                                 class="form-control text-center cantidad"
-                                                value="<?= $item['cantidad']; ?>" required>
+                                                value="<?= $item['cantidad']; ?>"
+                                                <?= $tipo === 'sin_oc' ? 'readonly' : 'required'; ?>>
                                         </td>
                                         <td class="text-center">
                                             <input type="number"
@@ -182,7 +183,7 @@ $tipo = $_SESSION['factura_tipo'];
                                                 value="<?= number_format($item['precio'], 2, '.', ''); ?>"
                                                 step="0.01"
                                                 min="0"
-                                                required>
+                                                <?= $tipo === 'sin_oc' ? 'readonly' : 'required'; ?>>
                                         </td>
                                         <td class="text-center subtotal"><?= number_format($item['subtotal'], 0, '.', '.'); ?></td>
                                         <td class="text-center"><?= htmlspecialchars($item['iva_descri']); ?></td>
@@ -233,11 +234,15 @@ $tipo = $_SESSION['factura_tipo'];
             <input type="hidden" name="iva5" id="input-iva5" value="0.00">
             <input type="hidden" name="base0" id="input-base0" value="0.00">
 
-            <p class="text-center" style="margin-top: 40px;">
+            <div class="text-center" style="margin-top: 40px; display: flex; justify-content: center; gap: 15px;">
                 <button type="submit" class="btn btn-info btn-raised btn-lg">
                     <i class="fas fa-save"></i> &nbsp; Guardar factura
                 </button>
-            </p>
+                <button type="button" id="btnCancelarCompra" class="btn btn-danger btn-raised btn-lg">
+                    <i class="fas fa-times"></i> &nbsp; Cancelar factura
+                </button>
+            </div>
+
         </div>
     </form>
 </div>

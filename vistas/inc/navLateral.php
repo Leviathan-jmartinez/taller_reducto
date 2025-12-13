@@ -20,7 +20,7 @@
 
 
                 <li>
-                    <a href="<?php echo SERVERURL; ?>inventario-nuevo/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Inventarios</a>
+                    <a href="<?php echo SERVERURL; ?>inventario/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Inventarios</a>
                 </li>
                 <li>
                     <a href="#" class="nav-btn-submenu"><i class="fas fa-shopping-cart"></i> &nbsp; Compras <i class="fas fa-chevron-down"></i></a>

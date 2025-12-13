@@ -265,5 +265,26 @@
                 Swal.fire("Error", "No se pudo procesar la petición", "error");
             });
     }
-    
+    $(document).ready(function() {
+        $("#btnCancelarCompra").click(function(e) {
+            e.preventDefault();
+
+            $.ajax({
+                url: "<?php echo SERVERURL; ?>ajax/compraAjax.php", // reemplaza con tu ruta real
+                method: "POST",
+                data: {
+                    cancelar: true
+                },
+                success: function(resp) {
+                    var data = JSON.parse(resp);
+                    if (data.Alerta === "recargar") {
+                        // Redirigir a página de inicio o limpiar vista
+                        window.location.href = "<?php echo SERVERURL; ?>factura-nuevo";
+                    } else {
+                        alert(data.Texto);
+                    }
+                }
+            });
+        });
+    });
 </script>

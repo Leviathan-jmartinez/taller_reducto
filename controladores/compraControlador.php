@@ -138,7 +138,6 @@ class compraControlador extends compraModelo
 
     public function guardar_compra_controlador()
     {
-
         if (empty($_SESSION['Cdatos_articuloCO'])) {
             return [
                 "Alerta" => "simple",
@@ -148,146 +147,147 @@ class compraControlador extends compraModelo
             ];
         }
 
-        /* ===============================
+        $pdo = mainModel::conectar();
+        $pdo->beginTransaction();
+
+        try {
+            /* ===============================
             DATOS DE LA CABECERA
+        ================================= */
+            $datosCab = [
+                "proveedor"           => $_SESSION['datos_proveedorCO']['ID'],
+                "usuario"             => $_SESSION['id_str'],
+                "nro_factura"         => $_POST['factura_numero'],
+                "fecha_factura"       => $_POST['fecha_emision'],
+                "timbrado"            => $_POST['timbrado'],
+                "vencimiento_timbrado" => $_POST['vencimiento_timbrado'],
+                "estado"              => "1",
+                "total"               => $_POST['total_factura'],
+                "condicion"           => $_POST['condicion'],
+                "intervalo"           => $_POST['intervalo'],
+                "idoc"                => isset($_SESSION['id_oc_seleccionado']) ? $_SESSION['id_oc_seleccionado'] : null
+            ];
+
+            // Guardar cabecera
+            $guardarCab = compraModelo::insertar_compra_cabecera_modelo($datosCab);
+            if ($guardarCab["stmt"]->rowCount() < 1) {
+                throw new Exception("No se pudo guardar la cabecera de la compra.");
+            }
+            $idcab = $guardarCab["last_id"];
+
+            /* ===============================
+            GUARDAR DETALLES + ACTUALIZAR STOCK
             ================================= */
-        $datosCab = [
-            "proveedor"           => $_SESSION['datos_proveedorCO']['ID'],
-            "usuario"             => $_SESSION['id_str'],
-            "nro_factura"         => $_POST['factura_numero'],
-            "fecha_factura"       => $_POST['fecha_emision'],
-            "timbrado"            => $_POST['timbrado'],
-            "vencimiento_timbrado" => $_POST['vencimiento_timbrado'],
-            "estado"              => "1",
-            "total"               => $_POST['total_factura'],
-            "condicion"           => $_POST['condicion'],
-            "intervalo"           => $_POST['intervalo'],
-            "idoc" => isset($_SESSION['id_oc_seleccionado']) ? $_SESSION['id_oc_seleccionado'] : null
-        ];
+            foreach ($_SESSION['Cdatos_articuloCO'] as $item) {
+                if ($item['cantidad'] <= 0) continue;
 
-        $guardarCab = compraModelo::insertar_compra_cabecera_modelo($datosCab);
+                // Guardar detalle
+                $detalle = [
+                    "idcab"       => $idcab,
+                    "id_articulo" => $item['ID'],
+                    "precio"      => $item['precio'],
+                    "cantidad"    => $item['cantidad'],
+                    "subtotal"    => $item['subtotal'],
+                    "iva"         => $item['iva']
+                ];
+                $guardarDet = compraModelo::insertar_compra_detalle_modelo($detalle);
+                if ($guardarDet->rowCount() < 1) {
+                    throw new Exception("Error al guardar detalle del artículo ID " . $item['ID']);
+                }
 
-        if ($guardarCab["stmt"]->rowCount() < 1) {
+                // INSERTAR MOVIMIENTO STOCK
+                $mov = [
+                    "local"        => $_SESSION['nick_sucursal'],
+                    "tipo"         => "RECEPCION COMPRA",
+                    "producto"     => $item['ID'],
+                    "cantidad"     => $item['cantidad'],
+                    "precioVenta"  => 0,
+                    "costo"        => $item['precio'],
+                    "nroTicket"    => $_POST['factura_numero'],
+                    "pos"          => null,
+                    "usuario"      => $_SESSION['id_str'],
+                    "signo"        => 1,
+                    "referencia"   => $idcab
+                ];
+                compraModelo::agregar_movimiento_stock($mov);
+
+                // SUMAR al stock actual
+                $stockActual = compraModelo::obtener_stock_actual_modelo($_SESSION['nick_sucursal'], $item['ID']);
+                $nuevoStock = $stockActual + $item['cantidad'];
+
+                $datos_stock = [
+                    "id_sucursal"                => $_SESSION['nick_sucursal'],
+                    "id_articulo"               => $item['ID'],
+                    "stockDisponible"           => $nuevoStock,
+                    "stockUltActualizacion"     => date("Y-m-d H:i:s"),
+                    "stockUsuActualizacion"     => $_SESSION['id_str'],
+                    "stockultimoIdActualizacion" => $idcab
+                ];
+                compraModelo::upsert_stock_modelo($datos_stock);
+            }
+
+            /* ===============================
+            ACTUALIZAR ORDEN DE COMPRA
+            ================================= */
+            if (!empty($datosCab['idoc'])) {
+                compraModelo::actualizar_oc_modelo([
+                    "idorden_compra" => $datosCab['idoc'],
+                    "idcompra_cabecera" => $idcab,
+                    "updatedby" => $_SESSION['id_str']
+                ]);
+            }
+
+            /* ===============================
+            GENERAR CUENTAS A PAGAR
+            ================================= */
+            $condicion = $_POST['condicion'];
+            $intervalo = intval($_POST['intervalo']);
+            $cuotas    = intval($_POST['cuotas']);
+            $total     = floatval($_POST['total_factura']);
+            if ($condicion === 'contado') $cuotas = 1;
+            $monto_cuota = round($total / $cuotas, 2);
+
+            for ($i = 1; $i <= $cuotas; $i++) {
+                $fecha_vencimiento = date('Y-m-d', strtotime("+" . ($intervalo * $i) . " days"));
+                $datos_cuenta = [
+                    "idcompra"        => $idcab,
+                    "monto"           => $monto_cuota,
+                    "saldo"           => $monto_cuota,
+                    "cuotas"          => $i,
+                    "fecha_vencimiento" => $fecha_vencimiento,
+                    "estado"          => 1
+                ];
+                $guardarCuenta = compraModelo::insertar_cuentas_a_pagar_modelo($datos_cuenta);
+                if ($guardarCuenta->rowCount() < 1) {
+                    throw new Exception("Error al guardar cuenta a pagar cuota $i");
+                }
+            }
+
+            // CONFIRMAR TRANSACCIÓN
+            $pdo->commit();
+
+            // LIMPIAR SESIÓN
+            unset($_SESSION['Cdatos_articuloCO']);
+            unset($_SESSION['datos_proveedorCO']);
+            unset($_SESSION['id_oc_seleccionado']);
+
+            return [
+                "Alerta" => "recargar",
+                "Titulo" => "Compra registrada",
+                "Texto" => "La compra se guardó correctamente.",
+                "Tipo" => "success"
+            ];
+        } catch (Exception $e) {
+            $pdo->rollBack();
             return [
                 "Alerta" => "simple",
-                "Titulo" => "Error",
-                "Texto" => "No se pudo guardar la cabecera de la compra.",
+                "Titulo" => "Ocurrió un error inesperado!",
+                "Texto" => $e->getMessage(),
                 "Tipo" => "error"
             ];
         }
-
-        $idcab = $guardarCab["last_id"];
-
-        /* ===============================
-            GUARDAR DETALLES + ACTUALIZAR STOCK
-                ================================= */
-        $errores = 0;
-        $iddeposito = 1;
-
-        foreach ($_SESSION['Cdatos_articuloCO'] as $item) {
-            if ($item['cantidad'] <= 0) continue;
-
-            /* Guardar detalle */
-            $detalle = [
-                "idcab"       => $idcab,
-                "id_articulo" => $item['ID'],
-                "precio"      => $item['precio'],
-                "cantidad"    => $item['cantidad'],
-                "subtotal"    => $item['subtotal'],
-                "iva"         => $item['iva']
-            ];
-
-            $guardarDet = compraModelo::insertar_compra_detalle_modelo($detalle);
-            if ($guardarDet->rowCount() < 1) {
-                $errores++;
-                continue;
-            }
-
-            /* ================================================
-           INSERTAR MOVIMIENTO STOCK
-            =================================================== */
-            $mov = [
-                "local"        => $_SESSION['nick_sucursal'],
-                "tipo"         => "RECEPCION COMPRA",
-                "producto"     => $item['ID'],
-                "cantidad"     => $item['cantidad'],
-                "precioVenta"  => 0,
-                "costo"        => $item['precio'],
-                "nroTicket"    => $_POST['factura_numero'],
-                "pos"          => null,
-                "usuario"      => $_SESSION['id_str'],
-                "signo"        => 1,
-                "referencia"   => $idcab
-            ];
-
-            compraModelo::agregar_movimiento_stock($mov);
-
-            // SUMAR al stock actual
-            $stockActual = compraModelo::obtener_stock_actual_modelo($iddeposito, $item['ID']);
-            $nuevoStock = $stockActual + $item['cantidad'];
-
-            $datos_stock = [
-                "iddeposito"                => $iddeposito,
-                "id_articulo"               => $item['ID'],
-                "stockDisponible"           => $nuevoStock,
-                "stockUltActualizacion"     => date("Y-m-d H:i:s"),
-                "stockUsuActualizacion"     => $_SESSION['id_str'],
-                "stockultimoIdActualizacion" => $idcab
-            ];
-
-            compraModelo::upsert_stock_modelo($datos_stock);
-        }
-
-        /* ===============================
-            GENERAR CUENTAS A PAGAR
-                ================================= */
-        $condicion = $_POST['condicion'];
-        $intervalo = intval($_POST['intervalo']);
-        $cuotas    = intval($_POST['cuotas']);
-        $total     = floatval($_POST['total_factura']);
-
-        if ($condicion === 'contado') $cuotas = 1;
-        $monto_cuota = round($total / $cuotas, 2);
-        $errores_cuentas = 0;
-
-        for ($i = 1; $i <= $cuotas; $i++) {
-            $fecha_vencimiento = date('Y-m-d', strtotime("+" . ($intervalo * $i) . " days"));
-
-            $datos_cuenta = [
-                "idcompra"        => $idcab,
-                "monto"           => $monto_cuota,
-                "saldo"           => $monto_cuota,
-                "cuotas"          => $i,
-                "fecha_vencimiento" => $fecha_vencimiento,
-                "estado"          => 1
-            ];
-
-            $guardarCuenta = compraModelo::insertar_cuentas_a_pagar_modelo($datos_cuenta);
-            if ($guardarCuenta->rowCount() < 1) $errores_cuentas++;
-        }
-
-        /* ERROR PARCIAL EN DETALLES */
-        if ($errores > 0 || $errores_cuentas > 0) {
-            return [
-                "Alerta" => "simple",
-                "Titulo" => "Error parcial",
-                "Texto" => "La compra se guardó, pero algunos detalles o cuentas a pagar no pudieron insertarse.",
-                "Tipo" => "warning"
-            ];
-        }
-
-        /* LIMPIAR SESIÓN */
-        unset($_SESSION['Cdatos_articuloCO']);
-        unset($_SESSION['datos_proveedorCO']);
-        unset($_SESSION['id_oc_seleccionado']);
-
-        return [
-            "Alerta" => "recargar",
-            "Titulo" => "Compra registrada",
-            "Texto" => "La compra se guardó correctamente.",
-            "Tipo" => "success"
-        ];
     }
+
     /**fin controlador */
 
 
@@ -560,16 +560,17 @@ class compraControlador extends compraModelo
             exit();
         }
     }
-
     /**fin controlador */
 
-
-    /**Controlador paginar presupuestos */
-    public function paginador_factura_controlador($pagina, $registros, $privilegio, $url, $fecha_inicio = null, $fecha_final = null, $nro_factura = null, $idproveedor = null)
+    /** Controlador paginar compras */
+    public function paginador_compra_controlador($pagina, $registros, $privilegio, $url, $busqueda1, $busqueda2)
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
         $privilegio = mainModel::limpiar_string($privilegio);
+        $busqueda1 = mainModel::limpiar_string($busqueda1);
+        $busqueda2 = mainModel::limpiar_string($busqueda2);
+
         $url = mainModel::limpiar_string($url);
         $url = SERVERURL . $url . "/";
 
@@ -578,135 +579,150 @@ class compraControlador extends compraModelo
         $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
 
-        // Filtro dinámico
-        $condiciones = [];
-        if (!empty($fecha_inicio) && !empty($fecha_final)) {
-            $condiciones[] = "date(c.fecha) >= '$fecha_inicio' AND date(c.fecha) <= '$fecha_final'";
+        if (!empty($busqueda1) && !empty($busqueda2)) {
+            $consulta = "SELECT SQL_CALC_FOUND_ROWS co.idcompra_cabecera as idcompra_cabecera, co.id_usuario as id_usuario, co.fecha_creacion as fecha_creacion, co.estado as estadoCO, nro_factura AS nro_factura, condicion as condicion,
+            co.fecha_factura as fecha_factura, total_compra AS total_compra, co.idproveedores as idproveedores, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
+            p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick, co.updated as updated,
+            co.updatedby as updatedby
+            FROM compra_cabecera co
+            INNER JOIN proveedores p on p.idproveedores = co.idproveedores
+            INNER JOIN usuarios u on u.id_usuario = co.id_usuario
+            WHERE date(fecha_creacion) >= '$busqueda1' AND date(fecha_creacion) <='$busqueda2'
+            ORDER BY fecha_creacion ASC LIMIT $inicio,$registros";
+        } else {
+            $consulta = "SELECT SQL_CALC_FOUND_ROWS co.idcompra_cabecera as idcompra_cabecera, co.id_usuario as id_usuario, co.fecha_creacion as fecha_creacion, co.estado as estadoCO, nro_factura AS nro_factura, condicion as condicion,
+            co.fecha_factura as fecha_factura, total_compra AS total_compra, co.idproveedores as idproveedores, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
+            p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick, co.updated as updated,
+            co.updatedby as updatedby
+            FROM compra_cabecera co
+            INNER JOIN proveedores p on p.idproveedores = co.idproveedores
+            INNER JOIN usuarios u on u.id_usuario = co.id_usuario
+            WHERE oc.estado != 0
+            ORDER BY pc.idcompra_cabecera ASC LIMIT $inicio,$registros";
         }
-        if (!empty($nro_factura)) {
-            $nro_factura = mainModel::limpiar_string($nro_factura);
-            $condiciones[] = "c.nro_factura LIKE '%$nro_factura%'";
-        }
-        if (!empty($idproveedor)) {
-            $idproveedor = (int)$idproveedor;
-            $condiciones[] = "c.idproveedores = $idproveedor";
-        }
-
-        // Condición por defecto si no hay filtros
-        $where = (!empty($condiciones)) ? implode(" AND ", $condiciones) : "c.estado != 0";
-
-        $consulta = "SELECT SQL_CALC_FOUND_ROWS c.idcompra_cabecera as idcompra_cabecera,
-                        c.id_usuario as id_usuario,
-                        c.fecha as fecha,
-                        c.estado as estadoCompra,
-                        c.nro_factura as nro_factura,
-                        c.total_compra as total_compra,
-                        p.razon_social as razon_social,
-                        p.ruc as ruc,
-                        u.usu_nombre as usu_nombre,
-                        u.usu_apellido as usu_apellido
-                 FROM compra_cabecera c
-                 INNER JOIN proveedores p ON p.idproveedores = c.idproveedores
-                 INNER JOIN usuarios u ON u.id_usuario = c.id_usuario
-                 WHERE $where
-                 ORDER BY c.fecha DESC
-                 LIMIT $inicio, $registros";
-
         $conexion = mainModel::conectar();
-        $datos = $conexion->query($consulta)->fetchAll();
+        $datos = $conexion->query($consulta);
+        $datos = $datos->fetchAll();
 
-        $total = (int)$conexion->query("SELECT FOUND_ROWS()")->fetchColumn();
+        $total = $conexion->query("SELECT FOUND_ROWS()");
+        $total = (int) $total->fetchColumn();
+
         $Npaginas = ceil($total / $registros);
 
-        // Construcción de la tabla (igual que antes, solo cambia la columna de nro_factura)
         $tabla .= '<div class="table-responsive">
-        <table class="table table-dark table-sm">
-        <thead>
-            <tr class="text-center roboto-medium">
-                <th>#</th>
-                <th>FECHA</th>
-                <th>NRO FACTURA</th>
-                <th>PROVEEDOR</th>
-                <th>CREADO POR</th>
-                <th>TOTAL</th>
-                <th>ESTADO</th>';
-        if ($privilegio == 1 || $privilegio == 2) $tabla .= '<th>ELIMINAR</th>';
-        $tabla .= '</tr></thead><tbody>';
-
+					<table class="table table-dark table-sm">
+						<thead>
+							<tr class="text-center roboto-medium">
+								<th>#</th>
+                                <th>PROVEEDOR</th>
+                                <th>FACTURA</th>
+                                <th>FECHA</th>
+                                <th>TOTAL COMPRA</th>
+                                <th>CARGADO POR</th>
+                                <th>ESTADO</th>';
+        if ($privilegio == 1 || $privilegio == 2) {
+            $tabla .=           '<th>ANULAR</th>';
+        }
+        $tabla .= '
+						</tr>
+						</thead>
+						<tbody>';
         if ($total >= 1 && $pagina <= $Npaginas) {
             $contador = $inicio + 1;
-            foreach ($datos as $row) {
-                $estadoBadge = match ($row['estadoCompra']) {
-                    1 => '<span class="badge bg-primary">Pendiente</span>',
-                    2 => '<span class="badge bg-success">Procesado</span>',
-                    0 => '<span class="badge bg-danger">Anulado</span>',
-                    default => '<span class="badge bg-secondary">Desconocido</span>'
-                };
-                $tabla .= '<tr class="text-center">
-                        <td>' . $contador . '</td>
-                        <td>' . date("d-m-Y", strtotime($row['fecha'])) . '</td>
-                        <td>' . $row['nro_factura'] . '</td>
-                        <td>' . $row['razon_social'] . '</td>
-                        <td>' . $row['usu_nombre'] . ' ' . $row['usu_apellido'] . '</td>
-                        <td>' . number_format($row['total_compra'], 2, ",", ".") . '</td>
-                        <td>' . $estadoBadge . '</td>';
+            $reg_inicio = $inicio + 1;
+            foreach ($datos as $rows) {
+                switch ($rows['estadoCO']) {
+                    case 1:
+                        $estadoBadge = '<span class="badge bg-primary">Activo</span>';
+                        break;
+                    case 2:
+                        $estadoBadge = '<span class="badge bg-success">Procesado</span>';
+                        break;
+                    case 0:
+                        $estadoBadge = '<span class="badge bg-danger">Anulado</span>';
+                        break;
+                    default:
+                        $estadoBadge = '<span class="badge bg-secondary">Desconocido</span>';
+                }
+                $tabla .= '
+                            <tr class="text-center">
+								<td>' . $contador . '</td>
+								<td>' . $rows['razon_social'] . '</td>
+								<td>' . $rows['nro_factura'] . '</td>
+								<td>' . date("d-m-Y", strtotime($rows['fecha_factura'])) . '</td>
+								<td>' . number_format($rows['total_compra'], 0, ',', '.') . '</td>
+                                <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
+                                <td>' . $estadoBadge . '</td>';
                 if ($privilegio == 1 || $privilegio == 2) {
                     $tabla .= '<td>
-                            <form class="FormularioAjax" action="' . SERVERURL . 'ajax/presupuestoAjax.php" method="POST" data-form="delete" autocomplete="off">
-                                <input type="hidden" name="compra_id_del" value="' . mainModel::encryption($row['idcompra_cabecera']) . '">
-                                <button type="submit" class="btn btn-warning"><i class="far fa-trash-alt"></i></button>
-                            </form>
-                           </td>';
+									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/compraAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
+                                    <input type="hidden" name="compra_id_del" value=' . mainModel::encryption($rows['idcompra_cabecera']) . '>
+										<button type="submit" class="btn btn-warning">
+											<i class="far fa-trash-alt"></i>
+										</button>
+									</form>
+								</td>';
                 }
+
                 $tabla .= '</tr>';
                 $contador++;
             }
+            $reg_final = $contador - 1;
         } else {
-            $tabla .= '<tr class="text-center"><td colspan="8">No hay registros que mostrar</td></tr>';
+            if ($total >= 1) {
+                $tabla .= '<tr class="text-center"> <td colspan="6"> <a href="' . $url . '" class="btn btn-reaised btn-primary btn-sm"> Haga click aqui para recargar el listado </a> </td> </tr> ';
+            } else {
+                $tabla .= '<tr class="text-center"> <td colspan="6"> No hay regitros en el sistema</td> </tr> ';
+            }
         }
 
-        $tabla .= '</tbody></table></div>';
-
+        $tabla .= '       </tbody>
+					</table>
+				</div>';
         if ($total >= 1 && $pagina <= $Npaginas) {
-            $tabla .= '<p class="text-right">Mostrando ' . ($inicio + 1) . ' a ' . ($inicio + count($datos)) . ' de ' . $total . '</p>';
+            $tabla .= '<p class="text-right"> Mostrando registro ' . $reg_inicio . ' al ' . $reg_final . ' de un total de ' . $total . '</p>';
             $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);
         }
-
         echo $tabla;
     }
-
     /**fin controlador */
 
-    /**Controlador anular presupuesto */
-    public function anular_presupuesto_controlador()
+    /**Controlador anular compra */
+    public function anular_compra_controlador()
     {
-        $id = mainModel::decryption($_POST['presupuesto_id_del']);
+        $id = mainModel::decryption($_POST['compra_id_del']);
         $id = mainModel::limpiar_string($id);
 
-        $check_presupuesto = mainModel::ejecutar_consulta_simple("SELECT idpresupuesto_compra FROM presupuesto_compra WHERE idpresupuesto_compra = '$id'");
-        if ($check_presupuesto->rowCount() < 0) {
+        // Verificar que la compra exista
+        $check_compra = mainModel::ejecutar_consulta_simple(
+            "SELECT idcompra_cabecera FROM compra_cabecera WHERE idcompra_cabecera = '$id'"
+        );
+        if ($check_compra->rowCount() <= 0) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "El PRESUPUESTO que intenta anular no existe en el sistema",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
-        }
-        $check_presupuestoestado = mainModel::ejecutar_consulta_simple("SELECT idpresupuesto_compra FROM presupuesto_compra WHERE idpresupuesto_compra = '$id' AND estado = 2");
-        if ($check_presupuestoestado->rowCount() > 0) {
-            $alerta = [
-                "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "El PRESUPUESTO que intenta anular se encuentra procesado",
+                "Texto" => "La recepcion de compra que intenta anular no existe en el sistema",
                 "Tipo" => "error"
             ];
             echo json_encode($alerta);
             exit();
         }
 
-        session_start(['name' => 'STR']);
+        // Verificar que no esté anulada
+        $check_compraestado = mainModel::ejecutar_consulta_simple(
+            "SELECT idcompra_cabecera FROM compra_cabecera WHERE idcompra_cabecera = '$id' AND estado = 0"
+        );
+        if ($check_compraestado->rowCount() > 0) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "La recepcion de compra que intenta anular ya se encuentra anulada",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
         if ($_SESSION['nivel_str'] > 2) {
             $alerta = [
                 "Alerta" => "simple",
@@ -717,34 +733,70 @@ class compraControlador extends compraModelo
             echo json_encode($alerta);
             exit();
         }
-        $datos_presupuesto_del = [
-            "updatedby" => $_SESSION['id_str'],
-            "idpresupuesto_compra" => $id
-        ];
 
-        if (compraModelo::anular_presupuesto_modelo($datos_presupuesto_del)) {
+        $usuario = $_SESSION['id_str'];
+        $id_sucursal = $_SESSION['nick_sucursal']; // Ajustar si aplica
+
+        try {
+            // Iniciar transacción
+            $pdo = mainModel::conectar();
+            $pdo->beginTransaction();
+
+            // 1) Anular compra cabecera
+            compraModelo::anular_compra_modelo([
+                "idcompra_cabecera" => $id,
+                "updatedby" => $usuario
+            ]);
+
+            // 2) Obtener detalles de la compra
+            $detalles = compraModelo::datos_detalle_compra_modelo($id)->fetchAll(PDO::FETCH_ASSOC);
+
+            // 3) Descontar stock y generar movimientos
+            foreach ($detalles as $d) {
+                // Descontar stock
+                compraModelo::descontar_stock_modelo([
+                    "id_articulo" => $d['id_articulo'],
+                    "cantidad"    => $d['cantidad_recibida'],
+                    "usuario"     => $usuario,
+                    "id_sucursal"  => $id_sucursal,
+                    "referencia"  => $id
+                ]);
+
+                // Insertar movimiento de stock
+                compraModelo::movimiento_stock_anulacion_modelo([
+                    "LocalId"     => $id_sucursal,
+                    "ProductoId"  => $d['id_articulo'],
+                    "Cantidad"    => $d['cantidad_recibida'],
+                    "Costo"       => $d['precio_unitario'],
+                    "Usuario"     => $usuario,
+                    "Referencia"  => "ANUL_COMPRA# " . $id
+                ]);
+            }
+
+            // 4) Anular cuentas a pagar
+            compraModelo::anular_cuentas_pagar_modelo($id);
+
+            // Confirmar transacción
+            $pdo->commit();
+
             $alerta = [
                 "Alerta" => "recargar",
-                "Titulo" => "Pedido Anulado!",
-                "Texto" => "El PRESUPUESTO ha sido anulado correctamente",
+                "Titulo" => "Compra Anulada!",
+                "Texto" => "La recepcion de compra ha sido anulada correctamente",
                 "Tipo" => "success"
             ];
-        } else {
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "No se pudo anular el PRESUPUESTO seleccionado",
+                "Texto" => "No se pudo anular la recepcion de compra seleccionada: " . $e->getMessage(),
                 "Tipo" => "error"
             ];
         }
+
         echo json_encode($alerta);
     }
-    /**fin controlador */
 
-    public function obtenerProveedores()
-    {
-        $conexion = mainModel::conectar();
-        $consulta = $conexion->query("SELECT idproveedores, razon_social FROM proveedores ORDER BY razon_social ASC");
-        return $consulta->fetchAll();
-    }
+    /**fin controlador */
 }

@@ -11,7 +11,7 @@ class compraModelo extends mainModel
         $conexion = mainModel::conectar();
         $sql = $conexion->prepare("
             INSERT INTO compra_cabecera
-            (idproveedores, id_usuario, fecha, nro_factura, fecha_factura, nro_timbrado, vencimiento_timbrado, estado, total_compra, condicion, compra_intervalo, idOcompra)
+            (idproveedores, id_usuario, fecha_creacion, nro_factura, fecha_factura, nro_timbrado, vencimiento_timbrado, estado, total_compra, condicion, compra_intervalo, idOcompra)
             VALUES (:proveedor, :usuario, NOW(), :nro_factura, :fecha_factura, :timbrado, :vto_timbrado, :estado, :total, :condicion, :intervalo, :idoc)
         ");
 
@@ -63,7 +63,7 @@ class compraModelo extends mainModel
     {
 
         $sql = "INSERT INTO stock (
-                iddeposito,
+                id_sucursal,
                 id_articulo,
                 stockcant_max,
                 stockcant_min,
@@ -72,7 +72,7 @@ class compraModelo extends mainModel
                 stockUsuActualizacion,
                 stockultimoIdActualizacion
             ) VALUES (
-                :iddeposito,
+                :id_sucursal,
                 :id_articulo,
                 200,
                 15,
@@ -92,7 +92,7 @@ class compraModelo extends mainModel
         $conexion = mainModel::conectar();
         $stmt = $conexion->prepare($sql);
 
-        $stmt->bindParam(":iddeposito", $datos['iddeposito'], PDO::PARAM_INT);
+        $stmt->bindParam(":id_sucursal", $datos['id_sucursal'], PDO::PARAM_INT);
         $stmt->bindParam(":id_articulo", $datos['id_articulo'], PDO::PARAM_INT);
         $stmt->bindParam(":stockDisponible", $datos['stockDisponible']);
         $stmt->bindParam(":stockUltActualizacion", $datos['stockUltActualizacion']);
@@ -105,18 +105,18 @@ class compraModelo extends mainModel
     /* ==============================
        obtener stock actual
     ============================== */
-    protected function obtener_stock_actual_modelo($iddeposito, $id_articulo)
+    protected function obtener_stock_actual_modelo($id_sucursal, $id_articulo)
     {
         $sql = "SELECT stockDisponible 
             FROM stock 
-            WHERE iddeposito = :iddeposito 
+            WHERE id_sucursal = :id_sucursal 
               AND id_articulo = :id_articulo 
             LIMIT 1";
 
         $conexion = mainModel::conectar();
         $stmt = $conexion->prepare($sql);
 
-        $stmt->bindParam(":iddeposito", $iddeposito, PDO::PARAM_INT);
+        $stmt->bindParam(":id_sucursal", $id_sucursal, PDO::PARAM_INT);
         $stmt->bindParam(":id_articulo", $id_articulo, PDO::PARAM_INT);
 
         $stmt->execute();
@@ -203,14 +203,140 @@ class compraModelo extends mainModel
         return $sql;
     }
 
-    protected static function anular_presupuesto_modelo($datos)
+    /** modelo actualizar OC y restar cantidad pendiente */
+    protected static function actualizar_oc_modelo($datos)
     {
-        $sql = mainModel::conectar()->prepare("UPDATE compra_cabecera SET estado = 'Anulado' WHERE idcompra_cabecera = :idpresupuesto_compra");
+        $pdo = mainModel::conectar();
 
-        $sql->bindParam(":idpresupuesto_compra", $datos['idpresupuesto_compra']);
+        // 1) Obtener detalles de la compra para restar de la OC
+        $detalles = compraModelo::datos_detalle_compra_modelo($datos['idcompra_cabecera'])->fetchAll(PDO::FETCH_ASSOC);
 
+        foreach ($detalles as $d) {
+            // Restar cantidad recibida de cantidad pendiente en OC
+            $sql_det = $pdo->prepare("
+            UPDATE orden_compra_detalle
+            SET cantidad_pendiente = cantidad_pendiente - :cantidad_recibida
+            WHERE idorden_compra = :idorden_compra
+              AND id_articulo = :id_articulo
+        ");
+            $sql_det->bindParam(":cantidad_recibida", $d['cantidad_recibida']);
+            $sql_det->bindParam(":idorden_compra", $datos['idorden_compra']);
+            $sql_det->bindParam(":id_articulo", $d['id_articulo']);
+            $sql_det->execute();
+        }
+
+        // 2) Verificar si todas las cantidades pendientes quedaron en cero
+        $checkPendientes = $pdo->prepare("
+        SELECT COUNT(*) AS pendientes
+        FROM orden_compra_detalle
+        WHERE idorden_compra = :idorden_compra
+          AND cantidad_pendiente > 0
+    ");
+        $checkPendientes->bindParam(":idorden_compra", $datos['idorden_compra']);
+        $checkPendientes->execute();
+        $res = $checkPendientes->fetch(PDO::FETCH_ASSOC);
+
+        // 3) Si no quedan pendientes, actualizar estado de la OC a 2 (completada)
+        if ($res['pendientes'] == 0) {
+            $sql_oc = $pdo->prepare("
+            UPDATE orden_compra
+            SET estado = 2,
+                updatedby = :updatedby,
+                updated = NOW()
+            WHERE idorden_compra = :idorden_compra
+        ");
+            $sql_oc->bindParam(":updatedby", $datos['updatedby']);
+            $sql_oc->bindParam(":idorden_compra", $datos['idorden_compra']);
+            $sql_oc->execute();
+        }
+
+        return true;
+    }
+    /** fin modelo */
+
+
+    /** modelo anular compra */
+    protected static function anular_compra_modelo($datos)
+    {
+        $sql = mainModel::conectar()->prepare("
+        UPDATE compra_cabecera
+        SET estado = 0,
+            updatedby = :updatedby,
+            updated = NOW()
+        WHERE idcompra_cabecera = :idcompra_cabecera");
+        $sql->bindParam(":updatedby", $datos['updatedby']);
+        $sql->bindParam(":idcompra_cabecera", $datos['idcompra_cabecera']);
         $sql->execute();
         return $sql;
     }
+    /** fin modelo */
+    /** modelo obtener detalles de compra */
+    protected static function datos_detalle_compra_modelo($idcompra_cabecera)
+    {
+        $sql = mainModel::conectar()->prepare("
+        SELECT id_articulo, cantidad_recibida, precio_unitario
+        FROM compra_detalle
+        WHERE idcompra_cabecera = :idcompra_cabecera");
+        $sql->bindParam(":idcompra_cabecera", $idcompra_cabecera);
+        $sql->execute();
+        return $sql;
+    }
+    /** fin modelo */
+    /** modelo descontar stock */
+    protected static function descontar_stock_modelo($datos)
+    {
+        $sql = mainModel::conectar()->prepare("
+        UPDATE stock
+        SET stockDisponible = stockDisponible - :cantidad,
+            stockUltActualizacion = NOW(),
+            stockUsuActualizacion = :usuario,
+            stockultimoIdActualizacion = :referencia
+        WHERE id_sucursal = :id_sucursal
+          AND id_articulo = :id_articulo");
+        $sql->bindParam(":cantidad", $datos['cantidad']);
+        $sql->bindParam(":usuario", $datos['usuario']);
+        $sql->bindParam(":referencia", $datos['referencia']);
+        $sql->bindParam(":id_sucursal", $datos['id_sucursal']);
+        $sql->bindParam(":id_articulo", $datos['id_articulo']);
+        $sql->execute();
+        return $sql;
+    }
+    /** fin modelo */
+    /** modelo movimiento stock anulacion */
+    protected static function movimiento_stock_anulacion_modelo($datos)
+    {
+        $sql = mainModel::conectar()->prepare("
+        INSERT INTO sucmovimientostock
+        (LocalId, TipoMovStockId, MovStockProductoId, MovStockCantidad,
+         MovStockPrecioVenta, MovStockCosto, MovStockFechaHora,
+         MovStockNroTicket, MovStockPOS, MovStockUsuario,
+         MovStockSigno, MovStockReferencia)
+        VALUES
+        (:LocalId, 'ANULACION COMPRA', :ProductoId, :Cantidad,
+         0, :Costo, NOW(),
+         :Referencia, NULL, :Usuario,
+         -1, :Referencia)");
 
+        $sql->bindParam(":LocalId", $datos['LocalId']);
+        $sql->bindParam(":ProductoId", $datos['ProductoId']);
+        $sql->bindParam(":Cantidad", $datos['Cantidad']);
+        $sql->bindParam(":Costo", $datos['Costo']);
+        $sql->bindParam(":Referencia", $datos['Referencia']);
+        $sql->bindParam(":Usuario", $datos['Usuario']);
+        $sql->execute();
+        return $sql;
+    }
+    /** fin modelo */
+    /** modelo anular cuentas a pagar */
+    protected static function anular_cuentas_pagar_modelo($idcompra_cabecera)
+    {
+        $sql = mainModel::conectar()->prepare("
+        UPDATE cuentas_a_pagar
+        SET estado = 0
+        WHERE idcompra_cabecera = :idcompra_cabecera");
+        $sql->bindParam(":idcompra_cabecera", $idcompra_cabecera);
+        $sql->execute();
+        return $sql;
+    }
+    /** fin modelo */
 }
