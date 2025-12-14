@@ -272,11 +272,11 @@ class compraControlador extends compraModelo
             unset($_SESSION['id_oc_seleccionado']);
 
             return [
-                "Alerta" => "recargar",
-                "Titulo" => "Compra registrada",
-                "Texto" => "La compra se guardó correctamente.",
-                "Tipo" => "success"
-            ];
+                    "Alerta" => "recargar",
+                    "Titulo" => "Compra registrada",
+                    "Texto" => "La compra se guardó correctamente.",
+                    "Tipo" => "success"
+                ];
         } catch (Exception $e) {
             $pdo->rollBack();
             return [

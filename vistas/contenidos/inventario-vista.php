@@ -28,8 +28,8 @@ $tipo = $_SESSION['inventario_tipo'];
 <div class="container-fluid">
     <!-- Botones de acción -->
     <div style="display: flex; justify-content: flex-end; margin-bottom: 15px; gap: 10px;">
-        <button class="btn btn-success" data-toggle="modal" data-target="#ModalProducto">
-            <i class="fas fa-plus"></i> &nbsp; Agregar producto
+        <button class="btn btn-success" data-toggle="modal" data-target="#modalInventario">
+            <i class="fas fa-plus"></i> &nbsp; Generar Inventario
         </button>
     </div>
 
@@ -87,50 +87,94 @@ $tipo = $_SESSION['inventario_tipo'];
     </div>
 </div>
 
-<!-- MODAL AGREGAR/EDITAR PRODUCTO -->
-<div class="modal fade" id="ModalProducto" tabindex="-1" role="dialog" aria-labelledby="ModalProducto" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <form class="form-neon FormularioAjax" method="POST" action="">
-            <input type="hidden" name="accion" value="guardar_producto">
-            <input type="hidden" name="id" id="productoId">
+<!-- MODAL NUEVO INVENTARIO -->
+<div class="modal fade" id="modalInventario" tabindex="-1" aria-labelledby="modalInventarioLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form id="formInventario" method="POST">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Producto</h5>
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalInventarioLabel">
+                        <i class="fas fa-boxes"></i> Nuevo Inventario
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">
+                        <span>&times;</span>
+                    </button>
                 </div>
+
                 <div class="modal-body">
+
+                    <!-- Tipo de inventario -->
                     <div class="form-group">
-                        <label>Código</label>
-                        <input type="text" class="form-control" name="codigo" id="codigo" required>
+                        <label for="tipo_inventario">Tipo de Inventario</label>
+                        <select name="tipo_inventario" id="tipo_inventario" class="form-control" required>
+                            <option value="">Seleccione...</option>
+                            <option value="general">Inventario General</option>
+                            <option value="categoria">Inventario por Categoría</option>
+                            <option value="proveedor">Inventario por Proveedor</option>
+                            <option value="producto">Inventario por Producto</option>
+                        </select>
                     </div>
+
+                    <!-- Subtipo Categoría -->
+                    <div class="form-group" id="grupo_categoria" style="display:none;">
+                        <label for="subtipo_categoria">Seleccione Categoría</label>
+                        <select name="subtipo_categoria" id="subtipo_categoria" class="form-control">
+                            <option value="">Seleccione...</option>
+                        </select>
+                    </div>
+
+                    <!-- Subtipo Proveedor -->
+                    <div class="form-group" id="grupo_proveedor" style="display:none;">
+                        <label for="subtipo_proveedor">Seleccione Proveedor</label>
+                        <select name="subtipo_proveedor" id="subtipo_proveedor" class="form-control">
+                            <option value="">Seleccione...</option>
+                        </select>
+                    </div>
+
+                    <!-- Subtipo Producto -->
+                    <div class="form-group" id="grupo_producto" style="display:none;">
+                        <label for="subtipo_producto">Seleccione Productos</label>
+                        <select name="subtipo_producto[]" id="subtipo_producto" class="form-control" multiple="multiple"></select>
+                    </div>
+
+                    <!-- Fecha creación -->
                     <div class="form-group">
-                        <label>Nombre</label>
-                        <input type="text" class="form-control" name="nombre" id="nombre" required>
+                        <label>Fecha de Creación</label>
+                        <input type="text" name="fecha_creacion" class="form-control" value="<?= date('Y-m-d H:i:s'); ?>" readonly>
                     </div>
+
+                    <!-- Observación -->
                     <div class="form-group">
-                        <label>Stock</label>
-                        <input type="number" class="form-control" name="stock" id="stock" min="0" required>
+                        <label for="observacion">Observación</label>
+                        <textarea name="observacion" id="observacion" class="form-control" rows="3" placeholder="Observación del inventario..."></textarea>
                     </div>
-                    <div class="form-group">
-                        <label>Precio</label>
-                        <input type="number" class="form-control" name="precio" id="precio" step="0.01" min="0" required>
-                    </div>
+
                 </div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary">Guardar</button>
                 </div>
+
             </div>
         </form>
     </div>
 </div>
 
+
+<script src="<?= SERVERURL ?>vistas/js/jquery-3.6.0.min.js"></script>
+<script src="<?= SERVERURL ?>vistas/js/popper.min.js"></script>
+<script src="<?= SERVERURL ?>vistas/js/bootstrap.min.js"></script>
+
+<?php include "./vistas/inc/inventario.php"; ?>
+
 <script>
-function editarProducto(producto) {
-    document.getElementById('productoId').value = producto.id;
-    document.getElementById('codigo').value = producto.codigo;
-    document.getElementById('nombre').value = producto.nombre;
-    document.getElementById('stock').value = producto.stock;
-    document.getElementById('precio').value = producto.precio;
-}
+    function editarProducto(producto) {
+        document.getElementById('productoId').value = producto.id;
+        document.getElementById('codigo').value = producto.codigo;
+        document.getElementById('nombre').value = producto.nombre;
+        document.getElementById('stock').value = producto.stock;
+        document.getElementById('precio').value = producto.precio;
+    }
 </script>
