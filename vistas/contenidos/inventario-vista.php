@@ -9,6 +9,9 @@ if (!isset($_SESSION['inventario_tipo'])) {
 }
 
 $tipo = $_SESSION['inventario_tipo'];
+if (!isset($_SESSION['id_inv_seleccionado'])) {
+    $_SESSION['id_inv_seleccionado'] = '';
+}
 ?>
 
 <div class="container-fluid">
@@ -27,65 +30,108 @@ $tipo = $_SESSION['inventario_tipo'];
 
 <div class="container-fluid">
     <!-- Botones de acción -->
-    <div style="display: flex; justify-content: flex-end; margin-bottom: 15px; gap: 10px;">
-        <button class="btn btn-success" data-toggle="modal" data-target="#modalInventario">
-            <i class="fas fa-plus"></i> &nbsp; Generar Inventario
-        </button>
+
+    <div class="container-fluid">
+        <!-- Botones de acción -->
+        <?php var_dump($_SESSION['id_inv_seleccionado']); ?>
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 15px; gap: 10px;">
+            <?php if ($_SESSION['id_inv_seleccionado'] != ''): ?>
+                <button class="btn btn-success" data-toggle="modal" data-target="#modalInventario">
+                    <i class="fas fa-plus"></i> &nbsp; Generar Inventario
+                </button>
+            <?php endif; ?>
+            <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#ModalBuscarINV">
+                <i class="fas fa-search"></i> &nbsp; Cargar Inventario
+            </button>
+        </div>
     </div>
+
 
     <!-- Buscador -->
-    <form class="form-neon mb-3" method="GET" action="">
-        <div class="input-group">
-            <input type="text" class="form-control" placeholder="Buscar por código o nombre" name="search">
-            <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i> Buscar</button>
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <input type="text"
+                id="filtro-productos"
+                class="form-control"
+                placeholder="🔎 Buscar producto...">
         </div>
-    </form>
+    </div>
 
-    <!-- Tabla productos (ejemplo estático, reemplazar por PHP/AJAX) -->
-    <div class="table-responsive">
-        <table class="table table-dark table-sm">
-            <thead>
-                <tr class="text-center">
-                    <th>ID</th>
-                    <th>Código</th>
-                    <th>Nombre</th>
-                    <th>Stock</th>
-                    <th>Precio</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr class="text-center">
-                    <td>1</td>
-                    <td>P001</td>
-                    <td class="text-left">Producto de ejemplo 1</td>
-                    <td>50</td>
-                    <td>150.00</td>
-                    <td>
-                        <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#ModalProducto" onclick='editarProducto({id:1,codigo:"P001",nombre:"Producto de ejemplo 1",stock:50,precio:150.00})'>
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <a href="#" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></a>
-                    </td>
-                </tr>
-                <tr class="text-center">
-                    <td>2</td>
-                    <td>P002</td>
-                    <td class="text-left">Producto de ejemplo 2</td>
-                    <td>20</td>
-                    <td>75.50</td>
-                    <td>
-                        <button class="btn btn-warning btn-sm" data-toggle="modal" data-target="#ModalProducto" onclick='editarProducto({id:2,codigo:"P002",nombre:"Producto de ejemplo 2",stock:20,precio:75.50})'>
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <a href="#" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></a>
-                    </td>
-                </tr>
-                <!-- Agregar más filas según necesidad -->
-            </tbody>
-        </table>
+    <!-- TABLA DETALLE DE PRODUCTOS -->
+    <div class="row" style="margin-top:20px;">
+        <div class="col-12">
+            <h5>Detalle de productos</h5>
+            <table class="table table-dark table-sm" id="tabla-detalle">
+                <thead>
+                    <tr>
+                        <th style="width:20%;">Código</th>
+                        <th style="width:20%;">Producto</th>
+                        <th class="text-center" style="width:10%;">Costo</th>
+                        <th class="text-center" style="width:20%;">Cantidad en stock</th>
+                        <th class="text-center" style="width:20%;">Cantidad inventariada</th>
+                        <th class="text-center" style="width:20%;">Diferencia</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($_SESSION['Cdatos_articuloINV'])): ?>
+                        <?php foreach ($_SESSION['Cdatos_articuloINV'] as $i => $item): ?>
+                            <tr data-index="<?= $i ?>">
+                                <td><?= htmlspecialchars($item['codigo']); ?></td>
+                                <td><?= htmlspecialchars($item['descripcion']); ?></td>
+
+                                <td class="text-center">
+                                    <input type="number"
+                                        class="form-control text-center"
+                                        value="<?= $item['costo']; ?>"
+                                        readonly>
+                                </td>
+
+                                <td class="text-center">
+                                    <input type="number"
+                                        class="form-control text-center teorica"
+                                        value="<?= $item['cantidad_teorica']; ?>"
+                                        readonly>
+                                </td>
+
+                                <td class="text-center">
+                                    <input type="number"
+                                        name="cantidades_fisicas[]"
+                                        class="form-control text-center cantidad"
+                                        value="<?= $item['cantidad_fisica']; ?>"
+                                        min="0"
+                                        required>
+                                </td>
+
+                                <td class="text-center">
+                                    <span class="diferencia">
+                                        <?= $item['diferencia']; ?>
+                                    </span>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
+<div class="row mt-3">
+    <div class="col-12 text-center">
+        <button id="guardar-ajuste" class="btn btn-success">
+            <i class="fas fa-save"></i> Guardar cambios
+        </button>
+        <button id="btn-ajustar-stock" class="btn btn-danger">
+            <i class="fas fa-sync-alt"></i> Ajustar Stock
+        </button>
+        <button id="btn-limpiar-todo" class="btn btn-default">
+            <i class="fas fa-trash-alt"></i> Limpiar Todo
+        </button>
+    </div>
+</div>
+
+
+
 
 <!-- MODAL NUEVO INVENTARIO -->
 <div class="modal fade" id="modalInventario" tabindex="-1" aria-labelledby="modalInventarioLabel" aria-hidden="true">
@@ -109,10 +155,10 @@ $tipo = $_SESSION['inventario_tipo'];
                         <label for="tipo_inventario">Tipo de Inventario</label>
                         <select name="tipo_inventario" id="tipo_inventario" class="form-control" required>
                             <option value="">Seleccione...</option>
-                            <option value="general">Inventario General</option>
-                            <option value="categoria">Inventario por Categoría</option>
-                            <option value="proveedor">Inventario por Proveedor</option>
-                            <option value="producto">Inventario por Producto</option>
+                            <option value="General">Inventario General</option>
+                            <option value="Categoria">Inventario por Categoría</option>
+                            <option value="Proveedor">Inventario por Proveedor</option>
+                            <option value="Producto">Inventario por Producto</option>
                         </select>
                     </div>
 
@@ -163,18 +209,39 @@ $tipo = $_SESSION['inventario_tipo'];
 </div>
 
 
+<!-- MODAL BUSCAR OC -->
+<div class="modal fade" id="ModalBuscarINV" tabindex="-1" role="dialog" aria-labelledby="ModalBuscarINV" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ModalBuscarINV">Agregar Inventario</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div class="form-group">
+                        <label for="input_item" class="bmd-label-floating">Código de Inventario, Obseracion</label>
+                        <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" class="form-control" name="input_inv" id="input_inv" maxlength="30">
+                    </div>
+                </div>
+                <br>
+                <div class="container-fluid" id="tabla_INV">
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="buscar_INV()"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar</button>
+                &nbsp; &nbsp;
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="<?= SERVERURL ?>vistas/js/jquery-3.6.0.min.js"></script>
 <script src="<?= SERVERURL ?>vistas/js/popper.min.js"></script>
 <script src="<?= SERVERURL ?>vistas/js/bootstrap.min.js"></script>
 
 <?php include "./vistas/inc/inventario.php"; ?>
-
-<script>
-    function editarProducto(producto) {
-        document.getElementById('productoId').value = producto.id;
-        document.getElementById('codigo').value = producto.codigo;
-        document.getElementById('nombre').value = producto.nombre;
-        document.getElementById('stock').value = producto.stock;
-        document.getElementById('precio').value = producto.precio;
-    }
-</script>

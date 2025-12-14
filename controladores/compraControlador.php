@@ -287,9 +287,7 @@ class compraControlador extends compraModelo
             ];
         }
     }
-
     /**fin controlador */
-
 
     /**controlador buscador proveedor */
     public function buscar_proveedor_controlador()
