@@ -9,9 +9,7 @@ if (!isset($_SESSION['inventario_tipo'])) {
 }
 
 $tipo = $_SESSION['inventario_tipo'];
-if (!isset($_SESSION['id_inv_seleccionado'])) {
-    $_SESSION['id_inv_seleccionado'] = '';
-}
+
 ?>
 
 <div class="container-fluid">
@@ -20,10 +18,10 @@ if (!isset($_SESSION['id_inv_seleccionado'])) {
     </h3>
     <ul class="full-box list-unstyled page-nav-tabs">
         <li>
-            <a class="active" href="#"><i class="fas fa-list fa-fw"></i> &nbsp; Listado de productos</a>
+            <a class="active" href="<?php echo SERVERURL; ?>inventario/"><i class="fas fa-list fa-fw"></i> &nbsp; Inventario</a>
         </li>
         <li>
-            <a href="#"><i class="fas fa-chart-bar fa-fw"></i> &nbsp; Estadísticas</a>
+            <a href="<?php echo SERVERURL; ?>inventario-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar por fecha</a>
         </li>
     </ul>
 </div>
@@ -33,13 +31,11 @@ if (!isset($_SESSION['id_inv_seleccionado'])) {
 
     <div class="container-fluid">
         <!-- Botones de acción -->
-        <?php var_dump($_SESSION['id_inv_seleccionado']); ?>
+
         <div style="display: flex; justify-content: flex-end; margin-bottom: 15px; gap: 10px;">
-            <?php if ($_SESSION['id_inv_seleccionado'] != ''): ?>
-                <button class="btn btn-success" data-toggle="modal" data-target="#modalInventario">
-                    <i class="fas fa-plus"></i> &nbsp; Generar Inventario
-                </button>
-            <?php endif; ?>
+            <button class="btn btn-success" data-toggle="modal" data-target="#modalInventario">
+                <i class="fas fa-plus"></i> &nbsp; Generar Inventario
+            </button>
             <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#ModalBuscarINV">
                 <i class="fas fa-search"></i> &nbsp; Cargar Inventario
             </button>

@@ -246,7 +246,9 @@ class inventarioControlador extends inventarioModelo
         header("Location: " . SERVERURL . "inventario/");
         exit();
     }
-
+    /* ===============================
+        Guardar ajuste de inventario   
+    =============================== */
     public function guardar_ajuste_inv_controlador()
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {
@@ -374,5 +376,276 @@ class inventarioControlador extends inventarioModelo
         unset($_SESSION['alerta_inv']);
 
         return ["status" => "ok", "msg" => "Stock, movimientos y ajuste actualizados correctamente"];
+    }
+
+    /* ===============================
+        PAGINADOR COMPRA    
+    =============================== */
+    public function paginador_inv_controlador($pagina, $registros, $privilegio, $url, $busqueda1, $busqueda2)
+    {
+        $pagina = mainModel::limpiar_string($pagina);
+        $registros = mainModel::limpiar_string($registros);
+        $privilegio = mainModel::limpiar_string($privilegio);
+        $busqueda1 = mainModel::limpiar_string($busqueda1);
+        $busqueda2 = mainModel::limpiar_string($busqueda2);
+
+        $url = mainModel::limpiar_string($url);
+        $url = SERVERURL . $url . "/";
+
+        $tabla = "";
+
+        $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
+        $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
+
+        if (!empty($busqueda1) && !empty($busqueda2)) {
+            $consulta = "SELECT SQL_CALC_FOUND_ROWS ai.idajuste_inventario as idajuste_inventario, ai.id_usuario as id_usuario, ai.estado as estadoInv, ai.fecha as fecha, ai.tipo_inv as tipo_inv, 
+            ai.descripcion as descripcion, ai.fecha_ajuste as fecha_ajuste, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick
+            FROM ajuste_inventario ai 
+            INNER JOIN usuarios u on u.id_usuario = ai.id_usuario
+            WHERE date(fecha) >= '$busqueda1' AND date(fecha) <='$busqueda2'
+            ORDER BY fecha ASC LIMIT $inicio,$registros";
+        } else {
+            $consulta = "SELECT SQL_CALC_FOUND_ROWS ai.idajuste_inventario as idajuste_inventario, ai.id_usuario as id_usuario, ai.estado as estadoInv, ai.fecha as fecha, ai.tipo_inv as tipo_inv, 
+            ai.descripcion as descripcion, ai.fecha_ajuste as fecha_ajuste, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick
+            FROM ajuste_inventario ai 
+            INNER JOIN usuarios u on u.id_usuario = ai.id_usuario
+            WHERE ai.estado != 0
+            ORDER BY ai.idajuste_inventario ASC LIMIT $inicio,$registros";
+        }
+        $conexion = mainModel::conectar();
+        $datos = $conexion->query($consulta);
+        $datos = $datos->fetchAll();
+
+        $total = $conexion->query("SELECT FOUND_ROWS()");
+        $total = (int) $total->fetchColumn();
+
+        $Npaginas = ceil($total / $registros);
+
+        $tabla .= '<div class="table-responsive">
+					<table class="table table-dark table-sm">
+						<thead>
+							<tr class="text-center roboto-medium">
+								<th>#</th>
+                                <th>Número de Inventario</th>
+                                <th>Tipo de Inventario</th>
+                                <th>Fecha Creación</th>
+                                <th>Observación</th>
+                                <th>Creado Por</th>
+                                <th>Estado</th>';
+        if ($privilegio == 1 || $privilegio == 2) {
+            $tabla .=           '<th>ANULAR</th>';
+        }
+        $tabla .= '
+						</tr>
+						</thead>
+						<tbody>';
+        if ($total >= 1 && $pagina <= $Npaginas) {
+            $contador = $inicio + 1;
+            $reg_inicio = $inicio + 1;
+            foreach ($datos as $rows) {
+                switch ($rows['estadoInv']) {
+                    case 1:
+                        $estadoBadge = '<span class="badge bg-primary">Activo</span>';
+                        break;
+                    case 2:
+                        $estadoBadge = '<span class="badge bg-success">Procesado</span>';
+                        break;
+                    case 0:
+                        $estadoBadge = '<span class="badge bg-danger">Anulado</span>';
+                        break;
+                    default:
+                        $estadoBadge = '<span class="badge bg-secondary">Desconocido</span>';
+                }
+                $tabla .= '
+                            <tr class="text-center">
+								<td>' . $contador . '</td>
+								<td>' . $rows['idajuste_inventario'] . '</td>
+								<td>' . $rows['tipo_inv'] . '</td>
+								<td>' . date("d-m-Y", strtotime($rows['fecha'])) . '</td>
+								<td>' . $rows['descripcion'] . '</td>
+                                <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
+                                <td>' . $estadoBadge . '</td>';
+                if ($privilegio == 1 || $privilegio == 2) {
+                    $tabla .= '<td>
+									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/inventarioAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
+                                    <input type="hidden" name="inv_id_del" value=' . mainModel::encryption($rows['idajuste_inventario']) . '>
+										<button type="submit" class="btn btn-warning">
+											<i class="far fa-trash-alt"></i>
+										</button>
+									</form>
+								</td>';
+                }
+
+                $tabla .= '</tr>';
+                $contador++;
+            }
+            $reg_final = $contador - 1;
+        } else {
+            if ($total >= 1) {
+                $tabla .= '<tr class="text-center"> <td colspan="6"> <a href="' . $url . '" class="btn btn-reaised btn-primary btn-sm"> Haga click aqui para recargar el listado </a> </td> </tr> ';
+            } else {
+                $tabla .= '<tr class="text-center"> <td colspan="6"> No hay regitros en el sistema</td> </tr> ';
+            }
+        }
+
+        $tabla .= '       </tbody>
+					</table>
+				</div>';
+        if ($total >= 1 && $pagina <= $Npaginas) {
+            $tabla .= '<p class="text-right"> Mostrando registro ' . $reg_inicio . ' al ' . $reg_final . ' de un total de ' . $total . '</p>';
+            $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);
+        }
+        echo $tabla;
+    }
+
+
+    private function revertir_ajuste_stock_controlador($idajuste)
+    {
+        $pdo = mainModel::conectar();
+        $pdo->beginTransaction();
+
+        try {
+
+            $detalle = $pdo->query("
+            SELECT id_articulo, diferencia, costo
+            FROM ajuste_inventario_detalle
+            WHERE idajuste_inventario = '$idajuste'
+        ")->fetchAll(PDO::FETCH_ASSOC);
+
+            $sucursal = $_SESSION['nick_sucursal'];
+            $usuario  = $_SESSION['id_str'];
+            $fecha    = date("Y-m-d H:i:s");
+
+            foreach ($detalle as $item) {
+
+                $id_art = $item['id_articulo'];
+                $cant   = floatval($item['diferencia']);
+
+                // revertir stock
+                $pdo->query("
+                UPDATE stock
+                SET stockDisponible = stockDisponible - ($cant),
+                    stockUltActualizacion = '$fecha',
+                    stockUsuActualizacion = '$usuario'
+                WHERE id_articulo = '$id_art'
+                AND id_sucursal = '$sucursal'
+            ");
+
+                // movimiento de anulación
+                $signo = $cant >= 0 ? -1 : 1;
+
+                $pdo->query("
+                INSERT INTO sucmovimientostock (
+                    LocalId, TipoMovStockId, MovStockProductoId,
+                    MovStockCantidad, MovStockCosto,
+                    MovStockFechaHora, MovStockUsuario,
+                    MovStockSigno, MovStockReferencia
+                ) VALUES (
+                    '$sucursal',
+                    'AJUSTE_INV_REV',
+                    '$id_art',
+                    '" . abs($cant) . "',
+                    '{$item['costo']}',
+                    '$fecha',
+                    '$usuario',
+                    '$signo',
+                    'REVERSIÓN AJUSTE #$idajuste'
+                )
+            ");
+            }
+
+            $pdo->query("
+            UPDATE ajuste_inventario
+            SET estado = 3, fecha_ajuste = '$fecha'
+            WHERE idajuste_inventario = '$idajuste'
+        ");
+
+            $pdo->commit();
+
+            unset($_SESSION['id_inv_seleccionado']);
+
+            return true;
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            return $e->getMessage();
+        }
+    }
+
+    public function anular_inv_controlador()
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start(['name' => 'STR']);
+        }
+
+        $idinv = mainModel::decryption($_POST['inv_id_del']);
+        $idinv = mainModel::limpiar_string($idinv);
+
+        $inv = mainModel::ejecutar_consulta_simple("
+        SELECT estado 
+        FROM ajuste_inventario 
+        WHERE idajuste_inventario = '$idinv'")->fetch(PDO::FETCH_ASSOC);
+
+        if (!$inv) {
+            return [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto"  => "Inventario no encontrado",
+                "Tipo"   => "error"
+            ];
+        }
+
+        /* ============================
+       INVENTARIO YA AJUSTADO
+        ============================ */
+        if ($inv['estado'] == 2 && !isset($_POST['confirmar_reversion'])) {
+
+            $_SESSION['id_inv_seleccionado'] = $idinv;
+
+            return [
+                "Alerta" => "confirmar",
+                "Titulo" => "Inventario ya ajustado",
+                "Texto"  => "Este inventario ya modificó el stock. ¿Desea revertir los ajustes?",
+                "Tipo"   => "warning"
+            ];
+        }
+
+        /* ============================
+       REVERTIR AJUSTE DE STOCK
+        ============================ */
+        if ($inv['estado'] == 2 && isset($_POST['confirmar_reversion'])) {
+
+            $resp = $this->revertir_ajuste_stock_controlador($idinv);
+
+            if ($resp !== true) {
+                return [
+                    "Alerta" => "simple",
+                    "Titulo" => "Error",
+                    "Texto"  => $resp,
+                    "Tipo"   => "error"
+                ];
+            }
+
+            return [
+                "Alerta" => "recargar",
+                "Titulo" => "Inventario revertido",
+                "Texto"  => "El stock fue restaurado correctamente",
+                "Tipo"   => "success"
+            ];
+        }
+
+        /* ============================
+       INVENTARIO NO AJUSTADO
+        ============================ */
+        if ($inv['estado'] == 1) {
+
+            inventarioModelo::anular_inv_modelo($idinv);
+
+            return [
+                "Alerta" => "recargar",
+                "Titulo" => "Inventario anulado",
+                "Texto"  => "El inventario fue anulado correctamente",
+                "Tipo"   => "success"
+            ];
+        }
     }
 }

@@ -110,3 +110,10 @@ if (isset($_POST['limpiar_ajuste'])) {
     echo json_encode(["status" => "ok", "msg" => "Variables de ajuste limpiadas correctamente"]);
     exit();
 }
+
+// Anular inventario
+if (isset($_POST['inv_id_del'])) {
+    $resp = $inst_inventario->anular_inv_controlador();
+    echo json_encode($resp);
+    exit();
+}

@@ -75,7 +75,7 @@ function alertasAjax(alerta) {
                 location.reload();
             }
         });
-    } else if(alerta.Alerta === "limpiar"){
+    } else if (alerta.Alerta === "limpiar") {
         Swal.fire({
             title: alerta.Titulo,
             text: alerta.Texto,
@@ -89,5 +89,29 @@ function alertasAjax(alerta) {
     } else if (alerta.Alerta === "redireccionar") {
         window.location.href = alerta.URL;
 
+    } else if (alerta.Alerta === "confirmar") {
+        Swal.fire({
+            title: alerta.Titulo,
+            text: alerta.Texto,
+            type: alerta.Tipo,
+            showCancelButton: true,
+            confirmButtonText: 'Sí, revertir',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.value) {
+
+                let form = document.querySelector(".FormularioAjax");
+                let data = new FormData(form);
+                data.append("confirmar_reversion", "1");
+
+                fetch(form.getAttribute("action"), {
+                    method: form.getAttribute("method"),
+                    body: data
+                })
+                    .then(r => r.json())
+                    .then(resp => alertasAjax(resp));
+            }
+        });
     }
+
 }
