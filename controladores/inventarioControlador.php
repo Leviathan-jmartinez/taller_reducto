@@ -326,8 +326,8 @@ class inventarioControlador extends inventarioModelo
             ");
             } else {
                 mainModel::ejecutar_consulta_simple("
-                INSERT INTO stock (id_sucursal, id_articulo, stockDisponible, stockUltActualizacion, stockUsuActualizacion, stockultimoIdActualizacion)
-                VALUES ('$idsucursal', '$id_articulo', '$cantidad_fisica', '$fecha', '$usuario', '$idajuste')
+                INSERT INTO stock (id_sucursal, id_articulo, stockcant_max, stockcant_min, stockDisponible, stockUltActualizacion, stockUsuActualizacion, stockultimoIdActualizacion)
+                VALUES ('$idsucursal', '$id_articulo', 200, 15,'$cantidad_fisica', '$fecha', '$usuario', '$idajuste')
             ");
             }
 
@@ -497,79 +497,9 @@ class inventarioControlador extends inventarioModelo
         }
         echo $tabla;
     }
-
-
-    private function revertir_ajuste_stock_controlador($idajuste)
-    {
-        $pdo = mainModel::conectar();
-        $pdo->beginTransaction();
-
-        try {
-
-            $detalle = $pdo->query("
-            SELECT id_articulo, diferencia, costo
-            FROM ajuste_inventario_detalle
-            WHERE idajuste_inventario = '$idajuste'
-        ")->fetchAll(PDO::FETCH_ASSOC);
-
-            $sucursal = $_SESSION['nick_sucursal'];
-            $usuario  = $_SESSION['id_str'];
-            $fecha    = date("Y-m-d H:i:s");
-
-            foreach ($detalle as $item) {
-
-                $id_art = $item['id_articulo'];
-                $cant   = floatval($item['diferencia']);
-
-                // revertir stock
-                $pdo->query("
-                UPDATE stock
-                SET stockDisponible = stockDisponible - ($cant),
-                    stockUltActualizacion = '$fecha',
-                    stockUsuActualizacion = '$usuario'
-                WHERE id_articulo = '$id_art'
-                AND id_sucursal = '$sucursal'
-            ");
-
-                // movimiento de anulación
-                $signo = $cant >= 0 ? -1 : 1;
-
-                $pdo->query("
-                INSERT INTO sucmovimientostock (
-                    LocalId, TipoMovStockId, MovStockProductoId,
-                    MovStockCantidad, MovStockCosto,
-                    MovStockFechaHora, MovStockUsuario,
-                    MovStockSigno, MovStockReferencia
-                ) VALUES (
-                    '$sucursal',
-                    'AJUSTE_INV_REV',
-                    '$id_art',
-                    '" . abs($cant) . "',
-                    '{$item['costo']}',
-                    '$fecha',
-                    '$usuario',
-                    '$signo',
-                    'REVERSIÓN AJUSTE #$idajuste'
-                )
-            ");
-            }
-
-            $pdo->query("
-            UPDATE ajuste_inventario
-            SET estado = 3, fecha_ajuste = '$fecha'
-            WHERE idajuste_inventario = '$idajuste'
-        ");
-
-            $pdo->commit();
-
-            unset($_SESSION['id_inv_seleccionado']);
-
-            return true;
-        } catch (Exception $e) {
-            $pdo->rollBack();
-            return $e->getMessage();
-        }
-    }
+    /* ===============================
+           ANULAR INVENTARIO  
+    =============================== */
 
     public function anular_inv_controlador()
     {
@@ -577,74 +507,112 @@ class inventarioControlador extends inventarioModelo
             session_start(['name' => 'STR']);
         }
 
-        $idinv = mainModel::decryption($_POST['inv_id_del']);
-        $idinv = mainModel::limpiar_string($idinv);
+        $id = mainModel::limpiar_string(
+            mainModel::decryption($_POST['inv_id_del'])
+        );
 
-        $inv = mainModel::ejecutar_consulta_simple("
-        SELECT estado 
-        FROM ajuste_inventario 
-        WHERE idajuste_inventario = '$idinv'")->fetch(PDO::FETCH_ASSOC);
+        $db = mainModel::conectar();
+        $db->beginTransaction();
 
-        if (!$inv) {
-            return [
-                "Alerta" => "simple",
-                "Titulo" => "Error",
-                "Texto"  => "Inventario no encontrado",
-                "Tipo"   => "error"
-            ];
-        }
+        try {
 
-        /* ============================
-       INVENTARIO YA AJUSTADO
-        ============================ */
-        if ($inv['estado'] == 2 && !isset($_POST['confirmar_reversion'])) {
+            $ajuste = $db->query("
+            SELECT estado, sucursal_id
+            FROM ajuste_inventario
+            WHERE idajuste_inventario = $id
+            FOR UPDATE
+        ")->fetch(PDO::FETCH_ASSOC);
 
-            $_SESSION['id_inv_seleccionado'] = $idinv;
+            if (!$ajuste) {
+                throw new Exception("Ajuste no encontrado");
+            }
 
-            return [
-                "Alerta" => "confirmar",
-                "Titulo" => "Inventario ya ajustado",
-                "Texto"  => "Este inventario ya modificó el stock. ¿Desea revertir los ajustes?",
-                "Tipo"   => "warning"
-            ];
-        }
+            // ESTADO 1 → anulación simple
+            if ($ajuste['estado'] == 1) {
 
-        /* ============================
-       REVERTIR AJUSTE DE STOCK
-        ============================ */
-        if ($inv['estado'] == 2 && isset($_POST['confirmar_reversion'])) {
+                $db->exec("
+                UPDATE ajuste_inventario
+                SET estado = 0
+                WHERE idajuste_inventario = $id
+            ");
 
-            $resp = $this->revertir_ajuste_stock_controlador($idinv);
+                $db->commit();
 
-            if ($resp !== true) {
                 return [
-                    "Alerta" => "simple",
-                    "Titulo" => "Error",
-                    "Texto"  => $resp,
-                    "Tipo"   => "error"
+                    "Alerta" => "recargar",
+                    "Titulo" => "Ajuste anulado",
+                    "Texto"  => "El ajuste fue anulado correctamente",
+                    "Tipo"   => "success"
                 ];
             }
 
+            // ESTADO 2 → revertir stock
+            if ($ajuste['estado'] == 2) {
+
+                $detalle = $db->query("
+                SELECT id_articulo, diferencia, costo
+                FROM ajuste_inventario_detalle
+                WHERE idajuste_inventario = $id
+            ")->fetchAll(PDO::FETCH_ASSOC);
+
+                foreach ($detalle as $d) {
+
+                    // Revertir stock
+                    $db->exec("
+                    UPDATE stock
+                    SET stockDisponible = stockDisponible - {$d['diferencia']},
+                        stockUltActualizacion = NOW()
+                    WHERE id_sucursal = {$ajuste['sucursal_id']}
+                      AND id_articulo = {$d['id_articulo']}
+                ");
+
+                    // Movimiento de anulación
+                    $signo = ($d['diferencia'] > 0) ? -1 : 1;
+
+                    $db->exec("
+                    INSERT INTO sucmovimientostock (
+                        LocalId, TipoMovStockId, MovStockProductoId,
+                        MovStockCantidad, MovStockPrecioVenta, MovStockCosto,
+                        MovStockFechaHora, MovStockUsuario, MovStockSigno,
+                        MovStockReferencia
+                    ) VALUES (
+                        '{$ajuste['sucursal_id']}',
+                        'ANULACION_AJUSTE_INV',
+                        '{$d['id_articulo']}',
+                        " . abs($d['diferencia']) . ",
+                        0,
+                        {$d['costo']},
+                        NOW(),
+                        {$_SESSION['id_str']},
+                        $signo,
+                        'Anulación ajuste inventario #$id'
+                    )
+                ");
+                }
+
+                $db->exec("
+                UPDATE ajuste_inventario
+                SET estado = 0
+                WHERE idajuste_inventario = $id
+            ");
+            }
+
+            $db->commit();
+
             return [
                 "Alerta" => "recargar",
-                "Titulo" => "Inventario revertido",
-                "Texto"  => "El stock fue restaurado correctamente",
+                "Titulo" => "Ajuste anulado",
+                "Texto"  => "El ajuste fue anulado y el stock fue revertido correctamente",
                 "Tipo"   => "success"
             ];
-        }
-
-        /* ============================
-       INVENTARIO NO AJUSTADO
-        ============================ */
-        if ($inv['estado'] == 1) {
-
-            inventarioModelo::anular_inv_modelo($idinv);
+        } catch (Exception $e) {
+            $db->rollBack();
 
             return [
-                "Alerta" => "recargar",
-                "Titulo" => "Inventario anulado",
-                "Texto"  => "El inventario fue anulado correctamente",
-                "Tipo"   => "success"
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto"  => $e->getMessage(),
+                "Tipo"   => "error"
             ];
         }
     }

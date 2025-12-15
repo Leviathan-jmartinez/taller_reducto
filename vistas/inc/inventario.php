@@ -384,24 +384,6 @@
             .then(res => res.json())
             .then(resp => {
 
-                /* ================= CONFIRMACIÓN ================= */
-                if (resp.Alerta === "confirmar") {
-                    Swal.fire({
-                        title: resp.Titulo,
-                        text: resp.Texto,
-                        icon: resp.Tipo,
-                        showCancelButton: true,
-                        confirmButtonText: "Sí, revertir",
-                        cancelButtonText: "Cancelar"
-                    }).then(result => {
-                        if (result.isConfirmed) {
-                            confirmarAnulacion(id);
-                        }
-                    });
-                    return;
-                }
-
-                /* ================= ALERTAS NORMALES ================= */
                 Swal.fire({
                     title: resp.Titulo,
                     text: resp.Texto,
@@ -411,32 +393,7 @@
                         location.reload();
                     }
                 });
-            });
-    }
 
-    function confirmarAnulacion(id) {
-
-        fetch("<?= SERVERURL ?>ajax/inventarioAjax.php", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
-                body: new URLSearchParams({
-                    inv_id_del: id,
-                    confirmar: 1
-                })
-            })
-            .then(res => res.json())
-            .then(resp => {
-                Swal.fire({
-                    title: resp.Titulo,
-                    text: resp.Texto,
-                    icon: resp.Tipo
-                }).then(() => {
-                    if (resp.Alerta === "recargar") {
-                        location.reload();
-                    }
-                });
             });
     }
 </script>
