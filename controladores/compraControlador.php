@@ -578,7 +578,7 @@ class compraControlador extends compraModelo
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
 
         if (!empty($busqueda1) && !empty($busqueda2)) {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS co.idcompra_cabecera as idcompra_cabecera, co.id_usuario as id_usuario, co.fecha_creacion as fecha_creacion, co.estado as estadoCO, nro_factura AS nro_factura, condicion as condicion,
+            $consulta = "SELECT SQL_CALC_FOUND_ROWS co.idcompra_cabecera as idcompra_cabecera, co.id_usuario as id_usuario, co.fecha_creacion as fecha_creacion, co.estado as estadoCO, co.nro_factura AS nro_factura, co.condicion as condicion,
             co.fecha_factura as fecha_factura, total_compra AS total_compra, co.idproveedores as idproveedores, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
             p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick, co.updated as updated,
             co.updatedby as updatedby
@@ -795,6 +795,5 @@ class compraControlador extends compraModelo
 
         echo json_encode($alerta);
     }
-
     /**fin controlador */
 }

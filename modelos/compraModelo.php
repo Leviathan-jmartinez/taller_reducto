@@ -230,8 +230,7 @@ class compraModelo extends mainModel
         SELECT COUNT(*) AS pendientes
         FROM orden_compra_detalle
         WHERE idorden_compra = :idorden_compra
-          AND cantidad_pendiente > 0
-    ");
+          AND cantidad_pendiente > 0");
         $checkPendientes->bindParam(":idorden_compra", $datos['idorden_compra']);
         $checkPendientes->execute();
         $res = $checkPendientes->fetch(PDO::FETCH_ASSOC);
