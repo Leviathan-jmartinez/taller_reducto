@@ -42,4 +42,5 @@
         document.body.appendChild(form);
         form.submit(); // envía y recarga la página
     }
+    
 </script>

@@ -32,3 +32,12 @@ if (isset($_POST['nro_remision'])) {
     echo $inst_remision->guardar_remision_controlador();
     exit();
 }
+
+/* ===============================
+   ANULAR REMISIÓN  
+================================ */
+if (isset($_POST['remision_id_del'])) {
+    require_once "../controladores/remisionControlador.php";
+    $remision = new remisionControlador();
+    echo $remision->anular_remision_controlador();
+}

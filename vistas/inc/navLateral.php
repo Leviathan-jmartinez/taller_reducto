@@ -41,7 +41,7 @@
                             <a href="<?php echo SERVERURL; ?>remision-nuevo/"><i class="fas fa-box fa-fw"></i> &nbsp; Remisiones</a>
                         </li>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>notas-lista/"><i class="fas fa-file-alt fa-fw"></i> &nbsp; Notas de Crédito y Débito</a>
+                            <a href="<?php echo SERVERURL; ?>notasCreDe-nuevo/"><i class="fas fa-file-alt fa-fw"></i> &nbsp; Notas de Crédito y Débito</a>
                         </li>
                     </ul>
                 </li>

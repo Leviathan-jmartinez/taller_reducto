@@ -252,6 +252,232 @@ class remisionControlador extends remisionModelo
         echo json_encode($alerta);
         exit();
     }
-
     /**fin controlador */
+
+    /**controlador paginador remision */
+    public function paginador_remision_controlador($pagina, $registros, $privilegio, $url, $busqueda1, $busqueda2)
+    {
+        $pagina     = mainModel::limpiar_string($pagina);
+        $registros  = mainModel::limpiar_string($registros);
+        $privilegio = mainModel::limpiar_string($privilegio);
+        $busqueda1  = mainModel::limpiar_string($busqueda1);
+        $busqueda2  = mainModel::limpiar_string($busqueda2);
+
+        $url = mainModel::limpiar_string($url);
+        $url = SERVERURL . $url . "/";
+
+        $tabla = "";
+
+        $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
+        $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
+
+        /* 🔹 CONSULTA */
+        if (!empty($busqueda1) && !empty($busqueda2)) {
+
+            $consulta = "
+        SELECT SQL_CALC_FOUND_ROWS
+            r.idnota_remision,
+            r.fecha_emision,
+            r.nro_remision,
+            r.nombre_transpo,
+            r.motivo_remision,
+            r.estado,
+            u.usu_nombre,
+            u.usu_apellido
+        FROM nota_remision r
+        INNER JOIN usuarios u ON u.id_usuario = r.id_usuario
+        WHERE DATE(r.fecha_emision) >= '$busqueda1'
+        AND DATE(r.fecha_emision) <= '$busqueda2'
+        ORDER BY r.fecha_emision ASC
+        LIMIT $inicio, $registros
+        ";
+        } else {
+
+            $consulta = "
+        SELECT SQL_CALC_FOUND_ROWS
+            r.idnota_remision,
+            r.fecha_emision,
+            r.nro_remision,
+            r.nombre_transpo,
+            r.motivo_remision,
+            r.estado,
+            u.usu_nombre,
+            u.usu_apellido
+        FROM nota_remision r
+        INNER JOIN usuarios u ON u.id_usuario = r.id_usuario
+        WHERE r.estado != 0
+        ORDER BY r.idnota_remision DESC
+        LIMIT $inicio, $registros
+        ";
+        }
+
+        $conexion = mainModel::conectar();
+        $datos = $conexion->query($consulta)->fetchAll();
+
+        $total = (int)$conexion->query("SELECT FOUND_ROWS()")->fetchColumn();
+        $Npaginas = ceil($total / $registros);
+
+        /* 🔹 TABLA */
+        $tabla .= '<div class="table-responsive">
+        <table class="table table-dark table-sm">
+            <thead>
+                <tr class="text-center roboto-medium">
+                    <th>#</th>
+                    <th>N° REMISIÓN</th>
+                    <th>FECHA</th>
+                    <th>TRANSPORTISTA</th>
+                    <th>MOTIVO</th>
+                    <th>GENERADO POR</th>
+                    <th>ESTADO</th>
+                    <th>PDF</th>';
+
+        if ($privilegio == 1 || $privilegio == 2) {
+            $tabla .= '<th>ANULAR</th>';
+        }
+
+        $tabla .= '
+                </tr>
+            </thead>
+            <tbody>';
+
+        if ($total >= 1 && $pagina <= $Npaginas) {
+
+            $contador   = $inicio + 1;
+            $reg_inicio = $contador;
+
+            foreach ($datos as $rows) {
+
+                /* 🔹 ESTADO */
+                switch ($rows['estado']) {
+                    case 1:
+                        $estadoBadge = '<span class="badge bg-primary">Activo</span>';
+                        break;
+                    case 2:
+                        $estadoBadge = '<span class="badge bg-success">Procesado</span>';
+                        break;
+                    case 0:
+                        $estadoBadge = '<span class="badge bg-danger">Anulado</span>';
+                        break;
+                    default:
+                        $estadoBadge = '<span class="badge bg-secondary">Desconocido</span>';
+                }
+
+                $tabla .= '
+            <tr class="text-center">
+                <td>' . $contador . '</td>
+                <td>' . $rows['nro_remision'] . '</td>
+                <td>' . date("d-m-Y", strtotime($rows['fecha_emision'])) . '</td>
+                <td>' . $rows['nombre_transpo'] . '</td>
+                <td>' . $rows['motivo_remision'] . '</td>
+                <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
+                <td>' . $estadoBadge . '</td>
+
+                <!-- PDF -->
+                <td>
+                    <a href="' . SERVERURL . 'pdf/remision.php?id=' . mainModel::encryption($rows['idnota_remision']) . '" 
+                       target="_blank"
+                       class="btn btn-info btn-sm">
+                        <i class="fas fa-file-pdf"></i>
+                    </a>
+                </td>';
+
+                /* 🔹 ANULAR */
+                if ($privilegio == 1 || $privilegio == 2) {
+                    $tabla .= '
+                <td>
+                    <form class="FormularioAjax"
+                          action="' . SERVERURL . 'ajax/remisionAjax.php"
+                          method="POST"
+                          data-form="delete"
+                          autocomplete="off">
+
+                        <input type="hidden" name="remision_id_del"
+                               value="' . mainModel::encryption($rows['idnota_remision']) . '">
+
+                        <button type="submit" class="btn btn-warning btn-sm">
+                            <i class="far fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </td>';
+                }
+
+                $tabla .= '</tr>';
+                $contador++;
+            }
+
+            $reg_final = $contador - 1;
+        } else {
+
+            if ($total >= 1) {
+                $tabla .= '
+            <tr class="text-center">
+                <td colspan="9">
+                    <a href="' . $url . '" class="btn btn-raised btn-primary btn-sm">
+                        Haga click aquí para recargar el listado
+                    </a>
+                </td>
+            </tr>';
+            } else {
+                $tabla .= '
+            <tr class="text-center">
+                <td colspan="9">No hay registros en el sistema</td>
+            </tr>';
+            }
+        }
+
+        $tabla .= '
+            </tbody>
+        </table></div>';
+
+        /* 🔹 PAGINADOR */
+        if ($total >= 1 && $pagina <= $Npaginas) {
+            $tabla .= '
+        <p class="text-right">
+            Mostrando registro ' . $reg_inicio . ' al ' . $reg_final . ' de un total de ' . $total . '
+        </p>';
+
+            $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);
+        }
+
+        echo $tabla;
+    }
+    /**fin controlador */
+    /**controlador anular remision */
+    public function anular_remision_controlador()
+    {
+        $id = mainModel::decryption($_POST['remision_id_del'] ?? '');
+
+        if (!$id || !is_numeric($id)) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "ID inválido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        $usuario = $_SESSION['id_str'];
+
+        $anular = remisionModelo::anular_remision_modelo($id, $usuario);
+
+        if ($anular) {
+            $alerta = [
+                "Alerta" => "recargar",
+                "Titulo" => "Remisión Anulada",
+                "Texto" => "La remisión fue anulada correctamente",
+                "Tipo" => "success"
+            ];
+        } else {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "No se pudo anular la remisión",
+                "Tipo" => "error"
+            ];
+        }
+
+        echo json_encode($alerta);
+        exit();
+    }
 }

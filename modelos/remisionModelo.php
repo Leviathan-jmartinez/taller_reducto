@@ -41,8 +41,6 @@ class remisionModelo extends mainModel
         }
     }
 
-
-
     /**
      * Guardar detalle de remisión
      */
@@ -74,5 +72,49 @@ class remisionModelo extends mainModel
         }
 
         return true;
+    }
+
+    /**
+     * Anular remisión
+     */
+    protected static function anular_remision_modelo($id, $usuario)
+    {
+        $sql = mainModel::conectar()->prepare("
+        UPDATE nota_remision
+        SET estado = 0,
+            updated = NOW(),
+            updatedby = :usuario
+        WHERE idnota_remision = :id");
+
+        $sql->bindParam(":id", $id, PDO::PARAM_INT);
+        $sql->bindParam(":usuario", $usuario, PDO::PARAM_INT);
+        return $sql->execute();
+    }
+
+    public static function obtener_remision_modelo($idnota)
+    {
+        $sql = mainModel::conectar()->prepare("
+        SELECT * 
+        FROM nota_remision
+        WHERE idnota_remision = :id
+        LIMIT 1");
+        $sql->bindParam(":id", $idnota, PDO::PARAM_INT);
+        $sql->execute();
+
+        return $sql->fetch(PDO::FETCH_ASSOC);
+    }
+
+
+    public static function obtener_remision_detalle_modelo($idnota)
+    {
+        $sql = mainModel::conectar()->prepare("
+        SELECT d.*, a.nombre AS nombre_articulo
+        FROM nota_remision_detalle d
+        INNER JOIN articulos a ON a.id_articulo = d.id_articulo
+        WHERE d.idnota_remision = :id");
+        $sql->bindParam(":id", $idnota, PDO::PARAM_INT);
+        $sql->execute();
+
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 }

@@ -9,9 +9,22 @@ $id_usuario = $_SESSION['id_usuario'] ?? null;
 
 <div class="container-fluid">
     <h3 class="text-left">
-        <i class="fas fa-truck fa-fw"></i> &nbsp; INGRESO DE NOTA DE REMISIÓN
+        <i class="fas fa-search fa-fw"></i> &nbsp; REMISIÓN
     </h3>
+    <ul class="full-box list-unstyled page-nav-tabs">
+        <li>
+            <a class="active" href="<?php echo SERVERURL; ?>remision-nuevo/">
+                <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVA REMISIÓN
+            </a>
+        </li>
+        <li>
+            <a href="<?php echo SERVERURL; ?>remision-buscar/">
+                <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR
+            </a>
+        </li>
+    </ul>
 </div>
+
 
 <div class="container-fluid">
     <form class="form-neon FormularioAjax"
