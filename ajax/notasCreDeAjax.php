@@ -24,3 +24,23 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'actualizar_item_nc') {
     );
     exit;
 }
+// ajax/notasCreDeAjax.php
+
+if (isset($_POST['accion']) && $_POST['accion'] === 'guardar_nota_compra') {
+    echo json_encode(
+        notasCreDeControlador::guardarNotaCompraControlador()
+    );
+    exit;
+}
+if (isset($_POST['accion']) && $_POST['accion'] === 'limpiar_nc') {
+    session_start(['name' => 'STR']);
+    unset($_SESSION['NC_DETALLE'], $_SESSION['NC_FACTURA']);
+    echo json_encode(['status' => 'ok']);
+    exit;
+}
+if (isset($_POST['notaCreDe_id_del'])) {
+    echo json_encode(
+        notasCreDeControlador::anularNotaCompraControlador()
+    );
+    exit;
+}

@@ -8,7 +8,7 @@ class vistasModelo
         "cliente-actualizar", "cliente-buscar", "cliente-lista", "cliente-nuevo", "company",        
         "usuario-actualizar", "usuario-buscar", "usuario-lista", "usuario-nuevo","pedido-lista","pedido-nuevo","pedido-buscar",
         "presupuesto-nuevo", "presupuesto-lista","presupuesto-buscar","oc-nuevo","oc-lista","oc-buscar","factura-nuevo","factura-lista","factura-buscar"
-        ,"inventario", "inventario-buscar", "remision-nuevo", "remision-buscar", "notasCreDe-nuevo", "notasCreDe-buscar", "notasCreDe-lista"];
+        ,"inventario", "inventario-buscar", "remision-nuevo", "remision-buscar", "notasCreDe-nuevo", "notasCreDe-buscar","recepcionServicio-nuevo"];
         if (in_array($vistas, $lista_blanca)) {
             if (is_file("./vistas/contenidos/" . $vistas . "-vista.php")) {
                 $contenido = "./vistas/contenidos/" . $vistas . "-vista.php";

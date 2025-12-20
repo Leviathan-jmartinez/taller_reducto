@@ -3,45 +3,53 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start(['name' => 'STR']);
 }
 
-$id_usuario = $_SESSION['id_str'];
 $facturaNC = $_SESSION['NC_FACTURA'] ?? null;
 $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
 ?>
 
 <div class="container-fluid">
     <h3 class="text-left">
-        <i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; INGRESO DE NOTA DE COMPRA
+        <i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; INGRESO DE NOTA (CREDITO/DEBITO)
     </h3>
+    <ul class="full-box list-unstyled page-nav-tabs">
+        <li>
+            <a class="active"  href="<?php echo SERVERURL; ?>notasCreDe-nuevo-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; INGRESO DE NOTA</a>
+        </li>
+        <li>
+            <a href="<?php echo SERVERURL; ?>notasCreDe-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR</a>
+        </li>
+    </ul>
 </div>
-<div class="col-md-4 mt-3">
-    <label>Factura asociada</label>
+<?php if (empty($facturaNC)): ?>
+    <div class="col-md-4 mt-3">
+        <label>Factura asociada</label>
 
-    <div class="input-group">
-        <input type="hidden" name="idcompra_cabecera"
-            value="<?= $facturaNC['idcompra_cabecera'] ?? '' ?>">
+        <div class="input-group">
+            <input type="hidden" name="idcompra_cabecera"
+                value="<?= $facturaNC['idcompra_cabecera'] ?? '' ?>">
 
-        <input type="text" class="form-control"
-            value="<?= $facturaNC['nro_factura'] ?? '' ?>"
-            placeholder="Seleccione factura"
-            readonly>
+            <input type="text" class="form-control"
+                value="<?= $facturaNC['nro_factura'] ?? '' ?>"
+                placeholder="Seleccione factura"
+                readonly>
 
-        <div class="input-group-append">
-            <button type="button" class="btn btn-info"
-                onclick="abrirModalFactura()">
-                <i class="fas fa-search"></i>
-            </button>
+            <div class="input-group-append">
+                <button type="button" class="btn btn-info"
+                    onclick="abrirModalFactura()">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
         </div>
     </div>
-</div>
+<?php endif; ?>
 <div class="container-fluid">
     <form class="form-neon FormularioAjax"
-        action="<?php echo SERVERURL; ?>ajax/notaCompraAjax.php"
+        action="<?php echo SERVERURL; ?>ajax/notasCreDeAjax.php"
         method="POST"
         data-form="save"
         autocomplete="off">
 
         <input type="hidden" name="accion" value="guardar_nota_compra">
-        <input type="hidden" name="idusuario" value="<?= $id_usuario ?>">
 
         <!-- ================= CABECERA ================= -->
         <fieldset class="border p-3 mb-4">
@@ -59,13 +67,8 @@ $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
                 </div>
 
                 <div class="col-md-3">
-                    <label>Serie</label>
-                    <input type="text" name="serie" class="form-control" required>
-                </div>
-
-                <div class="col-md-3">
-                    <label>N° Documento</label>
-                    <input type="text" name="nro_documento" class="form-control" required>
+                    <label>Número de Nota</label>
+                    <input type="text" name="nro_nota" class="form-control" required>
                 </div>
 
                 <div class="col-md-3">
@@ -80,12 +83,12 @@ $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
 
                 <div class="col-md-4 mt-3">
                     <label>Factura asociada</label>
-                    <input type="number" name="idcompra_cabecera" class="form-control" required>
+                    <input type="text" name="factura_asociada" class="form-control" value="<?= $facturaNC['nro_factura'] ?? '' ?>" readonly>
                 </div>
 
                 <div class="col-md-4 mt-3">
                     <label>Proveedor</label>
-                    <input type="number" name="idproveedor" class="form-control">
+                    <input type="text" name="proveedor" class="form-control" value="<?= $facturaNC['proveedor'] ?? '' ?>" readonly>
                 </div>
 
                 <div class="col-md-12 mt-3">
@@ -106,8 +109,8 @@ $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
                         <tr>
                             <th>Artículo</th>
                             <th>Descripción</th>
-                            <th>Cantidad</th>
-                            <th>Precio Unit.</th>
+                            <th class="text-center">Cantidad</th>
+                            <th class="text-center">Precio Unit.</th>
                             <th>IVA</th>
                             <th>Total</th>
                         </tr>
@@ -124,9 +127,7 @@ $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
                             $total_iva10 += $d['iva_10'];
                             $total = $subtotal;
                         }
-
-                        $total = $subtotal + $total_iva5 + $total_iva10;
-
+                        $total_iva = $total_iva5 + $total_iva10;
 
                         foreach ($detalleNC as $i => $d):
                             $total_item = $d['cantidad'] * $d['precio']; ?>
@@ -136,17 +137,15 @@ $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
 
                                 <td>
                                     <input type="number"
-                                        class="form-control form-control-sm text-right"
+                                        class="form-control form-control-sm text-center"
                                         value="<?= $d['cantidad'] ?>"
-                                        min="0.01" step="0.01"
                                         onchange="actualizarItem(<?= $i ?>)">
                                 </td>
 
                                 <td>
                                     <input type="number"
-                                        class="form-control form-control-sm text-right"
+                                        class="form-control form-control-sm text-center"
                                         value="<?= $d['precio'] ?>"
-                                        min="0.01" step="0.01"
                                         onchange="actualizarItem(<?= $i ?>)">
                                 </td>
                                 <td><?= $d['iva_tipo'] ?></td>
@@ -159,10 +158,6 @@ $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
 
                 </table>
             </div>
-
-            <button type="button" class="btn btn-primary btn-sm" onclick="agregarFila()">
-                <i class="fas fa-plus"></i> Agregar ítem
-            </button>
         </fieldset>
 
         <!-- ================= TOTALES ================= -->
@@ -171,7 +166,7 @@ $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
 
             <div class="row">
                 <div class="col-md-3">
-                    <label>Subtotal</label>
+                    <label>Total</label>
                     <input type="text" name="subtotal" id="subtotal"
                         class="form-control"
                         value="<?= number_format($subtotal, 0, ',', '.') ?>" readonly>
@@ -192,10 +187,10 @@ $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
                 </div>
 
                 <div class="col-md-3">
-                    <label>Total</label>
+                    <label>Total IVA</label>
                     <input type="text" name="total" id="total"
                         class="form-control"
-                        value="<?= number_format($total, 0, ',', '.') ?>" readonly>
+                        value="<?= number_format($total_iva, 0, ',', '.') ?>" readonly>
                 </div>
             </div>
         </fieldset>
@@ -203,6 +198,10 @@ $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
         <div class="text-center">
             <button type="submit" class="btn btn-success">
                 <i class="fas fa-save"></i> Guardar Nota
+            </button>
+            <button type="button" class="btn btn-danger ml-2"
+                onclick="cancelarNota()">
+                <i class="fas fa-times"></i> Cancelar
             </button>
         </div>
 

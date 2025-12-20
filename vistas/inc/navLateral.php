@@ -49,7 +49,7 @@
                     <a href="#" class="nav-btn-submenu"><i class="fas fa-tools fa-fw"></i> &nbsp; Servicios <i class="fas fa-chevron-down"></i></a>
                     <ul>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>servicios-nuevo/"> <i class="fas fa-file-signature fa-fw"></i> &nbsp; Solicitud de Servicios
+                            <a href="<?php echo SERVERURL; ?>recepcionServicio-nuevo/"> <i class="fas fa-file-signature fa-fw"></i> &nbsp; Solicitud de Servicios
                             </a>
                         </li>
                         <li>

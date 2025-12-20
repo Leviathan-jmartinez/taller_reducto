@@ -87,4 +87,120 @@
                 document.getElementById('total').value = resp.totales.total;
             });
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const form = document.querySelector('.FormularioAjax');
+        if (!form) return;
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const data = new FormData(this);
+
+            fetch(this.action, {
+                    method: this.method,
+                    body: data
+                })
+                .then(r => r.json())
+                .then(resp => {
+
+                    if (resp.status === 'ok') {
+                        Swal.fire({
+                            type: 'success',
+                            title: 'Nota guardada correctamente',
+                            confirmButtonText: 'Aceptar'
+                        }).then(() => {
+                            // 🔴 recargar vista limpia
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            type: 'error',
+                            title: 'Error',
+                            text: resp.msg || 'Ocurrió un error',
+                            confirmButtonText: 'Aceptar'
+                        });
+                    }
+
+                })
+                .catch(err => {
+                    Swal.fire({
+                        type: 'error',
+                        title: 'Error',
+                        text: 'Error de comunicación con el servidor'
+                    });
+                });
+        });
+
+    });
+
+    function cancelarNota() {
+
+        // feedback inmediato (no bloquea)
+        Swal.fire({
+            title: 'Cancelando...',
+            text: 'Limpiando datos',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        fetch('<?php echo SERVERURL; ?>ajax/notasCreDeAjax.php', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    accion: 'limpiar_nc'
+                })
+            })
+            .then(r => r.json())
+            .then(resp => {
+
+                Swal.close();
+
+                if (resp.status === 'ok') {
+                    Swal.fire({
+                        type: 'success',
+                        title: 'Nota cancelada',
+                        timer: 1200,
+                        showConfirmButton: false
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        type: 'error',
+                        title: 'Error',
+                        text: 'No se pudo cancelar'
+                    });
+                }
+            })
+            .catch(() => {
+                Swal.close();
+                Swal.fire({
+                    type: 'error',
+                    title: 'Error de comunicación'
+                });
+            });
+    }
+
+    document.addEventListener('submit', function(e) {
+        if (e.target.classList.contains('FormularioAjax')) {
+            e.preventDefault();
+
+            fetch(e.target.action, {
+                    method: 'POST',
+                    body: new FormData(e.target)
+                })
+                .then(r => r.json())
+                .then(resp => {
+                    if (resp.status === 'ok') {
+                        Swal.fire('Correcto', resp.msg, 'success')
+                            .then(() => location.reload());
+                    } else {
+                        Swal.fire('Error', resp.msg, 'error');
+                    }
+                });
+        }
+    });
 </script>
