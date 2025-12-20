@@ -3,22 +3,25 @@
         $('#modalFactura').modal('show');
     }
 
-    document.getElementById('buscarFactura').addEventListener('keyup', function() {
-        let texto = this.value.trim();
+    document.addEventListener('keyup', function(e) {
+        if (e.target && e.target.id === 'buscarFactura') {
 
-        if (texto.length < 2) return;
+            let texto = e.target.value.trim();
+            if (texto.length < 2) return;
 
-        let data = new FormData();
-        data.append('buscar_factura', texto);
+            let data = new FormData();
+            data.append('buscar_factura', texto);
 
-        fetch('<?php echo SERVERURL ?>ajax/notasCreDeAjax.php', {
-                method: 'POST',
-                body: data
-            })
-            .then(r => r.text())
-            .then(html => {
-                document.getElementById('resultadoFacturas').innerHTML = html;
-            });
+            fetch('<?php echo SERVERURL ?>ajax/notasCreDeAjax.php', {
+                    method: 'POST',
+                    body: data
+                })
+                .then(r => r.text())
+                .then(html => {
+                    document.getElementById('resultadoFacturas').innerHTML = html;
+                    console.log('buscando factura:', texto);
+                });
+        }
     });
 
     function seleccionarFactura(id) {

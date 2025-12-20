@@ -119,9 +119,10 @@ $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
                         $total_iva10 = 0;
 
                         foreach ($detalleNC as $d) {
-                            $subtotal += $d['exenta'] + $d['iva_5'] + $d['iva_10'];
-                            $total_iva5 += ($d['iva_5'] > 0) ? round($d['iva_5'] / 21, 2) : 0;
-                            $total_iva10 += ($d['iva_10'] > 0) ? round($d['iva_10'] / 11, 2) : 0;
+                            $subtotal += $d['cantidad'] * $d['precio'];
+                            $total_iva5 += $d['iva_5'];
+                            $total_iva10 += $d['iva_10'];
+                            $total = $subtotal;
                         }
 
                         $total = $subtotal + $total_iva5 + $total_iva10;
@@ -148,7 +149,7 @@ $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
                                         min="0.01" step="0.01"
                                         onchange="actualizarItem(<?= $i ?>)">
                                 </td>
-                                <td><?= $d['iva'] ?></td>
+                                <td><?= $d['iva_tipo'] ?></td>
                                 <td class="text-right" id="total_item_<?= $i ?>">
                                     <?= number_format($total_item, 0, ',', '.') ?>
                                 </td>
