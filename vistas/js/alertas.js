@@ -45,7 +45,7 @@ function enviar_formulario_ajax(e) {
             fetch(action, config)
                 .then(respuesta => respuesta.json())
                 .then(respuesta => {
-                    return alertasAjax(respuesta);
+                    return alertasAjax(respuesta, this);
                 });
         }
     });
@@ -56,7 +56,7 @@ formulario_ajax.forEach(formularios => {
     formularios.addEventListener("submit", enviar_formulario_ajax);
 });
 
-function alertasAjax(alerta) {
+function alertasAjax(alerta, form = null) {
     if (alerta.Alerta === "simple") {
         Swal.fire({
             title: alerta.Titulo,
@@ -83,7 +83,26 @@ function alertasAjax(alerta) {
             confirmButtonText: 'Aceptar'
         }).then((result) => {
             if (result.value) {
-                document.querySelector(".FormularioAjax").reset();
+
+                // 1. Resetear SOLO el formulario enviado
+                if (form) {
+                    form.reset();
+                }
+
+                // 2. Limpiar localStorage de promociones
+                localStorage.removeItem('promo_articulos');
+
+                // 3. Limpiar lista visual de artículos
+                const lista = document.getElementById('articulos_seleccionados');
+                if (lista) {
+                    lista.innerHTML = '';
+                }
+
+                // 4. Limpiar input de búsqueda
+                const buscar = document.getElementById('buscar_articulo');
+                if (buscar) {
+                    buscar.value = '';
+                }
             }
         });
     } else if (alerta.Alerta === "redireccionar") {

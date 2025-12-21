@@ -53,7 +53,7 @@
                             </a>
                         </li>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>promociones-lista/"> <i class="fas fa-tags fa-fw"></i> &nbsp; Promociones
+                            <a href="<?php echo SERVERURL; ?>promocion-nuevo/"> <i class="fas fa-tags fa-fw"></i> &nbsp; Promociones
                             </a>
                         </li>
                         <li>

@@ -3,25 +3,32 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-/* Usuario de sesión */
-$id_usuario = $_SESSION['id_usuario'] ?? null;
 ?>
 
 <div class="container-fluid">
 
-    <h3 class="text-left">
-        <i class="fas fa-car fa-fw"></i> &nbsp; REGISTRO DE SOLICITUD DE SERVICIO
-    </h3>
+    <div class="container-fluid">
+        <h3 class="text-left">
+            <i class="fas fa-search fa-fw"></i> &nbsp; NUEVA RECEPCION
+        </h3>
+        <ul class="full-box list-unstyled page-nav-tabs">
+            <li>
+                <a class="active" href="<?php echo SERVERURL; ?>recepcionServicio-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVA RECEPCION</a>
+            </li>
+            <li>
+                <a href="<?php echo SERVERURL; ?>recepcionServicio-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR RECEPCION</a>
+            </li>
+        </ul>
+    </div>
 
     <form class="form-neon FormularioAjax"
-        action="<?php echo SERVERURL; ?>ajax/recepcionAjax.php"
+        action="<?php echo SERVERURL; ?>ajax/recepcionservicioAjax.php"
         method="POST"
         data-form="save"
         autocomplete="off">
 
         <!-- ACCIÓN -->
         <input type="hidden" name="accion" value="guardar_recepcion">
-        <input type="hidden" name="id_usuario" value="<?php echo $id_usuario; ?>">
 
         <!-- CLIENTE -->
         <fieldset class="border p-3 mb-3">
@@ -57,8 +64,9 @@ $id_usuario = $_SESSION['id_usuario'] ?? null;
                 </div>
 
                 <div class="col-md-2">
-                    <button type="button" class="btn btn-info btn-block"
-                        onclick="buscarVehiculo()">
+                    <button type="button"
+                        class="btn btn-info btn-block"
+                        onclick="validarClienteVehiculo()">
                         <i class="fas fa-search"></i>
                     </button>
                 </div>
@@ -106,7 +114,9 @@ $id_usuario = $_SESSION['id_usuario'] ?? null;
                 <i class="fas fa-save"></i> &nbsp; Guardar Recepción
             </button>
 
-            <button type="reset" class="btn btn-secondary">
+            <button type="button"
+                class="btn btn-secondary"
+                onclick="limpiarFormularioRecepcion()">
                 <i class="fas fa-undo"></i> &nbsp; Limpiar
             </button>
         </div>
@@ -163,11 +173,11 @@ $id_usuario = $_SESSION['id_usuario'] ?? null;
 
             <div class="modal-body">
 
-                <input type="text" id="buscar_vehiculo"
+                <input type="text"
+                    id="buscar_vehiculo"
                     class="form-control mb-3"
-                    placeholder="Buscar por chapa, marca o modelo"
+                    placeholder="Buscar por placa o modelo"
                     onkeyup="buscarVehiculoAjax()">
-
                 <div id="tabla_vehiculos">
                     <!-- AJAX -->
                 </div>
@@ -178,18 +188,4 @@ $id_usuario = $_SESSION['id_usuario'] ?? null;
     </div>
 </div>
 
-<script>
-    function validarClienteVehiculo() {
-        let idCliente = document.getElementById('id_cliente').value;
-
-        if (!idCliente) {
-            Swal.fire({
-                icon: 'warning',
-                text: 'Debe seleccionar un cliente primero'
-            });
-            return;
-        }
-
-        $('#modalVehiculo').modal('show');
-    }
-</script>
+<?php include_once "./vistas/inc/recepcionservicio.php"; ?>

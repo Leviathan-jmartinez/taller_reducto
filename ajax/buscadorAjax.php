@@ -14,7 +14,8 @@ if (isset($_POST['busqueda_inicial']) || isset($_POST['eliminar_busqueda'])  || 
         "compra" => "factura-buscar",
         "inventario" => "inventario-buscar",
         "remision" => "remision-buscar",
-        "notasCreDe" => "notasCreDe-buscar"
+        "notasCreDe" => "notasCreDe-buscar",
+        "recepcion" => "recepcionServicio-buscar"
     ];
     if (isset($_POST['modulo'])) {
         $modulo = $_POST['modulo'];
