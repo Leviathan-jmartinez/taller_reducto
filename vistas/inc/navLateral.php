@@ -57,11 +57,11 @@
                             </a>
                         </li>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>descuentos-lista/"> <i class="fas fa-tags fa-fw"></i> &nbsp; Descuentos
+                            <a href="<?php echo SERVERURL; ?>descuento-nuevo/"> <i class="fas fa-tags fa-fw"></i> &nbsp; Descuentos
                             </a>
                         </li>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>presupuestos-lista/"> <i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; Presupuestos de Trabajo
+                            <a href="<?php echo SERVERURL; ?>presupuesto-servicio-nuevo"> <i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; Presupuesto de Trabajo
                             </a>
                         </li>
                         <li>

@@ -1,4 +1,5 @@
 <script>
+    const SERVERURL = "<?php echo SERVERURL; ?>";
     /* ================= BUSCAR ARTÍCULOS ================= */
     function buscarArticuloPromo() {
         let txt = document.getElementById('buscar_articulo').value.trim();
@@ -11,7 +12,7 @@
         let datos = new FormData();
         datos.append("buscar_articulo", txt);
 
-        fetch("<?php echo SERVERURL ?>ajax/promocionAjax.php", {
+        fetch(SERVERURL + "ajax/promocionAjax.php", {
                 method: "POST",
                 body: datos
             })
@@ -20,6 +21,7 @@
                 document.getElementById('resultado_articulos').innerHTML = r;
             });
     }
+
 
     /* ================= AGREGAR ARTÍCULO ================= */
     function agregarArticuloPromo(id, descripcion) {
@@ -86,6 +88,4 @@
     }
 
     window.addEventListener('load', restaurarArticulosPromo);
-
-    
 </script>

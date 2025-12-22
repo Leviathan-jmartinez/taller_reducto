@@ -14,9 +14,9 @@ class promocionModelo extends mainModel
             /* Insertar promoción */
             $sql = $pdo->prepare("
                 INSERT INTO promociones
-                (nombre, descripcion, tipo, valor, fecha_inicio, fecha_fin)
+                (nombre, descripcion, tipo, valor, fecha_inicio, fecha_fin, id_usuario_crea)
                 VALUES
-                (:nombre, :descripcion, :tipo, :valor, :inicio, :fin)
+                (:nombre, :descripcion, :tipo, :valor, :inicio, :fin, :usuario)
             ");
 
             $sql->execute([
@@ -25,7 +25,8 @@ class promocionModelo extends mainModel
                 ":tipo"        => $promo['tipo'],
                 ":valor"       => $promo['valor'],
                 ":inicio"      => $promo['fecha_inicio'],
-                ":fin"         => $promo['fecha_fin']
+                ":fin"         => $promo['fecha_fin'],
+                ":usuario" =>   $_SESSION['id_str']
             ]);
 
             $idPromocion = $pdo->lastInsertId();
@@ -95,5 +96,140 @@ class promocionModelo extends mainModel
         $html .= '</ul>';
 
         return $html;
+    }
+
+    protected static function listar_promociones_modelo()
+    {
+        $sql = mainModel::conectar()->prepare("
+        SELECT
+            p.id_promocion,
+            p.nombre,
+            p.tipo,
+            p.valor,
+            p.fecha_inicio,
+            p.fecha_fin,
+            p.estado,
+            CONCAT(u.usu_nombre,' ',u.usu_apellido) AS creado_por
+        FROM promociones p
+        INNER JOIN usuarios u ON u.id_usuario = p.id_usuario_crea
+        ORDER BY p.fecha_creacion DESC");
+
+        $sql->execute();
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+    protected static function cambiar_estado_promocion_modelo($id, $estado)
+    {
+        $sql = mainModel::conectar()->prepare("
+        UPDATE promociones
+        SET estado = :estado,
+            id_usuario_modifica = :usuario,
+            fecha_actualizacion = NOW()
+        WHERE id_promocion = :id");
+
+        $sql->bindParam(":estado", $estado, PDO::PARAM_INT);
+        $sql->bindParam(":usuario", $_SESSION['id_usuario'], PDO::PARAM_INT);
+        $sql->bindParam(":id", $id, PDO::PARAM_INT);
+
+        return $sql->execute();
+    }
+
+    protected static function datos_promocion_modelo($id)
+    {
+        $sql = mainModel::conectar()->prepare("
+        SELECT
+            p.*,
+            CONCAT(u.usu_nombre,' ',u.usu_apellido) AS creado_por,
+            CONCAT(um.usu_nombre,' ',um.usu_apellido) AS modificado_por
+        FROM promociones p
+        INNER JOIN usuarios u ON u.id_usuario = p.id_usuario_crea
+        LEFT JOIN usuarios um ON um.id_usuario = p.id_usuario_modifica
+        WHERE p.id_promocion = :id
+        LIMIT 1");
+
+        $sql->bindParam(":id", $id, PDO::PARAM_INT);
+        $sql->execute();
+
+        return $sql->fetch(PDO::FETCH_ASSOC);
+    }
+
+    protected static function articulos_promocion_modelo($id)
+    {
+        $sql = mainModel::conectar()->prepare("
+        SELECT
+            a.id_articulo,
+            a.desc_articulo
+        FROM promocion_producto pp
+        INNER JOIN articulos a ON a.id_articulo = pp.id_articulo
+        WHERE pp.id_promocion = :id");
+
+        $sql->bindParam(":id", $id, PDO::PARAM_INT);
+        $sql->execute();
+
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    protected static function editar_promocion_modelo($datos, $articulos)
+    {
+        $conexion = mainModel::conectar();
+
+        try {
+            $conexion->beginTransaction();
+
+            /* PROMOCIÓN */
+            $sql = $conexion->prepare("
+               UPDATE promociones SET
+                    nombre = :nombre,
+                    descripcion = :descripcion,
+                    tipo = :tipo,
+                    valor = :valor,
+                    fecha_inicio = :inicio,
+                    fecha_fin = :fin,
+                    estado = :estado,
+                    id_usuario_modifica = :usuario,
+                    fecha_actualizacion = NOW()
+                WHERE id_promocion = :id");
+
+
+            $sql->bindParam(":nombre", $datos['nombre']);
+            $sql->bindParam(":descripcion", $datos['descripcion']);
+            $sql->bindParam(":tipo", $datos['tipo']);
+            $sql->bindParam(":valor", $datos['valor']);
+            $sql->bindParam(":inicio", $datos['fecha_inicio']);
+            $sql->bindParam(":fin", $datos['fecha_fin']);
+            $sql->bindParam(":usuario", $_SESSION['id_usuario'], PDO::PARAM_INT);
+            $sql->bindParam(":id", $datos['id'], PDO::PARAM_INT);
+            $sql->bindParam(":estado", $datos['estado'], PDO::PARAM_INT);
+
+
+            $sql->execute();
+
+            /* ARTÍCULOS */
+            $conexion->prepare("
+            DELETE FROM promocion_producto
+            WHERE id_promocion = :id
+        ")->execute([":id" => $datos['id']]);
+
+            if (!empty($articulos)) {
+                $sqlRel = $conexion->prepare("
+                INSERT INTO promocion_producto (id_promocion, id_articulo)
+                VALUES (:promo, :articulo)
+            ");
+
+                foreach ($articulos as $idArt) {
+                    $sqlRel->execute([
+                        ":promo"    => $datos['id'],
+                        ":articulo" => $idArt
+                    ]);
+                }
+            }
+
+            $conexion->commit();
+            return true;
+        } catch (Exception $e) {
+            $conexion->rollBack();
+            return ["msg" => $e->getMessage()];
+        }
     }
 }
