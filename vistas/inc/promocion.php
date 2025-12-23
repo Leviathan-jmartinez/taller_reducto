@@ -88,4 +88,23 @@
     }
 
     window.addEventListener('load', restaurarArticulosPromo);
+
+
+    document.addEventListener('ajax:limpiar', e => {
+
+        if (e.detail.modulo === 'promociones') {
+
+            // 1. LocalStorage propio
+            localStorage.removeItem('promo_articulos');
+
+            // 2. Lista visual
+            const lista = document.getElementById('articulos_seleccionados');
+            if (lista) lista.innerHTML = '';
+
+            // 3. Buscador
+            const buscar = document.getElementById('buscar_articulo');
+            if (buscar) buscar.value = '';
+        }
+
+    });
 </script>

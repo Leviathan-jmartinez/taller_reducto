@@ -7,6 +7,7 @@
     <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/promocionAjax.php"
         method="POST"
+        data-modulo="promociones"
         data-form="save"
         autocomplete="off">
 

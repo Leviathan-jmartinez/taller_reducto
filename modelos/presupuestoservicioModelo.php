@@ -3,75 +3,6 @@ require_once "mainModel.php";
 
 class presupuestoservicioModelo extends mainModel
 {
-    protected static function guardar_presupuesto_modelo($datos, $detalle)
-    {
-        $pdo = mainModel::conectar();
-
-        try {
-            $pdo->beginTransaction();
-
-            /* CABECERA */
-            $sql = $pdo->prepare("
-            INSERT INTO presupuesto_servicio
-            (id_usuario, fecha, estado, subtotal, total_descuento, total_final, fecha_venc)
-            VALUES
-            (:usuario, CURDATE(), 1, 0, 0, 0, :venc)
-        ");
-
-            $sql->execute([
-                ":usuario" => $datos['id_usuario'],
-                ":venc"    => $datos['fecha_venc']
-            ]);
-
-            $idPresupuesto = $pdo->lastInsertId();
-
-            $subtotal = 0;
-
-            /* DETALLE */
-            $sqlDet = $pdo->prepare("
-            INSERT INTO presupuesto_detalleservicio
-            (idpresupuesto_servicio, id_articulo, cantidad, preciouni, subtotal)
-            VALUES
-            (:pres, :art, :cant, :precio, :sub)
-        ");
-
-            foreach ($detalle as $d) {
-                $subLinea = $d['cantidad'] * $d['precio'];
-                $subtotal += $subLinea;
-
-                $sqlDet->execute([
-                    ":pres"   => $idPresupuesto,
-                    ":art"    => $d['id_articulo'],
-                    ":cant"   => $d['cantidad'],
-                    ":precio" => $d['precio'],
-                    ":sub"    => $subLinea
-                ]);
-            }
-
-            /* ACTUALIZAR TOTALES */
-            $sqlUpd = $pdo->prepare("
-            UPDATE presupuesto_servicio
-            SET subtotal = :sub,
-                total_descuento = 0,
-                total_final = :sub
-            WHERE idpresupuesto_servicio = :id
-        ");
-
-            $sqlUpd->execute([
-                ":sub" => $subtotal,
-                ":id"  => $idPresupuesto
-            ]);
-
-            $pdo->commit();
-            return $idPresupuesto;
-        } catch (Exception $e) {
-            $pdo->rollBack();
-            return [
-                "error" => $e->getMessage()
-            ];
-        }
-    }
-
     protected static function datos_recepcion_modelo($idrecepcion)
     {
         $sql = mainModel::conectar()->prepare("
@@ -141,5 +72,252 @@ class presupuestoservicioModelo extends mainModel
         $html .= '</table>';
 
         return $html;
+    }
+
+    protected static function buscar_servicios_modelo($txt)
+    {
+        $txt = "%$txt%";
+
+        $sql = mainModel::conectar()->prepare("
+        SELECT
+            id_articulo,
+            desc_articulo,
+            codigo,
+            precio_venta
+        FROM articulos
+        WHERE estado = 1
+          AND (desc_articulo LIKE :b OR codigo LIKE :b)
+        ORDER BY desc_articulo
+        LIMIT 20
+    ");
+
+        $sql->bindParam(':b', $txt);
+        $sql->execute();
+
+        $datos = $sql->fetchAll(PDO::FETCH_ASSOC);
+
+        if (!$datos) {
+            return '<div class="alert alert-warning text-center">
+                    No se encontraron servicios
+                </div>';
+        }
+
+        $html = '<ul class="list-group">';
+        foreach ($datos as $d) {
+
+            $desc = addslashes($d['desc_articulo']);
+            $precio = (int)$d['precio_venta'];
+
+            $html .= "
+        <li class='list-group-item d-flex justify-content-between align-items-center'>
+            <div>
+                <strong>{$d['codigo']}</strong> - {$d['desc_articulo']}
+                <br>
+                <small class='text-muted'>Precio: Gs. " . number_format($precio, 0, ',', '.') . "</small>
+            </div>
+
+            <button type='button'
+                    class='btn btn-success btn-sm'
+                    onclick=\"agregarServicio({$d['id_articulo']}, '{$desc}', {$precio})\">
+                <i class='fas fa-plus'></i>
+            </button>
+        </li>";
+        }
+        $html .= '</ul>';
+
+        return $html;
+    }
+
+    protected static function promo_articulo_modelo($id)
+    {
+        $sql = mainModel::conectar()->prepare("
+        SELECT
+            p.id_promocion,
+            p.nombre,
+            p.tipo,
+            p.valor
+        FROM promociones p
+        INNER JOIN promocion_producto pp
+            ON pp.id_promocion = p.id_promocion
+        WHERE pp.id_articulo = :id
+          AND p.estado = 1
+          AND CURDATE() BETWEEN p.fecha_inicio AND p.fecha_fin
+        LIMIT 1
+    ");
+
+        $sql->bindParam(':id', $id, PDO::PARAM_INT);
+        $sql->execute();
+
+        $promo = $sql->fetch(PDO::FETCH_ASSOC);
+
+        return json_encode($promo ?: []);
+    }
+
+    protected static function descuentos_cliente_modelo($idCliente)
+    {
+        $sql = mainModel::conectar()->prepare("
+        SELECT
+            d.id_descuento,
+            d.nombre,
+            d.tipo,
+            d.valor,
+            d.es_reutilizable
+        FROM descuentos d
+        INNER JOIN descuento_cliente dc
+            ON dc.id_descuento = d.id_descuento
+        WHERE dc.id_cliente = :cliente
+          AND d.estado = 1");
+
+        $sql->bindParam(':cliente', $idCliente, PDO::PARAM_INT);
+        $sql->execute();
+
+        return json_encode($sql->fetchAll(PDO::FETCH_ASSOC));
+    }
+
+    protected static function guardar_presupuesto_modelo($d)
+    {
+        $pdo = mainModel::conectar();
+
+        try {
+            $pdo->beginTransaction();
+
+            /* ================= CABECERA ================= */
+            $sql = $pdo->prepare("
+            INSERT INTO presupuesto_servicio
+            (id_usuario, fecha, estado, fecha_venc,
+             subtotal, total_descuento, total_final, idrecepcion)
+            VALUES
+            (:usuario, CURDATE(), 1, :fecha_venc,
+             :subtotal, :total_desc, :total_final, :idrecepcion)
+        ");
+
+            $sql->execute([
+                ':usuario'     => $d['usuario'],
+                ':fecha_venc'  => $d['fecha_venc'],
+                ':subtotal'    => $d['subtotal'],
+                ':total_desc'  => $d['total_descuento'],
+                ':total_final' => $d['total_final'],
+                ':idrecepcion' => $d['idrecepcion']
+            ]);
+
+            $idPresupuesto = $pdo->lastInsertId();
+
+            /* ================= ACTUALIZAR ESTADO RECEPCIÓN ================= */
+            if (!empty($d['idrecepcion'])) {
+
+                $sqlUpd = $pdo->prepare("
+                UPDATE recepcion_servicio
+                SET estado = 2,
+                    fecha_actualizacion = NOW()
+                WHERE idrecepcion = :id ");
+
+                $sqlUpd->execute([
+                    ':id' => $d['idrecepcion']
+                ]);
+            }
+
+
+            /* ================= DETALLE ================= */
+            $sqlDet = $pdo->prepare("
+            INSERT INTO presupuesto_detalleservicio
+            (id_articulo, idpresupuesto_servicio, cantidad, preciouni, subtotal)
+            VALUES
+            (:articulo, :presupuesto, :cantidad, :precio, :subtotal)
+        ");
+
+            foreach ($d['detalle'] as $it) {
+
+                $sqlDet->execute([
+                    ':articulo'    => $it['id_articulo'],
+                    ':presupuesto' => $idPresupuesto,
+                    ':cantidad'    => $it['cantidad'],
+                    ':precio'      => $it['precio_final'], // precio ya con promo
+                    ':subtotal'    => $it['subtotal']
+                ]);
+            }
+
+            /* ================= PROMOCIONES ================= */
+            /* ================= PROMOCIONES ================= */
+            $sqlPromo = $pdo->prepare("
+            INSERT INTO presupuesto_promocion
+            (idpresupuesto_servicio, id_promocion, monto_aplicado)
+            VALUES
+            (:presupuesto, :promocion, :monto)");
+
+            foreach ($d['detalle'] as $it) {
+
+                if (
+                    isset($it['promocion']) &&
+                    is_array($it['promocion']) &&
+                    !empty($it['promocion']['id_promocion'])
+                ) {
+
+                    $precioBase  = $it['precio_base'];
+                    $precioFinal = $it['precio_final'];
+                    $cantidad    = $it['cantidad'];
+
+                    // 🔥 monto real aplicado por la promo
+                    $montoPromo = ($precioBase - $precioFinal) * $cantidad;
+
+                    if ($montoPromo > 0) {
+                        $sqlPromo->execute([
+                            ':presupuesto' => $idPresupuesto,
+                            ':promocion'   => $it['promocion']['id_promocion'],
+                            ':monto'       => $montoPromo
+                        ]);
+                    }
+                }
+            }
+
+
+            /* ================= DESCUENTOS CLIENTE ================= */
+            if (!empty($d['descuentos'])) {
+
+                $sqlDesc = $pdo->prepare("
+                INSERT INTO presupuesto_descuento
+                (id_presupuesto, id_descuento, tipo, valor,
+                 monto_aplicado, motivo, id_usuario)
+                VALUES
+                (:presupuesto, :descuento, :tipo, :valor,
+                 :monto, :motivo, :usuario)
+            ");
+
+                foreach ($d['descuentos'] as $des) {
+
+                    $sqlDesc->execute([
+                        ':presupuesto' => $idPresupuesto,
+                        ':descuento'   => $des['id_descuento'],
+                        ':tipo'        => $des['tipo'],
+                        ':valor'       => $des['valor'],
+                        ':monto'       => $des['monto'],
+                        ':motivo'      => $des['nombre'] ?? null,
+                        ':usuario'     => $d['usuario']
+                    ]);
+                }
+            }
+
+            $pdo->commit();
+            return true;
+        } catch (Exception $e) {
+
+            $pdo->rollBack();
+            return [
+                'error' => true,
+                'msg'   => $e->getMessage()
+            ];
+        }
+    }
+
+    protected static function actualizar_estado_recepcion_modelo($idrecepcion)
+    {
+        $sql = mainModel::conectar()->prepare("
+        UPDATE recepcion_servicio
+        SET estado = 2,
+            fecha_actualizacion = NOW()
+        WHERE idrecepcion = :id
+    ");
+
+        $sql->bindParam(':id', $idrecepcion, PDO::PARAM_INT);
+        return $sql->execute();
     }
 }

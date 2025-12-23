@@ -3,7 +3,7 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-$usuario_nombre = $_SESSION['nombre_str'] .' '. $_SESSION['apellido_str'] ;
+$usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
 ?>
 
 <div class="container-fluid">
@@ -16,31 +16,37 @@ $usuario_nombre = $_SESSION['nombre_str'] .' '. $_SESSION['apellido_str'] ;
     <form class="form-neon FormularioAjax"
         action="<?= SERVERURL; ?>ajax/presupuestoServicioAjax.php"
         method="POST"
+        data-modulo="presupuesto"
         data-form="save"
         autocomplete="off">
 
-        <input type="hidden" name="accion" value="guardar_presupuesto_servicio">
-        <input type="hidden" name="id_usuario" value="<?= $id_usuario; ?>">
+        <input type="hidden" name="guardar_presupuesto" value="1">
+        <input type="hidden" name="idrecepcion" id="idrecepcion">
+        <input type="hidden" name="detalle_json" id="detalle_json">
+        <input type="hidden" name="descuentos_json" id="descuentos_json">
+        <input type="hidden" name="subtotal_servicios" id="inp_subtotal_servicios">
+        <input type="hidden" name="total_descuento" id="inp_total_descuento">
+        <input type="hidden" name="total_final" id="inp_total_final">
+
 
         <!-- ================= RECEPCIÓN ================= -->
         <fieldset class="border p-3 mb-3">
             <legend class="w-auto px-2">Recepción</legend>
 
-            <input type="hidden" name="idrecepcion" id="idrecepcion">
             <input type="hidden" name="id_cliente" id="id_cliente">
             <input type="hidden" name="id_vehiculo" id="id_vehiculo">
 
             <div class="row">
                 <div class="col-md-6">
                     <label>Cliente</label>
-                    <input type="text" id="cliente_txt"
+                    <input type="text" id="cliente"
                         class="form-control" readonly
                         placeholder="Seleccione una recepción">
                 </div>
 
                 <div class="col-md-6">
                     <label>Vehículo</label>
-                    <input type="text" id="vehiculo_txt"
+                    <input type="text" id="vehiculo"
                         class="form-control" readonly>
                 </div>
             </div>
@@ -48,13 +54,13 @@ $usuario_nombre = $_SESSION['nombre_str'] .' '. $_SESSION['apellido_str'] ;
             <div class="row mt-2">
                 <div class="col-md-4">
                     <label>Kilometraje</label>
-                    <input type="text" id="kilometraje_txt"
+                    <input type="text" id="kilometraje"
                         class="form-control" readonly>
                 </div>
 
                 <div class="col-md-8">
                     <label>Observación</label>
-                    <input type="text" id="observacion_txt"
+                    <input type="text" id="observacion"
                         class="form-control" readonly>
                 </div>
             </div>
@@ -66,7 +72,7 @@ $usuario_nombre = $_SESSION['nombre_str'] .' '. $_SESSION['apellido_str'] ;
                 </button>
 
                 <button type="button" class="btn btn-warning"
-                    onclick="limpiarRecepcion()">
+                    onclick="limpiarFormularioPresupuesto()">
                     <i class="fas fa-undo"></i> Limpiar
                 </button>
             </div>
@@ -114,14 +120,15 @@ $usuario_nombre = $_SESSION['nombre_str'] .' '. $_SESSION['apellido_str'] ;
             <div id="resultado_servicios"></div>
 
             <div class="table-responsive mt-3">
-                <table class="table table-bordered table-sm" id="tabla_detalle">
+                <table class="table table-dark table-sm" id="tabla_detalle">
                     <thead class="text-center">
                         <tr>
                             <th>Servicio</th>
                             <th width="10%">Cant.</th>
-                            <th width="15%">Precio</th>
+                            <th width="15%">Precio Unitario</th>
                             <th width="15%">Subtotal</th>
-                            <th width="5%"></th>
+                            <th width="15%">Promoción</th>
+                            <th width="15%"></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -137,7 +144,7 @@ $usuario_nombre = $_SESSION['nombre_str'] .' '. $_SESSION['apellido_str'] ;
 
             <div class="text-right">
                 <strong>Subtotal servicios:</strong>
-                <span id="subtotal_servicios">Gs. 0</span>
+                <span id="txt_subtotal_servicios">Gs. 0</span>
             </div>
         </fieldset>
 
@@ -161,11 +168,11 @@ $usuario_nombre = $_SESSION['nombre_str'] .' '. $_SESSION['apellido_str'] ;
                     <strong id="total_subtotal">Gs. 0</strong>
                 </p>
                 <p>Descuentos:
-                    <strong id="total_descuento">Gs. 0</strong>
+                    <strong id="txt_total_descuento">Gs. 0</strong>
                 </p>
                 <h4>
                     TOTAL FINAL:
-                    <strong id="total_final">Gs. 0</strong>
+                    <strong id="txt_total_final">Gs. 0</strong>
                 </h4>
             </div>
         </fieldset>

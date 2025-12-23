@@ -76,6 +76,7 @@ function alertasAjax(alerta, form = null) {
             }
         });
     } else if (alerta.Alerta === "limpiar") {
+
         Swal.fire({
             title: alerta.Titulo,
             text: alerta.Texto,
@@ -84,24 +85,15 @@ function alertasAjax(alerta, form = null) {
         }).then((result) => {
             if (result.value) {
 
-                // 1. Resetear SOLO el formulario enviado
                 if (form) {
                     form.reset();
-                }
 
-                // 2. Limpiar localStorage de promociones
-                localStorage.removeItem('promo_articulos');
-
-                // 3. Limpiar lista visual de artículos
-                const lista = document.getElementById('articulos_seleccionados');
-                if (lista) {
-                    lista.innerHTML = '';
-                }
-
-                // 4. Limpiar input de búsqueda
-                const buscar = document.getElementById('buscar_articulo');
-                if (buscar) {
-                    buscar.value = '';
+                    // 🔔 aviso genérico
+                    document.dispatchEvent(new CustomEvent('ajax:limpiar', {
+                        detail: {
+                            modulo: form.dataset.modulo || null
+                        }
+                    }));
                 }
             }
         });
@@ -131,6 +123,9 @@ function alertasAjax(alerta, form = null) {
                     .then(resp => alertasAjax(resp));
             }
         });
+    } else if (alerta.Alerta === "limpiar") {
+        localStorage.removeItem('presupuesto_servicio_tmp');
+        document.querySelector(".FormularioAjax").reset();
     }
 
 }
