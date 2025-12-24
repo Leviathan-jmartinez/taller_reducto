@@ -314,10 +314,63 @@ class presupuestoservicioModelo extends mainModel
         UPDATE recepcion_servicio
         SET estado = 2,
             fecha_actualizacion = NOW()
-        WHERE idrecepcion = :id
-    ");
+        WHERE idrecepcion = :id");
 
         $sql->bindParam(':id', $idrecepcion, PDO::PARAM_INT);
         return $sql->execute();
+    }
+
+    protected static function anular_estado_recepcion_modelo($idrecepcion)
+    {
+        $sql = mainModel::conectar()->prepare("
+        UPDATE recepcion_servicio
+        SET estado = 0,
+            fecha_actualizacion = NOW()
+        WHERE idrecepcion = :id");
+
+        $sql->bindParam(':id', $idrecepcion, PDO::PARAM_INT);
+        return $sql->execute();
+    }
+
+    protected static function listar_presupuestos_modelo()
+    {
+        $sql = mainModel::conectar()->prepare("
+            SELECT
+                p.idpresupuesto_servicio,
+                p.fecha,
+                p.fecha_venc,
+                p.subtotal,
+                p.total_descuento,
+                p.total_final,
+                p.estado,
+                CONCAT(c.nombre_cliente,' ',c.apellido_cliente) AS cliente,
+                CONCAT(ma.mod_descri,' - ',v.placa) AS vehiculo,
+                CONCAT(u.usu_nombre,' ',u.usu_apellido) AS creado_por
+            FROM presupuesto_servicio p
+            LEFT JOIN recepcion_servicio r ON r.idrecepcion = p.idrecepcion
+            LEFT JOIN clientes c ON c.id_cliente = r.id_cliente
+            LEFT JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
+            LEFT JOIN modelo_auto ma ON ma.id_modeloauto = v.id_modeloauto
+            INNER JOIN usuarios u ON u.id_usuario = p.id_usuario
+            ORDER BY p.idpresupuesto_servicio DESC
+        ");
+
+        $sql->execute();
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /* ================= APROBAR ================= */
+    protected static function aprobar_presupuesto_modelo($id)
+    {
+        $sql = mainModel::conectar()->prepare("
+            UPDATE presupuesto_servicio
+            SET estado = 2
+            WHERE idpresupuesto_servicio = :id
+              AND estado = 1
+        ");
+
+        return $sql->execute([
+            ':id' => $id
+        ]);
     }
 }

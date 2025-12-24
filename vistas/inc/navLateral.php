@@ -65,7 +65,7 @@
                             </a>
                         </li>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>ordentrabajo-lista/"> <i class="fas fa-clipboard-check fa-fw"></i> &nbsp; Ordenes de Trabajo
+                            <a href="<?php echo SERVERURL; ?>ordenTrabajo/"> <i class="fas fa-clipboard-check fa-fw"></i> &nbsp; Ordenes de Trabajo
                             </a>
                         </li>
                         <li>
