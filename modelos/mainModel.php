@@ -1,9 +1,5 @@
 <?php
-if ($peticionAjax) {
-    require_once "../config/SERVER.php";
-} else {
-    require_once "./config/SERVER.php";
-}
+require_once __DIR__ . "/../config/SERVER.php";
 
 class mainModel
 {
@@ -137,15 +133,15 @@ class mainModel
                 break;
             }
             if ($pagina == $i) {
-                $tabla.='<li class="page-item">
+                $tabla .= '<li class="page-item">
                                 <a class="page-link active" href="' . $url . $i . '/">
-                                    '.$i.'
+                                    ' . $i . '
                                 </a>
                         </li>';
             } else {
-                $tabla.='<li class="page-item">
+                $tabla .= '<li class="page-item">
                                 <a class="page-link" href="' . $url . $i . '/">
-                                    '.$i.'
+                                    ' . $i . '
                                 </a>
                         </li>';
             }

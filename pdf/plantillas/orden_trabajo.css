@@ -1,0 +1,101 @@
+body {
+    font-family: DejaVu Sans, sans-serif;
+    font-size: 11px;
+    color: #333;
+}
+
+.header {
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.logo {
+    width: 60%;
+}
+
+.doc {
+    width: 40%;
+    text-align: right;
+}
+
+.doc-box {
+    width: 100%;
+    border: 1px solid #ccc;
+    font-size: 10px;
+}
+
+.doc-box td {
+    padding: 3px;
+}
+
+.box {
+    border: 1px solid #ccc;
+    padding: 8px;
+    margin-bottom: 10px;
+}
+
+.estado {
+    margin-top: 5px;
+    background: #2f7d63;
+    color: #fff;
+    font-weight: bold;
+    text-align: center;
+    padding: 5px;
+}
+
+.detalle {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.detalle th {
+    background: #1f3c5b;
+    color: white;
+    padding: 6px;
+}
+
+.detalle td {
+    border: 1px solid #ddd;
+    padding: 6px;
+}
+
+.promo {
+    color: green;
+    font-size: 9px;
+}
+
+.right {
+    text-align: right;
+}
+
+.totales {
+    width: 40%;
+    float: right;
+    margin-top: 10px;
+}
+
+.totales td {
+    padding: 6px;
+}
+
+.totales .final {
+    background: #e8f3ef;
+    font-weight: bold;
+}
+
+.firma {
+    margin-top: 40px;
+    text-align: center;
+}
+
+.linea {
+    margin-top: 20px;
+    border-top: 1px dashed #666;
+}
+
+.footer {
+    margin-top: 30px;
+    font-size: 9px;
+    text-align: center;
+}

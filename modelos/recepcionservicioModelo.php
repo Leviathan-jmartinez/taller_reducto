@@ -191,8 +191,7 @@ class recepcionservicioModelo extends mainModel
         SET estado = 0,
             fecha_actualizacion = NOW()
         WHERE idrecepcion = :id
-          AND estado = 1
-    ");
+          AND estado = 1");
 
         $sql->bindParam(":id", $id, PDO::PARAM_INT);
 

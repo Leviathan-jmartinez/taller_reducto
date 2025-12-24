@@ -1,8 +1,20 @@
 <?php
-$datos = $insOT->detalle_ot_controlador($pagina[1]);
+if (!isset($insOT)) {
+    require_once "./controladores/ordenTrabajoControlador.php";
+    $insOT = new ordenTrabajoControlador();
+}
+
+$paginaActual = isset($pagina[1]) ? $pagina[1] : null;
+if (!$paginaActual) {
+    echo '<div class="alert alert-danger">OT no válida</div>';
+    exit;
+}
+
+$datos = $insOT->detalle_ot_controlador($paginaActual);
 $ot = $datos['ot'];
 $detalle = $datos['detalle'];
 ?>
+
 
 <h3>ORDEN DE TRABAJO #<?= $ot['idorden_trabajo'] ?></h3>
 

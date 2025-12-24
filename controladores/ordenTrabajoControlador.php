@@ -1,9 +1,5 @@
 <?php
-if ($peticionAjax) {
-    require_once "../modelos/ordenTrabajoModelo.php";
-} else {
-    require_once "./modelos/ordenTrabajoModelo.php";
-}
+require_once __DIR__ . "/../modelos/ordenTrabajoModelo.php";
 
 class ordenTrabajoControlador extends ordenTrabajoModelo
 {
@@ -134,10 +130,17 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
                 <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
                 <td>' . $estado . '</td>
                 <td>
-                    <a href="' . SERVERURL . 'ordenTrabajo-detalle/' . mainModel::encryption($rows['idorden_trabajo']) . '/" 
-                       class="btn btn-info btn-sm">
-                        <i class="fas fa-eye"></i>
-                    </a>
+                <button class="btn btn-primary btn-sm"
+                    onclick="abrirModalTecnico(\'' . mainModel::encryption($rows['idorden_trabajo']) . '\')"
+                    title="Asignar técnico">
+                    <i class="fas fa-user-cog"></i>
+                </button>
+                <a href="' . SERVERURL . 'pdf/ordenTrabajo.php?id=' . mainModel::encryption($rows['idorden_trabajo']) . '"
+                    target="_blank"
+                    class="btn btn-info btn-sm"
+                    title="Imprimir OT">
+                        <i class="fas fa-print"></i>
+                </a>
                 </td>
             </tr>';
 
@@ -181,5 +184,31 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
             'Texto' => 'La OT pasó a EN PROCESO',
             'Tipo' => 'success'
         ]);
+    }
+    public function listar_tecnicos_controlador()
+    {
+        return ordenTrabajoModelo::listar_tecnicos_modelo();
+    }
+
+    public function obtener_ot_pdf_controlador($idOT)
+    {
+        return ordenTrabajoModelo::obtener_ot_modelo($idOT);
+    }
+
+    public function obtener_detalle_ot_pdf_controlador($idOT)
+    {
+        return ordenTrabajoModelo::obtener_detalle_ot_modelo($idOT);
+    }
+
+    public function datos_ot_controlador($idOT)
+    {
+        return [
+            'cabecera' => ordenTrabajoModelo::obtener_ot_completa($idOT),
+            'detalle'  => ordenTrabajoModelo::obtener_detalle_ot($idOT)
+        ];
+    }
+    public static function decrypt($valor)
+    {
+        return mainModel::decryption($valor);
     }
 }

@@ -227,4 +227,87 @@ class ordenTrabajoModelo extends mainModel
             ':ot' => $ot
         ]);
     }
+
+    protected static function obtener_ot_completa($idOT)
+    {
+        $sql = mainModel::conectar()->prepare("
+        SELECT
+            ot.idorden_trabajo,
+            ot.fecha_inicio,
+            ot.fecha_fin,
+            ot.estado,
+            ot.observacion,
+
+            ps.subtotal,
+            ps.total_descuento,
+            ps.total_final,
+
+            r.kilometraje,
+
+            c.nombre_cliente,
+            c.apellido_cliente,
+            c.celular_cliente,
+            c.direccion_cliente,
+
+            v.placa,
+            ma.mod_descri AS modelo,
+
+            e.nombre AS tecnico_nombre,
+            e.apellido AS tecnico_apellido
+
+        FROM orden_trabajo ot
+
+        INNER JOIN presupuesto_servicio ps 
+            ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+
+        INNER JOIN recepcion_servicio r 
+            ON r.idrecepcion = ot.idrecepcion
+
+        INNER JOIN clientes c 
+            ON c.id_cliente = r.id_cliente
+
+        INNER JOIN vehiculos v 
+            ON v.id_vehiculo = r.id_vehiculo
+
+        INNER JOIN modelo_auto ma 
+            ON ma.id_modeloauto = v.id_modeloauto
+
+        LEFT JOIN equipo_trabajo et 
+            ON et.idtrabajos = ot.idtrabajos
+
+        LEFT JOIN empleados e 
+            ON e.idempleados = et.idempleados
+
+        WHERE ot.idorden_trabajo = :id
+        LIMIT 1
+    ");
+
+        $sql->bindParam(":id", $idOT, PDO::PARAM_INT);
+        $sql->execute();
+
+        return $sql->fetch(PDO::FETCH_ASSOC);
+    }
+
+
+    protected static function obtener_detalle_ot($idOT)
+    {
+        $sql = mainModel::conectar()->prepare("
+        SELECT 
+            a.desc_articulo,
+            d.cantidad,
+            d.precio_unitario,
+            d.subtotal,
+            p.nombre AS promocion
+        FROM orden_trabajo_detalle d
+        INNER JOIN articulos a ON a.id_articulo = d.id_articulo
+        LEFT JOIN presupuesto_promocion pp 
+            ON pp.idpresupuesto_servicio = d.idorden_trabajo
+        LEFT JOIN promociones p 
+            ON p.id_promocion = pp.id_promocion
+        WHERE d.idorden_trabajo = :id
+    ");
+        $sql->bindParam(":id", $idOT);
+        $sql->execute();
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
