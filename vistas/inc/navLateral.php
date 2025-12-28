@@ -65,15 +65,15 @@
                             </a>
                         </li>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>ordenTrabajo/"> <i class="fas fa-clipboard-check fa-fw"></i> &nbsp; Ordenes de Trabajo
+                            <a href="<?php echo SERVERURL; ?>ordenTrabajo-nuevo/"> <i class="fas fa-clipboard-check fa-fw"></i> &nbsp; Ordenes de Trabajo
                             </a>
                         </li>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>regservicios-lista/"> <i class="fas fa-cogs fa-fw"></i> &nbsp; Registro de Servicios
+                            <a href="<?php echo SERVERURL; ?>registro-servicio-nuevo/"> <i class="fas fa-cogs fa-fw"></i> &nbsp; Registro de Servicios
                             </a>
                         </li>
                         <li>
-                            <a href="<?php echo SERVERURL; ?>reclamos-lista/"> <i class="fas fa-exclamation-circle fa-fw"></i> &nbsp; Reclamos
+                            <a href="<?php echo SERVERURL; ?>reclamo-servicio-nuevo/"> <i class="fas fa-exclamation-circle fa-fw"></i> &nbsp; Reclamos
                             </a>
                         </li>
                     </ul>

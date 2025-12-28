@@ -81,7 +81,7 @@ class ordenTrabajoModelo extends mainModel
             /* ACTUALIZAR PRESUPUESTO → OT GENERADA */
             $pdo->prepare("
                 UPDATE presupuesto_servicio
-                SET estado = 4
+                SET estado = 3
                 WHERE idpresupuesto_servicio = :id
             ")->execute([
                 ':id' => $d['idpresupuesto']
@@ -177,8 +177,7 @@ class ordenTrabajoModelo extends mainModel
         LEFT JOIN equipo_trabajo et ON et.idtrabajos = ot.idtrabajos
         LEFT JOIN empleados e ON e.idempleados = et.idempleados
         WHERE ot.idorden_trabajo = :id
-        LIMIT 1
-    ");
+        LIMIT 1");
         $sql->bindParam(":id", $id);
         $sql->execute();
         return $sql->fetch(PDO::FETCH_ASSOC);
@@ -194,23 +193,21 @@ class ordenTrabajoModelo extends mainModel
             a.desc_articulo
         FROM orden_trabajo_detalle d
         INNER JOIN articulos a ON a.id_articulo = d.id_articulo
-        WHERE d.idorden_trabajo = :id
-    ");
+        WHERE d.idorden_trabajo = :id");
         $sql->bindParam(":id", $id);
         $sql->execute();
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
+
     protected static function listar_tecnicos_modelo()
     {
         $sql = mainModel::conectar()->query("
         SELECT
             et.idtrabajos,
-            e.nombre,
-            e.apellido
+            CONCAT(e.nombre, ' ', e.apellido) AS tecnico
         FROM equipo_trabajo et
         INNER JOIN empleados e ON e.idempleados = et.idempleados
-        WHERE et.estado = 1
-    ");
+        WHERE et.estado = 1 ");
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -220,8 +217,7 @@ class ordenTrabajoModelo extends mainModel
         UPDATE orden_trabajo
         SET idtrabajos = :t,
             estado = 2
-        WHERE idorden_trabajo = :ot
-    ");
+        WHERE idorden_trabajo = :ot");
         return $sql->execute([
             ':t' => $tecnico,
             ':ot' => $ot
@@ -279,15 +275,13 @@ class ordenTrabajoModelo extends mainModel
             ON e.idempleados = et.idempleados
 
         WHERE ot.idorden_trabajo = :id
-        LIMIT 1
-    ");
+        LIMIT 1");
 
         $sql->bindParam(":id", $idOT, PDO::PARAM_INT);
         $sql->execute();
 
         return $sql->fetch(PDO::FETCH_ASSOC);
     }
-
 
     protected static function obtener_detalle_ot($idOT)
     {
@@ -304,10 +298,132 @@ class ordenTrabajoModelo extends mainModel
             ON pp.idpresupuesto_servicio = d.idorden_trabajo
         LEFT JOIN promociones p 
             ON p.id_promocion = pp.id_promocion
-        WHERE d.idorden_trabajo = :id
-    ");
+        WHERE d.idorden_trabajo = :id");
         $sql->bindParam(":id", $idOT);
         $sql->execute();
         return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    protected static function crear_ot_modelo2($datos)
+    {
+        $pdo = self::conectar();
+
+        try {
+            $pdo->beginTransaction();
+
+            /* VALIDAR OT EXISTENTE */
+            $val = $pdo->prepare("
+                SELECT idorden_trabajo
+                FROM orden_trabajo
+                WHERE idpresupuesto_servicio = ?
+            ");
+            $val->execute([$datos['idpresupuesto']]);
+
+            if ($val->rowCount() > 0) {
+                return ['msg' => 'Este presupuesto ya tiene una OT'];
+            }
+
+            /* OBTENER RECEPCION DESDE PRESUPUESTO (SEGURIDAD) */
+            $qRec = $pdo->prepare("
+                SELECT idrecepcion
+                FROM presupuesto_servicio
+                WHERE idpresupuesto_servicio = ?
+            ");
+            $qRec->execute([$datos['idpresupuesto']]);
+            $rec = $qRec->fetch(PDO::FETCH_ASSOC);
+
+            if (!$rec) {
+                return ['msg' => 'Presupuesto no válido'];
+            }
+
+            /* CABECERA OT */
+            $cab = $pdo->prepare("
+                INSERT INTO orden_trabajo
+                (idpresupuesto_servicio, idrecepcion, id_usuario, idtrabajos, observacion, estado)
+                VALUES (?, ?, ?, ?, ?, 2)
+            ");
+            $cab->execute([
+                $datos['idpresupuesto'],
+                $rec['idrecepcion'],
+                $datos['idusuario'],
+                $datos['idtrabajos'],
+                $datos['observacion']
+            ]);
+
+            $idOT = $pdo->lastInsertId();
+
+            /* DETALLE OT */
+            $det = $pdo->prepare("
+                INSERT INTO orden_trabajo_detalle
+                (idorden_trabajo, id_articulo, cantidad, precio_unitario, subtotal)
+                SELECT ?, id_articulo, cantidad, preciouni, subtotal
+                FROM presupuesto_detalleservicio
+                WHERE idpresupuesto_servicio = ?
+            ");
+            $det->execute([$idOT, $datos['idpresupuesto']]);
+
+            /* ACTUALIZAR ESTADO PRESUPUESTO */
+            $upd = $pdo->prepare("
+                UPDATE presupuesto_servicio
+                SET estado = 3
+                WHERE idpresupuesto_servicio = ?
+            ");
+            $upd->execute([$datos['idpresupuesto']]);
+
+            $pdo->commit();
+            return true;
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            return ['msg' => $e->getMessage()];
+        }
+    }
+
+    protected static function anular_ot_modelo($idOT, $usuario)
+    {
+        $pdo = self::conectar();
+
+        try {
+            $pdo->beginTransaction();
+
+            $q = $pdo->prepare("
+                SELECT estado, idpresupuesto_servicio
+                FROM orden_trabajo
+                WHERE idorden_trabajo = ?
+            ");
+            $q->execute([$idOT]);
+            $ot = $q->fetch(PDO::FETCH_ASSOC);
+
+            if (!$ot) {
+                return ['msg' => 'OT no existe'];
+            }
+
+            if (!in_array($ot['estado'], [1, 2])) {
+                return ['msg' => 'No se puede anular esta OT'];
+            }
+
+            // Anular OT
+            $upd = $pdo->prepare("
+                UPDATE orden_trabajo
+                SET estado = 0,
+                    updated = NOW(),
+                    updatedby = ?
+                WHERE idorden_trabajo = ?
+            ");
+            $upd->execute([$usuario, $idOT]);
+
+            // Volver presupuesto a aprobado
+            $updPres = $pdo->prepare("
+                UPDATE presupuesto_servicio
+                SET estado = 2
+                WHERE idpresupuesto_servicio = ?
+            ");
+            $updPres->execute([$ot['idpresupuesto_servicio']]);
+
+            $pdo->commit();
+            return true;
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            return ['msg' => $e->getMessage()];
+        }
     }
 }

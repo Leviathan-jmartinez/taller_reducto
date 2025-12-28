@@ -43,7 +43,7 @@
 
                     <label>Técnico</label>
                     <select name="idtrabajos"
-                        id="select_tecnico"
+                        id="idtrabajos"
                         class="form-control"
                         required>
                         <option value="">Seleccione técnico</option>
@@ -63,34 +63,4 @@
     </div>
 </div>
 
-
-<script>
-    function abrirModalTecnico(idOT) {
-
-        document.getElementById('modal_id_ot').value = idOT;
-        document.getElementById('select_tecnico').innerHTML =
-            '<option value="">Cargando...</option>';
-
-        fetch("<?= SERVERURL ?>ajax/ordenTrabajoAjax.php", {
-                method: "POST",
-                body: new URLSearchParams({
-                    accion: "listar_tecnicos"
-                })
-            })
-            .then(r => r.json())
-            .then(data => {
-
-                let html = '<option value="">Seleccione técnico</option>';
-
-                data.forEach(t => {
-                    html += `
-                <option value="${t.idtrabajos}">
-                    ${t.nombre} ${t.apellido}
-                </option>`;
-                });
-
-                document.getElementById('select_tecnico').innerHTML = html;
-                $('#modalAsignarTecnico').modal('show');
-            });
-    }
-</script>
+<?php include_once "./vistas/inc/ordenTrabajoJS.php";?>

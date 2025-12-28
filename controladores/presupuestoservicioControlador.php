@@ -170,10 +170,10 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
                         $estadoBadge = '<span class="badge badge-success">Aprobado</span>';
                         break;
                     case 3:
-                        $estadoBadge = '<span class="badge badge-primary">Facturado</span>';
+                        $estadoBadge = '<span class="badge badge-primary">OT generada</span>';
                         break;
                     case 4:
-                        $estadoBadge = '<span class="badge badge-info">OT generada</span>';
+                        $estadoBadge = '<span class="badge badge-info">Facturado</span>';
                         break;
                     case 0:
                         $estadoBadge = '<span class="badge badge-danger">Anulado</span>';
