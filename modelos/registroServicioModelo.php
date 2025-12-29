@@ -36,7 +36,7 @@ class registroServicioModelo extends mainModel
             $v = $pdo->prepare("
                 SELECT idregistro_servicio
                 FROM registro_servicio
-                WHERE idorden_trabajo = ?
+                WHERE idorden_trabajo = ? and estado = 1
             ");
             $v->execute([$datos['idorden_trabajo']]);
 
@@ -86,10 +86,15 @@ class registroServicioModelo extends mainModel
             $upd = $pdo->prepare("
                 UPDATE orden_trabajo
                 SET estado = 3,
+                    updated=NOW(),
+                    updatedby=?,
                     fecha_fin = NOW()
                 WHERE idorden_trabajo = ?
             ");
-            $upd->execute([$datos['idorden_trabajo']]);
+            $upd->execute([
+                $datos['updatedby'],
+                $datos['idorden_trabajo']
+            ]);
 
             $pdo->commit();
             return true;
@@ -112,11 +117,9 @@ class registroServicioModelo extends mainModel
         INNER JOIN recepcion_servicio r ON r.idrecepcion = ot.idrecepcion
         INNER JOIN clientes c ON c.id_cliente = r.id_cliente
         INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
-        INNER JOIN modelo_auto m ON v.id_modeloauto = v.id_modeloauto
-        LEFT JOIN registro_servicio rs
-            ON rs.idorden_trabajo = ot.idorden_trabajo
+        INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
+        LEFT JOIN registro_servicio rs ON rs.idorden_trabajo = ot.idorden_trabajo
         WHERE ot.estado = 2
-          AND rs.idregistro_servicio IS NULL
           AND (
                 c.nombre_cliente LIKE :b
              OR c.apellido_cliente LIKE :b
@@ -131,6 +134,7 @@ class registroServicioModelo extends mainModel
 
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
+
 
     /* ================= OBTENER OT + DETALLE ================= */
     protected static function obtener_ot_para_registro_modelo($idOT)
@@ -187,32 +191,10 @@ class registroServicioModelo extends mainModel
 
         foreach ($items as $item) {
 
-            /* ===== VALIDAR STOCK EXISTENTE ===== */
-            $upd = $pdo->prepare("
-            UPDATE stock
-            SET stockDisponible = stockDisponible - ?,
-                stockUltActualizacion = NOW(),
-                stockUsuActualizacion = ?
-            WHERE id_sucursal = ?
-              AND id_articulo = ?
-        ");
-            $upd->execute([
-                $item['cantidad'],
-                $usuario,
-                $idSucursal,
-                $item['id_articulo']
-            ]);
-
-            if ($upd->rowCount() === 0) {
-                throw new Exception(
-                    'No existe stock para el artículo ID ' . $item['id_articulo']
-                );
-            }
-
-            /* ===== MOVIMIENTO STOCK ===== */
+            /* ===== 1. INSERTAR MOVIMIENTO STOCK ===== */
             $mov = $pdo->prepare("
             INSERT INTO sucmovimientostock
-            (LocalId, TipoMovStockId,MovStockProductoId, MovStockCantidad,
+            (LocalId, TipoMovStockId, MovStockProductoId, MovStockCantidad,
              MovStockPrecioVenta, MovStockCosto,
              MovStockFechaHora, MovStockUsuario,
              MovStockSigno, MovStockReferencia)
@@ -227,25 +209,48 @@ class registroServicioModelo extends mainModel
                 $usuario,
                 'REG_SERV #' . $idRegistro
             ]);
+
+            $idMovimiento = $pdo->lastInsertId();
+            if (!$idMovimiento) {
+                throw new Exception('No se pudo generar el movimiento de stock');
+            }
+
+            /* ===== 2. ACTUALIZAR STOCK ===== */
+            $upd = $pdo->prepare("
+            UPDATE stock
+            SET stockDisponible = stockDisponible - ?,
+                stockUltActualizacion = NOW(),
+                stockUsuActualizacion = ?,
+                stockUltimoIdActualizacion = ?
+            WHERE id_sucursal = ?
+              AND id_articulo = ?
+        ");
+            $upd->execute([
+                $item['cantidad'],
+                $usuario,
+                $idMovimiento,
+                $idSucursal,
+                $item['id_articulo']
+            ]);
+
+            if ($upd->rowCount() === 0) {
+                throw new Exception(
+                    'No existe stock para el artículo ID ' . $item['id_articulo']
+                );
+            }
         }
     }
 
-
-    protected static function revertir_stock_registro_servicio(
-        PDO $pdo,
-        $idRegistro,
-        $idSucursal,
-        $usuario
-    ) {
+    protected static function revertir_stock_registro_servicio(PDO $pdo, $idRegistro, $idSucursal, $usuario)
+    {
         $sql = $pdo->prepare("
-        SELECT d.id_articulo,
-               d.cantidad,
-               d.precio_unitario
-        FROM registro_servicio_detalle d
-        INNER JOIN articulos a ON a.id_articulo = d.id_articulo
-        WHERE d.idregistro_servicio = ?
-          AND a.tipo = 'producto'
-    ");
+            SELECT d.id_articulo,
+                d.cantidad,
+                d.precio_unitario
+            FROM registro_servicio_detalle d
+            INNER JOIN articulos a ON a.id_articulo = d.id_articulo
+            WHERE d.idregistro_servicio = ?
+            AND a.tipo = 'producto'");
         $sql->execute([$idRegistro]);
 
         foreach ($sql->fetchAll(PDO::FETCH_ASSOC) as $item) {

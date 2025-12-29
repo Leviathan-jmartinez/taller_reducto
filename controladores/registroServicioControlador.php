@@ -56,6 +56,7 @@ class registroServicioControlador extends registroServicioModelo
             'fecha_ejecucion' => $_POST['fecha_ejecucion'],
             'observacion'     => $_POST['observacion'] ?? '',
             'usuario'         => $idUsuario,
+            'updatedby'       => $idUsuario,
             'id_sucursal'     => $idSucursal,
             'ip'              => $_SERVER['REMOTE_ADDR'] ?? null,
             'user_agent'      => $_SERVER['HTTP_USER_AGENT'] ?? null

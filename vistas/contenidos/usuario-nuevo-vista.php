@@ -10,7 +10,7 @@
 		<i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO USUARIO
 	</h3>
 	<p class="text-justify">
-		
+
 	</p>
 </div>
 
@@ -24,6 +24,9 @@
 		</li>
 		<li>
 			<a href="<?php echo SERVERURL; ?>usuario-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR USUARIO</a>
+		</li>
+		<li>
+			<a href="<?php echo SERVERURL; ?>usuario-rol/"><i class="fas fa-search fa-fw"></i> &nbsp; ASIGNAR ROL</a>
 		</li>
 	</ul>
 </div>

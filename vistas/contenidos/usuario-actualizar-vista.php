@@ -13,7 +13,7 @@ if ($lc->encryption($_SESSION['id_str']) != $pagina[1]) {
 		<i class="fas fa-sync-alt fa-fw"></i> &nbsp; ACTUALIZAR USUARIO
 	</h3>
 	<p class="text-justify">
-		
+
 	</p>
 </div>
 <?php
@@ -28,6 +28,9 @@ if ($_SESSION['nivel_str'] == 1) { ?>
 			</li>
 			<li>
 				<a href="<?php echo SERVERURL; ?>usuario-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR USUARIO</a>
+			</li>
+			<li>
+				<a href="<?php echo SERVERURL; ?>usuario-rol/"><i class="fas fa-search fa-fw"></i> &nbsp; ASIGNAR ROL</a>
 			</li>
 		</ul>
 	</div>
@@ -97,10 +100,18 @@ if ($_SESSION['nivel_str'] == 1) { ?>
 							<?php
 							if ($_SESSION['nivel_str'] == 1 && $campos['id_usuario'] != 1) { ?>
 								<div class="form-group">
-									<span>Estado de la cuenta &nbsp; <?php if ($campos['usu_estado'] == 1) {echo '<span class="badge badge-success">Activa</span>';} else {echo '<span class="badge badge-danger">Inactiva</span>';} ?></span>
+									<span>Estado de la cuenta &nbsp; <?php if ($campos['usu_estado'] == 1) {
+																			echo '<span class="badge badge-success">Activa</span>';
+																		} else {
+																			echo '<span class="badge badge-danger">Inactiva</span>';
+																		} ?></span>
 									<select class="form-control" name="usuario_estado_up">
-										<option value="1" <?php if ($campos['usu_estado'] == 1) {echo 'selected=""';} ?>>Activa</option>
-										<option value="0" <?php if ($campos['usu_estado'] == 0) {echo 'selected=""';} ?>>Inactiva</option>
+										<option value="1" <?php if ($campos['usu_estado'] == 1) {
+																echo 'selected=""';
+															} ?>>Activa</option>
+										<option value="0" <?php if ($campos['usu_estado'] == 0) {
+																echo 'selected=""';
+															} ?>>Inactiva</option>
 									</select>
 								</div>
 							<?php } ?>
@@ -131,27 +142,39 @@ if ($_SESSION['nivel_str'] == 1) { ?>
 			</fieldset>
 			<?php
 			if ($_SESSION['nivel_str'] == 1 && $campos['id_usuario'] != 1) { ?>
-			<br><br><br>
-			<fieldset>
-				<legend><i class="fas fa-medal"></i> &nbsp; Nivel de privilegio</legend>
-				<div class="container-fluid">
-					<div class="row">
-						<div class="col-12">
-							<p><span class="badge badge-info">Control total</span> Permisos para registrar, actualizar y eliminar</p>
-							<p><span class="badge badge-success">Edición</span> Permisos para registrar y actualizar</p>
-							<p><span class="badge badge-dark">Registrar</span> Solo permisos para registrar</p>
-							<div class="form-group">
-								<select class="form-control" name="usuario_privilegio_up">
-									<option value="1" <?php if($campos['usu_nivel'] == 1){echo 'selected=""';}?>>Control total <?php if($campos['usu_nivel'] == 1){echo '(Actual)';}?></option>
-									<option value="2" <?php if($campos['usu_nivel'] == 2){echo 'selected=""';}?>>Edición <?php if($campos['usu_nivel'] == 2){echo '(Actual)';}?></option>
-									<option value="3" <?php if($campos['usu_nivel'] == 3){echo 'selected=""';}?>>Registrar <?php if($campos['usu_nivel'] == 3){echo '(Actual)';}?></option>
-								</select>
+				<br><br><br>
+				<fieldset>
+					<legend><i class="fas fa-medal"></i> &nbsp; Nivel de privilegio</legend>
+					<div class="container-fluid">
+						<div class="row">
+							<div class="col-12">
+								<p><span class="badge badge-info">Control total</span> Permisos para registrar, actualizar y eliminar</p>
+								<p><span class="badge badge-success">Edición</span> Permisos para registrar y actualizar</p>
+								<p><span class="badge badge-dark">Registrar</span> Solo permisos para registrar</p>
+								<div class="form-group">
+									<select class="form-control" name="usuario_privilegio_up">
+										<option value="1" <?php if ($campos['usu_nivel'] == 1) {
+																echo 'selected=""';
+															} ?>>Control total <?php if ($campos['usu_nivel'] == 1) {
+																																		echo '(Actual)';
+																																	} ?></option>
+										<option value="2" <?php if ($campos['usu_nivel'] == 2) {
+																echo 'selected=""';
+															} ?>>Edición <?php if ($campos['usu_nivel'] == 2) {
+																																	echo '(Actual)';
+																																} ?></option>
+										<option value="3" <?php if ($campos['usu_nivel'] == 3) {
+																echo 'selected=""';
+															} ?>>Registrar <?php if ($campos['usu_nivel'] == 3) {
+																																	echo '(Actual)';
+																																} ?></option>
+									</select>
+								</div>
 							</div>
 						</div>
 					</div>
-				</div>
-			</fieldset>
-			<?php }?>
+				</fieldset>
+			<?php } ?>
 			<br><br><br>
 			<fieldset>
 				<p class="text-center">Para poder guardar los cambios en esta cuenta debe de ingresar su nombre de usuario y contraseña</p>
@@ -172,11 +195,11 @@ if ($_SESSION['nivel_str'] == 1) { ?>
 					</div>
 				</div>
 			</fieldset>
-			<?php if($lc->encryption($_SESSION['id_str']) != $pagina[1]){?>
+			<?php if ($lc->encryption($_SESSION['id_str']) != $pagina[1]) { ?>
 				<input type="hidden" name="tipo_cuenta" value="impropia">
-			<?php }else{?>
+			<?php } else { ?>
 				<input type="hidden" name="tipo_cuenta" value="propia">
-			<?php }?>
+			<?php } ?>
 			<p class="text-center" style="margin-top: 40px;">
 				<button type="submit" class="btn btn-raised btn-success btn-sm"><i class="fas fa-sync-alt"></i> &nbsp; ACTUALIZAR</button>
 			</p>

@@ -322,8 +322,6 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
         return $html;
     }
 
-
-    /* ================= GENERAR OT ================= */
     public function generar_ot_controlador2()
     {
         if (empty($_POST['idpresupuesto_servicio']) || empty($_POST['idtrabajos'])) {

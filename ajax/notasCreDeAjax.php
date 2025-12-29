@@ -13,11 +13,17 @@ if (isset($_POST['buscar_factura'])) {
 }
 
 if (isset($_POST['seleccionar_factura'])) {
-    echo notasCreDeControlador::seleccionarFactura(
+    $ok = notasCreDeControlador::seleccionarFactura(
         intval($_POST['seleccionar_factura'])
-    ) ? 'OK' : 'ERROR';
+    );
+
+    echo json_encode([
+        'status' => $ok ? 'ok' : 'error',
+        'msg'    => $ok ? 'Factura seleccionada' : 'No se pudo seleccionar la factura'
+    ]);
     exit;
 }
+
 if (isset($_POST['accion']) && $_POST['accion'] === 'actualizar_item_nc') {
     echo json_encode(
         notasCreDeControlador::actualizarItemNC($_POST)

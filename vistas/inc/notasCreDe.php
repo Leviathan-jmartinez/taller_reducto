@@ -184,23 +184,4 @@
             });
     }
 
-    document.addEventListener('submit', function(e) {
-        if (e.target.classList.contains('FormularioAjax')) {
-            e.preventDefault();
-
-            fetch(e.target.action, {
-                    method: 'POST',
-                    body: new FormData(e.target)
-                })
-                .then(r => r.json())
-                .then(resp => {
-                    if (resp.status === 'ok') {
-                        Swal.fire('Correcto', resp.msg, 'success')
-                            .then(() => location.reload());
-                    } else {
-                        Swal.fire('Error', resp.msg, 'error');
-                    }
-                });
-        }
-    });
 </script>

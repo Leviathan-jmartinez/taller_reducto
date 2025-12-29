@@ -1,0 +1,45 @@
+Módulo de Compras
+PEDIDOS DE COMPRA
+	* Articulos
+PRESUPUESTO DE COMPRA
+	* Articulos
+	* Proveedores
+ORDEN DE COMPRA
+	* Articulos
+	* Proveedores
+	* Presupuesto (Flujo normal)
+REGISTRAR COMPRA
+	* Articulos
+	* Proveedores
+	* Orden de compr (Flujo normal)
+REGISTRAR NOTA DE REMISION
+	* Registro de compra (factura)
+REGISTRAR NOTA DE CREDITO/DEBITO
+	* Registro de compra (factura)
+REGISTRAR AJUSTE DE INVENTARIO
+	* Articulos
+	* Depositos
+	* Sucursales
+
+Módulo de Servicios
+REGISTRAR SOLICITUD DE SERVICIOS
+	* Cliente 
+	* Marcas
+	* Modelos
+	* Colores
+	* Vehículo
+REGISTRAR PROMOCIONES
+	* Articulos
+REGISTRAR DESCUENTOS
+	* Articulos
+REGISTRAR PRESUPUESTO DE SERVICIOS
+	* Solicitud de servicio
+	* Descuentos
+	* Promociones
+GENERAR ORDEN DE TRABAJO
+	* Presupuesto aprobado
+	* Equipo de trabajo
+REGISTRO DE SERVICIOS
+	* Orden de trabajo
+REGISTRO DE RECLAMOS
+	* Registro de servicio relacionado

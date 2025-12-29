@@ -174,4 +174,49 @@ class mainModel
                 </nav>';
         return $tabla;
     }
+
+    public static function cargarPermisosSesion($idUsuario)
+    {
+        $sql = self::conectar()->prepare("
+        SELECT p.clave
+        FROM permisos p
+        INNER JOIN rol_permiso rp ON rp.id_permiso = p.id_permiso
+        INNER JOIN usuarios u ON u.id_rol = rp.id_rol
+        WHERE u.id_usuario = ?
+    ");
+        $sql->execute([$idUsuario]);
+
+        $_SESSION['permisos'] = array_column(
+            $sql->fetchAll(PDO::FETCH_ASSOC),
+            'clave'
+        );
+    }
+
+    public static function tienePermiso($clave)
+    {
+        if (isset($_SESSION['nivel_str']) && $_SESSION['nivel_str'] == 1) {
+            return true;
+        }
+
+        return isset($_SESSION['permisos']) && in_array($clave, $_SESSION['permisos']);
+    }
+
+    public static function puedeVerMenu($modulo)
+    {
+        // Fallback super admin (opcional pero recomendado)
+        if (isset($_SESSION['nivel_str']) && $_SESSION['nivel_str'] == 1) {
+            return true;
+        }
+
+        if (!isset($_SESSION['permisos']) || empty($_SESSION['permisos'])) {
+            return false;
+        }
+
+        foreach ($_SESSION['permisos'] as $permiso) {
+            if (strpos($permiso, $modulo . '.') === 0) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

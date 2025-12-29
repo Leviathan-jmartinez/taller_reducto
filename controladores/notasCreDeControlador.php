@@ -185,8 +185,14 @@ class notasCreDeControlador extends notasCreDeModelo
         }
         $factura = $_SESSION['NC_FACTURA'] ?? null;
 
-        if (!$factura) {
-            return ['status' => 'error', 'msg' => 'Debe seleccionar una factura'];
+        if (
+            !isset($_SESSION['NC_FACTURA']) ||
+            empty($_SESSION['NC_FACTURA']['idcompra_cabecera'])
+        ) {
+            return [
+                'status' => 'error',
+                'msg' => 'Debe seleccionar una factura válida'
+            ];
         }
 
         if (empty($_SESSION['NC_DETALLE'])) {

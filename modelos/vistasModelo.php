@@ -6,7 +6,7 @@ class vistasModelo
     {
         $lista_blanca = ["home", "articulo-actualizar", "articulo-buscar", "articulo-lista", "articulo-nuevo", 
         "cliente-actualizar", "cliente-buscar", "cliente-lista", "cliente-nuevo", "company",        
-        "usuario-actualizar", "usuario-buscar", "usuario-lista", "usuario-nuevo","pedido-lista","pedido-nuevo","pedido-buscar",
+        "usuario-actualizar", "usuario-buscar", "usuario-lista", "usuario-rol", "rol-permisos","usuario-nuevo","pedido-lista","pedido-nuevo","pedido-buscar",
         "presupuesto-nuevo", "presupuesto-lista","presupuesto-buscar","oc-nuevo","oc-lista","oc-buscar","factura-nuevo","factura-lista","factura-buscar"
         ,"inventario", "inventario-buscar", "remision-nuevo", "remision-buscar", "notasCreDe-nuevo", "notasCreDe-buscar","recepcionServicio-nuevo","recepcionServicio-buscar",
         "promocion-nuevo","promocion-lista", "promocion-editar","descuento-nuevo","descuento-asignar","descuento-lista","descuento-editar","presupuesto-servicio-nuevo",

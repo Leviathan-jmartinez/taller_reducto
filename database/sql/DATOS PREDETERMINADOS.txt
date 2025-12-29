@@ -1,0 +1,127 @@
+-- Marcas
+INSERT INTO marcas (mar_descri, estado) VALUES
+('TOYOTA', 1),
+('VOLKSWAGEN', 1),
+('CHEVROLET', 1),
+('FORD', 1),
+('NISSAN', 1),
+('HYUNDAI', 1),
+('KIA', 1),
+('HONDA', 1),
+('MAZDA', 1),
+('MITSUBISHI', 1),
+('SUZUKI', 1),
+('PEUGEOT', 1),
+('RENAULT', 1),
+('FIAT', 1),
+('CITROËN', 1),
+('JEEP', 1),
+('DODGE', 1),
+('CHERY', 1),
+('GEELY', 1),
+('BYD', 1),
+('BMW', 1),
+('MERCEDES-BENZ', 1),
+('AUDI', 1),
+('VOLVO', 1),
+('LAND ROVER', 1),
+('PORSCHE', 1),
+('LEXUS', 1),
+('SUBARU', 1),
+('ISUZU', 1),
+('GREAT WALL', 1);
+
+
+Modelos de Auto
+INSERT INTO modelo_auto (id_marcas, mod_descri, estado) VALUES
+((SELECT id_marcas FROM marcas WHERE mar_descri='TOYOTA'), 'Corolla', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='TOYOTA'), 'Yaris', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='TOYOTA'), 'Hilux', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='TOYOTA'), 'RAV4', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='TOYOTA'), 'Land Cruiser', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='TOYOTA'), 'Camry', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='TOYOTA'), 'Etios', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='TOYOTA'), 'Fortuner', 1);
+
+
+INSERT INTO modelo_auto (id_marcas, mod_descri, estado) VALUES
+((SELECT id_marcas FROM marcas WHERE mar_descri='VOLKSWAGEN'), 'Gol', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='VOLKSWAGEN'), 'Voyage', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='VOLKSWAGEN'), 'Polo', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='VOLKSWAGEN'), 'Virtus', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='VOLKSWAGEN'), 'Saveiro', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='VOLKSWAGEN'), 'Amarok', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='VOLKSWAGEN'), 'T-Cross', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='VOLKSWAGEN'), 'Tiguan', 1);
+
+INSERT INTO modelo_auto (id_marcas, mod_descri, estado) VALUES
+((SELECT id_marcas FROM marcas WHERE mar_descri='CHEVROLET'), 'Onix', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='CHEVROLET'), 'Prisma', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='CHEVROLET'), 'Corsa', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='CHEVROLET'), 'Cruze', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='CHEVROLET'), 'Tracker', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='CHEVROLET'), 'S10', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='CHEVROLET'), 'Spin', 1);
+
+INSERT INTO modelo_auto (id_marcas, mod_descri, estado) VALUES
+((SELECT id_marcas FROM marcas WHERE mar_descri='FORD'), 'Fiesta', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='FORD'), 'Focus', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='FORD'), 'EcoSport', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='FORD'), 'Ranger', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='FORD'), 'Ka', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='FORD'), 'Territory', 1);
+
+INSERT INTO modelo_auto (id_marcas, mod_descri, estado) VALUES
+((SELECT id_marcas FROM marcas WHERE mar_descri='NISSAN'), 'Versa', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='NISSAN'), 'March', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='NISSAN'), 'Sentra', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='NISSAN'), 'Frontier', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='NISSAN'), 'X-Trail', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='NISSAN'), 'Kicks', 1);
+
+
+INSERT INTO modelo_auto (id_marcas, mod_descri, estado) VALUES
+((SELECT id_marcas FROM marcas WHERE mar_descri='HYUNDAI'), 'HB20', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='HYUNDAI'), 'Accent', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='HYUNDAI'), 'Elantra', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='HYUNDAI'), 'Tucson', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='HYUNDAI'), 'Santa Fe', 1);
+
+INSERT INTO modelo_auto (id_marcas, mod_descri, estado) VALUES
+((SELECT id_marcas FROM marcas WHERE mar_descri='KIA'), 'Rio', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='KIA'), 'Cerato', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='KIA'), 'Sportage', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='KIA'), 'Sorento', 1),
+((SELECT id_marcas FROM marcas WHERE mar_descri='KIA'), 'Picanto', 1);
+
+
+Colores
+INSERT INTO colores (col_descripcion, estado) VALUES
+('BLANCO', 1),
+('NEGRO', 1),
+('GRIS', 1),
+('PLATEADO', 1),
+('AZUL', 1),
+('ROJO', 1),
+('VERDE', 1),
+('AMARILLO', 1),
+('MARRÓN', 1),
+('BEIGE', 1),
+('NARANJA', 1),
+('CELESTE', 1),
+('BORDÓ', 1),
+('VIOLETA', 1),
+('CHAMPAGNE', 1),
+('DORADO', 1),
+('TURQUESA', 1),
+('CREMA', 1),
+('GRIS OSCURO', 1),
+('GRIS CLARO', 1),
+('AZUL OSCURO', 1),
+('AZUL MARINO', 1),
+('ROJO OSCURO', 1),
+('VERDE OSCURO', 1),
+('NEGRO METALIZADO', 1),
+('BLANCO PERLADO', 1),
+('PLATEADO METALIZADO', 1);
+	

@@ -325,104 +325,86 @@ class presupuestoControlador extends presupuestoModelo
             }
             echo json_encode($alerta);
         } elseif ($_SESSION['tipo_presupuesto'] == "con_pedido") {
-            if (empty($_SESSION['Cdatos_proveedorPre'])) {
-                $alerta = [
+
+            if (empty($_SESSION['Cdatos_proveedorPre']) || empty($_SESSION['Cdatos_articuloPre'])) {
+                echo json_encode([
                     "Alerta" => "simple",
-                    "Titulo" => "Ocurrió un error!",
-                    "Texto" => "No has seleccionado ningun proveedor",
+                    "Titulo" => "Error",
+                    "Texto" => "Datos incompletos para generar el presupuesto",
                     "Tipo" => "error"
-                ];
-                echo json_encode($alerta);
-                exit();
-            }
-            if (empty($_SESSION['Cdatos_articuloPre'])) {
-                $alerta = [
-                    "Alerta" => "simple",
-                    "Titulo" => "Ocurrió un error!",
-                    "Texto" => "No has seleccionado ningun artículo para el presupuesto",
-                    "Tipo" => "error"
-                ];
-                echo json_encode($alerta);
+                ]);
                 exit();
             }
 
-            if (empty($fecha_venc) || $fecha_venc == null) {
-                $alerta = [
+            if (empty($fecha_venc)) {
+                echo json_encode([
                     "Alerta" => "simple",
                     "Titulo" => "Error!",
                     "Texto" => "Debes seleccionar la fecha de vencimiento",
                     "Tipo" => "error"
-                ];
-                echo json_encode($alerta);
+                ]);
                 exit();
             }
 
-            /** Insertar cabecera */
+            /* ========= CABECERA ========= */
             $datos_presu_agg = [
                 "idPedido"   => $_SESSION['id_pedido_seleccionado'],
-                "usuario"   => $_SESSION['id_str'],
-                "proveedor" => $_SESSION['Cdatos_proveedorPre']['ID'],
-                "total" => $_SESSION['total_pre'],
+                "usuario"    => $_SESSION['id_str'],
+                "proveedor"  => $_SESSION['Cdatos_proveedorPre']['ID'],
+                "total"      => $_SESSION['total_pre'],
                 "fecha_venc" => $fecha_venc
             ];
 
-            $datos_update_pedido = [
+            presupuestoModelo::actualizar_pedido_modelo([
                 "idpedido_cabecera" => $_SESSION['id_pedido_seleccionado'],
                 "updatedby" => $_SESSION['id_str']
-            ];
+            ]);
 
-            $updatePedido = presupuestoModelo::actualizar_pedido_modelo($datos_update_pedido);
             $idpresupuestoCab = presupuestoModelo::agregar_presupuestoC_modelo2($datos_presu_agg);
 
             if ($idpresupuestoCab <= 0) {
-                $alerta = [
+                echo json_encode([
                     "Alerta" => "simple",
-                    "Titulo" => "Ocurrió un error inesperado!",
-                    "Texto" => "No pudimos registrar la cabecera del pedido",
+                    "Titulo" => "Error",
+                    "Texto" => "No se pudo crear la cabecera del presupuesto",
                     "Tipo" => "error"
-                ];
-                echo json_encode($alerta);
+                ]);
                 exit();
             }
 
-            /** Insertar detalles */
-            $errores_detalles = 0;
+            /* ========= DETALLE ========= */
+            $insertados = [];
+
             foreach ($_SESSION['Cdatos_articuloPre'] as $article) {
 
-                $detalle_reg = [
-                    "presupuestoid" => $idpresupuestoCab,
-                    "articulo" => $article['ID'],
-                    "cantidad" => $article['cantidad'],
-                    "precio" => $article['precio'],
-                    "subtotal" => $article['subtotal']
-                ];
+                $idArticulo = (int)$article['ID'];
 
-                $detalleInsert = presupuestoModelo::agregar_presupuestoD_modelo($detalle_reg);
-
-                if ($detalleInsert->rowCount() != 1) {
-                    $errores_detalles++;
+                // 🔒 evita insertar dos veces el mismo artículo
+                if (in_array($idArticulo, $insertados, true)) {
+                    continue;
                 }
+
+                presupuestoModelo::agregar_presupuestoD_modelo([
+                    "presupuestoid" => $idpresupuestoCab,
+                    "articulo"      => $idArticulo,
+                    "cantidad"      => $article['cantidad'],
+                    "precio"        => $article['precio'],
+                    "subtotal"      => $article['subtotal']
+                ]);
+
+                $insertados[] = $idArticulo;
             }
 
-            if ($errores_detalles > 0) {
-                $alerta = [
-                    "Alerta" => "simple",
-                    "Titulo" => "Error parcial",
-                    "Texto" => "El presupuesto se creó, pero algunos artículos no se guardaron",
-                    "Tipo" => "warning"
-                ];
-            } else {
-                $alerta = [
-                    "Alerta" => "recargar",
-                    "Titulo" => "Pedido guardado!",
-                    "Texto" => "El presupuesto se registró correctamente",
-                    "Tipo" => "success"
-                ];
-            }
             unset($_SESSION['Cdatos_proveedorPre']);
             unset($_SESSION['Cdatos_articuloPre']);
             unset($_SESSION['tipo_presupuesto']);
-            echo json_encode($alerta);
+
+            echo json_encode([
+                "Alerta" => "recargar",
+                "Titulo" => "Pedido guardado!",
+                "Texto" => "El presupuesto se registró correctamente",
+                "Tipo" => "success"
+            ]);
         }
     }
     /**fin controlador */
@@ -516,9 +498,11 @@ class presupuestoControlador extends presupuestoModelo
         WHERE pd.idpedido_cabecera = '$idPedido'");
         $detalle = $sqlDetalle->fetchAll();
 
+        unset($_SESSION['Cdatos_articuloPre']);
         $_SESSION['Cdatos_articuloPre'] = [];
+
         foreach ($detalle as $row) {
-            $_SESSION['Cdatos_articuloPre'][] = [
+            $_SESSION['Cdatos_articuloPre'][$row['id_articulo']] = [
                 "ID" => $row['id_articulo'],
                 "codigo" => $row['codigo'],
                 "descripcion" => $row['desc_articulo'],
@@ -527,6 +511,7 @@ class presupuestoControlador extends presupuestoModelo
                 "subtotal" => 0
             ];
         }
+
 
         // 3️⃣ Redirigir a la página para que se recargue
         header("Location: " . SERVERURL . "presupuesto-nuevo/");

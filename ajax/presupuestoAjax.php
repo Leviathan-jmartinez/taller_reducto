@@ -36,25 +36,27 @@ if (
         echo $inst_presu->cargar_pedido_controlador();
     }
     if (isset($_POST['id_actualizar_precio'])) {
-        $idArticulo = $_POST['id_actualizar_precio'];
-        $precio = floatval($_POST['precio']);
+
         session_start(['name' => 'STR']);
 
-        if (isset($_SESSION['Cdatos_articuloPre'])) {
-            foreach ($_SESSION['Cdatos_articuloPre'] as &$art) {
-                if ($art['ID'] == $idArticulo) {
-                    $art['precio'] = $precio;
-                    $art['subtotal'] = $art['cantidad'] * $precio;
-                    break;
-                }
-            }
-            $_SESSION['total_pre'] = 0;
-            foreach ($_SESSION['Cdatos_articuloPre'] as $art) {
-                $_SESSION['total_pre'] += $art['subtotal'];
-            }
+        $idArticulo = (int)$_POST['id_actualizar_precio'];
+        $precio     = (float)$_POST['precio'];
+
+        if (isset($_SESSION['Cdatos_articuloPre'][$idArticulo])) {
+            $_SESSION['Cdatos_articuloPre'][$idArticulo]['precio'] = $precio;
+            $_SESSION['Cdatos_articuloPre'][$idArticulo]['subtotal'] =
+                $_SESSION['Cdatos_articuloPre'][$idArticulo]['cantidad'] * $precio;
         }
-        exit();
+
+        // recalcular total
+        $_SESSION['total_pre'] = 0;
+        foreach ($_SESSION['Cdatos_articuloPre'] as $art) {
+            $_SESSION['total_pre'] += $art['subtotal'];
+        }
+
+        exit;
     }
+
     if (isset($_POST['presupuesto_id_del'])) {
         echo $inst_presu->anular_presupuesto_controlador();
     }

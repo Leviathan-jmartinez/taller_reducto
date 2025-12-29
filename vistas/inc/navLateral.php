@@ -2,141 +2,170 @@
 <section class="full-box nav-lateral">
     <div class="full-box nav-lateral-bg show-nav-lateral"></div>
     <div class="full-box nav-lateral-content">
+
         <figure class="full-box nav-lateral-avatar">
             <i class="far fa-times-circle show-nav-lateral"></i>
-            <!--<img src="<?php echo SERVERURL; ?>vistas/assets/avatar/Avatar.png" class="img-fluid" alt="Avatar">-->
             <figcaption class="roboto-medium text-center">
-                <?php echo $_SESSION['nombre_str'] . " " . $_SESSION['apellido_str'] ?> <br><small class="roboto-condensed-light"><?php echo $_SESSION['nick_str'] ?></small>
+                <?= $_SESSION['nombre_str'] . " " . $_SESSION['apellido_str'] ?><br>
+                <small class="roboto-condensed-light"><?= $_SESSION['nick_str'] ?></small>
             </figcaption>
         </figure>
+
         <div class="full-box nav-lateral-bar"></div>
+
         <nav class="full-box nav-lateral-menu">
             <ul>
+                    <!-- PANEL -->
                 <li>
-                    <a href="<?php echo SERVERURL; ?>home/"><i class="fab fa-dashcube fa-fw"></i> &nbsp; Panel Principal</a>
+                    <a href="<?= SERVERURL; ?>home/">
+                        <i class="fab fa-dashcube fa-fw"></i> &nbsp; Panel Principal
+                    </a>
                 </li>
 
-
-
-
-                <li>
-                    <a href="<?php echo SERVERURL; ?>inventario/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Inventarios</a>
-                </li>
-                <li>
-                    <a href="#" class="nav-btn-submenu"><i class="fas fa-shopping-cart"></i> &nbsp; Compras <i class="fas fa-chevron-down"></i></a>
-                    <ul>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>pedido-lista/"><i class="fas fa-file-alt fa-fw"></i> &nbsp; Pedidos</a>
-                        </li>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>presupuesto-lista/"><i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; Presupuestos</a>
-                        </li>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>oc-nuevo/"><i class="fas fa-file-invoice fa-fw"></i> &nbsp; Ordenes de Compra</a>
-                        </li>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>factura-nuevo/"><i class="fas fa-shopping-cart fa-fw"></i> &nbsp; Ingreso de Facturas</a>
-                        </li>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>remision-nuevo/"><i class="fas fa-box fa-fw"></i> &nbsp; Remisiones</a>
-                        </li>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>notasCreDe-nuevo/"><i class="fas fa-file-alt fa-fw"></i> &nbsp; Notas de Crédito y Débito</a>
-                        </li>
-                    </ul>
-                </li>
-                <li>
-                    <a href="#" class="nav-btn-submenu"><i class="fas fa-tools fa-fw"></i> &nbsp; Servicios <i class="fas fa-chevron-down"></i></a>
-                    <ul>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>recepcionServicio-nuevo/"> <i class="fas fa-file-signature fa-fw"></i> &nbsp; Solicitud de Servicios
-                            </a>
-                        </li>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>promocion-nuevo/"> <i class="fas fa-tags fa-fw"></i> &nbsp; Promociones
-                            </a>
-                        </li>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>descuento-nuevo/"> <i class="fas fa-tags fa-fw"></i> &nbsp; Descuentos
-                            </a>
-                        </li>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>presupuesto-servicio-nuevo"> <i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; Presupuesto de Trabajo
-                            </a>
-                        </li>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>ordenTrabajo-nuevo/"> <i class="fas fa-clipboard-check fa-fw"></i> &nbsp; Ordenes de Trabajo
-                            </a>
-                        </li>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>registro-servicio-nuevo/"> <i class="fas fa-cogs fa-fw"></i> &nbsp; Registro de Servicios
-                            </a>
-                        </li>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>reclamo-servicio-nuevo/"> <i class="fas fa-exclamation-circle fa-fw"></i> &nbsp; Reclamos
-                            </a>
-                        </li>
-                    </ul>
-                </li>
-                <li>
-                    <a href="#" class="nav-btn-submenu"><i class="fas fa-cog fa-fw"></i> &nbsp; Administración <i class="fas fa-chevron-down"></i></a>
-                    <ul>
-                        <li>
-                            <a href="#" class="nav-btn-submenu"><i class="fas fa-users fa-fw"></i> &nbsp; Clientes <i class="fas fa-chevron-down"></i></a>
-                            <ul>
-                                <li>
-                                    <a href="<?php echo SERVERURL; ?>cliente-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; Agregar Cliente</a>
-                                </li>
-                                <li>
-                                    <a href="<?php echo SERVERURL; ?>cliente-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Lista de clientes</a>
-                                </li>
-                                <li>
-                                    <a href="<?php echo SERVERURL; ?>cliente-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar cliente</a>
-                                </li>
-                            </ul>
-                        </li>
-                        <li>
-                            <a href="#" class="nav-btn-submenu"><i class="fas fa-pallet fa-fw"></i> &nbsp; Articulos <i class="fas fa-chevron-down"></i></a>
-                            <ul>
-                                <li>
-                                    <a href="<?php echo SERVERURL; ?>articulo-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; Agregar Articulo</a>
-                                </li>
-                                <li>
-                                    <a href="<?php echo SERVERURL; ?>articulo-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Lista de Articulos</a>
-                                </li>
-                                <li>
-                                    <a href="<?php echo SERVERURL; ?>articulo-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar Articulo</a>
-                                </li>
-                            </ul>
-                        </li>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>ciudad-lista/"><i class="fas fa-city"></i> &nbsp; Ciudades</a>
-                        </li>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>cargo-lista/"><i class="fas fa-file-invoice"></i> &nbsp; Cargos</a>
-                        </li>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>marca-lista/"><i class="fas fa-tag fa-fw"></i> &nbsp; Marcas</a>
-                        </li>
-                        <li>
-                            <a href="<?php echo SERVERURL; ?>modelo-auto-lista/"><i class="fas fa-list-ul fa-fw"></i> &nbsp; Modelos de Auto</a>
-                        </li>
-                    </ul>
-                </li>
-                <?php
-                if ($_SESSION['nivel_str'] == 1) { ?>
+                <!-- INVENTARIOS -->
+                <?php if (mainModel::tienePermiso('inventario.ver')) { ?>
                     <li>
-                        <a href="#" class="nav-btn-submenu"><i class="fas fa-shield-alt fa-fw"></i> &nbsp; Seguridad <i class="fas fa-chevron-down"></i></a>
+                        <a href="<?= SERVERURL; ?>inventario/">
+                            <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Inventarios
+                        </a>
+                    </li>
+                <?php } ?>
+
+                <!-- COMPRAS -->
+                <?php if (mainModel::tienePermiso('compra.ver')) { ?>       
+                    <li>
+                        <a href="#" class="nav-btn-submenu">
+                            <i class="fas fa-shopping-cart"></i> &nbsp; Compras
+                            <i class="fas fa-chevron-down"></i>
+                        </a>
                         <ul>
-                            <li>
-                                <a href="<?php echo SERVERURL; ?>usuario-lista/"><i class="fas fa-user fa-fw"></i> &nbsp; Usuarios</a>
-                            </li>
+                            <?php if (mainModel::tienePermiso('compra.pedido.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>pedido-lista/"><i class="fas fa-file-alt fa-fw"></i> &nbsp; Pedidos</a></li>
+                            <?php } ?>
+
+                            <?php if (mainModel::tienePermiso('compra.presupuesto.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>presupuesto-lista/"><i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; Presupuestos</a></li>
+                            <?php } ?>
+
+                            <?php if (mainModel::tienePermiso('compra.oc.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>oc-nuevo/"><i class="fas fa-file-invoice fa-fw"></i> &nbsp; Ordenes de Compra</a></li>
+                            <?php } ?>
+
+                            <?php if (mainModel::tienePermiso('compra.factura.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>factura-nuevo/"><i class="fas fa-shopping-cart fa-fw"></i> &nbsp; Ingreso de Facturas</a></li>
+                            <?php } ?>
+
+                            <?php if (mainModel::tienePermiso('compra.remision.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>remision-nuevo/"><i class="fas fa-box fa-fw"></i> &nbsp; Remisiones</a></li>
+                            <?php } ?>
+
+                            <?php if (mainModel::tienePermiso('compra.nota.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>notasCreDe-nuevo/"><i class="fas fa-file-alt fa-fw"></i> &nbsp; Notas de Crédito y Débito</a></li>
+                            <?php } ?>
                         </ul>
                     </li>
                 <?php } ?>
-                <?php if ($_SESSION['nivel_str'] == 1) { ?>
+
+                <!-- SERVICIOS -->
+                <?php if (mainModel::puedeVerMenu('servicio')) { ?>
                     <li>
-                        <a href="<?php echo SERVERURL; ?>company/"><i class="fas fa-store-alt fa-fw"></i> &nbsp; Empresa</a>
+                        <a href="#" class="nav-btn-submenu">
+                            <i class="fas fa-tools fa-fw"></i> &nbsp; Servicios
+                            <i class="fas fa-chevron-down"></i>
+                        </a>
+                        <ul>
+                            <?php if (mainModel::tienePermiso('servicio.recepcion.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>recepcionServicio-nuevo/"><i class="fas fa-file-signature fa-fw"></i> &nbsp; Solicitud de Servicios</a></li>
+                            <?php } ?>
+
+                            <?php if (mainModel::tienePermiso('servicio.promocion.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>promocion-nuevo/"><i class="fas fa-tags fa-fw"></i> &nbsp; Promociones</a></li>
+                            <?php } ?>
+
+                            <?php if (mainModel::tienePermiso('servicio.descuento.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>descuento-nuevo/"><i class="fas fa-tags fa-fw"></i> &nbsp; Descuentos</a></li>
+                            <?php } ?>
+
+                            <?php if (mainModel::tienePermiso('servicio.presupuesto.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>presupuesto-servicio-nuevo"><i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; Presupuesto de Trabajo</a></li>
+                            <?php } ?>
+
+                            <?php if (mainModel::tienePermiso('servicio.ot.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>ordenTrabajo-nuevo/"><i class="fas fa-clipboard-check fa-fw"></i> &nbsp; Ordenes de Trabajo</a></li>
+                            <?php } ?>
+
+                            <?php if (mainModel::tienePermiso('servicio.registro.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>registro-servicio-nuevo/"><i class="fas fa-cogs fa-fw"></i> &nbsp; Registro de Servicios</a></li>
+                            <?php } ?>
+
+                            <?php if (mainModel::tienePermiso('servicio.reclamo.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>reclamo-servicio-nuevo/"><i class="fas fa-exclamation-circle fa-fw"></i> &nbsp; Reclamos</a></li>
+                            <?php } ?>
+                        </ul>
+                    </li>
+                <?php } ?>
+
+                <!-- ADMINISTRACIÓN -->
+                <?php if (
+                    mainModel::tienePermiso('cliente.ver') ||
+                    mainModel::tienePermiso('inventario.ver') ||
+                    mainModel::tienePermiso('empresa.ver')
+                ) { ?>
+                    <li>
+                        <a href="#" class="nav-btn-submenu">
+                            <i class="fas fa-cog fa-fw"></i> &nbsp; Administración
+                            <i class="fas fa-chevron-down"></i>
+                        </a>
+                        <ul>
+
+                            <?php if (mainModel::tienePermiso('cliente.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>cliente-lista/"><i class="fas fa-users fa-fw"></i> &nbsp; Clientes</a></li>
+                            <?php } ?>
+
+                            <?php if (mainModel::tienePermiso('inventario.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>articulo-lista/"><i class="fas fa-pallet fa-fw"></i> &nbsp; Articulos</a></li>
+                            <?php } ?>
+
+                            <?php if (mainModel::tienePermiso('empresa.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>company/"><i class="fas fa-store-alt fa-fw"></i> &nbsp; Empresa</a></li>
+                            <?php } ?>
+
+                            <?php if (mainModel::tienePermiso('sucursal.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>sucursal-lista/"><i class="fas fa-city fa-fw"></i> &nbsp; Ciudades</a></li>
+                            <?php } ?>
+
+                            <?php if (mainModel::tienePermiso('cargo.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>cargo-lista/"><i class="fas fa-file-invoice fa-fw"></i> &nbsp; Cargos</a></li>
+                            <?php } ?>
+
+                            <?php if (mainModel::tienePermiso('marca.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>marca-lista/"><i class="fas fa-tag fa-fw"></i> &nbsp; Marcas</a></li>
+                            <?php } ?>
+
+                            <?php if (mainModel::tienePermiso('modelo.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>modelo-auto-lista/"><i class="fas fa-list-ul fa-fw"></i> &nbsp; Modelos de Auto</a></li>
+                            <?php } ?>
+
+                        </ul>
+                    </li>
+                <?php } ?>
+
+                <!-- SEGURIDAD -->
+                <?php if (mainModel::puedeVerMenu('seguridad')) { ?>
+                    <li>
+                        <a href="#" class="nav-btn-submenu">
+                            <i class="fas fa-shield-alt fa-fw"></i> &nbsp; Seguridad
+                            <i class="fas fa-chevron-down"></i>
+                        </a>
+                        <ul>
+                            <?php if (mainModel::tienePermiso('seguridad.usuarios.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>usuario-lista/"><i class="fas fa-user fa-fw"></i> &nbsp; Usuarios</a></li>
+                            <?php } ?>
+
+                            <?php if (mainModel::tienePermiso('seguridad.roles.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>rol-permisos/"><i class="fas fa-key fa-fw"></i> &nbsp; Roles y Permisos</a></li>
+                            <?php } ?>
+                        </ul>
                     </li>
                 <?php } ?>
             </ul>

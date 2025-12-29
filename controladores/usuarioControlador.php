@@ -651,4 +651,140 @@ class usuarioControlador extends usuarioModelo
         echo json_encode($alerta);
     }
     /**fin controlador */
+
+    public function asignar_rol_controlador()
+    {
+        session_start(['name' => 'STR']);
+
+        if (
+            $_SESSION['nivel_str'] != 1 &&
+            !mainModel::tienePermiso('seguridad.roles.editar')
+        ) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto"  => "No tiene permisos para asignar roles",
+                "Tipo"   => "error"
+            ]);
+        }
+
+        $idUsuario = mainModel::limpiar_string($_POST['id_usuario']);
+        $idRol     = mainModel::limpiar_string($_POST['id_rol']);
+
+        if ($idUsuario == "" || $idRol == "") {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto"  => "Datos incompletos",
+                "Tipo"   => "error"
+            ]);
+        }
+
+        $res = usuarioModelo::asignar_rol_modelo($idUsuario, $idRol);
+
+        if ($res) {
+            return json_encode([
+                "Alerta" => "recargar",
+                "Titulo" => "Rol asignado",
+                "Texto"  => "El rol fue asignado correctamente",
+                "Tipo"   => "success"
+            ]);
+        }
+
+        return json_encode([
+            "Alerta" => "simple",
+            "Titulo" => "Error",
+            "Texto"  => "No se pudo asignar el rol",
+            "Tipo"   => "error"
+        ]);
+    }
+
+    public function listar_usuarios_controlador()
+    {
+        if (
+            $_SESSION['nivel_str'] != 1 &&
+            !mainModel::tienePermiso('seguridad.roles.ver')
+        ) {
+            return [];
+        }
+
+        return usuarioModelo::listar_usuarios_modelo();
+    }
+
+
+    public function listar_roles_controlador()
+    {
+        return usuarioModelo::listar_roles_modelo();
+    }
+
+    public function permisos_por_rol_controlador()
+    {
+        session_start(['name' => 'STR']);
+
+        if (
+            $_SESSION['nivel_str'] != 1 &&
+            !mainModel::tienePermiso('seguridad.roles.editar')
+        ) {
+            return '<div class="alert alert-danger">Acceso denegado</div>';
+        }
+
+        $idRol = mainModel::limpiar_string($_POST['id_rol']);
+        $permisos = usuarioModelo::permisos_por_rol_modelo($idRol);
+
+        $html = '<div class="row">';
+
+        foreach ($permisos as $p) {
+
+            $checked = $p['activo'] ? 'checked' : '';
+
+            $html .= '
+        <div class="col-md-4 mb-2">
+            <div class="custom-control custom-checkbox">
+                <input type="checkbox"
+                       class="custom-control-input"
+                       id="perm_' . $p['id_permiso'] . '"
+                       name="permisos[]"
+                       value="' . $p['id_permiso'] . '"
+                       ' . $checked . '>
+                <label class="custom-control-label"
+                       for="perm_' . $p['id_permiso'] . '">
+                    <small>' . $p['clave'] . '</small>
+                </label>
+            </div>
+        </div>';
+        }
+
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    public function guardar_permisos_rol_controlador()
+    {
+        session_start(['name' => 'STR']);
+
+        if (
+            $_SESSION['nivel_str'] != 1 &&
+            !mainModel::tienePermiso('seguridad.roles.editar')
+        ) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto"  => "No tiene permisos",
+                "Tipo"   => "error"
+            ]);
+        }
+
+        $idRol = $_POST['id_rol'];
+        $permisos = $_POST['permisos'] ?? [];
+
+        usuarioModelo::guardar_permisos_rol_modelo($idRol, $permisos);
+
+        return json_encode([
+            "Alerta" => "simple",
+            "Titulo" => "Permisos actualizados",
+            "Texto"  => "Los permisos fueron guardados correctamente",
+            "Tipo"   => "success"
+        ]);
+    }
 }

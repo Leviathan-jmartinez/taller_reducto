@@ -24,6 +24,9 @@
 		<li>
 			<a class="active" href="<?php echo SERVERURL; ?>usuario-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR USUARIO</a>
 		</li>
+		<li>
+            <a href="<?php echo SERVERURL; ?>usuario-rol/"><i class="fas fa-search fa-fw"></i> &nbsp; ASIGNAR ROL</a>
+        </li>
 	</ul>
 </div>
 <?php
