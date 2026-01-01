@@ -62,6 +62,9 @@
                             <?php if (mainModel::tienePermiso('compra.nota.ver')) { ?>
                                 <li><a href="<?= SERVERURL; ?>notasCreDe-nuevo/"><i class="fas fa-file-alt fa-fw"></i> &nbsp; Notas de Crédito y Débito</a></li>
                             <?php } ?>
+                            <?php if (mainModel::tienePermiso('compra.transferencia.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>transferencia-nuevo/"><i class="fas fa-file-alt fa-fw"></i> &nbsp; Transferencias</a></li>
+                            <?php } ?>
                         </ul>
                     </li>
                 <?php } ?>
