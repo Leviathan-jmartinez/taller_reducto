@@ -124,6 +124,53 @@ class transferenciaModelo extends mainModel
                     ':prod' => $idProducto,
                     ':suc'  => $d['id_sucursal_origen']
                 ]);
+
+                // ================= MOVIMIENTO DE STOCK (SALIDA) =================
+
+                // obtener costo (ya lo usás para remisión)
+                $qCosto = $pdo->prepare("
+                SELECT precio_compra
+                FROM articulos
+                WHERE id_articulo = :id");
+                $qCosto->execute([':id' => $idProducto]);
+                $costo = (float)$qCosto->fetchColumn();
+
+                $pdo->prepare("
+                INSERT INTO sucmovimientostock
+                    (
+                        LocalId,
+                        TipoMovStockId,
+                        MovStockProductoId,
+                        MovStockCantidad,
+                        MovStockPrecioVenta,
+                        MovStockCosto,
+                        MovStockFechaHora,
+                        MovStockNroTicket,
+                        MovStockUsuario,
+                        MovStockSigno,
+                        MovStockReferencia
+                    )
+                    VALUES
+                    (
+                        :local,
+                        'TRANSFERENCIA_SALIDA',
+                        :prod,
+                        :cant,
+                        0,
+                        :costo,
+                        NOW(),
+                        :nro,
+                        :usr,
+                        -1,
+                        :ref)")->execute([
+                    ':local' => $d['id_sucursal_origen'],
+                    ':prod'  => $idProducto,
+                    ':cant'  => $cantidad,
+                    ':costo' => $costo,
+                    ':nro'   => $nroRemision,
+                    ':usr'   => $d['id_usuario'],
+                    ':ref'   => 'TRANSFERENCIA #' . $idTransferencia
+                ]);
             }
 
 
@@ -159,6 +206,33 @@ class transferenciaModelo extends mainModel
                 ':motivo' => $d['observacion'],
                 ':idtrans' => $idTransferencia
             ]);
+            $idNotaRemision = $pdo->lastInsertId();
+
+            foreach ($d['productos'] as $idProducto => $cantidad) {
+
+                $cantidad = (float)$cantidad;
+
+                // Traer costo actual del artículo
+                $qArt = $pdo->prepare("
+                SELECT precio_compra
+                FROM articulos
+                WHERE id_articulo = :id");
+                $qArt->execute([':id' => $idProducto]);
+                $costo = (float)$qArt->fetchColumn();
+
+                $subtotal = $cantidad * $costo;
+
+                $pdo->prepare("
+                        INSERT INTO nota_remision_detalle
+                        (idnota_remision, id_articulo, cantidad, costo, subtotal)
+                        VALUES (:nota, :art, :cant, :costo, :sub)")->execute([
+                    ':nota'  => $idNotaRemision,
+                    ':art'   => $idProducto,
+                    ':cant'  => $cantidad,
+                    ':costo' => $costo,
+                    ':sub'   => $subtotal
+                ]);
+            }
 
 
             /* ================= ACTUALIZAR NUMERACIÓN ================= */
@@ -172,7 +246,10 @@ class transferenciaModelo extends mainModel
             ]);
 
             $pdo->commit();
-            return true;
+            return [
+                'ok' => true,
+                'idnota_remision' => $idNotaRemision
+            ];
         } catch (Exception $e) {
             $pdo->rollBack();
             return $e->getMessage();

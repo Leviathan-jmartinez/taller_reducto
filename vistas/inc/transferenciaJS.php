@@ -1,4 +1,6 @@
 <script>
+    const SERVERURL = "<?= SERVERURL ?>";
+
     function buscarProducto() {
         const q = document.getElementById('buscar_producto').value.trim();
 
@@ -105,16 +107,13 @@
                     onclick="this.closest('tr').remove()">
                 ✖
             </button>
-        </td>
-    `;
+        </td>`;
 
         tbody.appendChild(tr);
 
         document.getElementById('resultado_busqueda').innerHTML = '';
         document.getElementById('buscar_producto').value = '';
     }
-
-
 
     function buscarSucursalDestino() {
         const q = document.getElementById('buscar_sucursal').value.trim();
@@ -162,4 +161,67 @@
 
     // buscar mientras escribe
     document.getElementById('buscar_sucursal').addEventListener('keyup', buscarSucursalDestino);
+
+    document.querySelector('.FormularioAjax').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const form = this;
+
+        Swal.fire({
+            title: 'Confirmar',
+            text: '¿Desea guardar la transferencia y emitir la remisión?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, guardar',
+            cancelButtonText: 'No'
+        }).then((result) => {
+
+            // 👉 SOLO SI CONFIRMA SE GUARDA
+            if (!result.isConfirmed) return;
+
+            const datos = new FormData(form);
+
+            fetch(form.getAttribute('action'), {
+                    method: form.getAttribute('method'),
+                    body: datos
+                })
+                .then(res => res.json())
+                .then(resp => {
+
+                    if (resp.Alerta === 'limpiar') {
+
+                        // 👉 imprimir automáticamente
+                        if (resp.idnota_remision) {
+                            window.open(
+                                '<?= SERVERURL ?>pdf/remision.php?id=' + resp.idnota_remision,
+                                '_blank'
+                            );
+                        }
+
+                        Swal.fire({
+                            title: resp.Titulo,
+                            text: resp.Texto,
+                            icon: 'success'
+                        });
+
+                        // limpiar formulario
+                        form.reset();
+                        document.getElementById('detalle_productos').innerHTML = '';
+                        document.getElementById('resultado_busqueda').innerHTML = '';
+                        document.getElementById('resultado_sucursal').innerHTML = '';
+
+                    } else {
+                        Swal.fire({
+                            title: resp.Titulo,
+                            text: resp.Texto,
+                            icon: resp.Tipo
+                        });
+                    }
+                })
+                .catch(err => {
+                    Swal.fire('Error', 'Error al procesar la solicitud', 'error');
+                    console.error(err);
+                });
+        });
+    });
 </script>

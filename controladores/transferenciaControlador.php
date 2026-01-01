@@ -66,12 +66,13 @@ class transferenciaControlador extends transferenciaModelo
 
         $resultado = transferenciaModelo::crear_transferencia($datos);
 
-        if ($resultado === true) {
+        if (is_array($resultado) && $resultado['ok'] === true) {
             return json_encode([
                 "Alerta" => "limpiar",
                 "Titulo" => "Transferencia generada",
                 "Texto"  => "La salida fue registrada correctamente",
-                "Tipo"   => "success"
+                "Tipo"   => "success",
+                "idnota_remision" => $resultado['idnota_remision']
             ]);
         }
 
