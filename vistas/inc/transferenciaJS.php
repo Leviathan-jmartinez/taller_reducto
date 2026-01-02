@@ -1,26 +1,24 @@
 <script>
     const SERVERURL = "<?= SERVERURL ?>";
 
+    /* ================= BUSCAR PRODUCTO ================= */
     function buscarProducto() {
         const q = document.getElementById('buscar_producto').value.trim();
-
-        if (q === '') {
-            alert('Ingrese un criterio de búsqueda');
-            return;
-        }
+        if (q === '') return;
 
         const datos = new FormData();
         datos.append('accion', 'buscar_producto');
         datos.append('termino', q);
 
-        fetch('<?= SERVERURL ?>ajax/transferenciaAjax.php', {
+        fetch(SERVERURL + 'ajax/transferenciaAjax.php', {
                 method: 'POST',
                 body: datos
             })
             .then(res => res.json())
             .then(data => {
-                let html = '<table class="table table-sm table-hover">';
-                html += `
+
+                let html = `
+        <table class="table table-sm table-hover">
             <thead>
                 <tr>
                     <th>Producto</th>
@@ -28,8 +26,8 @@
                     <th width="120">Cantidad</th>
                     <th width="80"></th>
                 </tr>
-            </thead><tbody>
-        `;
+            </thead>
+            <tbody>`;
 
                 if (data.length === 0) {
                     html += `
@@ -37,31 +35,28 @@
                     <td colspan="4" class="text-danger text-center">
                         No se encontraron productos
                     </td>
-                </tr>
-            `;
+                </tr>`;
                 } else {
                     data.forEach(p => {
                         html += `
-                            <tr>
-                                <td>${p.desc_articulo}</td>
-                                <td class="text-center">${p.stockDisponible}</td>
-                                <td>
-                                    <input type="number"
-                                        id="cant_${p.id_articulo}"
-                                        class="form-control form-control-sm"
-                                        min="0.01"
-                                        step="0.01">
-                                </td>
-                                <td class="text-center">
-                                    <button class="btn btn-sm btn-success"
-                                            onclick="agregarProducto(${p.id_articulo}, '${p.desc_articulo}', ${p.stockDisponible})">
-                                        +
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
+                <tr>
+                    <td>${p.desc_articulo}</td>
+                    <td class="text-center">${p.stockDisponible}</td>
+                    <td>
+                        <input type="number"
+                               id="cant_${p.id_articulo}"
+                               class="form-control form-control-sm"
+                               min="0.01" step="0.01">
+                    </td>
+                    <td class="text-center">
+                        <button type="button"
+                                class="btn btn-sm btn-success"
+                                onclick="agregarProducto(${p.id_articulo}, '${p.desc_articulo}', ${p.stockDisponible})">
+                            +
+                        </button>
+                    </td>
+                </tr>`;
                     });
-
                 }
 
                 html += '</tbody></table>';
@@ -69,32 +64,28 @@
             });
     }
 
-
-
+    /* ================= AGREGAR PRODUCTO ================= */
     function agregarProducto(id, desc, stock) {
         const input = document.getElementById('cant_' + id);
         const cant = parseFloat(input.value);
 
         if (!cant || cant <= 0) {
-            alert('Cantidad inválida');
+            Swal.fire('Error', 'Cantidad inválida', 'error');
             return;
         }
 
         if (cant > stock) {
-            alert('La cantidad supera el stock disponible');
+            Swal.fire('Error', 'La cantidad supera el stock', 'error');
             return;
         }
 
-        // evitar duplicados
         if (document.getElementById('prod_' + id)) {
-            alert('El producto ya fue agregado');
+            Swal.fire('Atención', 'El producto ya fue agregado', 'warning');
             return;
         }
 
-        const tbody = document.getElementById('detalle_productos');
         const tr = document.createElement('tr');
         tr.id = 'prod_' + id;
-
         tr.innerHTML = `
         <td>${desc}</td>
         <td>
@@ -109,30 +100,28 @@
             </button>
         </td>`;
 
-        tbody.appendChild(tr);
+        document.getElementById('detalle_productos').appendChild(tr);
 
         document.getElementById('resultado_busqueda').innerHTML = '';
         document.getElementById('buscar_producto').value = '';
     }
 
+    /* ================= BUSCAR SUCURSAL DESTINO ================= */
     function buscarSucursalDestino() {
         const q = document.getElementById('buscar_sucursal').value.trim();
-
-        if (q.length < 2) {
-            document.getElementById('resultado_sucursal').innerHTML = '';
-            return;
-        }
+        if (q.length < 2) return;
 
         const datos = new FormData();
         datos.append('accion', 'buscar_sucursal_destino');
         datos.append('termino', q);
 
-        fetch('<?= SERVERURL ?>ajax/transferenciaAjax.php', {
+        fetch(SERVERURL + 'ajax/transferenciaAjax.php', {
                 method: 'POST',
                 body: datos
             })
             .then(res => res.json())
             .then(data => {
+
                 let html = '<ul class="list-group">';
                 if (data.length === 0) {
                     html += `
@@ -142,13 +131,14 @@
                 } else {
                     data.forEach(s => {
                         html += `
-                    <li class="list-group-item list-group-item-action"
-                        onclick="seleccionarSucursal(${s.id_sucursal}, '${s.suc_descri}')">
-                        ${s.suc_descri}
-                    </li>`;
+                <li class="list-group-item list-group-item-action"
+                    onclick="seleccionarSucursal(${s.id_sucursal}, '${s.suc_descri}')">
+                    ${s.suc_descri}
+                </li>`;
                     });
                 }
                 html += '</ul>';
+
                 document.getElementById('resultado_sucursal').innerHTML = html;
             });
     }
@@ -159,69 +149,50 @@
         document.getElementById('resultado_sucursal').innerHTML = '';
     }
 
-    // buscar mientras escribe
-    document.getElementById('buscar_sucursal').addEventListener('keyup', buscarSucursalDestino);
+    /* ================= EVENTOS ================= */
+    document.getElementById('buscar_sucursal')
+        ?.addEventListener('keyup', buscarSucursalDestino);
 
-    document.querySelector('.FormularioAjax').addEventListener('submit', function(e) {
-        e.preventDefault();
+    /* ================= SUBMIT CREAR ================= */
+    document.querySelector('.FormularioAjax')
+        ?.addEventListener('submit', function(e) {
 
-        const form = this;
+            e.preventDefault();
 
-        Swal.fire({
-            title: 'Confirmar',
-            text: '¿Desea guardar la transferencia y emitir la remisión?',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, guardar',
-            cancelButtonText: 'No'
-        }).then((result) => {
+            if (!confirm('¿Desea guardar la transferencia y emitir la remisión?')) {
+                return;
+            }
 
-            // 👉 SOLO SI CONFIRMA SE GUARDA
-            if (!result.isConfirmed) return;
+            const pdfWindow = window.open('', '_blank');
+            const datos = new FormData(this);
 
-            const datos = new FormData(form);
-
-            fetch(form.getAttribute('action'), {
-                    method: form.getAttribute('method'),
+            fetch(this.action, {
+                    method: this.method,
                     body: datos
                 })
                 .then(res => res.json())
                 .then(resp => {
 
-                    if (resp.Alerta === 'limpiar') {
+                    if (resp.Alerta === 'limpiar' && resp.idnota_remision) {
 
-                        // 👉 imprimir automáticamente
-                        if (resp.idnota_remision) {
-                            window.open(
-                                '<?= SERVERURL ?>pdf/remision.php?id=' + resp.idnota_remision,
-                                '_blank'
-                            );
-                        }
+                        pdfWindow.location.href =
+                            SERVERURL + 'pdf/remision.php?id=' + resp.idnota_remision;
 
-                        Swal.fire({
-                            title: resp.Titulo,
-                            text: resp.Texto,
-                            icon: 'success'
-                        });
+                        Swal.fire(resp.Titulo, resp.Texto, 'success');
+                        this.reset();
 
-                        // limpiar formulario
-                        form.reset();
                         document.getElementById('detalle_productos').innerHTML = '';
                         document.getElementById('resultado_busqueda').innerHTML = '';
                         document.getElementById('resultado_sucursal').innerHTML = '';
 
                     } else {
-                        Swal.fire({
-                            title: resp.Titulo,
-                            text: resp.Texto,
-                            icon: resp.Tipo
-                        });
+                        pdfWindow.close();
+                        Swal.fire(resp.Titulo || 'Error', resp.Texto || 'Error', 'error');
                     }
                 })
-                .catch(err => {
-                    Swal.fire('Error', 'Error al procesar la solicitud', 'error');
-                    console.error(err);
+                .catch(() => {
+                    pdfWindow.close();
+                    Swal.fire('Error', 'Error al procesar la transferencia', 'error');
                 });
         });
-    });
 </script>

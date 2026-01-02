@@ -26,3 +26,9 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'crear_transferencia') {
 if (isset($_POST['accion']) && $_POST['accion'] === 'buscar_sucursal_destino') {
     $transferencia->buscar_sucursal_destino_controlador();
 }
+
+
+/* ========= RECIBIR TRANSFERENCIA ========= */
+if (isset($_POST['accion']) && $_POST['accion'] === 'recibir_transferencia') {
+    echo $transferencia->recibir_transferencia_controlador();
+}
