@@ -43,6 +43,9 @@ $detalle = $data['detalle'];
     <input type="hidden" name="accion" value="recibir_transferencia">
     <input type="hidden" name="idtransferencia"
         value="<?= $transferencia['idtransferencia'] ?>">
+    <input type="text" id="buscarProducto"
+        class="form-control mb-2"
+        placeholder="Buscar producto...">
 
     <table class="table table-bordered table-sm">
         <thead class="thead-light">

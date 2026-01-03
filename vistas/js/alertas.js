@@ -1,8 +1,11 @@
 const formulario_ajax = document.querySelectorAll(".FormularioAjax");
 
 function enviar_formulario_ajax(e) {
+    if (this.dataset.customSubmit === "true") {
+        return;
+    }
     e.preventDefault();
-
+    e.stopImmediatePropagation();
     let data = new FormData(this);
     let method = this.getAttribute("method");
     let action = this.getAttribute("action");
@@ -126,6 +129,16 @@ function alertasAjax(alerta, form = null) {
     } else if (alerta.Alerta === "limpiar") {
         localStorage.removeItem('presupuesto_servicio_tmp');
         document.querySelector(".FormularioAjax").reset();
+    } else if (alerta.Alerta === "redireccionar_confirmado") {
+        Swal.fire({
+            title: alerta.Titulo || "Proceso completado",
+            text: alerta.Texto || "",
+            type: alerta.Tipo || "success",
+            confirmButtonText: "Aceptar"
+        }).then(() => {
+            window.location.href = alerta.URL;
+        });
     }
+
 
 }

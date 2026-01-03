@@ -1,3 +1,15 @@
+#RewriteEngine On
+#Options All -Indexes
+#RewriteRule ^([a-zA-Z0-9/ñÑ-]+)$ index.php?vista=$1
+
 RewriteEngine On
-Options All -Indexes
-RewriteRule ^([a-zA-Z0-9/ñÑ-]+)$ index.php?vista=$1
+RewriteBase /taller_reducto/
+
+Options -Indexes
+
+# Si es archivo o directorio real, no reescribir
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Aceptar múltiples segmentos + underscore
+RewriteRule ^(.+)$ index.php?vista=$1 [QSA,L]

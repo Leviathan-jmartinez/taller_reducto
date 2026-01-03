@@ -42,8 +42,8 @@ class compraModelo extends mainModel
     {
         $sql = mainModel::conectar()->prepare("
             INSERT INTO compra_detalle
-            (idcompra_cabecera, id_articulo, precio_unitario, cantidad_recibida, subtotal, ivaPro)
-            VALUES (:idcab, :articulo, :precio, :cantidad, :subtotal, :iva)
+            (idcompra_cabecera, id_articulo, precio_unitario, cantidad_recibida, subtotal, tipo_iva, ivaPro)
+            VALUES (:idcab, :articulo, :precio, :cantidad, :subtotal, :tipo_iva, :iva)
         ");
 
         $sql->bindParam(":idcab", $detalle['idcab']);
@@ -51,6 +51,7 @@ class compraModelo extends mainModel
         $sql->bindParam(":precio", $detalle['precio']);
         $sql->bindParam(":cantidad", $detalle['cantidad']);
         $sql->bindParam(":subtotal", $detalle['subtotal']);
+        $sql->bindParam(":tipo_iva", $detalle['tipo_iva']);
         $sql->bindParam(":iva", $detalle['iva']);
 
         $sql->execute();
@@ -338,4 +339,43 @@ class compraModelo extends mainModel
         return $sql;
     }
     /** fin modelo */
+
+    public static function insertar_libro_compra_modelo($d)
+    {
+        $sql = mainModel::conectar()->prepare("
+        INSERT INTO libro_compra (
+            idcompra_cabecera,
+            fecha,
+            tipo_comprobante,
+            serie,
+            nro_comprobante,
+            idproveedores,
+            proveedor_nombre,
+            proveedor_ruc,
+            exenta,
+            gravada_5,
+            iva_5,
+            gravada_10,
+            iva_10,
+            total
+        ) VALUES (
+            :idcompra,
+            :fecha,
+            :tipo,
+            :serie,
+            :numero,
+            :proveedor,
+            :prov_nom,
+            :prov_ruc,
+            :exenta,
+            :gravada5,
+            :iva5,
+            :gravada10,
+            :iva10,
+            :total
+        )
+    ");
+
+        return $sql->execute($d) ? $sql : $sql;
+    }
 }

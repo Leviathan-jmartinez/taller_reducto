@@ -1,5 +1,6 @@
 <?php
-require_once "mainModel.php";
+require_once __DIR__ . "/mainModel.php";
+
 
 class transferenciaModelo extends mainModel
 {
@@ -354,9 +355,8 @@ class transferenciaModelo extends mainModel
         try {
             $pdo->beginTransaction();
 
-            /* ========= BLOQUEAR TRANSFERENCIA ========= */
             $q = $pdo->prepare("
-            SELECT sucursal_destino, estado
+            SELECT sucursal_origen, sucursal_destino, estado, usuario_envia
             FROM transferencia_stock
             WHERE idtransferencia = :id
             FOR UPDATE
@@ -364,18 +364,18 @@ class transferenciaModelo extends mainModel
             $q->execute([':id' => $idTransferencia]);
             $t = $q->fetch(PDO::FETCH_ASSOC);
 
-            if (!$t || $t['estado'] !== 'en_transito') {
+            if (!$t) {
+                throw new Exception("Transferencia no encontrada");
+            }
+
+            if ($t['estado'] !== 'en_transito') {
+                throw new Exception("La transferencia ya fue recibida");
+            }
+
+            if ($t['sucursal_destino'] != $_SESSION['nick_sucursal']) {
                 throw new Exception("Transferencia inválida");
             }
 
-            // 🔒 VALIDACIÓN DE SUCURSAL DESTINO
-            if ($t['sucursal_destino'] != $_SESSION['nick_sucursal']) {
-                throw new Exception("La transferencia no corresponde a su sucursal");
-            }
-
-            $destino = $t['sucursal_destino'];
-
-            /* ========= DETALLE ENVIADO ========= */
             $det = $pdo->prepare("
             SELECT id_articulo, cantidad
             FROM transferencia_stock_detalle
@@ -388,99 +388,118 @@ class transferenciaModelo extends mainModel
                 throw new Exception("Transferencia sin detalle");
             }
 
+            $faltantes = [];
+
             foreach ($detalle as $d) {
 
                 $idArticulo = $d['id_articulo'];
                 $enviado    = (float)$d['cantidad'];
-                $recibido   = isset($cantidadesRecibidas[$idArticulo])
-                    ? (float)$cantidadesRecibidas[$idArticulo]
-                    : 0;
+                $recibido   = (float)($cantidadesRecibidas[$idArticulo] ?? 0);
 
-                // ===== VALIDACIONES =====
-                if ($recibido < 0) {
-                    throw new Exception("Cantidad inválida para artículo {$idArticulo}");
+                if ($recibido < 0 || $recibido > $enviado) {
+                    throw new Exception("Cantidad inválida");
                 }
 
-                if ($recibido > $enviado) {
-                    throw new Exception("Cantidad recibida mayor a la enviada (artículo {$idArticulo})");
+                if ($recibido < $enviado) {
+                    $faltantes[] = [
+                        'id_articulo' => $idArticulo,
+                        'cantidad'    => $enviado - $recibido
+                    ];
                 }
 
-                /* ========= ACTUALIZAR CANTIDAD RECIBIDA ========= */
                 $pdo->prepare("
                 UPDATE transferencia_stock_detalle
                 SET cantidad_recibida = :rec
-                WHERE idtransferencia = :id
-                  AND id_articulo = :art
+                WHERE idtransferencia = :id AND id_articulo = :art
             ")->execute([
                     ':rec' => $recibido,
                     ':id'  => $idTransferencia,
                     ':art' => $idArticulo
                 ]);
 
-                /* ========= SUMAR STOCK DESTINO (SOLO RECIBIDO) ========= */
                 if ($recibido > 0) {
-
                     $pdo->prepare("
-                        INSERT INTO stock
-                            (id_articulo, id_sucursal, stockcant_max, stockcant_min, stockDisponible, stockUltActualizacion, stockUsuActualizacion, stockultimoIdActualizacion)
-                        VALUES
-                            (:art, :suc, 200, 15, :cant, NOW(), :usr, :id)
-                        ON DUPLICATE KEY UPDATE
-                            stockDisponible = stockDisponible + :cant,
-                            stockUltActualizacion = NOW(),
-                            stockultimoIdActualizacion = :id,
-                            stockUsuActualizacion = :usr")->execute([
+                    INSERT INTO stock
+                        (id_articulo, id_sucursal, stockcant_max, stockcant_min, stockDisponible,
+                         stockUltActualizacion, stockUsuActualizacion, stockultimoIdActualizacion)
+                    VALUES
+                        (:art, :suc, 200, 15, :cant, NOW(), :usr, :id)
+                    ON DUPLICATE KEY UPDATE
+                        stockDisponible = stockDisponible + :cant,
+                        stockUltActualizacion = NOW(),
+                        stockUsuActualizacion = :usr,
+                        stockultimoIdActualizacion = :id
+                ")->execute([
                         ':art' => $idArticulo,
-                        ':suc' => $destino,
+                        ':suc' => $t['sucursal_destino'],
                         ':cant' => $recibido,
                         ':usr' => $idUsuario,
-                        ':id' => $idTransferencia
-                    ]);
-
-
-                    /* ========= MOVIMIENTO DE STOCK (ENTRADA) ========= */
-                    $pdo->prepare("
-                        INSERT INTO sucmovimientostock
-                            (
-                                LocalId,
-                                TipoMovStockId,
-                                MovStockProductoId,
-                                MovStockCantidad,
-                                MovStockPrecioVenta,
-                                MovStockCosto,
-                                MovStockFechaHora,
-                                MovStockUsuario,
-                                MovStockSigno,
-                                MovStockReferencia
-                            )
-                        VALUES
-                            (:loc, 'TRANSFERENCIA_ENTRADA', :art,
-                            :cant, 0, 0, NOW(), :usr, 1, :ref)")->execute([
-                        ':loc' => $destino,
-                        ':art' => $idArticulo,
-                        ':cant' => $recibido,
-                        ':usr' => $idUsuario,
-                        ':ref' => 'TRANSFERENCIA #' . $idTransferencia
+                        ':id'  => $idTransferencia
                     ]);
                 }
             }
 
-            /* ========= MARCAR TRANSFERENCIA RECIBIDA ========= */
+            $estadoFinal = empty($faltantes) ? 'recibido' : 'recibido_parcial';
+
             $pdo->prepare("
             UPDATE transferencia_stock
-            SET estado = 'recibido',
-                usuario_recibe = :usr
+            SET estado = :estado,
+                usuario_recibe = :usr,
+                fecha_actualizacion = NOW()
             WHERE idtransferencia = :id
         ")->execute([
-                ':usr' => $idUsuario,
-                ':id'  => $idTransferencia
+                ':estado' => $estadoFinal,
+                ':usr'    => $idUsuario,
+                ':id'     => $idTransferencia
             ]);
 
+            // 🔁 generar devolución automática
+            if (!empty($faltantes)) {
+
+                $stmt = $pdo->prepare("
+                INSERT INTO transferencia_stock
+                (fecha, sucursal_origen, sucursal_destino, estado,
+                 usuario_envia, idtransferencia_origen, fecha_actualizacion)
+                VALUES
+                (NOW(), :origen, :destino, 'en_transito',
+                 :usr, :ref, NOW())
+            ");
+                $stmt->execute([
+                    ':origen' => $t['sucursal_destino'],
+                    ':destino' => $t['sucursal_origen'],
+                    ':usr'    => $t['usuario_envia'],
+                    ':ref'    => $idTransferencia
+                ]);
+
+                $idNueva = $pdo->lastInsertId();
+
+                $stmtDet = $pdo->prepare("
+                INSERT INTO transferencia_stock_detalle
+                (idtransferencia, id_articulo, cantidad)
+                VALUES (:id, :art, :cant)
+            ");
+
+                foreach ($faltantes as $f) {
+                    $stmtDet->execute([
+                        ':id'   => $idNueva,
+                        ':art'  => $f['id_articulo'],
+                        ':cant' => $f['cantidad']
+                    ]);
+                }
+            }
+
             $pdo->commit();
-            return true;
+
+            return [
+                'ok' => true,
+                'parcial' => !empty($faltantes)
+            ];
         } catch (Exception $e) {
             $pdo->rollBack();
-            return $e->getMessage();
+            return [
+                'ok' => false,
+                'mensaje' => $e->getMessage()
+            ];
         }
     }
 }

@@ -1,7 +1,7 @@
 <?php
 $peticionAjax = true;
-
 require_once "../config/SERVER.php";
+require_once "../config/APP.php";
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start(['name' => 'STR']);
@@ -31,4 +31,5 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'buscar_sucursal_destino') {
 /* ========= RECIBIR TRANSFERENCIA ========= */
 if (isset($_POST['accion']) && $_POST['accion'] === 'recibir_transferencia') {
     echo $transferencia->recibir_transferencia_controlador();
+    exit;
 }

@@ -96,7 +96,7 @@ class compraControlador extends compraModelo
 
         // 2️⃣ Detalle del pedido (artículos)
         $sqlDetalle = mainModel::ejecutar_consulta_simple("
-        SELECT ocd.id_articulo, ocd.cantidad_pendiente, a.desc_articulo, a.codigo, ocd.precio_unitario, ti.tipo_impuesto_descri, ti.ratevalueiva, ti.divisor
+        SELECT ocd.id_articulo, ocd.cantidad_pendiente, a.desc_articulo, a.codigo, ocd.precio_unitario, ti.idiva, ti.tipo_impuesto_descri, ti.ratevalueiva, ti.divisor
         FROM orden_compra_detalle ocd
         INNER JOIN articulos a ON a.id_articulo = ocd.id_articulo
         INNER JOIN tipo_impuesto ti ON ti.idiva = a.idiva
@@ -122,6 +122,7 @@ class compraControlador extends compraModelo
                 "cantidad" => $cantidad,
                 "precio" => $precio,
                 "subtotal" => $subtotal,
+                "tipo_iva" => $row['idiva'],
                 "iva_descri" => $row['tipo_impuesto_descri'],
                 "iva" => $iva,
                 "ratevalueiva" => $row['ratevalueiva'],
@@ -176,10 +177,34 @@ class compraControlador extends compraModelo
             $idcab = $guardarCab["last_id"];
 
             /* ===============================
-            GUARDAR DETALLES + ACTUALIZAR STOCK
+            GUARDAR DETALLES + ACTUALIZAR STOCK + ACUMULADORES LIBRO COMPRA
             ================================= */
+            $exenta     = 0;
+            $gravada5   = 0;
+            $iva5       = 0;
+            $gravada10  = 0;
+            $iva10      = 0;
+            $totalLibro = 0;
+
             foreach ($_SESSION['Cdatos_articuloCO'] as $item) {
                 if ($item['cantidad'] <= 0) continue;
+                $totalLibro += $item['subtotal'];
+
+                switch ($item['tipo_iva']) {
+                    case '1': // IVA 5%
+                        $gravada5 += ($item['subtotal'] - $item['iva']);
+                        $iva5     += $item['iva'];
+                        break;
+
+                    case '2': // IVA 10%
+                        $gravada10 += ($item['subtotal'] - $item['iva']);
+                        $iva10     += $item['iva'];
+                        break;
+
+                    default: // EXENTA
+                        $exenta += $item['subtotal'];
+                        break;
+                }
 
                 // Guardar detalle
                 $detalle = [
@@ -187,6 +212,7 @@ class compraControlador extends compraModelo
                     "id_articulo" => $item['ID'],
                     "precio"      => $item['precio'],
                     "cantidad"    => $item['cantidad'],
+                    "tipo_iva"    => $item['tipo_iva'],
                     "subtotal"    => $item['subtotal'],
                     "iva"         => $item['iva']
                 ];
@@ -263,6 +289,33 @@ class compraControlador extends compraModelo
                 }
             }
 
+                /* ===============================
+                INSERTAR EN LIBRO DE COMPRAS
+                ================================= */
+            $datosLibro = [
+                "idcompra"   => $idcab,
+                "fecha"      => $_POST['fecha_emision'],
+                "tipo"       => "factura",
+                "serie"      => substr($_POST['factura_numero'], 0, 7),
+                "numero"     => $_POST['factura_numero'],
+                "proveedor"  => $_SESSION['datos_proveedorCO']['ID'],
+                "prov_nom"   => $_SESSION['datos_proveedorCO']['RAZON'],
+                "prov_ruc"   => $_SESSION['datos_proveedorCO']['RUC'],
+                "exenta"     => $exenta,
+                "gravada5"   => $gravada5,
+                "iva5"       => $iva5,
+                "gravada10"  => $gravada10,
+                "iva10"      => $iva10,
+                "total"      => $totalLibro
+            ];
+
+            $guardarLibro = compraModelo::insertar_libro_compra_modelo($datosLibro);
+
+            if ($guardarLibro->rowCount() < 1) {
+                throw new Exception("No se pudo guardar el libro de compras.");
+            }
+
+
             // CONFIRMAR TRANSACCIÓN
             $pdo->commit();
 
@@ -272,11 +325,11 @@ class compraControlador extends compraModelo
             unset($_SESSION['id_oc_seleccionado']);
 
             return [
-                    "Alerta" => "recargar",
-                    "Titulo" => "Compra registrada",
-                    "Texto" => "La compra se guardó correctamente.",
-                    "Tipo" => "success"
-                ];
+                "Alerta" => "recargar",
+                "Titulo" => "Compra registrada",
+                "Texto" => "La compra se guardó correctamente.",
+                "Tipo" => "success"
+            ];
         } catch (Exception $e) {
             $pdo->rollBack();
             return [
@@ -488,7 +541,7 @@ class compraControlador extends compraModelo
             try {
                 $sqlDetalle = mainModel::ejecutar_consulta_simple("
                 SELECT a.id_articulo, a.desc_articulo, a.codigo,
-                       ti.tipo_impuesto_descri, ti.ratevalueiva, ti.divisor
+                       ti.idiva, ti.tipo_impuesto_descri, ti.ratevalueiva, ti.divisor
                 FROM articulos a
                 INNER JOIN tipo_impuesto ti ON ti.idiva = a.idiva
                 WHERE a.id_articulo = '$id'
@@ -539,6 +592,7 @@ class compraControlador extends compraModelo
                         "cantidad"    => $cantidad,
                         "precio"      => $precio,
                         "subtotal"    => $subtotal,
+                        "tipo_iva"    => $row['idiva'],
                         "iva_descri"  => $row['tipo_impuesto_descri'],
                         "iva"         => $iva,
                         "ratevalueiva" => $row['ratevalueiva'],
