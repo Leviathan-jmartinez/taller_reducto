@@ -23,7 +23,7 @@ class compraControlador extends compraModelo
             exit();
         }
         /**seleccionar proveedor */
-        $datoscompra = mainModel::ejecutar_consulta_simple("SELECT SQL_CALC_FOUND_ROWS oc.idorden_compra as idorden_compra, oc.idproveedores as idproveedores, 
+        $datoscompra = mainModel::ejecutar_consulta_simple("SELECT SQL_CALC_FOUND_ROWS oc.idorden_compra as idorden_compra, oc.id_sucursal as id_sucursal,oc.idproveedores as idproveedores, 
         oc.id_usuario as id_usuario, oc.fecha as fecha, oc.estado as estodoOC, oc.fecha_entrega as fecha_entrega, oc.updated as updated, 
         oc.updatedby as updatedby, p.idproveedores as idproveedores, p.id_ciudad as id_ciudad, p.razon_social as razon_social, 
         p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, p.estado as estadoPro, 
@@ -31,7 +31,7 @@ class compraControlador extends compraModelo
         from orden_compra oc 
         INNER JOIN proveedores p on p.idproveedores = oc.idproveedores 
         INNER JOIN usuarios u on u.id_usuario = oc.id_usuario
-        where (oc.idorden_compra like '%$ordencompa%' or p.razon_social like '%$ordencompa%' or p.ruc like '%$ordencompa%') and oc.estado = '1'
+        where (oc.idorden_compra like '%$ordencompa%' or p.razon_social like '%$ordencompa%' or p.ruc like '%$ordencompa%') and oc.estado = '1' and oc.id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
         order by idorden_compra desc");
 
         if ($datoscompra->rowCount() >= 1) {
@@ -84,7 +84,7 @@ class compraControlador extends compraModelo
         SELECT oc.idorden_compra, p.razon_social, p.ruc, oc.idproveedores
         FROM orden_compra oc
         INNER JOIN proveedores p ON p.idproveedores = oc.idproveedores
-        WHERE oc.idorden_compra = '$idoccompra'");
+        WHERE oc.idorden_compra = '$idoccompra' and id_sucursal = '" . $_SESSION['nick_sucursal'] . "'");
         $cabecera = $sqlCabecera->fetch();
         if ($cabecera) {
             $_SESSION['datos_proveedorCO'] = [
@@ -158,6 +158,7 @@ class compraControlador extends compraModelo
             $datosCab = [
                 "proveedor"           => $_SESSION['datos_proveedorCO']['ID'],
                 "usuario"             => $_SESSION['id_str'],
+                "idsucursal"          => $_SESSION['nick_sucursal'],
                 "nro_factura"         => $_POST['factura_numero'],
                 "fecha_factura"       => $_POST['fecha_emision'],
                 "timbrado"            => $_POST['timbrado'],
@@ -259,7 +260,8 @@ class compraControlador extends compraModelo
                 compraModelo::actualizar_oc_modelo([
                     "idorden_compra" => $datosCab['idoc'],
                     "idcompra_cabecera" => $idcab,
-                    "updatedby" => $_SESSION['id_str']
+                    "updatedby" => $_SESSION['id_str'],
+                    "id_sucursal" => $_SESSION['nick_sucursal']
                 ]);
             }
 
@@ -277,10 +279,12 @@ class compraControlador extends compraModelo
                 $fecha_vencimiento = date('Y-m-d', strtotime("+" . ($intervalo * $i) . " days"));
                 $datos_cuenta = [
                     "idcompra"        => $idcab,
+                    "idsucursal"     => $_SESSION['nick_sucursal'],
                     "monto"           => $monto_cuota,
                     "saldo"           => $monto_cuota,
                     "cuotas"          => $i,
                     "fecha_vencimiento" => $fecha_vencimiento,
+                    "observacion"     => "Factura " . $_POST['factura_numero'],
                     "estado"          => 1
                 ];
                 $guardarCuenta = compraModelo::insertar_cuentas_a_pagar_modelo($datos_cuenta);
@@ -294,6 +298,7 @@ class compraControlador extends compraModelo
                 ================================= */
             $datosLibro = [
                 "idcompra"   => $idcab,
+                "id_sucursal" => $_SESSION['nick_sucursal'],
                 "fecha"      => $_POST['fecha_emision'],
                 "tipo"       => "factura",
                 "serie"      => substr($_POST['factura_numero'], 0, 7),
@@ -632,24 +637,24 @@ class compraControlador extends compraModelo
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
 
         if (!empty($busqueda1) && !empty($busqueda2)) {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS co.idcompra_cabecera as idcompra_cabecera, co.id_usuario as id_usuario, co.fecha_creacion as fecha_creacion, co.estado as estadoCO, co.nro_factura AS nro_factura, co.condicion as condicion,
+            $consulta = "SELECT SQL_CALC_FOUND_ROWS co.idcompra_cabecera as idcompra_cabecera, co.id_usuario as id_usuario, co.id_sucursal as id_sucursal, co.fecha_creacion as fecha_creacion, co.estado as estadoCO, co.nro_factura AS nro_factura, co.condicion as condicion,
             co.fecha_factura as fecha_factura, total_compra AS total_compra, co.idproveedores as idproveedores, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
             p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick, co.updated as updated,
             co.updatedby as updatedby
             FROM compra_cabecera co
             INNER JOIN proveedores p on p.idproveedores = co.idproveedores
             INNER JOIN usuarios u on u.id_usuario = co.id_usuario
-            WHERE date(fecha_creacion) >= '$busqueda1' AND date(fecha_creacion) <='$busqueda2'
+            WHERE date(fecha_creacion) >= '$busqueda1' AND date(fecha_creacion) <='$busqueda2' AND id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
             ORDER BY fecha_creacion ASC LIMIT $inicio,$registros";
         } else {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS co.idcompra_cabecera as idcompra_cabecera, co.id_usuario as id_usuario, co.fecha_creacion as fecha_creacion, co.estado as estadoCO, nro_factura AS nro_factura, condicion as condicion,
+            $consulta = "SELECT SQL_CALC_FOUND_ROWS co.idcompra_cabecera as idcompra_cabecera, co.id_usuario as id_usuario, co.id_sucursal as id_sucursal, co.fecha_creacion as fecha_creacion, co.estado as estadoCO, nro_factura AS nro_factura, condicion as condicion,
             co.fecha_factura as fecha_factura, total_compra AS total_compra, co.idproveedores as idproveedores, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
             p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick, co.updated as updated,
             co.updatedby as updatedby
             FROM compra_cabecera co
             INNER JOIN proveedores p on p.idproveedores = co.idproveedores
             INNER JOIN usuarios u on u.id_usuario = co.id_usuario
-            WHERE oc.estado != 0
+            WHERE oc.estado != 0 and id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
             ORDER BY pc.idcompra_cabecera ASC LIMIT $inicio,$registros";
         }
         $conexion = mainModel::conectar();
@@ -747,7 +752,7 @@ class compraControlador extends compraModelo
 
         // Verificar que la compra exista
         $check_compra = mainModel::ejecutar_consulta_simple(
-            "SELECT idcompra_cabecera FROM compra_cabecera WHERE idcompra_cabecera = '$id'"
+            "SELECT idcompra_cabecera FROM compra_cabecera WHERE idcompra_cabecera = '$id' AND id_sucursal = '" . $_SESSION['nick_sucursal'] . "'"
         );
         if ($check_compra->rowCount() <= 0) {
             $alerta = [
@@ -762,7 +767,7 @@ class compraControlador extends compraModelo
 
         // Verificar que no esté anulada
         $check_compraestado = mainModel::ejecutar_consulta_simple(
-            "SELECT idcompra_cabecera FROM compra_cabecera WHERE idcompra_cabecera = '$id' AND estado = 0"
+            "SELECT idcompra_cabecera FROM compra_cabecera WHERE idcompra_cabecera = '$id' AND estado = 0 AND id_sucursal = '" . $_SESSION['nick_sucursal'] . "'"
         );
         if ($check_compraestado->rowCount() > 0) {
             $alerta = [
@@ -797,11 +802,12 @@ class compraControlador extends compraModelo
             // 1) Anular compra cabecera
             compraModelo::anular_compra_modelo([
                 "idcompra_cabecera" => $id,
-                "updatedby" => $usuario
+                "updatedby" => $usuario,
+                "idsucursal" => $id_sucursal
             ]);
 
             // 2) Obtener detalles de la compra
-            $detalles = compraModelo::datos_detalle_compra_modelo($id)->fetchAll(PDO::FETCH_ASSOC);
+            $detalles = compraModelo::datos_detalle_compra_modelo($id,$id_sucursal)->fetchAll(PDO::FETCH_ASSOC);
 
             // 3) Descontar stock y generar movimientos
             foreach ($detalles as $d) {
@@ -826,7 +832,7 @@ class compraControlador extends compraModelo
             }
 
             // 4) Anular cuentas a pagar
-            compraModelo::anular_cuentas_pagar_modelo($id);
+            compraModelo::anular_cuentas_pagar_modelo($id, $id_sucursal);
 
             // Confirmar transacción
             $pdo->commit();

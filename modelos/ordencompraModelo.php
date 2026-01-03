@@ -8,11 +8,12 @@ class ordencompraModelo extends mainModel
     {
         $conexion = mainModel::conectar();
         $sql = $conexion->prepare("INSERT INTO orden_compra 
-        (idproveedores, presupuestoid, id_usuario, fecha, estado, fecha_entrega)
-        VALUES (:proveedor, :presupuestoid, :usuario, NOW(), 1, :fecha_entrega)");
+        (idproveedores, presupuestoid, id_sucursal, id_usuario, fecha, estado, fecha_entrega)
+        VALUES (:proveedor, :presupuestoid, :sucursal, :usuario, NOW(), 1, :fecha_entrega)");
 
         $sql->bindParam(":proveedor", $datos['proveedor']);
         $sql->bindParam(":presupuestoid", $datos['presupuestoid']);
+        $sql->bindParam(":sucursal", $datos['sucursal']);
         $sql->bindParam(":usuario", $datos['usuario']);
         $sql->bindParam(":fecha_entrega", $datos['fecha_entrega']);
 
@@ -26,11 +27,12 @@ class ordencompraModelo extends mainModel
     {
         $conexion = mainModel::conectar();
         $sql = $conexion->prepare("INSERT INTO orden_compra 
-        (idproveedores, id_usuario, fecha, estado, fecha_entrega)
-        VALUES (:proveedor, :usuario, NOW(), 1, :fecha_entrega)");
+        (idproveedores, id_usuario, id_sucursal, fecha, estado, fecha_entrega)
+        VALUES (:proveedor, :usuario, :sucursal, NOW(), 1, :fecha_entrega)");
 
         $sql->bindParam(":proveedor", $datos['proveedor']);
         $sql->bindParam(":usuario", $datos['usuario']);
+        $sql->bindParam(":sucursal", $datos['sucursal']);
         $sql->bindParam(":fecha_entrega", $datos['fecha_entrega']);
 
         $sql->execute();
@@ -62,9 +64,10 @@ class ordencompraModelo extends mainModel
     {
         $sql = mainModel::conectar()->prepare("UPDATE orden_compra
         SET estado=0, updatedby=:updatedby, updated=now()
-        WHERE idorden_compra=:idorden_compra");
+        WHERE idorden_compra=:idorden_compra and id_sucursal=:idsucursal");
         $sql->bindParam(":updatedby", $datos['updatedby']);
         $sql->bindParam(":idorden_compra", $datos['idorden_compra']);
+        $sql->bindParam(":idsucursal", $datos['idsucursal']);
         $sql->execute();
         return $sql;
     }

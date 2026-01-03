@@ -149,8 +149,7 @@ class notasCreDeModelo extends mainModel
         UPDATE nota_compra
         SET estado = 0,
             fecha_actualizacion = NOW()
-        WHERE idnota_compra = :id
-    ");
+        WHERE idnota_compra = :id    ");
         $sql->execute([':id' => $idNota]);
     }
 
@@ -164,8 +163,7 @@ class notasCreDeModelo extends mainModel
         VALUES
         (:idcompra, 'anulacion', 'nota_compra',
          :ref, :monto, :monto,
-         NOW(), :obs, 1)
-    ");
+         NOW(), :obs, 1)");
 
         $sql->execute([
             ':idcompra' => $d['idcompra'],

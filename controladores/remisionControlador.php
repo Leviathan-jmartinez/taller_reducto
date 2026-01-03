@@ -22,14 +22,14 @@ class remisionControlador extends remisionModelo
             exit();
         }
         /**seleccionar proveedor */
-        $datoscompra = mainModel::ejecutar_consulta_simple("SELECT SQL_CALC_FOUND_ROWS co.idcompra_cabecera as idcompra_cabecera, co.id_usuario as id_usuario, co.fecha_creacion as fecha_creacion, co.estado as estadoCO, co.nro_factura AS nro_factura, co.condicion as condicion,
+        $datoscompra = mainModel::ejecutar_consulta_simple("SELECT SQL_CALC_FOUND_ROWS co.idcompra_cabecera as idcompra_cabecera, co.id_usuario as id_usuario, co.id_sucursal as id_sucursal, co.fecha_creacion as fecha_creacion, co.estado as estadoCO, co.nro_factura AS nro_factura, co.condicion as condicion,
         co.fecha_factura as fecha_factura, total_compra AS total_compra, co.idproveedores as idproveedores, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
         p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick, co.updated as updated,
         co.updatedby as updatedby
         FROM compra_cabecera co
         INNER JOIN proveedores p on p.idproveedores = co.idproveedores
         INNER JOIN usuarios u on u.id_usuario = co.id_usuario
-        where (co.nro_factura like '%$facturacompra%') and co.estado = '1'
+        where (co.nro_factura like '%$facturacompra%') and co.estado = '1'  and co.id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
         order by idcompra_cabecera desc");
 
         if ($datoscompra->rowCount() >= 1) {
@@ -77,13 +77,15 @@ class remisionControlador extends remisionModelo
         }
 
         $_SESSION['idfacturaseleccionado'] = $idcompra;
-
+        $id_sucursal = $_SESSION['nick_sucursal'];
+        
         // 1️⃣ Cabecera de la compra (proveedor)
         $sqlCabecera = mainModel::ejecutar_consulta_simple("
         SELECT cc.idcompra_cabecera, p.razon_social, p.ruc, cc.idproveedores, cc.nro_factura, cc.fecha_factura, cc.total_compra
         FROM compra_cabecera cc
         INNER JOIN proveedores p ON p.idproveedores = cc.idproveedores
-        WHERE cc.idcompra_cabecera = '$idcompra'");
+        WHERE cc.idcompra_cabecera = '$idcompra' and cc.id_sucursal = '$id_sucursal'
+        LIMIT 1");
         $cabecera = $sqlCabecera->fetch();
         if ($cabecera) {
             $_SESSION['datos_dactura'] = [
@@ -98,13 +100,23 @@ class remisionControlador extends remisionModelo
         }
 
         // 2️⃣ Detalle de la compra (artículos)
-        $sqlDetalle = mainModel::ejecutar_consulta_simple("
-        SELECT cd.id_articulo, cd.cantidad_recibida, a.desc_articulo, a.codigo, cd.precio_unitario, cd.subtotal, cd.ivaPro, ti.tipo_impuesto_descri, ti.ratevalueiva, ti.divisor
+        $conexion = mainModel::conectar();
+
+        $sqlDetalle = $conexion->prepare("
+        SELECT cd.id_articulo,cd.cantidad_recibida,a.desc_articulo,a.codigo,cd.precio_unitario,cd.subtotal,cd.ivaPro,ti.tipo_impuesto_descri,ti.ratevalueiva,ti.divisor
         FROM compra_detalle cd
+        INNER JOIN compra_cabecera cc ON cc.idcompra_cabecera = cd.idcompra_cabecera
         INNER JOIN articulos a ON a.id_articulo = cd.id_articulo
         INNER JOIN tipo_impuesto ti ON ti.idiva = a.idiva
-        WHERE cd.idcompra_cabecera = '$idcompra'");
-        $detalle = $sqlDetalle->fetchAll();
+        WHERE cd.idcompra_cabecera = :idcompra AND cc.id_sucursal = :id_sucursal");
+
+        $sqlDetalle->bindParam(":idcompra", $idcompra, PDO::PARAM_INT);
+        $sqlDetalle->bindParam(":id_sucursal", $id_sucursal, PDO::PARAM_INT);
+
+        $sqlDetalle->execute();
+        $detalle = $sqlDetalle->fetchAll(PDO::FETCH_ASSOC);
+
+
 
         $_SESSION['datos_articulofactura'] = $_SESSION['datos_articulofactura'] ?? [];
         foreach ($detalle as $i => $row) {
@@ -166,6 +178,7 @@ class remisionControlador extends remisionModelo
 
         // Validar otros campos obligatorios
         $id_usuario = mainModel::limpiar_string($_SESSION['id_str']);
+        $id_sucursal = mainModel::limpiar_string($_SESSION['nick_sucursal']);
         $nro_remision = mainModel::limpiar_string($_POST['nro_remision'] ?? '');
         $fecha_emision = mainModel::limpiar_string($_POST['fecha_emision'] ?? '');
         $nombre_transpo = mainModel::limpiar_string($_POST['nombre_transpo'] ?? '');
@@ -189,6 +202,7 @@ class remisionControlador extends remisionModelo
         $datos = [
             "idcompra_cabecera" => $idcompra,
             "id_usuario" => $id_usuario,
+            "id_sucursal" => $id_sucursal,
             "fecha_emision" => $fecha_emision,
             "nro_remision" => $nro_remision,
             "nombre_transpo" => $nombre_transpo,
@@ -277,6 +291,8 @@ class remisionControlador extends remisionModelo
             $consulta = "
         SELECT SQL_CALC_FOUND_ROWS
             r.idnota_remision,
+            r.id_sucursal,
+            r.id_usuario,
             r.fecha_emision,
             r.nro_remision,
             r.nombre_transpo,
@@ -287,7 +303,7 @@ class remisionControlador extends remisionModelo
         FROM nota_remision r
         INNER JOIN usuarios u ON u.id_usuario = r.id_usuario
         WHERE DATE(r.fecha_emision) >= '$busqueda1'
-        AND DATE(r.fecha_emision) <= '$busqueda2'
+        AND DATE(r.fecha_emision) <= '$busqueda2' AND r.id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
         ORDER BY r.fecha_emision ASC
         LIMIT $inicio, $registros
         ";
@@ -296,6 +312,8 @@ class remisionControlador extends remisionModelo
             $consulta = "
         SELECT SQL_CALC_FOUND_ROWS
             r.idnota_remision,
+            r.id_sucursal,
+            r.id_usuario,
             r.fecha_emision,
             r.nro_remision,
             r.nombre_transpo,
@@ -305,7 +323,7 @@ class remisionControlador extends remisionModelo
             u.usu_apellido
         FROM nota_remision r
         INNER JOIN usuarios u ON u.id_usuario = r.id_usuario
-        WHERE r.estado != 0
+        WHERE r.estado != 0 AND r.id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
         ORDER BY r.idnota_remision DESC
         LIMIT $inicio, $registros
         ";
@@ -458,8 +476,9 @@ class remisionControlador extends remisionModelo
         }
 
         $usuario = $_SESSION['id_str'];
+        $id_sucursal = $_SESSION['nick_sucursal'];
 
-        $anular = remisionModelo::anular_remision_modelo($id, $usuario);
+        $anular = remisionModelo::anular_remision_modelo($id, $usuario, $id_sucursal);
 
         if ($anular) {
             $alerta = [

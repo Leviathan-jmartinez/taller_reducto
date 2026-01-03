@@ -39,17 +39,26 @@
 			<p><?php echo $total_pedi->rowCount(); ?> Registradas</p>
 		</div>
 	</a>
-	<?php require_once "./controladores/presupuestoControlador.php";
+	<?php
+	require_once "./controladores/presupuestoControlador.php";
+
 	$ins_pres = new presupuestoControlador;
-	$total_pre = $ins_pres->datos_presupuesto_controlador("conteoActivos", 0);
+
+	// Ejecuta la consulta
+	$total_pre = $ins_pres->datos_presupuesto_controlador("conteoActivos");
+
+	// Obtener el valor del COUNT(*)
+	$total = ($total_pre) ? $total_pre->fetch(PDO::FETCH_ASSOC)['total'] : 0;
 	?>
+
 	<a href="<?php echo SERVERURL; ?>presupuesto-lista/" class="tile">
 		<div class="tile-tittle">Presupuestos Compra</div>
 		<div class="tile-icon">
 			<i class="fas fa-hand-holding-usd fa-fw"></i>
-			<p><?php echo $total_pre->rowCount(); ?> Registrados</p>
+			<p><?php echo $total; ?> Registrados</p>
 		</div>
 	</a>
+
 
 	<a href="<?php echo SERVERURL; ?>oc-nuevo/" class="tile">
 		<div class="tile-tittle">Ordenes de Compra</div>

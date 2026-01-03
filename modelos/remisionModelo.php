@@ -12,13 +12,14 @@ class remisionModelo extends mainModel
             $conexion = mainModel::conectar();
             $sql = $conexion->prepare("
             INSERT INTO nota_remision 
-            (idcompra_cabecera, id_usuario, fecha_emision, nro_remision, nombre_transpo, ci_transpo, cel_transpo, transportista, ruc_transport, vehimarca, vehimodelo, vehichapa, fechaenvio, fechallegada, motivo_remision, estado)
+            (idcompra_cabecera, id_usuario, id_sucursal,fecha_emision, nro_remision, nombre_transpo, ci_transpo, cel_transpo, transportista, ruc_transport, vehimarca, vehimodelo, vehichapa, fechaenvio, fechallegada, motivo_remision, estado, tipo)
             VALUES
-            (:idcompra_cabecera, :id_usuario, :fecha_emision, :nro_remision, :nombre_transpo, :ci_transpo, :cel_transpo, :transportista, :ruc_transport, :vehimarca, :vehimodelo, :vehichapa, :fechaenvio, :fechallegada, :motivo_remision, :estado)
+            (:idcompra_cabecera, :id_usuario, :id_sucursal, :fecha_emision, :nro_remision, :nombre_transpo, :ci_transpo, :cel_transpo, :transportista, :ruc_transport, :vehimarca, :vehimodelo, :vehichapa, :fechaenvio, :fechallegada, :motivo_remision, :estado, 'recepcion compra')
         ");
 
             $sql->bindParam(":idcompra_cabecera", $datos['idcompra_cabecera'], PDO::PARAM_INT);
             $sql->bindParam(":id_usuario", $datos['id_usuario'], PDO::PARAM_INT);
+            $sql->bindParam(":id_sucursal", $datos['id_sucursal'], PDO::PARAM_INT);
             $sql->bindParam(":fecha_emision", $datos['fecha_emision']);
             $sql->bindParam(":nro_remision", $datos['nro_remision']);
             $sql->bindParam(":nombre_transpo", $datos['nombre_transpo']);
@@ -77,42 +78,56 @@ class remisionModelo extends mainModel
     /**
      * Anular remisión
      */
-    protected static function anular_remision_modelo($id, $usuario)
+    protected static function anular_remision_modelo($id, $usuario, $id_sucursal)
     {
         $sql = mainModel::conectar()->prepare("
         UPDATE nota_remision
         SET estado = 0,
             updated = NOW(),
             updatedby = :usuario
-        WHERE idnota_remision = :id");
+        WHERE idnota_remision = :id and id_sucursal = :id_sucursal");
 
         $sql->bindParam(":id", $id, PDO::PARAM_INT);
         $sql->bindParam(":usuario", $usuario, PDO::PARAM_INT);
+        $sql->bindParam(":id_sucursal", $id_sucursal, PDO::PARAM_INT);
         return $sql->execute();
     }
 
-    public static function obtener_remision_modelo($idnota)
+
+    protected static function obtener_remision_modelo($idnota, $id_sucursal)
     {
         $sql = mainModel::conectar()->prepare("
         SELECT * 
         FROM nota_remision
-        WHERE idnota_remision = :id
+        WHERE idnota_remision = :id and id_sucursal = :id_sucursal
         LIMIT 1");
         $sql->bindParam(":id", $idnota, PDO::PARAM_INT);
+        $sql->bindParam(":id_sucursal", $id_sucursal, PDO::PARAM_INT);
         $sql->execute();
 
         return $sql->fetch(PDO::FETCH_ASSOC);
     }
 
 
-    public static function obtener_remision_detalle_modelo($idnota)
+    protected static function obtener_remision_detalle_modelo($idnota_remision, $id_sucursal)
     {
-        $sql = mainModel::conectar()->prepare("
-        SELECT d.*, a.nombre AS nombre_articulo
+        $conexion = mainModel::conectar();
+
+        $sql = $conexion->prepare("
+        SELECT 
+            d.*,
+            a.nombre AS nombre_articulo
         FROM nota_remision_detalle d
-        INNER JOIN articulos a ON a.id_articulo = d.id_articulo
-        WHERE d.idnota_remision = :id");
-        $sql->bindParam(":id", $idnota, PDO::PARAM_INT);
+        INNER JOIN nota_remision c 
+            ON c.idnota_remision = d.idnota_remision
+        INNER JOIN articulos a 
+            ON a.id_articulo = d.id_articulo
+        WHERE d.idnota_remision = :idnota_remision
+          AND c.id_sucursal = :id_sucursal");
+
+        $sql->bindParam(":idnota_remision", $idnota_remision, PDO::PARAM_INT);
+        $sql->bindParam(":id_sucursal", $id_sucursal, PDO::PARAM_INT);
+
         $sql->execute();
 
         return $sql->fetchAll(PDO::FETCH_ASSOC);

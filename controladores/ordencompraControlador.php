@@ -22,26 +22,26 @@ class ordencompraControlador extends ordencompraModelo
 
         $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
-
+        
         if (!empty($busqueda)) {
-            $consulta = "SELECT  SQL_CALC_FOUND_ROWS pc.idpresupuesto_compra as idpresupuesto_compra, pc.id_usuario as id_usuario, pc.fecha as fecha, fecha_venc as fecha_venc,pc.estado as estadoPre, 
+            $consulta = "SELECT  SQL_CALC_FOUND_ROWS pc.idpresupuesto_compra as idpresupuesto_compra, pc.id_sucursal as id_sucursal,pc.id_usuario as id_usuario, pc.fecha as fecha, fecha_venc as fecha_venc,pc.estado as estadoPre, 
             pc.idproveedores as idproveedores, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
             p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick, pc.updated as updated,
             pc.updatedby as updatedby
             FROM presupuesto_compra pc
             INNER JOIN proveedores p on p.idproveedores = pc.idproveedores
             INNER JOIN usuarios u on u.id_usuario = pc.id_usuario
-            WHERE (pc.idpresupuesto_compra LIKE '%$busqueda%' OR p.razon_social LIKE '%$busqueda%' OR p.ruc LIKE '%$busqueda%') AND pc.estado = 1
+            WHERE (pc.idpresupuesto_compra LIKE '%$busqueda%' OR p.razon_social LIKE '%$busqueda%' OR p.ruc LIKE '%$busqueda%') AND pc.estado = 1 AND id_sucursal = " . $_SESSION['nick_sucursal'] . "
             ORDER BY fecha desc LIMIT $inicio,$registros";
         } else {
-            $consulta = "SELECT  SQL_CALC_FOUND_ROWS pc.idpresupuesto_compra as idpresupuesto_compra, pc.id_usuario as id_usuario, fecha_venc as fecha_venc,pc.fecha as fecha, pc.estado as estadoPre, 
+            $consulta = "SELECT  SQL_CALC_FOUND_ROWS pc.idpresupuesto_compra as idpresupuesto_compra, pc.id_sucursal as id_sucursal,pc.id_usuario as id_usuario, pc.fecha as fecha, fecha_venc as fecha_venc,pc.estado as estadoPre, 
             pc.idproveedores as idproveedores, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
             p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick, pc.updated as updated,
             pc.updatedby as updatedby
             FROM presupuesto_compra pc
             INNER JOIN proveedores p on p.idproveedores = pc.idproveedores
             INNER JOIN usuarios u on u.id_usuario = pc.id_usuario
-            WHERE pc.estado != 0
+            WHERE pc.estado != 0 AND id_sucursal = " . $_SESSION['nick_sucursal'] . "
             ORDER BY pc.idpresupuesto_compra ASC LIMIT $inicio,$registros";
         }
         $conexion = mainModel::conectar();
@@ -158,8 +158,8 @@ class ordencompraControlador extends ordencompraModelo
         $consultaPre = $conexion->prepare("
         SELECT idpresupuesto_compra,idproveedores, id_usuario
         FROM presupuesto_compra
-        WHERE idpresupuesto_compra = :id");
-        $consultaPre->execute([":id" => $idpresupuesto]);
+        WHERE idpresupuesto_compra = :id AND id_sucursal = :sucursal AND estado = 1");
+        $consultaPre->execute([":id" => $idpresupuesto, ":sucursal" => $_SESSION['nick_sucursal']]);
         $pre = $consultaPre->fetch(PDO::FETCH_ASSOC);
 
         if (!$pre) {
@@ -173,6 +173,7 @@ class ordencompraControlador extends ordencompraModelo
         $datos_oc_cab = [
             "proveedor" => $pre['idproveedores'],
             "presupuestoid" => $pre['idpresupuesto_compra'],
+            "sucursal" => $_SESSION['nick_sucursal'],
             "usuario"   => $_SESSION['id_str'],
             "fecha_entrega"   => $fecha_entrega
         ];
@@ -189,10 +190,13 @@ class ordencompraControlador extends ordencompraModelo
         // 6) Obtener detalle del presupuesto
         // -----------------------------
         $consultaDet = $conexion->prepare("
-        SELECT id_articulo, precio
-        FROM presupuesto_detalle
-        WHERE idpresupuesto_compra = :id");
-        $consultaDet->execute([":id" => $idpresupuesto]);
+            SELECT d.id_articulo, d.precio
+            FROM presupuesto_detalle d
+            INNER JOIN presupuesto_compra c 
+                ON c.idpresupuesto_compra = d.idpresupuesto_compra
+            WHERE d.idpresupuesto_compra = :id
+            AND c.id_sucursal = :sucursal");
+        $consultaDet->execute([":id" => $idpresupuesto, ":sucursal" => $_SESSION['nick_sucursal']]);
         $detallePre = $consultaDet->fetchAll(PDO::FETCH_ASSOC);
         if (empty($detallePre)) {
             echo "error:detalle_vacio";
@@ -285,6 +289,7 @@ class ordencompraControlador extends ordencompraModelo
             $datos_OC_agg = [
                 "usuario"   => $_SESSION['id_str'],
                 "proveedor" => $_SESSION['Sdatos_proveedorOC']['ID'],
+                "sucursal" => $_SESSION['nick_sucursal'],
                 "fecha_entrega" => $fecha_entrega
             ];
 
@@ -351,31 +356,30 @@ class ordencompraControlador extends ordencompraModelo
         $busqueda2 = mainModel::limpiar_string($busqueda2);
         $url = mainModel::limpiar_string($url);
         $url = SERVERURL . $url . "/";
-
         $tabla = "";
 
         $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
 
         if (!empty($busqueda1) && !empty($busqueda2)) {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS oc.idorden_compra as idorden_compra, oc.idproveedores as idproveedores, oc.id_usuario as id_usuario, oc.fecha as fecha, oc.estado as estodoOC, 
+            $consulta = "SELECT SQL_CALC_FOUND_ROWS oc.idorden_compra as idorden_compra, oc.id_sucursal as id_sucursal, oc.idproveedores as idproveedores, oc.id_usuario as id_usuario, oc.fecha as fecha, oc.estado as estodoOC, 
             oc.fecha_entrega as fecha_entrega, oc.presupuestoid as presupuestoid, oc.updated as updated, oc.updatedby as updatedby, p.idproveedores as idproveedores, p.id_ciudad as id_ciudad, p.razon_social as razon_social, 
             p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, p.estado as estadoPro, 
             u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick
             from orden_compra oc 
             INNER JOIN proveedores p on p.idproveedores = oc.idproveedores 
             INNER JOIN usuarios u on u.id_usuario = oc.id_usuario
-            WHERE date(fecha) >= '$busqueda1' AND date(fecha) <='$busqueda2'
+            WHERE date(fecha) >= '$busqueda1' AND date(fecha) <='$busqueda2' AND id_sucursal = " . $_SESSION['nick_sucursal'] . "
             ORDER BY idorden_compra desc LIMIT $inicio,$registros";
         } else {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS oc.idorden_compra as idorden_compra, oc.idproveedores as idproveedores, oc.id_usuario as id_usuario, oc.fecha as fecha, oc.estado as estodoOC, 
+            $consulta = "SELECT SQL_CALC_FOUND_ROWS oc.idorden_compra as idorden_compra, oc.id_sucursal as id_sucursal, oc.idproveedores as idproveedores, oc.id_usuario as id_usuario, oc.fecha as fecha, oc.estado as estodoOC, 
             oc.fecha_entrega as fecha_entrega, oc.presupuestoid as presupuestoid, oc.updated as updated, oc.updatedby as updatedby, p.idproveedores as idproveedores, p.id_ciudad as id_ciudad, p.razon_social as razon_social, 
             p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, p.estado as estadoPro, 
             u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick
             from orden_compra oc 
             INNER JOIN proveedores p on p.idproveedores = oc.idproveedores 
             INNER JOIN usuarios u on u.id_usuario = oc.id_usuario
-            WHERE oc.estado != 0
+            WHERE oc.estado != 0 AND id_sucursal = " . $_SESSION['nick_sucursal'] . "
             ORDER BY idorden_compra desc LIMIT $inicio,$registros";
         }
         $conexion = mainModel::conectar();
@@ -471,8 +475,8 @@ class ordencompraControlador extends ordencompraModelo
     {
         $id = mainModel::decryption($_POST['ordencompra_id_del']);
         $id = mainModel::limpiar_string($id);
-
-        $check_presupuesto = mainModel::ejecutar_consulta_simple("SELECT idorden_compra FROM orden_compra WHERE idorden_compra = '$id'");
+        session_start(['name' => 'STR']);
+        $check_presupuesto = mainModel::ejecutar_consulta_simple("SELECT idorden_compra FROM orden_compra WHERE idorden_compra = '$id' AND id_sucursal = " . $_SESSION['nick_sucursal'] . "");
         if ($check_presupuesto->rowCount() < 0) {
             $alerta = [
                 "Alerta" => "simple",
@@ -483,7 +487,7 @@ class ordencompraControlador extends ordencompraModelo
             echo json_encode($alerta);
             exit();
         }
-        $check_presupuestoestado = mainModel::ejecutar_consulta_simple("SELECT idorden_compra FROM orden_compra WHERE idorden_compra = '$id' AND estado = 2");
+        $check_presupuestoestado = mainModel::ejecutar_consulta_simple("SELECT idorden_compra FROM orden_compra WHERE idorden_compra = '$id' AND estado = 2 AND id_sucursal = " . $_SESSION['nick_sucursal'] . "");
         if ($check_presupuestoestado->rowCount() > 0) {
             $alerta = [
                 "Alerta" => "simple",
@@ -495,7 +499,7 @@ class ordencompraControlador extends ordencompraModelo
             exit();
         }
 
-        session_start(['name' => 'STR']);
+
         if ($_SESSION['nivel_str'] > 2) {
             $alerta = [
                 "Alerta" => "simple",
@@ -508,6 +512,7 @@ class ordencompraControlador extends ordencompraModelo
         }
         $datos_oc_del = [
             "updatedby" => $_SESSION['id_str'],
+            "idsucursal" => $_SESSION['nick_sucursal'],
             "idorden_compra" => $id
         ];
 

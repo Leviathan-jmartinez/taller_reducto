@@ -258,7 +258,8 @@ class pedidoControlador extends pedidoModelo
         /** Insertar cabecera */
         $datos_pedido_agg = [
             "usuario"   => $_SESSION['id_str'],
-            "proveedor" => $_SESSION['datos_proveedor']['ID']
+            "proveedor" => $_SESSION['datos_proveedor']['ID'],
+            "sucursal"  => $_SESSION['nick_sucursal']
         ];
 
         $idPedidoCabecera = pedidoModelo::agregar_pedidoC_modelo($datos_pedido_agg);
@@ -329,24 +330,24 @@ class pedidoControlador extends pedidoModelo
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
 
         if (!empty($busqueda1) && !empty($busqueda2)) {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS pc.idpedido_cabecera as idpedido_cabecera, pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPe, 
+            $consulta = "SELECT SQL_CALC_FOUND_ROWS pc.idpedido_cabecera as idpedido_cabecera, id_sucursal AS id_sucursal, pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPe, 
             pc.id_proveedor as id_proveedor, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
             p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick, pc.updated as updated,
             pc.updatedby as updatedby
             FROM pedido_cabecera pc
             INNER JOIN proveedores p on p.idproveedores = pc.id_proveedor
             INNER JOIN usuarios u on u.id_usuario = pc.id_usuario
-            WHERE date(fecha) >= '$busqueda1' AND date(fecha) <='$busqueda2'
+            WHERE date(fecha) >= '$busqueda1' AND date(fecha) <='$busqueda2' AND id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
             ORDER BY fecha ASC LIMIT $inicio,$registros";
         } else {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS pc.idpedido_cabecera as idpedido_cabecera, pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPe, 
+            $consulta = "SELECT SQL_CALC_FOUND_ROWS pc.idpedido_cabecera as idpedido_cabecera, id_sucursal AS id_sucursal, pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPe, 
             pc.id_proveedor as id_proveedor, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
             p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick, pc.updated as updated,
             pc.updatedby as updatedby
             FROM pedido_cabecera pc
             INNER JOIN proveedores p on p.idproveedores = pc.id_proveedor 
             INNER JOIN usuarios u on u.id_usuario = pc.id_usuario
-            WHERE pc.estado != 0
+            WHERE pc.estado != 0 AND id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
             ORDER BY idpedido_cabecera ASC LIMIT $inicio,$registros";
         }
         $conexion = mainModel::conectar();
@@ -439,8 +440,9 @@ class pedidoControlador extends pedidoModelo
     {
         $id = mainModel::decryption($_POST['pedido_id_del']);
         $id = mainModel::limpiar_string($id);
-
-        $check_pedido = mainModel::ejecutar_consulta_simple("SELECT idpedido_cabecera FROM pedido_cabecera WHERE idpedido_cabecera = '$id'");
+        session_start(['name' => 'STR']);
+        
+        $check_pedido = mainModel::ejecutar_consulta_simple("SELECT idpedido_cabecera FROM pedido_cabecera WHERE idpedido_cabecera = '$id' AND id_sucursal = '" . $_SESSION['nick_sucursal'] . "'");
         if ($check_pedido->rowCount() < 0) {
             $alerta = [
                 "Alerta" => "simple",
@@ -451,7 +453,7 @@ class pedidoControlador extends pedidoModelo
             echo json_encode($alerta);
             exit();
         }
-        $check_pedidoestado = mainModel::ejecutar_consulta_simple("SELECT idpedido_cabecera FROM pedido_cabecera WHERE idpedido_cabecera = '$id' AND estado = 2");
+        $check_pedidoestado = mainModel::ejecutar_consulta_simple("SELECT idpedido_cabecera FROM pedido_cabecera WHERE idpedido_cabecera = '$id' AND estado = 2 AND id_sucursal = '" . $_SESSION['nick_sucursal'] . "'");
         if ($check_pedidoestado->rowCount() > 0) {
             $alerta = [
                 "Alerta" => "simple",
@@ -463,7 +465,6 @@ class pedidoControlador extends pedidoModelo
             exit();
         }
 
-        session_start(['name' => 'STR']);
         if ($_SESSION['nivel_str'] > 2) {
             $alerta = [
                 "Alerta" => "simple",
@@ -476,6 +477,7 @@ class pedidoControlador extends pedidoModelo
         }
         $datos_pedido_del = [
             "updatedby" => $_SESSION['id_str'],
+            "sucursal" => $_SESSION['nick_sucursal'],
             "idpedido_cabecera" => $id
         ];
 

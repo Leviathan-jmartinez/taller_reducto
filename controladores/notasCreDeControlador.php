@@ -8,7 +8,7 @@ if ($peticionAjax) {
 class notasCreDeControlador extends notasCreDeModelo
 {
     /* ================= BUSCAR FACTURAS ================= */
-    // controladores/notasCreDeControlador.php
+   
     public static function buscarFacturas($texto)
     {
         $facturas = notasCreDeModelo::buscarFacturas($texto);

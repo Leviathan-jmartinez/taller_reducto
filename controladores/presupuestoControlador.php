@@ -269,6 +269,7 @@ class presupuestoControlador extends presupuestoModelo
             $datos_presu_agg = [
                 "usuario"   => $_SESSION['id_str'],
                 "proveedor" => $_SESSION['Sdatos_proveedorPre']['ID'],
+                "sucursal" => $_SESSION['nick_sucursal'],
                 "total" => $_SESSION['total_pre'],
                 "fecha_venc" => $fecha_venc
             ];
@@ -350,6 +351,7 @@ class presupuestoControlador extends presupuestoModelo
             $datos_presu_agg = [
                 "idPedido"   => $_SESSION['id_pedido_seleccionado'],
                 "usuario"    => $_SESSION['id_str'],
+                "sucursal"  => $_SESSION['nick_sucursal'],
                 "proveedor"  => $_SESSION['Cdatos_proveedorPre']['ID'],
                 "total"      => $_SESSION['total_pre'],
                 "fecha_venc" => $fecha_venc
@@ -412,7 +414,7 @@ class presupuestoControlador extends presupuestoModelo
     public function buscar_pedido_controlador()
     {
         $pedidoCompra  = mainModel::limpiar_string($_POST['buscar_pedidoPre']);
-
+        session_start(['name' => 'STR']);
         if ($pedidoCompra == "") {
             return '        <div class="alert alert-warning" role="alert">
                                 <p class="text-center mb-0">
@@ -423,11 +425,12 @@ class presupuestoControlador extends presupuestoModelo
             exit();
         }
         /**seleccionar proveedor */
-        $datosPedido = mainModel::ejecutar_consulta_simple("select pc.idpedido_cabecera as idpedido_cabecera, pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPe, pc.id_proveedor as id_proveedor, pc.updated as updated, pc.updatedby as updatedby, 
+        $datosPedido = mainModel::ejecutar_consulta_simple("select pc.idpedido_cabecera as idpedido_cabecera, pc.id_sucursal as id_sucursal,pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPe, pc.id_proveedor as id_proveedor, pc.updated as updated, pc.updatedby as updatedby, 
         p.idproveedores as idproveedores, p.id_ciudad as id_ciudad, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, p.estado as estadoPro
         from pedido_cabecera pc 
         inner join proveedores p on p.idproveedores = pc.id_proveedor 
         where (idpedido_cabecera like '%$pedidoCompra%' or razon_social like '%$pedidoCompra%' or ruc like '%$pedidoCompra%') and pc.estado = '1'
+        and pc.id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
         order by idpedido_cabecera desc");
 
         if ($datosPedido->rowCount() >= 1) {
@@ -537,24 +540,24 @@ class presupuestoControlador extends presupuestoModelo
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
 
         if (!empty($busqueda1) && !empty($busqueda2)) {
-            $consulta = "SELECT  SQL_CALC_FOUND_ROWS pc.idpresupuesto_compra as idpresupuesto_compra, pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPre, 
+            $consulta = "SELECT  SQL_CALC_FOUND_ROWS pc.idpresupuesto_compra as idpresupuesto_compra, pc.id_sucursal as id_sucursal,pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPre, 
             pc.idproveedores as idproveedores, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
             p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick, pc.updated as updated,
             pc.updatedby as updatedby
             FROM presupuesto_compra pc
             INNER JOIN proveedores p on p.idproveedores = pc.idproveedores
             INNER JOIN usuarios u on u.id_usuario = pc.id_usuario
-            WHERE date(fecha) >= '$busqueda1' AND date(fecha) <='$busqueda2'
+            WHERE date(fecha) >= '$busqueda1' AND date(fecha) <='$busqueda2' and id_sucursal = '" . $_SESSION['nick_sucursal'] . "' AND pc.estado != 0 
             ORDER BY fecha ASC LIMIT $inicio,$registros";
         } else {
-            $consulta = "SELECT  SQL_CALC_FOUND_ROWS pc.idpresupuesto_compra as idpresupuesto_compra, pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPre, 
+            $consulta = "SELECT  SQL_CALC_FOUND_ROWS pc.idpresupuesto_compra as idpresupuesto_compra, pc.id_sucursal as id_sucursal, pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPre, 
             pc.idproveedores as idproveedores, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
             p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick, pc.updated as updated,
             pc.updatedby as updatedby
             FROM presupuesto_compra pc
             INNER JOIN proveedores p on p.idproveedores = pc.idproveedores
             INNER JOIN usuarios u on u.id_usuario = pc.id_usuario
-            WHERE pc.estado != 0
+            WHERE pc.estado != 0 and id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
             ORDER BY pc.idpresupuesto_compra ASC LIMIT $inicio,$registros";
         }
         $conexion = mainModel::conectar();
@@ -647,8 +650,8 @@ class presupuestoControlador extends presupuestoModelo
     {
         $id = mainModel::decryption($_POST['presupuesto_id_del']);
         $id = mainModel::limpiar_string($id);
-
-        $check_presupuesto = mainModel::ejecutar_consulta_simple("SELECT idpresupuesto_compra FROM presupuesto_compra WHERE idpresupuesto_compra = '$id'");
+        session_start(['name' => 'STR']);
+        $check_presupuesto = mainModel::ejecutar_consulta_simple("SELECT idpresupuesto_compra FROM presupuesto_compra WHERE idpresupuesto_compra = '$id' AND id_sucursal = '" . $_SESSION['nick_sucursal'] . "'");
         if ($check_presupuesto->rowCount() < 0) {
             $alerta = [
                 "Alerta" => "simple",
@@ -659,7 +662,7 @@ class presupuestoControlador extends presupuestoModelo
             echo json_encode($alerta);
             exit();
         }
-        $check_presupuestoestado = mainModel::ejecutar_consulta_simple("SELECT idpresupuesto_compra FROM presupuesto_compra WHERE idpresupuesto_compra = '$id' AND estado = 2");
+        $check_presupuestoestado = mainModel::ejecutar_consulta_simple("SELECT idpresupuesto_compra FROM presupuesto_compra WHERE idpresupuesto_compra = '$id' AND estado = 2 AND id_sucursal = '" . $_SESSION['nick_sucursal'] . "'");
         if ($check_presupuestoestado->rowCount() > 0) {
             $alerta = [
                 "Alerta" => "simple",
@@ -671,7 +674,7 @@ class presupuestoControlador extends presupuestoModelo
             exit();
         }
 
-        session_start(['name' => 'STR']);
+
         if ($_SESSION['nivel_str'] > 2) {
             $alerta = [
                 "Alerta" => "simple",
@@ -684,6 +687,7 @@ class presupuestoControlador extends presupuestoModelo
         }
         $datos_presupuesto_del = [
             "updatedby" => $_SESSION['id_str'],
+            "sucursal" => $_SESSION['nick_sucursal'],
             "idpresupuesto_compra" => $id
         ];
 
@@ -706,14 +710,25 @@ class presupuestoControlador extends presupuestoModelo
     }
     /**fin controlador */
 
-    public function datos_presupuesto_controlador($tipo, $id)
+    public function datos_presupuesto_controlador($tipo, $id = null)
     {
-        $tipo  = mainModel::limpiar_string($tipo);
+        $tipo = mainModel::limpiar_string($tipo);
 
-        $id  = mainModel::decryption($id);
-        $id  = mainModel::limpiar_string($id);
+        // Solo desencriptar cuando el tipo lo necesita
+        if ($tipo === "unico") {
+
+            if (empty($id)) {
+                return false;
+            }
+
+            $id = mainModel::decryption($id);
+            $id = mainModel::limpiar_string($id);
+        } else {
+            $id = null;
+        }
 
         return presupuestoModelo::datos_presupuesto_modelo($tipo, $id);
     }
+
     /**fin controlador */
 }

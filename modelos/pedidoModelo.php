@@ -7,10 +7,11 @@ class pedidoModelo extends mainModel
     protected static function agregar_pedidoC_modelo($datos)
     {
         $conexion = mainModel::conectar();
-        $sql = $conexion->prepare("INSERT INTO pedido_cabecera (id_usuario, fecha, id_proveedor, estado)
-                               VALUES(:usuario, NOW(), :proveedor, 1)");
+        $sql = $conexion->prepare("INSERT INTO pedido_cabecera (id_usuario, fecha, id_proveedor, estado, id_sucursal)
+                               VALUES(:usuario, NOW(), :proveedor, 1, :sucursal)");
         $sql->bindParam(":usuario", $datos['usuario']);
         $sql->bindParam(":proveedor", $datos['proveedor']);
+        $sql->bindParam(":sucursal", $datos['sucursal']);
         $sql->execute();
 
         // retornar el ID autoincremental
@@ -54,9 +55,10 @@ class pedidoModelo extends mainModel
     {
         $sql = mainModel::conectar()->prepare("UPDATE pedido_cabecera
         SET estado=0, updatedby=:updatedby, updated=now()
-        WHERE idpedido_cabecera=:idpedido_cabecera");
+        WHERE idpedido_cabecera=:idpedido_cabecera and id_sucursal = :sucursal");
         $sql->bindParam(":updatedby", $datos['updatedby']);
         $sql->bindParam(":idpedido_cabecera", $datos['idpedido_cabecera']);
+        $sql->bindParam(":sucursal", $datos['sucursal']);
         $sql->execute();
         return $sql;
     }
