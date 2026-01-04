@@ -47,28 +47,29 @@ class inventarioModelo extends mainModel
     {
         $pdo = mainModel::conectar();
 
+        if (empty($data['sucursal_id'])) {
+            throw new Exception('Sucursal no definida');
+        }
+
         try {
-            /* ================= TRANSACCIÓN ================= */
             $pdo->beginTransaction();
 
             /* ================= CABECERA ================= */
             $stmtCab = $pdo->prepare("
             INSERT INTO ajuste_inventario
             (id_usuario, sucursal_id, estado, fecha, tipo_inv, descripcion)
-            VALUES (:usuario,:sucursal,1,:fecha,:tipo,:desc)
-        ");
+            VALUES (:usuario, :sucursal, 1, NOW(), :tipo, :desc)");
 
             $stmtCab->execute([
-                ':usuario' => $data['usuario_id'],
+                ':usuario'  => $data['usuario_id'],
                 ':sucursal' => $data['sucursal_id'],
-                ':fecha'   => $data['fecha'],
-                ':tipo'    => $data['tipo'],
-                ':desc'    => $data['observacion']
+                ':tipo'     => $data['tipo'],
+                ':desc'     => $data['observacion']
             ]);
 
             $idajuste = $pdo->lastInsertId();
 
-            if ($idajuste <= 0) {
+            if (!$idajuste) {
                 throw new Exception('No se pudo generar el ajuste de inventario');
             }
 
@@ -76,25 +77,36 @@ class inventarioModelo extends mainModel
             switch ($data['tipo']) {
 
                 case 'General':
-                    // Todos los artículos activos, con stock disponible si existe, 0 si no
-                    $stmtArt = $pdo->query("
-                    SELECT a.id_articulo, COALESCE(s.stockDisponible, 0) AS stockDisponible, a.precio_compra
+                    $stmtArt = $pdo->prepare("
+                    SELECT 
+                        a.id_articulo,
+                        COALESCE(s.stockDisponible, 0) AS stockDisponible,
+                        a.precio_compra
                     FROM articulos a
-                    LEFT JOIN stock s ON s.id_articulo = a.id_articulo AND s.id_sucursal = " . intval($data['sucursal_id']) . "
-                    WHERE a.estado = 1
-                ");
+                    LEFT JOIN stock s 
+                        ON s.id_articulo = a.id_articulo
+                       AND s.id_sucursal = :sucursal
+                    WHERE a.estado = 1");
+                    $stmtArt->execute([
+                        ':sucursal' => $data['sucursal_id']
+                    ]);
                     $articulos = $stmtArt->fetchAll(PDO::FETCH_ASSOC);
                     break;
 
                 case 'Categoria':
                     $stmtArt = $pdo->prepare("
-                    SELECT a.id_articulo, COALESCE(s.stockDisponible,0) AS stockDisponible, a.precio_compra
+                    SELECT 
+                        a.id_articulo,
+                        COALESCE(s.stockDisponible, 0) AS stockDisponible,
+                        a.precio_compra
                     FROM articulos a
-                    LEFT JOIN stock s ON s.id_articulo = a.id_articulo AND s.id_sucursal = :sucursal
-                    WHERE a.id_categoria = :idcat AND a.estado=1
-                ");
+                    LEFT JOIN stock s 
+                        ON s.id_articulo = a.id_articulo
+                       AND s.id_sucursal = :sucursal
+                    WHERE a.id_categoria = :idcat
+                      AND a.estado = 1");
                     $stmtArt->execute([
-                        ':idcat' => $data['subtipo_categoria'],
+                        ':idcat'    => $data['subtipo_categoria'],
                         ':sucursal' => $data['sucursal_id']
                     ]);
                     $articulos = $stmtArt->fetchAll(PDO::FETCH_ASSOC);
@@ -102,13 +114,18 @@ class inventarioModelo extends mainModel
 
                 case 'Proveedor':
                     $stmtArt = $pdo->prepare("
-                    SELECT a.id_articulo, COALESCE(s.stockDisponible,0) AS stockDisponible, a.precio_compra
+                    SELECT 
+                        a.id_articulo,
+                        COALESCE(s.stockDisponible, 0) AS stockDisponible,
+                        a.precio_compra
                     FROM articulos a
-                    LEFT JOIN stock s ON s.id_articulo = a.id_articulo AND s.id_sucursal = :sucursal
-                    WHERE a.idproveedores = :idprov AND a.estado=1
-                ");
+                    LEFT JOIN stock s 
+                        ON s.id_articulo = a.id_articulo
+                       AND s.id_sucursal = :sucursal
+                    WHERE a.idproveedores = :idprov
+                      AND a.estado = 1");
                     $stmtArt->execute([
-                        ':idprov' => $data['subtipo_proveedor'],
+                        ':idprov'   => $data['subtipo_proveedor'],
                         ':sucursal' => $data['sucursal_id']
                     ]);
                     $articulos = $stmtArt->fetchAll(PDO::FETCH_ASSOC);
@@ -116,23 +133,37 @@ class inventarioModelo extends mainModel
 
                 case 'Producto':
                     $articulos = [];
+
+                    if (empty($data['subtipo_producto'])) {
+                        throw new Exception('No se seleccionaron productos');
+                    }
+
+                    $stmtStock = $pdo->prepare("
+                    SELECT 
+                        a.id_articulo,
+                        COALESCE(s.stockDisponible, 0) AS stockDisponible,
+                        a.precio_compra
+                    FROM articulos a
+                    LEFT JOIN stock s 
+                        ON s.id_articulo = a.id_articulo
+                       AND s.id_sucursal = :sucursal
+                    WHERE a.id_articulo = :id_art
+                      AND a.estado = 1");
+
                     foreach ($data['subtipo_producto'] as $id_art) {
-                        $stmtStock = $pdo->prepare("
-                        SELECT a.id_articulo, COALESCE(s.stockDisponible,0) AS stockDisponible, a.precio_compra
-                        FROM articulos a
-                        LEFT JOIN stock s ON s.id_articulo = a.id_articulo AND s.id_sucursal = :sucursal
-                        WHERE a.id_articulo = :id_art
-                    ");
                         $stmtStock->execute([
-                            ':id_art' => $id_art,
+                            ':id_art'   => $id_art,
                             ':sucursal' => $data['sucursal_id']
                         ]);
-                        $articulos[] = $stmtStock->fetch(PDO::FETCH_ASSOC);
+                        $row = $stmtStock->fetch(PDO::FETCH_ASSOC);
+                        if ($row) {
+                            $articulos[] = $row;
+                        }
                     }
                     break;
 
                 default:
-                    $articulos = [];
+                    throw new Exception('Tipo de inventario inválido');
             }
 
             if (empty($articulos)) {
@@ -142,19 +173,16 @@ class inventarioModelo extends mainModel
             /* ================= DETALLE ================= */
             $stmtDet = $pdo->prepare("
             INSERT INTO ajuste_inventario_detalle
-            (idajuste_inventario,id_articulo,cantidad_teorica,cantidad_fisica,costo)
-            VALUES (:idajuste,:id_art,:teo,:fis,:costo)
-        ");
+            (idajuste_inventario, id_articulo, cantidad_teorica, cantidad_fisica, costo)
+            VALUES (:idajuste, :id_art, :teo, :fis, :costo) ");
 
             foreach ($articulos as $art) {
-                if (!$art) continue;
-
                 $stmtDet->execute([
                     ':idajuste' => $idajuste,
                     ':id_art'   => $art['id_articulo'],
-                    ':teo'      => floatval($art['stockDisponible']),
-                    ':fis'      => floatval($art['stockDisponible']),
-                    ':costo'    => floatval($art['precio_compra'])
+                    ':teo'      => (float) $art['stockDisponible'],
+                    ':fis'      => (float) $art['stockDisponible'],
+                    ':costo'    => (float) $art['precio_compra']
                 ]);
             }
 
@@ -165,5 +193,4 @@ class inventarioModelo extends mainModel
             throw $e;
         }
     }
-    
 }

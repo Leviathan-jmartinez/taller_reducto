@@ -8,44 +8,51 @@ if ($peticionAjax) {
 class notasCreDeControlador extends notasCreDeModelo
 {
     /* ================= BUSCAR FACTURAS ================= */
-   
+
     public static function buscarFacturas($texto)
     {
+        $texto = mainModel::limpiar_string($texto);
+
         $facturas = notasCreDeModelo::buscarFacturas($texto);
 
         if (empty($facturas)) {
-            return '<div class="alert alert-warning">No se encontraron facturas</div>';
+            return '<div class="alert alert-warning mb-0">No se encontraron facturas</div>';
         }
 
-        $html = '<table class="table table-bordered table-sm">';
-        $html .= '<thead>
-                <tr>
-                    <th>N°</th>
-                    <th>Fecha</th>
-                    <th>Total</th>
-                    <th></th>
-                </tr>
-              </thead><tbody>';
+        $html = '<table class="table table-bordered table-sm mb-0">';
+        $html .= '
+        <thead class="thead-light">
+            <tr>
+                <th>N° Factura</th>
+                <th>Fecha</th>
+                <th class="text-right">Total</th>
+                <th class="text-center">Acción</th>
+            </tr>
+        </thead>
+        <tbody>';
 
         foreach ($facturas as $f) {
-            $html .= '<tr>
-            <td>' . htmlspecialchars($f['nro_factura']) . '</td>
-            <td>' . $f['fecha_factura'] . '</td>
-            <td>' . number_format($f['total_compra'], 0, ',', '.') . '</td>
-            <td>
-                <button class="btn btn-success btn-sm"
-                    onclick="seleccionarFactura(' . (int)$f['idcompra_cabecera'] . ')">
-                    Seleccionar
-                </button>
-            </td>
-        </tr>';
+            $html .= '
+            <tr>
+                <td>' . htmlspecialchars($f['nro_factura']) . '</td>
+                <td>' . date("d/m/Y", strtotime($f['fecha_factura'])) . '</td>
+                <td class="text-right">' . number_format($f['total_compra'], 0, ',', '.') . '</td>
+                <td class="text-center">
+                    <button 
+                        type="button"
+                        class="btn btn-success btn-sm"
+                        onclick="seleccionarFactura(' . (int)$f['idcompra_cabecera'] . ')">
+                        Seleccionar
+                    </button>
+                </td>
+            </tr>
+        ';
         }
 
         $html .= '</tbody></table>';
 
         return $html;
     }
-
 
     /* ================= SELECCIONAR FACTURA ================= */
     public static function seleccionarFactura($id)
@@ -61,6 +68,7 @@ class notasCreDeControlador extends notasCreDeModelo
 
         $_SESSION['NC_FACTURA'] = [
             'idcompra_cabecera' => $factura['idcompra_cabecera'],
+            'id_sucursal'       => $factura['id_sucursal'],
             'nro_factura'       => $factura['nro_factura'],
             'fecha_factura'     => $factura['fecha_factura'],
             'total'             => $factura['total_compra'],
@@ -227,6 +235,7 @@ class notasCreDeControlador extends notasCreDeModelo
 
             $idNota = notasCreDeModelo::insertarNotaCompraModelo($pdo, [
                 'idproveedor' => $factura['idproveedor'],
+                'id_sucursal' => $_SESSION['nick_sucursal'],
                 'tipo'        => $_POST['tipo'],
                 'nro'         => $_POST['nro_nota'],
                 'fecha'       => $_POST['fecha'],
@@ -241,6 +250,7 @@ class notasCreDeControlador extends notasCreDeModelo
 
             notasCreDeModelo::impactarNotaCompraModelo($pdo, [
                 'idcompra' => $factura['idcompra_cabecera'],
+                'id_sucursal' => $_SESSION['nick_sucursal'],
                 'tipo'     => $_POST['tipo'],
                 'idnota'   => $idNota,
                 'monto'    => $montoMovimiento,
@@ -252,13 +262,21 @@ class notasCreDeControlador extends notasCreDeModelo
             unset($_SESSION['NC_DETALLE']);
             unset($_SESSION['NC_FACTURA']);
 
-            return [
-                'status' => 'ok',
-                'msg' => 'Nota guardada correctamente'
-            ];
+            echo json_encode([
+                'Alerta' => 'recargar',
+                'Titulo' => 'Correcto',
+                'Texto'  => 'Nota guardada correctamente',
+                'Tipo'   => 'success'
+            ]);
+            exit;
+
         } catch (Exception $e) {
             $pdo->rollBack();
-            return ['status' => 'error', 'msg' => $e->getMessage()];
+            echo json_encode([
+                'status' => 'error',
+                'msg' => $e->getMessage()
+            ]);
+            exit;
         }
     }
 
@@ -280,7 +298,7 @@ class notasCreDeControlador extends notasCreDeModelo
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
 
         if (!empty($busqueda1) && !empty($busqueda2)) {
-            $consulta = " SELECT SQL_CALC_FOUND_ROWS nc.idnota_compra AS idnota_compra, nc.tipo AS tipo_nota, nc.nro_documento AS nro_documento, nc.fecha AS fecha_nota, nc.total AS 
+            $consulta = " SELECT SQL_CALC_FOUND_ROWS nc.idnota_compra AS idnota_compra, nc.id_sucursal AS id_sucursal, nc.tipo AS tipo_nota, nc.nro_documento AS nro_documento, nc.fecha AS fecha_nota, nc.total AS 
             total_nota, nc.estado   AS estado_nota, nc.fecha_creacion   AS fecha_creacion, nc.idcompra_cabecera AS idcompra_cabecera, co.nro_factura  
             AS nro_factura, co.fecha_factura AS fecha_factura, p.idproveedores AS idproveedor, p.razon_social  AS razon_social, p.ruc   AS ruc, p.telefono  
             AS telefono, p.direccion AS direccion, p.correo AS correo, p.estado AS estado_proveedor, u.id_usuario AS id_usuario, u.usu_nombre AS usu_nombre, 
@@ -289,10 +307,10 @@ class notasCreDeControlador extends notasCreDeModelo
             INNER JOIN proveedores p ON p.idproveedores = nc.idproveedor 
             INNER JOIN usuarios u ON u.id_usuario = nc.idusuario 
             INNER JOIN compra_cabecera co ON co.idcompra_cabecera = nc.idcompra_cabecera 
-            WHERE DATE(nc.fecha_creacion) >= '$busqueda1'   AND DATE(nc.fecha_creacion) <= '$busqueda2' 
+            WHERE DATE(nc.fecha_creacion) >= '$busqueda1'   AND DATE(nc.fecha_creacion) <= '$busqueda2' AND nc.id_sucursal = " . $_SESSION['nick_sucursal'] . "
             ORDER BY nc.fecha_creacion ASC LIMIT $inicio, $registros ";
         } else {
-            $consulta = " SELECT SQL_CALC_FOUND_ROWS nc.idnota_compra AS idnota_compra, nc.tipo AS tipo_nota, nc.nro_documento AS nro_documento, nc.fecha AS fecha_nota, nc.total AS 
+            $consulta = " SELECT SQL_CALC_FOUND_ROWS nc.idnota_compra AS idnota_compra, nc.id_sucursal AS id_sucursal, nc.tipo AS tipo_nota, nc.nro_documento AS nro_documento, nc.fecha AS fecha_nota, nc.total AS 
             total_nota, nc.estado   AS estado_nota, nc.fecha_creacion   AS fecha_creacion, nc.idcompra_cabecera AS idcompra_cabecera, co.nro_factura  
             AS nro_factura, co.fecha_factura AS fecha_factura, p.idproveedores AS idproveedor, p.razon_social  AS razon_social, p.ruc   AS ruc, p.telefono  
             AS telefono, p.direccion AS direccion, p.correo AS correo, p.estado AS estado_proveedor, u.id_usuario AS id_usuario, u.usu_nombre AS usu_nombre, 
@@ -301,7 +319,7 @@ class notasCreDeControlador extends notasCreDeModelo
             INNER JOIN proveedores p ON p.idproveedores = nc.idproveedor 
             INNER JOIN usuarios u ON u.id_usuario = nc.idusuario 
             INNER JOIN compra_cabecera co ON co.idcompra_cabecera = nc.idcompra_cabecera 
-            WHERE DATE(nc.fecha_creacion) >= '$busqueda1'   AND DATE(nc.fecha_creacion) <= '$busqueda2' 
+            WHERE DATE(nc.fecha_creacion) >= '$busqueda1'   AND DATE(nc.fecha_creacion) <= '$busqueda2' AND nc.id_sucursal = " . $_SESSION['nick_sucursal'] . "
             ORDER BY nc.fecha_creacion ASC LIMIT $inicio, $registros ";
         }
         $conexion = mainModel::conectar();
@@ -433,6 +451,7 @@ class notasCreDeControlador extends notasCreDeModelo
 
             notasCreDeModelo::impactarAnulacionNotaModelo($pdo, [
                 'idcompra' => $nota['idcompra_cabecera'],
+                'id_sucursal' => $nota['id_sucursal'],
                 'idnota'   => $idNota,
                 'monto'    => $montoInverso,
                 'obs'      => 'Anulación nota ' . $nota['tipo']

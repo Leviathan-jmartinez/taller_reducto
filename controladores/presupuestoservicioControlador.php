@@ -20,9 +20,15 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
 
     public function buscar_recepciones_controlador()
     {
+        session_start(['name' => 'STR']);
         $txt = trim($_POST['buscar_recepcion']);
-        return presupuestoservicioModelo::buscar_recepciones_modelo($txt);
+
+        return presupuestoservicioModelo::buscar_recepciones_modelo(
+            $txt,
+            $_SESSION['id_sucursal']
+        );
     }
+
 
     public function buscar_servicios_controlador()
     {
@@ -66,7 +72,20 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
             'detalle'         => json_decode($_POST['detalle_json'], true),
             'descuentos'      => json_decode($_POST['descuentos_json'], true)
         ];
+        $sucursalRecepcion = mainModel::ejecutar_consulta_simple("
+            SELECT id_sucursal
+            FROM recepcion_servicio
+            WHERE idrecepcion = '{$datos['idrecepcion']}'
+            ")->fetchColumn();
 
+        if ($sucursalRecepcion != $_SESSION['id_sucursal']) {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Acceso denegado',
+                'Texto'  => 'La recepción no pertenece a su sucursal',
+                'Tipo'   => 'error'
+            ]);
+        }
         $res = presupuestoServicioModelo::guardar_presupuesto_modelo($datos);
 
         if ($res === true) {
@@ -225,7 +244,7 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
                                     </button>
                                     </form>
                                     ';
-                        }   
+                        }
                     }
                     if ($rows['estadoPre'] == 1) {
                         $tabla .= '  

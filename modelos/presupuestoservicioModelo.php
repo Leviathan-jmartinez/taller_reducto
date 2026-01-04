@@ -33,7 +33,7 @@ class presupuestoservicioModelo extends mainModel
         return $sql->fetch(PDO::FETCH_ASSOC);
     }
 
-    protected static function buscar_recepciones_modelo($txt)
+    protected static function buscar_recepciones_modelo($txt, $idSucursal)
     {
         $txt = "%$txt%";
 
@@ -46,13 +46,15 @@ class presupuestoservicioModelo extends mainModel
         INNER JOIN clientes c ON c.id_cliente = r.id_cliente
         INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
         INNER JOIN modelo_auto ma ON ma.id_modeloauto = v.id_modeloauto
-        WHERE c.nombre_cliente LIKE :b OR v.placa LIKE :b
+        WHERE r.id_sucursal = :sucursal
+          AND (c.nombre_cliente LIKE :b OR v.placa LIKE :b)
         ORDER BY r.fecha_ingreso DESC
-        LIMIT 20
-    ");
+        LIMIT 20    ");
 
-        $sql->bindParam(":b", $txt);
-        $sql->execute();
+        $sql->execute([
+            ':sucursal' => $idSucursal,
+            ':b' => $txt
+        ]);
 
         $html = '<table class="table table-sm">';
         foreach ($sql->fetchAll(PDO::FETCH_ASSOC) as $r) {
@@ -89,7 +91,7 @@ class presupuestoservicioModelo extends mainModel
           AND (desc_articulo LIKE :b OR codigo LIKE :b)
         ORDER BY desc_articulo
         LIMIT 20
-    ");
+        ");
 
         $sql->bindParam(':b', $txt);
         $sql->execute();
@@ -143,7 +145,7 @@ class presupuestoservicioModelo extends mainModel
           AND p.estado = 1
           AND CURDATE() BETWEEN p.fecha_inicio AND p.fecha_fin
         LIMIT 1
-    ");
+        ");
 
         $sql->bindParam(':id', $id, PDO::PARAM_INT);
         $sql->execute();
@@ -359,7 +361,6 @@ class presupuestoservicioModelo extends mainModel
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /* ================= APROBAR ================= */
     protected static function aprobar_presupuesto_modelo($id)
     {
         $sql = mainModel::conectar()->prepare("

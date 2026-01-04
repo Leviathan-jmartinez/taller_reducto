@@ -151,13 +151,14 @@ class recepcionservicioModelo extends mainModel
 
             $sql = $pdo->prepare("
             INSERT INTO recepcion_servicio
-            (id_usuario, id_cliente, id_vehiculo, fecha_ingreso, kilometraje, observacion, estado)
+            (id_usuario, id_cliente, id_sucursal,id_vehiculo, fecha_ingreso, kilometraje, observacion, estado)
             VALUES
-            (:usuario, :cliente, :vehiculo, :fecha, :km, :obs, :estado)
+            (:usuario, :cliente, :sucursal, :vehiculo, :fecha, :km, :obs, :estado)
         ");
 
             $sql->bindParam(":usuario",  $d['id_usuario'],   PDO::PARAM_INT);
             $sql->bindParam(":cliente",  $d['id_cliente'],   PDO::PARAM_INT);
+            $sql->bindParam(":sucursal", $d['id_sucursal'],  PDO::PARAM_INT);
             $sql->bindParam(":vehiculo", $d['id_vehiculo'],  PDO::PARAM_INT);
             $sql->bindParam(":fecha",    $d['fecha_ingreso']);
             $sql->bindParam(":km",       $d['kilometraje'],  PDO::PARAM_INT);
@@ -184,16 +185,17 @@ class recepcionservicioModelo extends mainModel
         }
     }
 
-    protected static function anular_recepcion_modelo($id)
-    {
+    protected static function anular_recepcion_modelo($id, $sucursal)
+    {   
         $sql = mainModel::conectar()->prepare("
         UPDATE recepcion_servicio
         SET estado = 0,
             fecha_actualizacion = NOW()
         WHERE idrecepcion = :id
-          AND estado = 1");
+          AND estado = 1 AND id_sucursal = :sucursal ");
 
         $sql->bindParam(":id", $id, PDO::PARAM_INT);
+        $sql->bindParam(":sucursal", $sucursal, PDO::PARAM_INT);
 
         return $sql->execute();
     }

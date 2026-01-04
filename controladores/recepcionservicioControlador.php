@@ -58,6 +58,7 @@ class recepcionservicioControlador extends recepcionservicioModelo
         $datos = [
             "id_usuario"   => $_SESSION['id_str'],
             "id_cliente"   => intval($_POST['id_cliente']),
+            "id_sucursal"  => intval($_SESSION['nick_sucursal']),
             "id_vehiculo"  => intval($_POST['id_vehiculo']),
             "fecha_ingreso" => $_POST['fecha_ingreso'],
             "kilometraje"  => intval($_POST['kilometraje']),
@@ -113,7 +114,7 @@ class recepcionservicioControlador extends recepcionservicioModelo
                 rs.fecha_ingreso,
                 rs.kilometraje,
                 rs.estado,
-
+                rs.id_sucursal,
                 c.doc_number,
                 CONCAT(c.nombre_cliente,' ',c.apellido_cliente) AS cliente,
 
@@ -130,7 +131,7 @@ class recepcionservicioControlador extends recepcionservicioModelo
                 OR c.apellido_cliente LIKE '%$busqueda%'
                 OR c.doc_number LIKE '%$busqueda%'
                 OR v.placa LIKE '%$busqueda%'
-            )
+            ) AND rs.id_sucursal = " . $_SESSION['nick_sucursal'] . "
             ORDER BY rs.fecha_ingreso DESC
             LIMIT $inicio,$registros
         ";
@@ -141,18 +142,17 @@ class recepcionservicioControlador extends recepcionservicioModelo
                 rs.fecha_ingreso,
                 rs.kilometraje,
                 rs.estado,
-
+                rs.id_sucursal, 
                 c.doc_number,
                 CONCAT(c.nombre_cliente,' ',c.apellido_cliente) AS cliente,
-
                 v.placa,
                 v.anho,
-
                 CONCAT(u.usu_nombre,' ',u.usu_apellido) AS usuario
             FROM recepcion_servicio rs
             INNER JOIN clientes c   ON c.id_cliente = rs.id_cliente
             INNER JOIN vehiculos v  ON v.id_vehiculo = rs.id_vehiculo
             INNER JOIN usuarios u   ON u.id_usuario = rs.id_usuario
+            WHERE rs.id_sucursal = " . $_SESSION['nick_sucursal'] . "
             ORDER BY rs.fecha_ingreso DESC
             LIMIT $inicio,$registros
         ";
@@ -290,11 +290,11 @@ class recepcionservicioControlador extends recepcionservicioModelo
                 "Tipo"   => "error"
             ]);
         }
-
+        session_start(['name' => 'STR']);
         $id = mainModel::decryption($_POST['recepcion_id_del']);
         $id = mainModel::limpiar_string($id);
 
-        $anular = recepcionServicioModelo::anular_recepcion_modelo($id);
+        $anular = recepcionServicioModelo::anular_recepcion_modelo($id, $_SESSION['nick_sucursal']);
 
         if ($anular === true) {
             return json_encode([

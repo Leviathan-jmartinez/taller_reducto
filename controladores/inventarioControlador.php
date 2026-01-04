@@ -222,10 +222,10 @@ class inventarioControlador extends inventarioModelo
             INNER JOIN articulos a 
                 ON a.id_articulo = aid.id_articulo
             WHERE aid.idajuste_inventario = :idajuste
-            AND ai.id_sucursal = :id_sucursal");
+            AND ai.sucursal_id = :sucursal_id");
 
         $sqlDetalle->bindParam(":idajuste", $idajuste, PDO::PARAM_INT);
-        $sqlDetalle->bindParam(":id_sucursal", $idSucursal, PDO::PARAM_INT);
+        $sqlDetalle->bindParam(":sucursal_id", $idSucursal, PDO::PARAM_INT);
 
         $sqlDetalle->execute();
         $detalle = $sqlDetalle->fetchAll(PDO::FETCH_ASSOC);
@@ -274,12 +274,12 @@ class inventarioControlador extends inventarioModelo
             return ["status" => "error", "msg" => "No hay artículos para guardar"];
         }
 
-        if (empty($_SESSION['idsucursal'])) {
+        if (empty($_SESSION['nick_sucursal'])) {
             return ["status" => "error", "msg" => "Sucursal no definida"];
         }
 
         $idajuste   = (int) $_SESSION['id_inv_seleccionado'];
-        $idSucursal = (int) $_SESSION['idsucursal'];
+        $idSucursal = (int) $_SESSION['nick_sucursal'];
 
         $conexion = mainModel::conectar();
         $conexion->beginTransaction();
@@ -291,11 +291,11 @@ class inventarioControlador extends inventarioModelo
             SELECT 1
             FROM ajuste_inventario
             WHERE idajuste_inventario = :idajuste
-              AND id_sucursal = :id_sucursal
+              AND sucursal_id = :sucursal_id
         ");
             $check->execute([
                 ":idajuste"     => $idajuste,
-                ":id_sucursal"  => $idSucursal
+                ":sucursal_id"  => $idSucursal
             ]);
 
             if ($check->rowCount() === 0) {
@@ -312,7 +312,7 @@ class inventarioControlador extends inventarioModelo
                 d.costo           = :costo
             WHERE d.idajuste_inventario = :idajuste
               AND d.id_articulo = :id_articulo
-              AND a.id_sucursal = :id_sucursal
+              AND a.sucursal_id = :sucursal_id
         ");
 
             foreach ($_SESSION['Cdatos_articuloINV'] as $item) {
@@ -323,7 +323,7 @@ class inventarioControlador extends inventarioModelo
                     ":costo"           => (float) $item['costo'],
                     ":idajuste"        => $idajuste,
                     ":id_articulo"     => (int) $item['ID'],
-                    ":id_sucursal"     => $idSucursal
+                    ":sucursal_id"     => $idSucursal
                 ]);
 
                 if ($sqlUpd->rowCount() === 0) {
@@ -352,46 +352,67 @@ class inventarioControlador extends inventarioModelo
             session_start(['name' => 'STR']);
         }
 
-        // ✅ Validar si hay ajuste cargado
-        if (!isset($_SESSION['id_inv_seleccionado']) || empty($_SESSION['Cdatos_articuloINV'])) {
+        if (
+            empty($_SESSION['id_inv_seleccionado']) ||
+            empty($_SESSION['Cdatos_articuloINV'])
+        ) {
             return ["status" => "error", "msg" => "No hay ajuste seleccionado para aplicar"];
         }
 
-        $idajuste = $_SESSION['id_inv_seleccionado'];
+        $idajuste = (int) $_SESSION['id_inv_seleccionado'];
         $usuario  = $_SESSION['id_str'];
         $fecha    = date("Y-m-d H:i:s");
 
-        foreach ($_SESSION['Cdatos_articuloINV'] as $item) {
-            $id_articulo = $item['ID'];
-            $costo       = floatval($item['costo']);
-            $cantidad    = floatval($item['diferencia']); // puede ser + o -
-            $cantidad_fisica = floatval($item['cantidad_fisica']);
+        $ajustesAplicados = 0;
 
-            // Actualizar stock
+        foreach ($_SESSION['Cdatos_articuloINV'] as $item) {
+
+            $cantidad = (float) $item['diferencia'];
+
+            // 🔴 CLAVE: si no hay diferencia, no se hace nada
+            if ($cantidad == 0) {
+                continue;
+            }
+
+            $id_articulo     = (int) $item['ID'];
+            $costo           = (float) $item['costo'];
+            $cantidad_fisica = (float) $item['cantidad_fisica'];
+
+            /* ================= STOCK ================= */
             $stock = mainModel::ejecutar_consulta_simple("
-            SELECT stockDisponible FROM stock
-            WHERE id_articulo = '$id_articulo' AND id_sucursal = '$idsucursal'
+            SELECT stockDisponible 
+            FROM stock
+            WHERE id_articulo = '$id_articulo'
+              AND id_sucursal = '$idsucursal'
         ")->fetch();
 
             if ($stock) {
-                $nuevo_stock = floatval($stock['stockDisponible']) + $cantidad;
+                $nuevo_stock = (float) $stock['stockDisponible'] + $cantidad;
+
                 mainModel::ejecutar_consulta_simple("
                 UPDATE stock
                 SET stockDisponible = '$nuevo_stock',
                     stockUltActualizacion = '$fecha',
                     stockUsuActualizacion = '$usuario',
                     stockultimoIdActualizacion = '$idajuste'
-                WHERE id_articulo = '$id_articulo' AND id_sucursal = '$idsucursal'
+                WHERE id_articulo = '$id_articulo'
+                  AND id_sucursal = '$idsucursal'
             ");
             } else {
+                // Solo crear stock si hay diferencia real
                 mainModel::ejecutar_consulta_simple("
-                INSERT INTO stock (id_sucursal, id_articulo, stockcant_max, stockcant_min, stockDisponible, stockUltActualizacion, stockUsuActualizacion, stockultimoIdActualizacion)
-                VALUES ('$idsucursal', '$id_articulo', 200, 15,'$cantidad_fisica', '$fecha', '$usuario', '$idajuste')
+                INSERT INTO stock
+                (id_sucursal, id_articulo, stockcant_max, stockcant_min,
+                 stockDisponible, stockUltActualizacion,
+                 stockUsuActualizacion, stockultimoIdActualizacion)
+                VALUES
+                ('$idsucursal', '$id_articulo', 200, 15,
+                 '$cantidad_fisica', '$fecha', '$usuario', '$idajuste')
             ");
             }
 
-            // Registrar movimiento
-            $signo = $cantidad >= 0 ? 1 : -1;
+            /* ================= MOVIMIENTO ================= */
+            $signo = $cantidad > 0 ? 1 : -1;
 
             mainModel::ejecutar_consulta_simple("
             INSERT INTO sucmovimientostock (
@@ -418,24 +439,41 @@ class inventarioControlador extends inventarioModelo
                 'AJUSTE #$idajuste'
             )
         ");
+
+            $ajustesAplicados++;
         }
 
-        // ✅ Actualizar ajuste como aplicado
+        // 🔴 Si no hubo diferencias reales, no aplicar el ajuste
+        if ($ajustesAplicados === 0) {
+            return [
+                "status" => "warning",
+                "msg" => "No se aplicó ningún ajuste porque no había diferencias"
+            ];
+        }
+
+        /* ================= CERRAR AJUSTE ================= */
         mainModel::ejecutar_consulta_simple("
         UPDATE ajuste_inventario
         SET estado = 2,
             ajustadoPor = '$usuario',
-            fecha_ajuste = now()
-        WHERE idajuste_inventario = '$idajuste'");
+            fecha_ajuste = NOW()
+        WHERE idajuste_inventario = '$idajuste'
+        ");
 
-        // ✅ Limpiar sesión después de aplicar
-        unset($_SESSION['Cdatos_articuloINV']);
-        unset($_SESSION['id_inv_seleccionado']);
-        unset($_SESSION['datos_ajuste_inv']);
-        unset($_SESSION['alerta_inv']);
+        /* ================= LIMPIAR SESIÓN ================= */
+        unset(
+            $_SESSION['Cdatos_articuloINV'],
+            $_SESSION['id_inv_seleccionado'],
+            $_SESSION['datos_ajuste_inv'],
+            $_SESSION['alerta_inv']
+        );
 
-        return ["status" => "ok", "msg" => "Stock, movimientos y ajuste actualizados correctamente"];
+        return [
+            "status" => "ok",
+            "msg" => "Ajuste aplicado correctamente ($ajustesAplicados productos ajustados)"
+        ];
     }
+
 
     /* ===============================
         PAGINADOR COMPRA    
@@ -457,18 +495,18 @@ class inventarioControlador extends inventarioModelo
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
 
         if (!empty($busqueda1) && !empty($busqueda2)) {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS ai.idajuste_inventario as idajuste_inventario, ai.id_usuario as id_usuario, ai.estado as estadoInv, ai.fecha as fecha, ai.tipo_inv as tipo_inv, 
+            $consulta = "SELECT SQL_CALC_FOUND_ROWS ai.idajuste_inventario as idajuste_inventario, ai.sucursal_id as sucursal_id, ai.id_usuario as id_usuario, ai.estado as estadoInv, ai.fecha as fecha, ai.tipo_inv as tipo_inv, 
             ai.descripcion as descripcion, ai.fecha_ajuste as fecha_ajuste, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick
             FROM ajuste_inventario ai 
             INNER JOIN usuarios u on u.id_usuario = ai.id_usuario
-            WHERE date(fecha) >= '$busqueda1' AND date(fecha) <='$busqueda2'
+            WHERE date(fecha) >= '$busqueda1' AND date(fecha) <='$busqueda2' AND ai.sucursal_id = '" . $_SESSION['nick_sucursal'] . "'
             ORDER BY fecha ASC LIMIT $inicio,$registros";
         } else {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS ai.idajuste_inventario as idajuste_inventario, ai.id_usuario as id_usuario, ai.estado as estadoInv, ai.fecha as fecha, ai.tipo_inv as tipo_inv, 
+            $consulta = "SELECT SQL_CALC_FOUND_ROWS ai.idajuste_inventario as idajuste_inventario, ai.sucursal_id as sucursal_id,ai.id_usuario as id_usuario, ai.estado as estadoInv, ai.fecha as fecha, ai.tipo_inv as tipo_inv, 
             ai.descripcion as descripcion, ai.fecha_ajuste as fecha_ajuste, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick
             FROM ajuste_inventario ai 
             INNER JOIN usuarios u on u.id_usuario = ai.id_usuario
-            WHERE ai.estado != 0
+            WHERE ai.estado != 0 and ai.sucursal_id = '" . $_SESSION['nick_sucursal'] . "'
             ORDER BY ai.idajuste_inventario ASC LIMIT $inicio,$registros";
         }
         $conexion = mainModel::conectar();
@@ -566,7 +604,7 @@ class inventarioControlador extends inventarioModelo
             session_start(['name' => 'STR']);
         }
 
-        $id = mainModel::limpiar_string(
+        $id = (int) mainModel::limpiar_string(
             mainModel::decryption($_POST['inv_id_del'])
         );
 
@@ -575,6 +613,7 @@ class inventarioControlador extends inventarioModelo
 
         try {
 
+            /* ===== CABECERA CON BLOQUEO ===== */
             $ajuste = $db->query("
             SELECT estado, sucursal_id
             FROM ajuste_inventario
@@ -586,8 +625,13 @@ class inventarioControlador extends inventarioModelo
                 throw new Exception("Ajuste no encontrado");
             }
 
-            // ESTADO 1 → anulación simple
-            if ($ajuste['estado'] == 1) {
+            // 🔴 ya anulado
+            if ((int)$ajuste['estado'] === 0) {
+                throw new Exception("El ajuste ya fue anulado");
+            }
+
+            /* ===== ESTADO 1: NO APLICADO ===== */
+            if ((int)$ajuste['estado'] === 1) {
 
                 $db->exec("
                 UPDATE ajuste_inventario
@@ -605,39 +649,52 @@ class inventarioControlador extends inventarioModelo
                 ];
             }
 
-            // ESTADO 2 → revertir stock
-            if ($ajuste['estado'] == 2) {
+            /* ===== ESTADO 2: APLICADO ===== */
+            if ((int)$ajuste['estado'] === 2) {
 
                 $detalle = $db->query("
                 SELECT id_articulo, diferencia, costo
                 FROM ajuste_inventario_detalle
                 WHERE idajuste_inventario = $id
+                  AND diferencia <> 0
             ")->fetchAll(PDO::FETCH_ASSOC);
+
+                if (empty($detalle)) {
+                    throw new Exception("No hay movimientos para revertir");
+                }
 
                 foreach ($detalle as $d) {
 
-                    // Revertir stock
+                    /* ===== REVERTIR STOCK ===== */
                     $db->exec("
                     UPDATE stock
                     SET stockDisponible = stockDisponible - {$d['diferencia']},
-                        stockUltActualizacion = NOW()
+                        stockUltActualizacion = NOW(),
+                        stockUsuActualizacion = {$_SESSION['id_str']},
+                        stockultimoIdActualizacion = $id
                     WHERE id_sucursal = {$ajuste['sucursal_id']}
                       AND id_articulo = {$d['id_articulo']}
                 ");
 
-                    // Movimiento de anulación
+                    /* ===== MOVIMIENTO INVERSO ===== */
                     $signo = ($d['diferencia'] > 0) ? -1 : 1;
 
                     $db->exec("
                     INSERT INTO sucmovimientostock (
-                        LocalId, TipoMovStockId, MovStockProductoId,
-                        MovStockCantidad, MovStockPrecioVenta, MovStockCosto,
-                        MovStockFechaHora, MovStockUsuario, MovStockSigno,
+                        id_sucursal,
+                        TipoMovStockId,
+                        MovStockProductoId,
+                        MovStockCantidad,
+                        MovStockPrecioVenta,
+                        MovStockCosto,
+                        MovStockFechaHora,
+                        MovStockUsuario,
+                        MovStockSigno,
                         MovStockReferencia
                     ) VALUES (
-                        '{$ajuste['sucursal_id']}',
+                        {$ajuste['sucursal_id']},
                         'ANULACION_AJUSTE_INV',
-                        '{$d['id_articulo']}',
+                        {$d['id_articulo']},
                         " . abs($d['diferencia']) . ",
                         0,
                         {$d['costo']},
@@ -649,6 +706,7 @@ class inventarioControlador extends inventarioModelo
                 ");
                 }
 
+                /* ===== MARCAR COMO ANULADO ===== */
                 $db->exec("
                 UPDATE ajuste_inventario
                 SET estado = 0

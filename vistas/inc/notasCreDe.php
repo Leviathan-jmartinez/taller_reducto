@@ -88,52 +88,60 @@
             });
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('submit', function(e) {
+        e.preventDefault();
+        console.log('SUBMIT DETECTADO', e.target);
+    });
 
-        const form = document.querySelector('.FormularioAjax');
-        if (!form) return;
 
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
+    document.addEventListener('submit', function(e) {
 
-            const data = new FormData(this);
+        if (!e.target.classList.contains('FormularioAjax')) return;
 
-            fetch(this.action, {
-                    method: this.method,
-                    body: data
-                })
-                .then(r => r.json())
-                .then(resp => {
+        e.preventDefault();
+        console.log('SUBMIT AJAX OK');
+        const form = e.target;
+        const data = new FormData(form);
+        data.append('accion', 'guardar_nota_compra');
 
-                    if (resp.status === 'ok') {
-                        Swal.fire({
-                            type: 'success',
-                            title: 'Nota guardada correctamente',
-                            confirmButtonText: 'Aceptar'
-                        }).then(() => {
-                            // 🔴 recargar vista limpia
-                            window.location.reload();
-                        });
-                    } else {
-                        Swal.fire({
-                            type: 'error',
-                            title: 'Error',
-                            text: resp.msg || 'Ocurrió un error',
-                            confirmButtonText: 'Aceptar'
-                        });
-                    }
+        fetch('<?php echo SERVERURL ?>ajax/notasCreDeAjax.php', {
+                method: 'POST',
+                body: data
+            })
+            .then(r => r.text())
+            .then(txt => {
+                console.log('RESPUESTA RAW:', txt); // 👈 debug real
+                return JSON.parse(txt);
+            })
+            .then(resp => {
 
-                })
-                .catch(err => {
+                if (resp.status === 'ok') {
+                    Swal.fire({
+                        type: 'success',
+                        title: 'Nota guardada correctamente',
+                        confirmButtonText: 'Aceptar'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
                     Swal.fire({
                         type: 'error',
                         title: 'Error',
-                        text: 'Error de comunicación con el servidor'
+                        text: resp.msg || 'Ocurrió un error'
                     });
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire({
+                    type: 'error',
+                    title: 'Error',
+                    text: 'Respuesta inválida del servidor'
                 });
-        });
+            });
 
     });
+
 
     function cancelarNota() {
 
@@ -183,5 +191,4 @@
                 });
             });
     }
-
 </script>
