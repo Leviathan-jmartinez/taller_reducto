@@ -45,6 +45,9 @@ $roles    = $insUsuario->listar_roles_controlador();
         <li>
             <a class="active" href="<?php echo SERVERURL; ?>usuario-rol/"><i class="fas fa-search fa-fw"></i> &nbsp; ASIGNAR ROL</a>
         </li>
+        <li>
+            <a href="<?php echo SERVERURL; ?>usuario-sucursal/"><i class="fas fa-store-alt fa-fw"></i> &nbsp; ASIGNAR SUCURSAL</a>
+        </li>
     </ul>
 </div>
 

@@ -1,9 +1,6 @@
 <?php
-if ($peticionAjax) {
-    require_once "../modelos/pedidoModelo.php";
-} else {
-    require_once "./modelos/pedidoModelo.php";
-}
+require_once __DIR__ . "/../modelos/pedidoModelo.php";
+
 
 class pedidoControlador extends pedidoModelo
 {
@@ -330,56 +327,108 @@ class pedidoControlador extends pedidoModelo
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
 
         if (!empty($busqueda1) && !empty($busqueda2)) {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS pc.idpedido_cabecera as idpedido_cabecera, id_sucursal AS id_sucursal, pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPe, 
-            pc.id_proveedor as id_proveedor, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
-            p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick, pc.updated as updated,
-            pc.updatedby as updatedby
+            $consulta = "
+            SELECT SQL_CALC_FOUND_ROWS
+                pc.idpedido_cabecera,
+                pc.id_sucursal,
+                pc.id_usuario,
+                pc.fecha,
+                pc.estado AS estadoPe,
+                pc.id_proveedor,
+                pc.updated,
+                pc.updatedby,
+
+                p.razon_social,
+                p.ruc,
+                p.telefono,
+                p.direccion,
+                p.correo,
+                p.estado AS estadoPro,
+
+                u.usu_nombre,
+                u.usu_apellido,
+                u.usu_estado,
+                u.usu_nick
+
             FROM pedido_cabecera pc
-            INNER JOIN proveedores p on p.idproveedores = pc.id_proveedor
-            INNER JOIN usuarios u on u.id_usuario = pc.id_usuario
-            WHERE date(fecha) >= '$busqueda1' AND date(fecha) <='$busqueda2' AND id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
-            ORDER BY fecha ASC LIMIT $inicio,$registros";
+            INNER JOIN proveedores p ON p.idproveedores = pc.id_proveedor
+            INNER JOIN usuarios u ON u.id_usuario = pc.id_usuario
+            WHERE DATE(pc.fecha) >= '$busqueda1'
+              AND DATE(pc.fecha) <= '$busqueda2'
+              AND pc.id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
+            ORDER BY pc.fecha ASC
+            LIMIT $inicio,$registros
+        ";
         } else {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS pc.idpedido_cabecera as idpedido_cabecera, id_sucursal AS id_sucursal, pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPe, 
-            pc.id_proveedor as id_proveedor, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
-            p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick, pc.updated as updated,
-            pc.updatedby as updatedby
+            $consulta = "
+            SELECT SQL_CALC_FOUND_ROWS
+                pc.idpedido_cabecera,
+                pc.id_sucursal,
+                pc.id_usuario,
+                pc.fecha,
+                pc.estado AS estadoPe,
+                pc.id_proveedor,
+                pc.updated,
+                pc.updatedby,
+
+                p.razon_social,
+                p.ruc,
+                p.telefono,
+                p.direccion,
+                p.correo,
+                p.estado AS estadoPro,
+
+                u.usu_nombre,
+                u.usu_apellido,
+                u.usu_estado,
+                u.usu_nick
+
             FROM pedido_cabecera pc
-            INNER JOIN proveedores p on p.idproveedores = pc.id_proveedor 
-            INNER JOIN usuarios u on u.id_usuario = pc.id_usuario
-            WHERE pc.estado != 0 AND id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
-            ORDER BY idpedido_cabecera ASC LIMIT $inicio,$registros";
+            INNER JOIN proveedores p ON p.idproveedores = pc.id_proveedor
+            INNER JOIN usuarios u ON u.id_usuario = pc.id_usuario
+            WHERE pc.estado != 0
+              AND pc.id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
+            ORDER BY pc.idpedido_cabecera ASC
+            LIMIT $inicio,$registros
+        ";
         }
+
         $conexion = mainModel::conectar();
-        $datos = $conexion->query($consulta);
-        $datos = $datos->fetchAll();
+        $datos = $conexion->query($consulta)->fetchAll();
 
-        $total = $conexion->query("SELECT FOUND_ROWS()");
-        $total = (int) $total->fetchColumn();
-
+        $total = (int)$conexion->query("SELECT FOUND_ROWS()")->fetchColumn();
         $Npaginas = ceil($total / $registros);
 
-        $tabla .= '<div class="table-responsive">
-					<table class="table table-dark table-sm">
-						<thead>
-							<tr class="text-center roboto-medium">
-								<th>#</th>
-								<th>CÓDIGO PEDIDO</th>
-                                <th>PROVEEDOR</th>
-                                <th>FECHA</th>
-                                <th>CREADO POR</th>
-                                <th>ESTADO</th>';
-        if ($privilegio == 1 || $privilegio == 2) {
-            $tabla .=           '<th>ELIMINAR</th>';
-        }
         $tabla .= '
-						</tr>
-						</thead>
-						<tbody>';
+        <div class="table-responsive">
+        <table class="table table-dark table-sm">
+            <thead>
+                <tr class="text-center roboto-medium">
+                    <th>#</th>
+                    <th>CÓDIGO PEDIDO</th>
+                    <th>PROVEEDOR</th>
+                    <th>FECHA</th>
+                    <th>CREADO POR</th>
+                    <th>ESTADO</th>
+                    <th>PDF</th>';
+
+        if ($privilegio == 1 || $privilegio == 2) {
+            $tabla .= '<th>ELIMINAR</th>';
+        }
+
+        $tabla .= '
+                </tr>
+            </thead>
+            <tbody>
+        ';
+
         if ($total >= 1 && $pagina <= $Npaginas) {
+
             $contador = $inicio + 1;
             $reg_inicio = $inicio + 1;
+
             foreach ($datos as $rows) {
+
                 switch ($rows['estadoPe']) {
                     case 1:
                         $estadoBadge = '<span class="badge bg-primary">Pendiente</span>';
@@ -393,46 +442,91 @@ class pedidoControlador extends pedidoModelo
                     default:
                         $estadoBadge = '<span class="badge bg-secondary">Desconocido</span>';
                 }
+
                 $tabla .= '
-                            <tr class="text-center">
-								<td>' . $contador . '</td>
-								<td>' . $rows['idpedido_cabecera'] . '</td>
-								<td>' . $rows['razon_social'] . '</td>
-								<td>' . date("d-m-Y", strtotime($rows['fecha'])) . '</td>
-                                <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
-                                <td>' . $estadoBadge . '</td>';
+                <tr class="text-center">
+                    <td>' . $contador . '</td>
+                    <td>' . $rows['idpedido_cabecera'] . '</td>
+                    <td>' . $rows['razon_social'] . '</td>
+                    <td>' . date("d-m-Y", strtotime($rows['fecha'])) . '</td>
+                    <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
+                    <td>' . $estadoBadge . '</td>';
+
+                /* ===== PDF ===== */
+                if ($rows['estadoPe'] != 0) {
+                    $tabla .= '
+                    <td>
+                        <a href="' . SERVERURL . 'pdf/pedido.php?id=' . mainModel::encryption($rows['idpedido_cabecera']) . '"
+                            target="_blank"
+                            class="btn btn-danger btn-sm"
+                            title="Imprimir pedido">
+                            <i class="fas fa-file-pdf"></i>
+                        </a>
+
+                    </td>';
+                } else {
+                    $tabla .= '<td>-</td>';
+                }
+
+                /* ===== ELIMINAR ===== */
                 if ($privilegio == 1 || $privilegio == 2) {
-                    $tabla .= '<td>
-									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/pedidoAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
-                                    <input type="hidden" name="pedido_id_del" value=' . mainModel::encryption($rows['idpedido_cabecera']) . '>
-										<button type="submit" class="btn btn-warning">
-											<i class="far fa-trash-alt"></i>
-										</button>
-									</form>
-								</td>';
+                    $tabla .= '
+                    <td>
+                        <form class="FormularioAjax"
+                              action="' . SERVERURL . 'ajax/pedidoAjax.php"
+                              method="POST"
+                              data-form="delete"
+                              autocomplete="off">
+                            <input type="hidden" name="pedido_id_del"
+                                   value="' . mainModel::encryption($rows['idpedido_cabecera']) . '">
+                            <button type="submit" class="btn btn-warning btn-sm">
+                                <i class="far fa-trash-alt"></i>
+                            </button>
+                        </form>
+                    </td>';
                 }
 
                 $tabla .= '</tr>';
                 $contador++;
             }
+
             $reg_final = $contador - 1;
         } else {
+
             if ($total >= 1) {
-                $tabla .= '<tr class="text-center"> <td colspan="6"> <a href="' . $url . '" class="btn btn-reaised btn-primary btn-sm"> Haga click aqui para recargar el listado </a> </td> </tr> ';
+                $tabla .= '
+                <tr class="text-center">
+                    <td colspan="8">
+                        <a href="' . $url . '" class="btn btn-raised btn-primary btn-sm">
+                            Haga click aquí para recargar el listado
+                        </a>
+                    </td>
+                </tr>';
             } else {
-                $tabla .= '<tr class="text-center"> <td colspan="6"> No hay regitros en el sistema</td> </tr> ';
+                $tabla .= '
+                <tr class="text-center">
+                    <td colspan="8">No hay registros en el sistema</td>
+                </tr>';
             }
         }
 
-        $tabla .= '       </tbody>
-					</table>
-				</div>';
+        $tabla .= '
+            </tbody>
+        </table>
+        </div>
+        ';
+
         if ($total >= 1 && $pagina <= $Npaginas) {
-            $tabla .= '<p class="text-right"> Mostrando registro ' . $reg_inicio . ' al ' . $reg_final . ' de un total de ' . $total . '</p>';
+            $tabla .= '
+            <p class="text-right">
+                Mostrando registro ' . $reg_inicio . ' al ' . $reg_final . ' de un total de ' . $total . '
+            </p>';
             $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);
         }
+
         echo $tabla;
     }
+
     /**fin controlador */
 
     /**Controlador anular pedido */
@@ -441,7 +535,7 @@ class pedidoControlador extends pedidoModelo
         $id = mainModel::decryption($_POST['pedido_id_del']);
         $id = mainModel::limpiar_string($id);
         session_start(['name' => 'STR']);
-        
+
         $check_pedido = mainModel::ejecutar_consulta_simple("SELECT idpedido_cabecera FROM pedido_cabecera WHERE idpedido_cabecera = '$id' AND id_sucursal = '" . $_SESSION['nick_sucursal'] . "'");
         if ($check_pedido->rowCount() < 0) {
             $alerta = [
@@ -499,4 +593,16 @@ class pedidoControlador extends pedidoModelo
         echo json_encode($alerta);
     }
     /**fin controlador */
+    public function decrypt($valor)
+    {
+        return mainModel::decryption($valor);
+    }
+
+    public function datos_pedido_controladorPDF($idPedido)
+    {
+        return [
+            'cabecera' => pedidoModelo::obtener_pedido_cabecera($idPedido),
+            'detalle'  => pedidoModelo::obtener_pedido_detalle($idPedido)
+        ];
+    }
 }

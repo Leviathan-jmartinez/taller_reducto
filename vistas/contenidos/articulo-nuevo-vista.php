@@ -138,6 +138,16 @@
                                         </select>
                                     </div>
                                 </div>
+                                <div class="col-12 col-md-4">
+                                    <div class="form-group">
+                                        <label for="tipoprodReg" class="bmd-label-floating">Tipo Producto</label>
+                                        <select class="form-control" name="tipoprodReg" id="tipoprodReg">
+                                            <option value="" selected>Seleccione una opción</option>
+                                            <option value="servicio">Servicio</option>
+                                            <option value="producto">Producto</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 

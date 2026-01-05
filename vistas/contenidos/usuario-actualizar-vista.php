@@ -1,12 +1,3 @@
-<?php
-if ($lc->encryption($_SESSION['id_str']) != $pagina[1]) {
-	if ($_SESSION['nivel_str'] != 1) {
-		echo $lc->forzarCierre_sesion_controlador();
-		exit();
-	}
-}
-?>
-
 <!-- Page header -->
 <div class="full-box page-header">
 	<h3 class="text-left">
@@ -32,6 +23,10 @@ if ($_SESSION['nivel_str'] == 1) { ?>
 			<li>
 				<a href="<?php echo SERVERURL; ?>usuario-rol/"><i class="fas fa-search fa-fw"></i> &nbsp; ASIGNAR ROL</a>
 			</li>
+			<li>
+				<a href="<?php echo SERVERURL; ?>usuario-sucursal/"><i class="fas fa-store-alt fa-fw"></i> &nbsp; ASIGNAR SUCURSAL</a>
+			</li>
+
 		</ul>
 	</div>
 <?php } ?>
@@ -156,18 +151,18 @@ if ($_SESSION['nivel_str'] == 1) { ?>
 										<option value="1" <?php if ($campos['usu_nivel'] == 1) {
 																echo 'selected=""';
 															} ?>>Control total <?php if ($campos['usu_nivel'] == 1) {
-																																		echo '(Actual)';
-																																	} ?></option>
+																					echo '(Actual)';
+																				} ?></option>
 										<option value="2" <?php if ($campos['usu_nivel'] == 2) {
 																echo 'selected=""';
 															} ?>>Edición <?php if ($campos['usu_nivel'] == 2) {
-																																	echo '(Actual)';
-																																} ?></option>
+																				echo '(Actual)';
+																			} ?></option>
 										<option value="3" <?php if ($campos['usu_nivel'] == 3) {
 																echo 'selected=""';
 															} ?>>Registrar <?php if ($campos['usu_nivel'] == 3) {
-																																	echo '(Actual)';
-																																} ?></option>
+																				echo '(Actual)';
+																			} ?></option>
 									</select>
 								</div>
 							</div>

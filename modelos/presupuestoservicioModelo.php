@@ -46,7 +46,7 @@ class presupuestoservicioModelo extends mainModel
         INNER JOIN clientes c ON c.id_cliente = r.id_cliente
         INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
         INNER JOIN modelo_auto ma ON ma.id_modeloauto = v.id_modeloauto
-        WHERE r.id_sucursal = :sucursal
+        WHERE r.id_sucursal = :sucursal AND r.estado = 1
           AND (c.nombre_cliente LIKE :b OR v.placa LIKE :b)
         ORDER BY r.fecha_ingreso DESC
         LIMIT 20    ");
@@ -321,12 +321,23 @@ class presupuestoservicioModelo extends mainModel
         $sql->bindParam(':id', $idrecepcion, PDO::PARAM_INT);
         return $sql->execute();
     }
+    protected static function anular_presupuesto_servicio_modelo($idpresupuesto)
+    {
+        $sql = mainModel::conectar()->prepare("
+        UPDATE presupuesto_servicio
+        SET estado = 0
+        WHERE idpresupuesto_servicio = :id
+        ");
 
-    protected static function anular_estado_recepcion_modelo($idrecepcion)
+        $sql->bindParam(":id", $idpresupuesto, PDO::PARAM_INT);
+        return $sql->execute();
+    }
+
+    protected static function revertir_estado_recepcion_modelo($idrecepcion)
     {
         $sql = mainModel::conectar()->prepare("
         UPDATE recepcion_servicio
-        SET estado = 0,
+        SET estado = 1,
             fecha_actualizacion = NOW()
         WHERE idrecepcion = :id");
 
@@ -354,6 +365,8 @@ class presupuestoservicioModelo extends mainModel
             LEFT JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
             LEFT JOIN modelo_auto ma ON ma.id_modeloauto = v.id_modeloauto
             INNER JOIN usuarios u ON u.id_usuario = p.id_usuario
+            WHERE r.id_sucursal = '{$_SESSION['nick_sucursal']}'
+            AND p.estado != 0
             ORDER BY p.idpresupuesto_servicio DESC
         ");
 
@@ -373,5 +386,58 @@ class presupuestoservicioModelo extends mainModel
         return $sql->execute([
             ':id' => $id
         ]);
+    }
+    
+    protected static function obtener_presupuesto_cabecera($id)
+    {
+        $sql = self::conectar()->prepare("
+            SELECT
+                ps.idpresupuesto_servicio,
+                ps.fecha,
+                ps.fecha_venc,
+                ps.estado,
+                ps.subtotal,
+                ps.total_descuento,
+                ps.total_final,
+
+                c.nombre_cliente,
+                c.apellido_cliente,
+                c.celular_cliente,
+                c.direccion_cliente,
+
+                v.placa,
+                ma.mod_descri AS modelo,
+
+                u.usu_nombre,
+                u.usu_apellido
+            FROM presupuesto_servicio ps
+            INNER JOIN recepcion_servicio r ON r.idrecepcion = ps.idrecepcion
+            INNER JOIN clientes c ON c.id_cliente = r.id_cliente
+            INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
+            INNER JOIN modelo_auto ma ON ma.id_modeloauto = v.id_modeloauto
+            INNER JOIN usuarios u ON u.id_usuario = ps.id_usuario
+            WHERE ps.idpresupuesto_servicio = :id
+            LIMIT 1
+        ");
+        $sql->bindParam(":id", $id, PDO::PARAM_INT);
+        $sql->execute();
+        return $sql->fetch(PDO::FETCH_ASSOC);
+    }
+
+    protected static function obtener_presupuesto_detalle($id)
+    {
+        $sql = self::conectar()->prepare("
+            SELECT
+                a.desc_articulo,
+                d.cantidad,
+                d.preciouni,
+                d.subtotal
+            FROM presupuesto_detalleservicio d
+            INNER JOIN articulos a ON a.id_articulo = d.id_articulo
+            WHERE d.idpresupuesto_servicio = :id
+        ");
+        $sql->bindParam(":id", $id, PDO::PARAM_INT);
+        $sql->execute();
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 }

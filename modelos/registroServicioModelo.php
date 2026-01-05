@@ -75,11 +75,27 @@ class registroServicioModelo extends mainModel
                 $idRegistro,
                 $datos['idorden_trabajo']
             ]);
+            /* ================= OBTENER SUCURSAL DESDE OT ================= */
+            $qSuc = $pdo->prepare("
+                SELECT r.id_sucursal
+                FROM orden_trabajo ot
+                INNER JOIN recepcion_servicio r ON r.idrecepcion = ot.idrecepcion
+                WHERE ot.idorden_trabajo = ?
+            ");
+            $qSuc->execute([$datos['idorden_trabajo']]);
+            $idSucursalReal = $qSuc->fetchColumn();
+
+            if (!$idSucursalReal) {
+                throw new Exception('No se pudo determinar la sucursal del servicio');
+            }
+            if ($idSucursalReal != $_SESSION['nick_sucursal']) {
+                throw new Exception('No puede registrar servicios de otra sucursal');
+            }
 
             self::aplicar_stock_registro_servicio(
                 $pdo,
                 $idRegistro,
-                $datos['id_sucursal'],
+                $idSucursalReal,
                 $datos['usuario']
             );
             /* ================= CERRAR OT ================= */
@@ -96,6 +112,23 @@ class registroServicioModelo extends mainModel
                 $datos['idorden_trabajo']
             ]);
 
+            /* ================= CERRAR RECEPCIÓN ================= */
+            $updRec = $pdo->prepare("
+                UPDATE recepcion_servicio
+                SET estado = 3,
+                    fecha_salida = NOW(),
+                    fecha_actualizacion = NOW()
+                WHERE idrecepcion = (
+                    SELECT idrecepcion
+                    FROM orden_trabajo
+                    WHERE idorden_trabajo = ?
+                )
+            ");
+            $updRec->execute([
+                $datos['idorden_trabajo']
+            ]);
+
+
             $pdo->commit();
             return true;
         } catch (Exception $e) {
@@ -107,6 +140,7 @@ class registroServicioModelo extends mainModel
     /* ================= BUSCAR OT PARA REGISTRO ================= */
     protected static function buscar_ot_para_registro_modelo($texto)
     {
+        session_start(['name' => 'STR']);
         $sql = self::conectar()->prepare("
         SELECT ot.idorden_trabajo,
                c.nombre_cliente,
@@ -119,7 +153,7 @@ class registroServicioModelo extends mainModel
         INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
         INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
         LEFT JOIN registro_servicio rs ON rs.idorden_trabajo = ot.idorden_trabajo
-        WHERE ot.estado = 2
+        WHERE ot.estado = 2 AND r.id_sucursal = :sucursal 
           AND (
                 c.nombre_cliente LIKE :b
              OR c.apellido_cliente LIKE :b
@@ -130,11 +164,11 @@ class registroServicioModelo extends mainModel
         LIMIT 20");
 
         $sql->bindValue(':b', "%$texto%");
+        $sql->bindValue(':sucursal', $_SESSION['nick_sucursal'], PDO::PARAM_INT);
         $sql->execute();
 
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
-
 
     /* ================= OBTENER OT + DETALLE ================= */
     protected static function obtener_ot_para_registro_modelo($idOT)
@@ -194,7 +228,7 @@ class registroServicioModelo extends mainModel
             /* ===== 1. INSERTAR MOVIMIENTO STOCK ===== */
             $mov = $pdo->prepare("
             INSERT INTO sucmovimientostock
-            (LocalId, TipoMovStockId, MovStockProductoId, MovStockCantidad,
+            (id_sucursal, TipoMovStockId, MovStockProductoId, MovStockCantidad,
              MovStockPrecioVenta, MovStockCosto,
              MovStockFechaHora, MovStockUsuario,
              MovStockSigno, MovStockReferencia)
@@ -280,7 +314,7 @@ class registroServicioModelo extends mainModel
             /* ===== MOVIMIENTO INVERSO ===== */
             $mov = $pdo->prepare("
             INSERT INTO sucmovimientostock
-            (LocalId, TipoMovStockId, MovStockProductoId, MovStockCantidad,
+            (id_sucursal, TipoMovStockId, MovStockProductoId, MovStockCantidad,
              MovStockPrecioVenta, MovStockCosto,
              MovStockFechaHora, MovStockUsuario,
              MovStockSigno, MovStockReferencia)
@@ -319,6 +353,7 @@ class registroServicioModelo extends mainModel
         INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
         INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
         INNER JOIN usuarios u ON u.id_usuario = rs.usuario_registra
+        WHERE r.id_sucursal = '{$_SESSION['nick_sucursal']}'
         ORDER BY rs.idregistro_servicio DESC
         LIMIT $inicio, $registros";
     }
@@ -348,6 +383,20 @@ class registroServicioModelo extends mainModel
             if ($reg['estado'] != 1) {
                 return ['msg' => 'El registro no puede ser anulado'];
             }
+            $qSuc = $pdo->prepare("
+                SELECT r.id_sucursal
+                FROM registro_servicio rs
+                INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rs.idorden_trabajo
+                INNER JOIN recepcion_servicio r ON r.idrecepcion = ot.idrecepcion
+                WHERE rs.idregistro_servicio = ?
+            ");
+            $qSuc->execute([$datos['idregistro_servicio']]);
+            $idSucursalReal = $qSuc->fetchColumn();
+
+            if ($idSucursalReal != $_SESSION['nick_sucursal']) {
+                throw new Exception('No puede anular registros de otra sucursal');
+            }
+
 
             /* ================= REVERTIR STOCK ================= */
             self::revertir_stock_registro_servicio(
@@ -373,6 +422,21 @@ class registroServicioModelo extends mainModel
             WHERE idorden_trabajo = ?
         ");
             $updOT->execute([$reg['idorden_trabajo']]);
+
+            /* ================= REABRIR RECEPCIÓN ================= */
+            $updRec = $pdo->prepare("
+                UPDATE recepcion_servicio
+                SET estado = 2,
+                    fecha_salida = NULL,
+                    fecha_actualizacion = NOW()
+                WHERE idrecepcion = (
+                    SELECT idrecepcion
+                    FROM orden_trabajo
+                    WHERE idorden_trabajo = ?
+                )
+            ");
+            $updRec->execute([$reg['idorden_trabajo']]);
+
 
             $pdo->commit();
             return true;

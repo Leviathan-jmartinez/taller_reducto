@@ -57,7 +57,6 @@ class registroServicioControlador extends registroServicioModelo
             'observacion'     => $_POST['observacion'] ?? '',
             'usuario'         => $idUsuario,
             'updatedby'       => $idUsuario,
-            'id_sucursal'     => $idSucursal,
             'ip'              => $_SERVER['REMOTE_ADDR'] ?? null,
             'user_agent'      => $_SERVER['HTTP_USER_AGENT'] ?? null
         ];
@@ -141,9 +140,9 @@ class registroServicioControlador extends registroServicioModelo
 
     public function paginador_registro_servicio_controlador($pagina, $registros, $privilegio, $url, $busqueda1, $busqueda2)
     {
-        $pagina = mainModel::limpiar_string($pagina);
+        $pagina    = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
-        $url = SERVERURL . mainModel::limpiar_string($url) . "/";
+        $url       = SERVERURL . mainModel::limpiar_string($url) . "/";
 
         $pagina = ($pagina > 0) ? (int)$pagina : 1;
         $inicio = ($pagina * $registros) - $registros;
@@ -161,20 +160,20 @@ class registroServicioControlador extends registroServicioModelo
         $Npaginas = ceil($total / $registros);
 
         $tabla = '<div class="table-responsive">
-            <table class="table table-dark table-sm">
-            <thead>
-                <tr class="text-center">
-                    <th>#</th>
-                    <th>OT</th>
-                    <th>Cliente</th>
-                    <th>Vehículo</th>
-                    <th>Fecha ejecución</th>
-                    <th>Registrado por</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>';
+        <table class="table table-dark table-sm">
+        <thead>
+            <tr class="text-center">
+                <th>#</th>
+                <th>OT</th>
+                <th>Cliente</th>
+                <th>Vehículo</th>
+                <th>Fecha ejecución</th>
+                <th>Registrado por</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>';
 
         if ($total >= 1) {
             $contador = $inicio + 1;
@@ -196,38 +195,52 @@ class registroServicioControlador extends registroServicioModelo
                 }
 
                 $tabla .= '
-            <tr class="text-center">
-                <td>' . $contador . '</td>
-                <td>#' . $row['idorden_trabajo'] . '</td>
-                <td>' . $row['nombre_cliente'] . ' ' . $row['apellido_cliente'] . '</td>
-                <td>' . $row['mod_descri'] . ' ' . $row['placa'] . '</td>
-                <td>' . date("d-m-Y", strtotime($row['fecha_ejecucion'])) . '</td>
-                <td>' . $row['usuario_registra'] . '</td>
-                <td>' . $estado . '</td>
-                <td>
-                    <a href="' . SERVERURL . 'pdf/registroServicio.php?id=' .
+        <tr class="text-center">
+            <td>' . $contador . '</td>
+            <td>#' . $row['idorden_trabajo'] . '</td>
+            <td>' . $row['nombre_cliente'] . ' ' . $row['apellido_cliente'] . '</td>
+            <td>' . $row['mod_descri'] . ' ' . $row['placa'] . '</td>
+            <td>' . date("d-m-Y", strtotime($row['fecha_ejecucion'])) . '</td>
+            <td>' . $row['usuario_registra'] . '</td>
+            <td>' . $estado . '</td>
+            <td>
+                <a href="' . SERVERURL . 'pdf/registroServicio.php?id=' .
                     mainModel::encryption($row['idregistro_servicio']) . '"
-                        target="_blank"
-                        class="btn btn-info btn-sm"
-                        title="Imprimir registro">
-                        <i class="fas fa-print"></i>
-                    </a>';
+                    target="_blank"
+                    class="btn btn-info btn-sm"
+                    title="Imprimir registro">
+                    <i class="fas fa-print"></i>
+                </a>';
 
                 if ($row['estado'] == 1) {
                     $tabla .= '
-                    <button class="btn btn-danger btn-sm"
-                        onclick="anularRegistroServicio(\'' .
-                        mainModel::encryption($row['idregistro_servicio']) . '\')"
+                <form class="FormularioAjax d-inline"
+                    action="' . SERVERURL . 'ajax/registroServicioAjax.php"
+                    method="POST"
+                    data-form="delete"
+                    autocomplete="off">
+
+                    <input type="hidden" name="accion" value="anular">
+                    <input type="hidden" name="id_registro"
+                        value="' . mainModel::encryption($row['idregistro_servicio']) . '">
+
+                    <button type="submit"
+                        class="btn btn-danger btn-sm"
                         title="Anular registro">
                         <i class="fas fa-ban"></i>
-                    </button>';
+                    </button>
+                </form>';
                 }
 
-                $tabla .= '</td></tr>';
+                $tabla .= '
+            </td>
+        </tr>';
+
                 $contador++;
             }
         } else {
-            $tabla .= '<tr>
+            $tabla .= '
+        <tr>
             <td colspan="8" class="text-center">Sin registros</td>
         </tr>';
         }
@@ -240,6 +253,7 @@ class registroServicioControlador extends registroServicioModelo
 
         return $tabla;
     }
+
 
     public function anular_registro_servicio_controlador()
     {

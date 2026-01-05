@@ -51,8 +51,8 @@ class articuloModelo extends mainModel
     protected static function agregar_articulo_modelo($datos)
     {
         $sql = mainModel::conectar()->prepare("INSERT INTO articulos 
-        (id_categoria, idproveedores, idunidad_medida, idiva, id_marcas, desc_articulo, precio_venta, precio_compra, codigo, estado, date_updated, date_created) 
-        VALUES(:id_categoria, :idproveedores, :idunidad_medida, :idiva, :id_marcas, :descrip, :pricesale, :pricebuy, :code, :estado, now(), now())");
+        (id_categoria, idproveedores, idunidad_medida, idiva, id_marcas, desc_articulo, precio_venta, precio_compra, codigo, estado, date_updated, date_created, tipo) 
+        VALUES(:id_categoria, :idproveedores, :idunidad_medida, :idiva, :id_marcas, :descrip, :pricesale, :pricebuy, :code, :estado, now(), now(), :tipo)");
         $sql->bindParam(":id_categoria", $datos['id_categoria']);
         $sql->bindParam(":idproveedores", $datos['idproveedores']);
         $sql->bindParam(":idunidad_medida", $datos['idunidad_medida']);
@@ -63,6 +63,7 @@ class articuloModelo extends mainModel
         $sql->bindParam(":pricebuy", $datos['pricebuy']);
         $sql->bindParam(":code", $datos['code']);
         $sql->bindParam(":estado", $datos['estado']);
+        $sql->bindParam(":tipo", $datos['tipo']);
         $sql->execute();
         return $sql;
     }
@@ -81,7 +82,7 @@ class articuloModelo extends mainModel
     {
         $sql = mainModel::conectar()->prepare("UPDATE articulos
         SET id_categoria=:id_categoria, idproveedores=:idproveedores, idunidad_medida=:idunidad_medida, idiva=:idiva, id_marcas=:id_marcas, desc_articulo=:desc_articulo, 
-        precio_venta=:precio_venta, precio_compra=:precio_compra, codigo=:codigo, estado=:estado, date_updated=now()
+        precio_venta=:precio_venta, precio_compra=:precio_compra, codigo=:codigo, estado=:estado, date_updated=now(), tipo=:tipo
         WHERE id_articulo=:id_articulo");
         $sql->bindParam(":id_categoria", $datos['id_categoria']);
         $sql->bindParam(":idproveedores", $datos['idproveedores']);
@@ -93,6 +94,7 @@ class articuloModelo extends mainModel
         $sql->bindParam(":precio_compra", $datos['precio_compra']);
         $sql->bindParam(":codigo", $datos['codigo']);
         $sql->bindParam(":estado", $datos['estado']);
+        $sql->bindParam(":tipo", $datos['tipo']);
         $sql->bindParam(":id_articulo", $datos['id_articulo']);
         $sql->execute();
         return $sql;

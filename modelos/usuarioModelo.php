@@ -146,4 +146,17 @@ class usuarioModelo extends mainModel
         $pdo->commit();
         return true;
     }
+    protected static function asignar_sucursal_modelo($idUsuario, $idSucursal)
+    {
+        $sql = mainModel::conectar()->prepare("
+        UPDATE usuarios
+        SET sucursalid = :sucursal
+        WHERE id_usuario = :usuario
+    ");
+
+        return $sql->execute([
+            ':sucursal' => $idSucursal,
+            ':usuario'  => $idUsuario
+        ]);
+    }
 }

@@ -1,9 +1,5 @@
 <?php
-if ($peticionAjax) {
-    require_once "../modelos/ordencompraModelo.php";
-} else {
-    require_once "./modelos/ordencompraModelo.php";
-}
+require_once __DIR__ . "/../modelos/ordencompraModelo.php";
 
 class ordencompraControlador extends ordencompraModelo
 {
@@ -22,7 +18,7 @@ class ordencompraControlador extends ordencompraModelo
 
         $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
-        
+
         if (!empty($busqueda)) {
             $consulta = "SELECT  SQL_CALC_FOUND_ROWS pc.idpresupuesto_compra as idpresupuesto_compra, pc.id_sucursal as id_sucursal,pc.id_usuario as id_usuario, pc.fecha as fecha, fecha_venc as fecha_venc,pc.estado as estadoPre, 
             pc.idproveedores as idproveedores, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
@@ -401,7 +397,8 @@ class ordencompraControlador extends ordencompraModelo
                                 <th>FECHA CREACION</th>
                                 <th>FECHA ENTREGA</th>
                                 <th>CREADO POR</th>
-                                <th>ESTADO</th>';
+                                <th>ESTADO</th>
+                                <th>PDF</th>';
         if ($privilegio == 1 || $privilegio == 2) {
             $tabla .=           '<th>ELIMINAR</th>';
         }
@@ -434,7 +431,15 @@ class ordencompraControlador extends ordencompraModelo
 								<td>' . date("d-m-Y", strtotime($rows['fecha'])) . '</td>
 								<td>' . date("d-m-Y", strtotime($rows['fecha_entrega'])) . '</td>
                                 <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
-                                <td>' . $estadoBadge . '</td>';
+                                <td>' . $estadoBadge . '</td>
+                                <td>
+                                <a href="' . SERVERURL . 'pdf/orden_compra.php?id=' . mainModel::encryption($rows['idorden_compra']) . '"
+                                target="_blank"
+                                class="btn btn-info"
+                                title="Imprimir Orden de Compra">
+                                    <i class="fas fa-file-pdf"></i>
+                                </a>
+                                </td>';
                 if ($privilegio == 1 || $privilegio == 2) {
                     $tabla .= '<td>
 									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/ordencompraAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
@@ -728,4 +733,16 @@ class ordencompraControlador extends ordencompraModelo
         }
     }
     /**fin controlador */
+    public function decrypt($valor)
+    {
+        return mainModel::decryption($valor);
+    }
+
+    public function datos_orden_compra_controlador($idOC)
+    {
+        return [
+            'cabecera' => ordenCompraModelo::obtener_orden_compra_cabecera($idOC),
+            'detalle'  => ordenCompraModelo::obtener_orden_compra_detalle($idOC)
+        ];
+    }
 }

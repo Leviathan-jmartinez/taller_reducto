@@ -14,6 +14,20 @@ $promos = $insPromocion->listar_promociones_controlador();
     <h3 class="text-left">
         <i class="fas fa-tags"></i> &nbsp; LISTADO DE PROMOCIONES
     </h3>
+    <div class="container-fluid">
+        <ul class="full-box list-unstyled page-nav-tabs">
+            <li>
+                <a  href="<?php echo SERVERURL; ?>promocion-nuevo/">
+                    <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVA PROMOCIÓN
+                </a>
+            </li>
+            <li>
+                <a class="active" href="<?php echo SERVERURL; ?>promocion-lista/">
+                    <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTA DE PROMOCIONES
+                </a>
+            </li>
+        </ul>
+    </div>
 
     <div class="table-responsive">
         <table class="table table-dark table-sm">

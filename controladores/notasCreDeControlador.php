@@ -191,6 +191,7 @@ class notasCreDeControlador extends notasCreDeModelo
         if (session_status() === PHP_SESSION_NONE) {
             session_start(['name' => 'STR']);
         }
+
         $factura = $_SESSION['NC_FACTURA'] ?? null;
 
         if (
@@ -222,6 +223,31 @@ class notasCreDeControlador extends notasCreDeModelo
             $total += round($d['cantidad'] * $d['precio'], 2);
         }
 
+        /* ==========================================================
+       🔒 VALIDACIÓN TOPE NOTA DE CRÉDITO (ACÁ VA)
+       ========================================================== */
+        if ($_POST['tipo'] === 'credito') {
+
+            $totalFactura = (float)$factura['total'];
+
+            $totalNCPrevias = notasCreDeModelo::totalNCActivasPorFactura(
+                $factura['idcompra_cabecera']
+            );
+
+            $totalNCResultado = $totalNCPrevias + $total;
+
+            if ($totalNCResultado > $totalFactura) {
+                return [
+                    "Alerta" => "simple",
+                    "Titulo" => "Error",
+                    "Texto"  => "La Nota de Crédito supera el monto de la factura. Disponible: "
+                        . number_format($totalFactura - $totalNCPrevias, 0, ',', '.'),
+                    "Tipo"   => "error"
+                ];
+            }
+        }
+        /* ========================================================== */
+
         /* ================= SIGNO CONTABLE ================= */
         $montoMovimiento = $total;
         if ($_POST['tipo'] === 'credito') {
@@ -249,18 +275,17 @@ class notasCreDeControlador extends notasCreDeModelo
             notasCreDeModelo::insertarDetalleNotaCompraModelo($pdo, $idNota, $detalle);
 
             notasCreDeModelo::impactarNotaCompraModelo($pdo, [
-                'idcompra' => $factura['idcompra_cabecera'],
+                'idcompra'   => $factura['idcompra_cabecera'],
                 'id_sucursal' => $_SESSION['nick_sucursal'],
-                'tipo'     => $_POST['tipo'],
-                'idnota'   => $idNota,
-                'monto'    => $montoMovimiento,
-                'obs'      => 'Nota ' . $_POST['tipo']
+                'tipo'       => $_POST['tipo'],
+                'idnota'     => $idNota,
+                'monto'      => $montoMovimiento,
+                'obs'        => 'Nota ' . $_POST['tipo']
             ]);
 
             $pdo->commit();
 
-            unset($_SESSION['NC_DETALLE']);
-            unset($_SESSION['NC_FACTURA']);
+            unset($_SESSION['NC_DETALLE'], $_SESSION['NC_FACTURA']);
 
             echo json_encode([
                 'Alerta' => 'recargar',
@@ -269,7 +294,6 @@ class notasCreDeControlador extends notasCreDeModelo
                 'Tipo'   => 'success'
             ]);
             exit;
-
         } catch (Exception $e) {
             $pdo->rollBack();
             echo json_encode([
@@ -279,6 +303,7 @@ class notasCreDeControlador extends notasCreDeModelo
             exit;
         }
     }
+
 
     /** Controlador paginar compras */
     public function paginador_notasCreDe_controlador($pagina, $registros, $privilegio, $url, $busqueda1, $busqueda2)

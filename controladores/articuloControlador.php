@@ -161,6 +161,7 @@ class articuloControlador extends articuloModelo
         $pricebuy = mainModel::limpiar_string($_POST['articulo_priceC_reg']);
         $code = mainModel::limpiar_string($_POST['articulo_codigo_reg']);
         $estado = mainModel::limpiar_string($_POST['articuloEstadoReg']);
+        $tipo = mainModel::limpiar_string($_POST['tipoprodReg']);
 
         /** Comprobar campos vacios */
         if ($code == "" || $descrip == "" || $pricebuy == "" || $pricesale == "") {
@@ -299,7 +300,8 @@ class articuloControlador extends articuloModelo
             "pricesale" => $pricesale,
             "pricebuy" => $pricebuy,
             "code" => $code,
-            "estado" => $estado
+            "estado" => $estado,
+            "tipo" => $tipo
         ];
         $agregar_articulo = articuloModelo::agregar_articulo_modelo($datos_articulo);
         if ($agregar_articulo->rowCount() == 1) {
@@ -412,6 +414,7 @@ class articuloControlador extends articuloModelo
         $precio_compra = mainModel::limpiar_string($_POST['articulo_priceC_up']);
         $codigo = mainModel::limpiar_string($_POST['articulo_codigo_up']);
         $estado = mainModel::limpiar_string($_POST['articulo_Estado_up']);
+        $tipo = mainModel::limpiar_string($_POST['articulo_Tipo_up']);
 
         /** Comprobar campos vacios */
         if ($codigo == "" || $desc_articulo == "" || $precio_venta == "") {
@@ -511,6 +514,7 @@ class articuloControlador extends articuloModelo
             "precio_compra" => $precio_compra,
             "estado" => $estado,
             "codigo" => $codigo,
+            "tipo" => $tipo,
             "id_articulo" => $id
         ];
         if (articuloModelo::actualizar_articulo_modelo($datos_articulo_up)) {

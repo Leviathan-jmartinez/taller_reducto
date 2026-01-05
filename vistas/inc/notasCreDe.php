@@ -99,7 +99,7 @@
         if (!e.target.classList.contains('FormularioAjax')) return;
 
         e.preventDefault();
-        console.log('SUBMIT AJAX OK');
+
         const form = e.target;
         const data = new FormData(form);
         data.append('accion', 'guardar_nota_compra');
@@ -110,37 +110,53 @@
             })
             .then(r => r.text())
             .then(txt => {
-                console.log('RESPUESTA RAW:', txt); // 👈 debug real
+                console.log('RESPUESTA RAW:', txt);
                 return JSON.parse(txt);
             })
             .then(resp => {
 
-                if (resp.status === 'ok') {
+                /* 🔴 ERROR CONTROLADO */
+                if (resp.status && resp.status === 'error') {
                     Swal.fire({
-                        type: 'success',
-                        title: 'Nota guardada correctamente',
-                        confirmButtonText: 'Aceptar'
-                    }).then(() => {
-                        window.location.reload();
-                    });
-                } else {
-                    Swal.fire({
-                        type: 'error',
+                        icon: 'error',
                         title: 'Error',
-                        text: resp.msg || 'Ocurrió un error'
+                        text: resp.msg
                     });
+                    return;
                 }
+
+                /* 🟢 RESPUESTA ESTÁNDAR BACKEND */
+                if (resp.Alerta) {
+                    Swal.fire({
+                        icon: resp.Tipo || 'success',
+                        title: resp.Titulo || 'Correcto',
+                        text: resp.Texto || ''
+                    }).then(() => {
+                        if (resp.Alerta === 'recargar') {
+                            window.location.reload();
+                        }
+                    });
+                    return;
+                }
+
+                /* 🟡 FALLBACK */
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Respuesta inesperada del servidor'
+                });
             })
             .catch(err => {
                 console.error(err);
                 Swal.fire({
-                    type: 'error',
+                    icon: 'error',
                     title: 'Error',
-                    text: 'Respuesta inválida del servidor'
+                    text: 'Error de comunicación con el servidor'
                 });
             });
-
     });
+
+
 
 
     function cancelarNota() {

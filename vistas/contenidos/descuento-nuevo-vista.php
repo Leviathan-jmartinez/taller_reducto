@@ -3,6 +3,20 @@
     <h3 class="text-left">
         <i class="fas fa-percent"></i> &nbsp; REGISTRAR DESCUENTO
     </h3>
+    <div class="container-fluid">
+        <ul class="full-box list-unstyled page-nav-tabs">
+            <li>
+                <a class="active" href="<?php echo SERVERURL; ?>descuento-nuevo/">
+                    <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO DESCUENTO
+                </a>
+            </li>
+            <li>
+                <a href="<?php echo SERVERURL; ?>descuento-lista/">
+                    <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTA DE DESCUENTOS
+                </a>
+            </li>
+        </ul>
+    </div>
 
     <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/descuentoAjax.php"

@@ -15,7 +15,7 @@
 
         <nav class="full-box nav-lateral-menu">
             <ul>
-                    <!-- PANEL -->
+                <!-- PANEL -->
                 <li>
                     <a href="<?= SERVERURL; ?>home/">
                         <i class="fab fa-dashcube fa-fw"></i> &nbsp; Panel Principal
@@ -32,7 +32,7 @@
                 <?php } ?>
 
                 <!-- COMPRAS -->
-                <?php if (mainModel::tienePermiso('compra.ver')) { ?>       
+                <?php if (mainModel::tienePermiso('compra.ver')) { ?>
                     <li>
                         <a href="#" class="nav-btn-submenu">
                             <i class="fas fa-shopping-cart"></i> &nbsp; Compras
@@ -48,7 +48,7 @@
                             <?php } ?>
 
                             <?php if (mainModel::tienePermiso('compra.oc.ver')) { ?>
-                                <li><a href="<?= SERVERURL; ?>oc-nuevo/"><i class="fas fa-file-invoice fa-fw"></i> &nbsp; Ordenes de Compra</a></li>
+                                <li><a href="<?= SERVERURL; ?>oc-lista/"><i class="fas fa-file-invoice fa-fw"></i> &nbsp; Ordenes de Compra</a></li>
                             <?php } ?>
 
                             <?php if (mainModel::tienePermiso('compra.factura.ver')) { ?>
@@ -133,20 +133,23 @@
                                 <li><a href="<?= SERVERURL; ?>company/"><i class="fas fa-store-alt fa-fw"></i> &nbsp; Empresa</a></li>
                             <?php } ?>
 
+                            <?php if (mainModel::tienePermiso('proveedor.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>proveedor-nuevo/"><i class="fas fa-truck fa-fw"></i> &nbsp; Proveedores</a></li>
+                            <?php } ?>
+
                             <?php if (mainModel::tienePermiso('sucursal.ver')) { ?>
-                                <li><a href="<?= SERVERURL; ?>sucursal-lista/"><i class="fas fa-city fa-fw"></i> &nbsp; Ciudades</a></li>
+                                <li><a href="<?= SERVERURL; ?>sucursal-nuevo/"><i class="fas fa-city fa-fw"></i> &nbsp; Sucursales</a></li>
                             <?php } ?>
 
-                            <?php if (mainModel::tienePermiso('cargo.ver')) { ?>
-                                <li><a href="<?= SERVERURL; ?>cargo-lista/"><i class="fas fa-file-invoice fa-fw"></i> &nbsp; Cargos</a></li>
+                            <?php if (mainModel::tienePermiso('vehiculo.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>vehiculo-lista/"><i class="fas fa-car fa-fw"></i> &nbsp; Vehículos</a></li>
                             <?php } ?>
 
-                            <?php if (mainModel::tienePermiso('marca.ver')) { ?>
-                                <li><a href="<?= SERVERURL; ?>marca-lista/"><i class="fas fa-tag fa-fw"></i> &nbsp; Marcas</a></li>
+                            <?php if (mainModel::tienePermiso('empleado.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>empleado-lista/"><i class="fas fa-user fa-fw"></i> &nbsp; Empleados</a></li>
                             <?php } ?>
-
-                            <?php if (mainModel::tienePermiso('modelo.ver')) { ?>
-                                <li><a href="<?= SERVERURL; ?>modelo-auto-lista/"><i class="fas fa-list-ul fa-fw"></i> &nbsp; Modelos de Auto</a></li>
+                            <?php if (mainModel::tienePermiso('equipo.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>empleado-equipo/"><i class="fas fa-users fa-fw"></i> &nbsp; Equipos</a></li>
                             <?php } ?>
 
                         </ul>

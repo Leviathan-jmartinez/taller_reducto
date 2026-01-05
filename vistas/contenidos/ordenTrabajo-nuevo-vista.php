@@ -9,10 +9,29 @@ $id_usuario     = $_SESSION['id_str'];
 
 <div class="container-fluid">
 
-    <h3 class="text-left">
-        <i class="fas fa-tools fa-fw"></i> &nbsp; GENERAR ORDEN DE TRABAJO
-    </h3>
+    <div class="container-fluid">
+        <h3>
+            <i class="fas fa-tools"></i> &nbsp; ORDEN DE TRABAJO
+        </h3>
 
+        <ul class="full-box list-unstyled page-nav-tabs">
+            <li>
+                <a class="active" href="<?php echo SERVERURL; ?>/ordenTrabajo-nuevo/">
+                    <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVA ORDEN DE TRABAJO
+                </a>
+            </li>
+            <li>
+                <a href="<?php echo SERVERURL; ?>/ordenTrabajo-lista/">
+                    <i class="fas fa-search fa-fw"></i> &nbsp; HISTORIAL DE ORDENES DE TRABAJO
+                </a>
+            </li>
+            <li>
+                <a href="<?php echo SERVERURL; ?>/ordenTrabajo-buscar/">
+                    <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR ORDENES DE TRABAJO POR FECHA
+                </a>
+            </li>
+        </ul>
+    </div>
     <!-- ================= FORM OT ================= -->
     <form class="form-neon FormularioAjax"
         action="<?= SERVERURL; ?>ajax/ordenTrabajoAjax.php"
@@ -65,9 +84,9 @@ $id_usuario     = $_SESSION['id_str'];
 
             <div class="row">
                 <div class="col-md-6">
-                    <label>Técnico encargado</label>
+                    <label>Equipo encargado</label>
                     <select name="idtrabajos" id="idtrabajos" class="form-control" required>
-                        <option value="">Seleccione técnico</option>
+                        <option value="">Seleccione equipo de trabajo</option>
                         <!-- AJAX: equipo_trabajo -->
                     </select>
                 </div>
@@ -153,4 +172,4 @@ $id_usuario     = $_SESSION['id_str'];
 </div>
 
 
-<?php include_once "./vistas/inc/ordenTrabajoJS.php";?>
+<?php include_once "./vistas/inc/ordenTrabajoJS.php"; ?>

@@ -11,17 +11,17 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'generar_ot') {
     exit();
 }
 
-/* ================= LISTAR TECNICOS ================= */
-if (isset($_POST['accion']) && $_POST['accion'] === 'listar_tecnicos') {
-    echo json_encode($insOT->listar_tecnicos_controlador());
+if (isset($_POST['accion']) && $_POST['accion'] === 'listar_equipos') {
+    echo json_encode($insOT->listar_equipos_controlador());
     exit();
 }
 
-/* ================= ASIGNAR TECNICO ================= */
-if (isset($_POST['accion']) && $_POST['accion'] === 'asignar_tecnico') {
-    echo $insOT->asignar_tecnico_controlador();
+if (isset($_POST['accion']) && $_POST['accion'] === 'asignar_equipo') {
+    echo $insOT->asignar_equipo_controlador();
     exit();
 }
+
+
 
 /* ================= BUSCAR PRESUPUESTO ================= */
 if (isset($_POST['buscar_presupuesto'])) {
@@ -40,7 +40,7 @@ if (isset($_POST['generar_ot2'])) {
 }
 
 /* ===== ANULAR OT ===== */
-if (isset($_POST['accion']) && $_POST['accion'] === 'anular_ot') {
+if (isset($_POST['accion']) && $_POST['accion'] === 'anular') {
     echo $insOT->anular_ot_controlador();
     exit();
 }

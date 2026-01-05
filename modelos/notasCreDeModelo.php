@@ -195,4 +195,18 @@ class notasCreDeModelo extends mainModel
             ':obs'      => $d['obs']
         ]);
     }
+
+    protected static function totalNCActivasPorFactura($idcompra)
+    {
+        $sql = mainModel::conectar()->prepare("
+        SELECT COALESCE(SUM(total), 0) AS total_nc
+        FROM nota_compra
+        WHERE idcompra_cabecera = :id
+          AND tipo = 'credito'
+          AND estado = 1
+    ");
+        $sql->bindValue(':id', $idcompra, PDO::PARAM_INT);
+        $sql->execute();
+        return (float)$sql->fetchColumn();
+    }
 }

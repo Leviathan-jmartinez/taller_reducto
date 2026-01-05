@@ -1,6 +1,7 @@
 <?php
 if ($_SESSION['nivel_str'] > 2 || $_SESSION['nivel_str'] < 1) {
-    echo $lc->forzarCierre_sesion_controlador();
+    session_destroy();
+    header("Location: " . SERVERURL);
     exit();
 }
 ?>

@@ -63,4 +63,47 @@ class pedidoModelo extends mainModel
         return $sql;
     }
     /**fin modelo */
+    /** modelo obtener datos para PDF */
+    protected static function obtener_pedido_cabecera($id)
+    {
+        $sql = self::conectar()->prepare("
+            SELECT
+                pc.idpedido_cabecera,
+                pc.fecha,
+                pc.estado,
+
+                p.razon_social,
+                p.ruc,
+                p.telefono,
+                p.direccion,
+                p.correo,
+
+                u.usu_nombre,
+                u.usu_apellido
+            FROM pedido_cabecera pc
+            INNER JOIN proveedores p ON p.idproveedores = pc.id_proveedor
+            INNER JOIN usuarios u ON u.id_usuario = pc.id_usuario
+            WHERE pc.idpedido_cabecera = :id
+            LIMIT 1
+        ");
+        $sql->bindParam(":id", $id, PDO::PARAM_INT);
+        $sql->execute();
+        return $sql->fetch(PDO::FETCH_ASSOC);
+    }
+
+    protected static function obtener_pedido_detalle($id)
+    {
+        $sql = self::conectar()->prepare("
+            SELECT
+                a.codigo,
+                a.desc_articulo,
+                pd.cantidad
+            FROM pedido_detalle pd
+            INNER JOIN articulos a ON a.id_articulo = pd.id_articulo
+            WHERE pd.idpedido_cabecera = :id
+        ");
+        $sql->bindParam(":id", $id, PDO::PARAM_INT);
+        $sql->execute();
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

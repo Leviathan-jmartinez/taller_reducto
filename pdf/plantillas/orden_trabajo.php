@@ -174,7 +174,7 @@
             text-align: right;
         }
     </style>
-</head>         
+</head>
 
 <body>
 
@@ -215,12 +215,17 @@
 
         <div class="box">
             <h3>Orden</h3>
+
             <strong>Estado:</strong>
             <?= ['', 'Abierta', 'En proceso', 'Terminada', 'Facturada'][$cabecera['estado']] ?><br>
-            <strong>Técnico:</strong>
-            <?= $cabecera['tecnico_nombre']
-                ? $cabecera['tecnico_nombre'] . ' ' . $cabecera['tecnico_apellido']
-                : 'No asignado' ?>
+
+            <strong>Equipo:</strong>
+            <?= $cabecera['nombre_equipo'] ?? 'No asignado' ?><br>
+
+            <strong>Integrantes:</strong><br>
+            <?= !empty($cabecera['miembros_equipo'])
+                ? $cabecera['miembros_equipo']
+                : 'No asignados'; ?>
         </div>
     </div>
 

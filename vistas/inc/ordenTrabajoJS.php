@@ -1,59 +1,64 @@
 <script>
     const SERVERURL = "<?php echo SERVERURL; ?>";
 
-    function abrirModalTecnico(idOT) {
+    function abrirModalEquipo(idOT) {
 
         document.getElementById('modal_id_ot').value = idOT;
-        document.getElementById('idtrabajos').innerHTML =
-            '<option value="">Cargando...</option>';
+
+        const select = document.getElementById('modal_idtrabajos');
+        select.innerHTML = '<option value="">Cargando...</option>';
 
         fetch(SERVERURL + 'ajax/ordenTrabajoAjax.php', {
                 method: "POST",
                 body: new URLSearchParams({
-                    accion: "listar_tecnicos"
+                    accion: "listar_equipos"
                 })
             })
             .then(r => r.json())
             .then(data => {
 
-                let html = '<option value="">Seleccione técnico</option>';
+                let html = '<option value="">Seleccione equipo</option>';
 
-                data.forEach(t => {
-                    html += `
-                <option value="${t.idtrabajos}">
-                    ${t.tecnico}
-                </option>`;
+                data.forEach(e => {
+                    html += `<option value="${e.idtrabajos}">
+                        ${e.nombre}
+                     </option>`;
                 });
 
-                document.getElementById('idtrabajos').innerHTML = html;
+                select.innerHTML = html;
+
                 $('#modalAsignarTecnico').modal('show');
             });
     }
 
+    function cargarEquiposNuevo() {
 
-    function cargarTecnicos() {
+        const select = document.getElementById('idtrabajos');
+        if (!select) return; // seguridad
 
-        let data = new FormData();
-        data.append('accion', 'listar_tecnicos');
+        select.innerHTML = '<option value="">Cargando...</option>';
 
         fetch(SERVERURL + 'ajax/ordenTrabajoAjax.php', {
-                method: 'POST',
-                body: data
+                method: "POST",
+                body: new URLSearchParams({
+                    accion: "listar_equipos"
+                })
             })
             .then(r => r.json())
             .then(data => {
 
-                let select = document.getElementById('idtrabajos');
-                select.innerHTML = '<option value="">Seleccione técnico</option>';
+                let html = '<option value="">Seleccione equipo de trabajo</option>';
 
-                data.forEach(t => {
-                    let option = document.createElement('option');
-                    option.value = t.idtrabajos;
-                    option.textContent = t.tecnico;
-                    select.appendChild(option);
+                data.forEach(e => {
+                    html += `<option value="${e.idtrabajos}">
+                        ${e.nombre}
+                     </option>`;
                 });
+
+                select.innerHTML = html;
             });
     }
+
 
 
     function abrirModalPresupuesto() {
@@ -120,4 +125,8 @@
                 }
             });
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        cargarEquiposNuevo();
+    });
 </script>

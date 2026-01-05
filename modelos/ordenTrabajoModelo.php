@@ -126,7 +126,7 @@ class ordenTrabajoModelo extends mainModel
         INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
         INNER JOIN modelo_auto ma ON ma.id_modeloauto = v.id_modeloauto
         INNER JOIN usuarios u ON u.id_usuario = ot.id_usuario
-        WHERE DATE(ot.fecha_inicio) BETWEEN '$busqueda1' AND '$busqueda2'
+        WHERE r.id_sucursal = '{$_SESSION['nick_sucursal']}'AND DATE(ot.fecha_inicio) BETWEEN '$busqueda1' AND '$busqueda2'
         ORDER BY ot.idorden_trabajo DESC
         LIMIT $inicio,$registros";
         } else {
@@ -149,6 +149,7 @@ class ordenTrabajoModelo extends mainModel
         INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
         INNER JOIN modelo_auto ma ON ma.id_modeloauto = v.id_modeloauto
         INNER JOIN usuarios u ON u.id_usuario = ot.id_usuario
+        WHERE r.id_sucursal = '{$_SESSION['nick_sucursal']}'
         ORDER BY ot.idorden_trabajo DESC
         LIMIT $inicio,$registros";
         }
@@ -166,16 +167,16 @@ class ordenTrabajoModelo extends mainModel
             c.apellido_cliente,
             v.placa,
             ma.mod_descri AS modelo,
-            e.nombre AS tecnico_nombre,
-            e.apellido AS tecnico_apellido
+            GROUP_CONCAT(CONCAT(e.nombre,' ',e.apellido) SEPARATOR ', ') AS miembros
         FROM orden_trabajo ot
         INNER JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
         INNER JOIN recepcion_servicio r ON r.idrecepcion = ot.idrecepcion
         INNER JOIN clientes c ON c.id_cliente = r.id_cliente
         INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
         INNER JOIN modelo_auto ma ON ma.id_modeloauto = v.id_modeloauto
-        LEFT JOIN equipo_trabajo et ON et.idtrabajos = ot.idtrabajos
-        LEFT JOIN empleados e ON e.idempleados = et.idempleados
+        LEFT JOIN equipo_trabajo et ON et.id_equipo = ot.idtrabajos
+        LEFT JOIN equipo_empleado ee ON ee.id_equipo = et.id_equipo
+        LEFT JOIN empleados e ON e.idempleados = ee.idempleados
         WHERE ot.idorden_trabajo = :id
         LIMIT 1");
         $sql->bindParam(":id", $id);
@@ -199,30 +200,38 @@ class ordenTrabajoModelo extends mainModel
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    protected static function listar_tecnicos_modelo()
+    protected static function listar_equipos_modelo($idSucursal)
     {
-        $sql = mainModel::conectar()->query("
+        $sql = mainModel::conectar()->prepare("
         SELECT
-            et.idtrabajos,
-            CONCAT(e.nombre, ' ', e.apellido) AS tecnico
+            et.id_equipo,
+            et.nombre
         FROM equipo_trabajo et
-        INNER JOIN empleados e ON e.idempleados = et.idempleados
-        WHERE et.estado = 1 ");
+        WHERE et.estado = 1
+          AND et.id_sucursal = :sucursal
+        ORDER BY et.nombre
+     ");
+
+        $sql->bindParam(':sucursal', $idSucursal, PDO::PARAM_INT);
+        $sql->execute();
+
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    protected static function asignar_tecnico_modelo($ot, $tecnico)
+    protected static function asignar_equipo_modelo($ot, $equipo)
     {
         $sql = mainModel::conectar()->prepare("
         UPDATE orden_trabajo
-        SET idtrabajos = :t,
+        SET idtrabajos = :equipo,
             estado = 2
-        WHERE idorden_trabajo = :ot");
+        WHERE idorden_trabajo = :ot
+      ");
         return $sql->execute([
-            ':t' => $tecnico,
+            ':equipo' => $equipo,
             ':ot' => $ot
         ]);
     }
+
 
     protected static function obtener_ot_completa($idOT)
     {
@@ -248,8 +257,12 @@ class ordenTrabajoModelo extends mainModel
             v.placa,
             ma.mod_descri AS modelo,
 
-            e.nombre AS tecnico_nombre,
-            e.apellido AS tecnico_apellido
+            et.nombre AS nombre_equipo,
+
+            GROUP_CONCAT(
+                CONCAT(e.nombre,' ',e.apellido)
+                SEPARATOR ', '
+            ) AS miembros_equipo
 
         FROM orden_trabajo ot
 
@@ -268,20 +281,27 @@ class ordenTrabajoModelo extends mainModel
         INNER JOIN modelo_auto ma 
             ON ma.id_modeloauto = v.id_modeloauto
 
-        LEFT JOIN equipo_trabajo et 
-            ON et.idtrabajos = ot.idtrabajos
+        LEFT JOIN equipo_trabajo et
+            ON et.id_equipo = ot.idtrabajos
 
-        LEFT JOIN empleados e 
-            ON e.idempleados = et.idempleados
+        LEFT JOIN equipo_empleado ee
+            ON ee.id_equipo = et.id_equipo
+            AND ee.estado = 1
+
+        LEFT JOIN empleados e
+            ON e.idempleados = ee.idempleados
 
         WHERE ot.idorden_trabajo = :id
-        LIMIT 1");
+        GROUP BY ot.idorden_trabajo
+        LIMIT 1
+        ");
 
         $sql->bindParam(":id", $idOT, PDO::PARAM_INT);
         $sql->execute();
 
         return $sql->fetch(PDO::FETCH_ASSOC);
     }
+
 
     protected static function obtener_detalle_ot($idOT)
     {

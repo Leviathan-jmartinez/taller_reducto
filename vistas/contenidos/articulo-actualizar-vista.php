@@ -1,9 +1,3 @@
-<?php
-if ($_SESSION['nivel_str'] > 2 || $_SESSION['nivel_str'] < 1) {
-    echo $lc->forzarCierre_sesion_controlador();
-    exit();
-}
-?>
 
 <!-- Page header -->
 <div class="full-box page-header">
@@ -36,7 +30,7 @@ if ($_SESSION['nivel_str'] > 2 || $_SESSION['nivel_str'] < 1) {
     if ($dat_article->rowCount() == 1) {
         $campos = $dat_article->fetch();
     ?>
-        <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/articuloAjax.php" method="POST" data-form="udpate" autocomplete="off">
+        <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/articuloAjax.php" method="POST" data-form="update" autocomplete="off">
             <input type="hidden" name="articulo_id_up" value="<?php echo $pagina[1] ?>">
             <fieldset>
                 <legend><i class="far fa-plus-square"></i> &nbsp; Información del item</legend>
@@ -168,6 +162,16 @@ if ($_SESSION['nivel_str'] > 2 || $_SESSION['nivel_str'] < 1) {
                                     <option value="" selected disabled>Seleccione una opción</option>
                                     <option value="1" <?php if ($campos['estado'] == 1) {echo 'selected=""';} ?>>Activo</option>
                                     <option value="0" <?php if ($campos['estado'] == 0) {echo 'selected=""';} ?>>Inactivo</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="form-group">
+                                <label for="articulo_Tipo_up" class="bmd-label-floating">Tipo Producto</label>
+                                <select class="form-control" name="articulo_Tipo_up" id="articulo_Tipo_up">
+                                    <option value="" selected disabled>Seleccione una opción</option>
+                                    <option value="servicio" <?php if ($campos['tipo'] == 'servicio') {echo 'selected=""';} ?>>Servicio</option>
+                                    <option value="producto" <?php if ($campos['tipo'] == 'producto') {echo 'selected=""';} ?>>Producto</option>
                                 </select>
                             </div>
                         </div>

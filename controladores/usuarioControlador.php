@@ -787,4 +787,50 @@ class usuarioControlador extends usuarioModelo
             "Tipo"   => "success"
         ]);
     }
+    public function asignar_sucursal_controlador()
+    {
+        session_start(['name' => 'STR']);
+
+        if (empty($_POST['id_usuario']) || empty($_POST['id_sucursal'])) {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Error',
+                'Texto'  => 'Datos incompletos',
+                'Tipo'   => 'error'
+            ]);
+        }
+
+        if (
+            $_SESSION['nivel_str'] != 1 &&
+            !mainModel::tienePermiso('seguridad.usuarios.editar')
+        ) {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Acceso denegado',
+                'Texto'  => 'No tiene permisos',
+                'Tipo'   => 'error'
+            ]);
+        }
+
+        $res = usuarioModelo::asignar_sucursal_modelo(
+            $_POST['id_usuario'],
+            $_POST['id_sucursal']
+        );
+
+        if ($res) {
+            return json_encode([
+                'Alerta' => 'recargar',
+                'Titulo' => 'Sucursal asignada',
+                'Texto'  => 'La sucursal fue asignada correctamente',
+                'Tipo'   => 'success'
+            ]);
+        }
+
+        return json_encode([
+            'Alerta' => 'simple',
+            'Titulo' => 'Error',
+            'Texto'  => 'No se pudo asignar la sucursal',
+            'Tipo'   => 'error'
+        ]);
+    }
 }

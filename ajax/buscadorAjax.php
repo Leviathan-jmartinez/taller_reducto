@@ -5,6 +5,11 @@ require_once "../config/APP.php";
 if (isset($_POST['busqueda_inicial']) || isset($_POST['eliminar_busqueda'])  || isset($_POST['fecha_inicio']) || isset($_POST['fecha_final'])) {
     $data_url = [
         "usuario" => "usuario-buscar",
+        "sucursal" => "sucursal-buscar",
+        "cargo" => "cargo-buscar",
+        "empleado" => "empleado-buscar",
+        "vehiculo" => "vehiculo-buscar",
+        "proveedor" => "proveedor-buscar",
         "cliente" => "cliente-buscar",
         "articulo" => "articulo-buscar",
         "pedido" => "pedido-buscar",
@@ -15,7 +20,10 @@ if (isset($_POST['busqueda_inicial']) || isset($_POST['eliminar_busqueda'])  || 
         "inventario" => "inventario-buscar",
         "remision" => "remision-buscar",
         "notasCreDe" => "notasCreDe-buscar",
-        "recepcion" => "recepcionServicio-buscar"
+        "recepcion" => "recepcionServicio-buscar",
+        "presupuesto_servicio" => "presupuesto-servicio-buscar",
+        "orden_trabajo" => "ordenTrabajo-buscar",
+        "registro_servicio" => "registro-servicio-buscar",
     ];
     if (isset($_POST['modulo'])) {
         $modulo = $_POST['modulo'];
@@ -29,7 +37,8 @@ if (isset($_POST['busqueda_inicial']) || isset($_POST['eliminar_busqueda'])  || 
             echo json_encode($alerta);
             exit();
         }
-        if ($modulo == "pedido" || $modulo == "presupuesto" || $modulo == "ordencompra2" || $modulo == "compra" || $modulo == "inventario" || $modulo == "remision" || $modulo == "notasCreDe") {
+        if ($modulo == "pedido" || $modulo == "presupuesto" || $modulo == "ordencompra2" || $modulo == "compra" || $modulo == "inventario" || $modulo == "remision" 
+        || $modulo == "notasCreDe" || $modulo == "presupuesto_servicio" || $modulo == "orden_trabajo" || $modulo == "registro_servicio") {
             $fecha_inicio = "fecha_inicio_" . $modulo;
             $fecha_final = "fecha_final_" . $modulo;
 

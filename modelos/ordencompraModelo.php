@@ -72,4 +72,51 @@ class ordencompraModelo extends mainModel
         return $sql;
     }
     /**fin modelo */
+    /* ================= CABECERA ================= */
+    protected static function obtener_orden_compra_cabecera($id)
+    {
+        $sql = self::conectar()->prepare("
+            SELECT
+                oc.idorden_compra,
+                oc.fecha,
+                oc.fecha_entrega,
+                oc.estado,
+
+                p.razon_social,
+                p.ruc,
+                p.telefono,
+                p.direccion,
+                p.correo,
+
+                u.usu_nombre,
+                u.usu_apellido
+            FROM orden_compra oc
+            INNER JOIN proveedores p ON p.idproveedores = oc.idproveedores
+            INNER JOIN usuarios u ON u.id_usuario = oc.id_usuario
+            WHERE oc.idorden_compra = :id
+            LIMIT 1
+        ");
+        $sql->bindParam(":id", $id, PDO::PARAM_INT);
+        $sql->execute();
+        return $sql->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /* ================= DETALLE ================= */
+    protected static function obtener_orden_compra_detalle($id)
+    {
+        $sql = self::conectar()->prepare("
+            SELECT
+                a.codigo,
+                a.desc_articulo,
+                d.cantidad,
+                d.precio_unitario,
+                (d.cantidad * d.precio_unitario) AS subtotal
+            FROM orden_compra_detalle d
+            INNER JOIN articulos a ON a.id_articulo = d.id_articulo
+            WHERE d.idorden_compra = :id
+        ");
+        $sql->bindParam(":id", $id, PDO::PARAM_INT);
+        $sql->execute();
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

@@ -32,7 +32,13 @@ if (isset($_POST['usuario_nombre_reg']) || isset($_POST['usuario_id_del']) || is
         echo $inst_usuario->permisos_por_rol_controlador();
         exit();
     }
-} else {
+
+    /* ================= ASIGNAR SUCURSAL ================= */
+    if (isset($_POST['accion']) && $_POST['accion'] === 'asignar_sucursal') {
+        echo $inst_usuario->asignar_sucursal_controlador();
+        exit();
+    }
+    } else {
     session_start(['name' => 'STR']);
     session_unset();
     session_destroy();

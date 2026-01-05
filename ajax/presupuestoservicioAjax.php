@@ -34,3 +34,4 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'aprobar') {
 if (isset($_POST['accion']) && $_POST['accion'] === 'anular') {
     echo $insPresupuesto->anular_presupuesto_controlador();
 }
+

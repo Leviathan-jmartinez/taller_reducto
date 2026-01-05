@@ -1,9 +1,26 @@
 <div class="container-fluid">
     <h3>
-        <i class="fas fa-tools"></i> &nbsp; ORDENES DE TRABAJO
+        <i class="fas fa-tools"></i> &nbsp; ORDEN DE TRABAJO
     </h3>
-</div>
 
+    <ul class="full-box list-unstyled page-nav-tabs">
+        <li>
+            <a href="<?php echo SERVERURL; ?>/ordenTrabajo-nuevo/">
+                <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVA ORDEN DE TRABAJO
+            </a>
+        </li>
+        <li>
+            <a class="active" href="<?php echo SERVERURL; ?>/ordenTrabajo-lista/">
+                <i class="fas fa-search fa-fw"></i> &nbsp; HISTORIAL DE ORDENES DE TRABAJO
+            </a>
+        </li>
+        <li>
+            <a href="<?php echo SERVERURL; ?>/ordenTrabajo-buscar/">
+                <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR ORDENES DE TRABAJO POR FECHA
+            </a>
+        </li>
+    </ul>
+</div>
 <div class="container-fluid">
     <?php
     require_once "./controladores/ordenTrabajoControlador.php";
@@ -30,7 +47,7 @@
 
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        Asignar técnico
+                        Asignar equipo de trabajo
                     </h5>
                     <button type="button" class="close"
                         data-dismiss="modal">&times;</button>
@@ -38,15 +55,12 @@
 
                 <div class="modal-body">
 
-                    <input type="hidden" name="accion" value="asignar_tecnico">
+                    <input type="hidden" name="accion" value="asignar_equipo">
                     <input type="hidden" name="id_ot" id="modal_id_ot">
 
-                    <label>Técnico</label>
-                    <select name="idtrabajos"
-                        id="idtrabajos"
-                        class="form-control"
-                        required>
-                        <option value="">Seleccione técnico</option>
+                    <label>Equipo de trabajo</label>
+                    <select name="idtrabajos" id="modal_idtrabajos" class="form-control">
+                        <option value="">Seleccione equipo de trabajo</option>
                     </select>
 
                 </div>
@@ -63,4 +77,4 @@
     </div>
 </div>
 
-<?php include_once "./vistas/inc/ordenTrabajoJS.php";?>
+<?php include_once "./vistas/inc/ordenTrabajoJS.php"; ?>

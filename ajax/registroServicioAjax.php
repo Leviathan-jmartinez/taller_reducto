@@ -21,7 +21,7 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'cargar_ot') {
     exit();
 }
 
-if (isset($_POST['accion']) && $_POST['accion'] === 'anular_registro') {
+if (isset($_POST['accion']) && $_POST['accion'] === 'anular') {
     echo $insRS->anular_registro_servicio_controlador();
     exit();
 }

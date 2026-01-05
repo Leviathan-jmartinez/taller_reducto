@@ -1,15 +1,15 @@
-<div class="full-box page-header">
+
+<!--<div class="full-box page-header">
 	<h3 class="text-left">
 		<i class="fab fa-dashcube fa-fw"></i> &nbsp; Panel Principal
 	</h3>
 </div>
-
-<!-- Content -->
+ Content -->
 <div class="full-box tile-container">
-	<?php require_once "./controladores/clienteControlador.php";
-	$ins_cliente = new clienteControlador;
-	$total_client = $ins_cliente->datos_cliente_controlador("Conteo", 0);
-	?>
+	<!--<?php require_once "./controladores/clienteControlador.php";
+		$ins_cliente = new clienteControlador;
+		$total_client = $ins_cliente->datos_cliente_controlador("Conteo", 0);
+		?>
 	<a href="<?php echo SERVERURL; ?>cliente-lista/" class="tile">
 		<div class="tile-tittle">Clientes</div>
 		<div class="tile-icon">
@@ -87,5 +87,5 @@
 			<i class="fas fa-store-alt fa-fw"></i>
 			<p>1 Registrada</p>
 		</div>
-	</a>
+	</a>-->
 </div>
