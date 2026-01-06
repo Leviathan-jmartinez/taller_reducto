@@ -174,6 +174,19 @@
                         </ul>
                     </li>
                 <?php } ?>
+                <?php if (mainModel::puedeVerMenu('informes')) { ?>
+                    <li>
+                        <a href="#" class="nav-btn-submenu">
+                            <i class="fas fa-shield-alt fa-fw"></i> &nbsp; Informes
+                            <i class="fas fa-chevron-down"></i>
+                        </a>
+                        <ul>
+                            <?php if (mainModel::tienePermiso('informes.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>informe-pedidos/"><i class="fas fa-user fa-fw"></i> &nbsp;Informe de Pedidos</a></li>
+                            <?php } ?>
+                        </ul>
+                    </li>
+                <?php } ?>
             </ul>
         </nav>
     </div>
