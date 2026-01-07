@@ -174,19 +174,82 @@
                         </ul>
                     </li>
                 <?php } ?>
-                <?php if (mainModel::puedeVerMenu('informes')) { ?>
-                    <li>
-                        <a href="#" class="nav-btn-submenu">
-                            <i class="fas fa-shield-alt fa-fw"></i> &nbsp; Informes
-                            <i class="fas fa-chevron-down"></i>
-                        </a>
-                        <ul>
-                            <?php if (mainModel::tienePermiso('informes.ver')) { ?>
-                                <li><a href="<?= SERVERURL; ?>informe-pedidos/"><i class="fas fa-user fa-fw"></i> &nbsp;Informe de Pedidos</a></li>
-                            <?php } ?>
-                        </ul>
-                    </li>
-                <?php } ?>
+
+                <li>
+                    <a href="#" class="nav-btn-submenu">
+                        <i class="fas fa-chart-bar fa-fw"></i> &nbsp; Informes
+                        <i class="fas fa-chevron-down"></i>
+                    </a>
+
+                    <ul>
+                        <?php if (mainModel::tienePermiso('compra.reportes.ver')) { ?>
+                            <!-- ================= INFORMES DE COMPRAS ================= -->
+                            <li>
+                                <a href="#" class="nav-btn-submenu">
+                                    <i class="fas fa-file-invoice fa-fw"></i> &nbsp; Informes de Compras
+                                    <i class="fas fa-chevron-down"></i>
+                                </a>
+                                <ul>
+
+                                    <li>
+                                        <a href="<?= SERVERURL; ?>reporte-pedidos/">
+                                            <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Informe de Pedidos
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="<?= SERVERURL; ?>reporte-presupuestos/">
+                                            <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Informe de Presupuestos
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="<?= SERVERURL; ?>reporte-ordenes-compra/">
+                                            <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Informe de Órdenes de Compra
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="<?= SERVERURL; ?>reporte-compras/">
+                                            <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Informe de Compras
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                        <?php } ?>
+                        <?php if (mainModel::tienePermiso('servicio.reportes.ver')) { ?>
+                            <!-- ================= INFORMES DE SERVICIOS ================= -->
+                            <li>
+                                <a href="#" class="nav-btn-submenu">
+                                    <i class="fas fa-tools fa-fw"></i> &nbsp; Informes de Servicios
+                                    <i class="fas fa-chevron-down"></i>
+                                </a>
+                                <ul>
+
+                                    <li>
+                                        <a href="<?= SERVERURL; ?>reporte-recepcion-servicio/">
+                                            <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Informe de Rec. de Servicios
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="<?= SERVERURL; ?>reporte-presupuesto-servicio/">
+                                            <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Informe de Presupuestos
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="<?= SERVERURL; ?>reporte-orden-trabajo/">
+                                            <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Informe de OT
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="<?= SERVERURL; ?>reporte-registro-servicio/">
+                                            <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Informe de Reg. Servicios
+                                        </a>
+                                    </li>
+
+                                </ul>
+                            </li>
+                        <?php } ?>
+                    </ul>
+                </li>
             </ul>
         </nav>
     </div>

@@ -183,7 +183,7 @@ class mainModel
         INNER JOIN rol_permiso rp ON rp.id_permiso = p.id_permiso
         INNER JOIN usuarios u ON u.id_rol = rp.id_rol
         WHERE u.id_usuario = ?
-    ");
+        ");
         $sql->execute([$idUsuario]);
 
         $_SESSION['permisos'] = array_column(
@@ -218,5 +218,18 @@ class mainModel
             }
         }
         return false;
+    }
+
+    public static function tienePermisoVista(string $permiso): bool
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start(['name' => 'STR']);
+        }
+
+        if (!isset($_SESSION['permisos']) || !is_array($_SESSION['permisos'])) {
+            return false;
+        }
+
+        return in_array($permiso, $_SESSION['permisos']);
     }
 }

@@ -39,3 +39,30 @@
     </form>
 
 </div>
+
+<form class="FormularioAjax" method="POST" action="<?= SERVERURL ?>ajax/reportesAjax.php" target="_blank">
+    <input type="hidden" name="reporte_presupuestos" value="1">
+
+    <input type="date" name="desde">
+    <input type="date" name="hasta">
+
+    <select name="estado">
+        <option value="">Todos</option>
+        <option value="0">Pendiente</option>
+        <option value="1">Aprobado</option>
+        <option value="2">Anulado</option>
+    </select>
+
+    <select name="sucursal">
+        <option value="">Todas las sucursales</option>
+        <?php foreach ($sucursales as $s): ?>
+            <option value="<?= $s['id_sucursal'] ?>">
+                <?= $s['nombre'] ?>
+            </option>
+        <?php endforeach; ?>
+    </select>
+
+    <button type="submit" class="btn btn-info">
+        Imprimir
+    </button>
+</form>

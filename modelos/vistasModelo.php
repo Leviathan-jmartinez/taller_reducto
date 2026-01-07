@@ -15,7 +15,8 @@ class vistasModelo
         "promocion-nuevo","promocion-lista", "promocion-editar","descuento-nuevo","descuento-asignar","descuento-lista","descuento-editar","presupuesto-servicio-nuevo",
         "presupuesto-servicio-lista", "presupuesto-servicio-buscar", "ordenTrabajo-lista","ordenTrabajo-nuevo","ordenTrabajo-buscar","registro-servicio-nuevo","registro-servicio-lista",
         "registro-servicio-buscar"   ,"reclamo-servicio-nuevo","transferencia-nuevo","transferencia-historial","transferencia-recibir",
-        "informe-pedidos"];
+        "reporte-pedidos", "reporte-presupuestos", "reporte-ordenes-compra", "reporte-compras", "reporte-recepcion-servicio", "reporte-presupuesto-servicio","reporte-orden-trabajo"
+         ,"reporte-registro-servicio"   ];
         if (in_array($vistas, $lista_blanca)) {
             if (is_file("./vistas/contenidos/" . $vistas . "-vista.php")) {
                 $contenido = "./vistas/contenidos/" . $vistas . "-vista.php";

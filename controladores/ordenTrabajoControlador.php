@@ -126,7 +126,7 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
                         $estado = '<span class="badge badge-primary">En proceso</span>';
                         break;
                     case 3:
-                        $estado = '<span class="badge badge-success">Terminada</span>';
+                        $estado = '<span class="badge badge-success">Finalizado</span>';
                         break;
                     case 4:
                         $estado = '<span class="badge badge-info">Facturada</span>';
