@@ -96,12 +96,12 @@
 			</div>
 		</fieldset>
 		<br><br><br>
-		<fieldset>
+		<!--<fieldset>
 			<legend><i class="fas fa-medal"></i> &nbsp; Nivel de privilegio</legend>
 			<div class="container-fluid">
 				<div class="row">
 					<div class="col-12">
-						<p><span class="badge badge-info">Control total</span> Permisos para registrar, actualizar y eliminar</p>
+						 <p><span class="badge badge-info">Control total</span> Permisos para registrar, actualizar y eliminar</p>
 						<p><span class="badge badge-success">Edición</span> Permisos para registrar y actualizar</p>
 						<p><span class="badge badge-dark">Registrar</span> Solo permisos para registrar</p>
 						<div class="form-group">
@@ -115,7 +115,7 @@
 					</div>
 				</div>
 			</div>
-		</fieldset>
+		</fieldset>-->
 		<p class="text-center" style="margin-top: 40px;">
 			<button type="reset" class="btn btn-raised btn-secondary btn-sm"><i class="fas fa-paint-roller"></i> &nbsp; LIMPIAR</button>
 			&nbsp; &nbsp;
