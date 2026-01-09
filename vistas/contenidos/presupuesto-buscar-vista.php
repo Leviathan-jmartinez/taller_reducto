@@ -1,6 +1,8 @@
             <!-- Page header -->
             <div class="full-box page-header">
-                
+                <h3 class="text-left">
+                    <i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; BUSCADOR DE PRESUPUESTOS DE COMPRA
+                </h3>
             </div>
 
             <div class="container-fluid">

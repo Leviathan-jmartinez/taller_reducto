@@ -1,6 +1,6 @@
 <div class="container-fluid">
     <h3 class="text-left">
-        <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR FACTURA
+        <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR NOTA DE CREDITO/DEBITO
     </h3>
     <ul class="full-box list-unstyled page-nav-tabs">
         <li>
@@ -18,10 +18,13 @@ $fecha_inicio = $_SESSION['fecha_inicio_notasCreDe'] ?? '';
 $fecha_final  = $_SESSION['fecha_final_notasCreDe'] ?? '';
 $fecha_inicio_dt = $fecha_inicio ? $fecha_inicio . ' 00:00:00' : '';
 $fecha_final_dt  = $fecha_final  ? $fecha_final  . ' 23:59:59' : '';
+$nro_documento = $_SESSION['nro_documento_notasCreDe'] ?? '';
+$tipo_nota     = $_SESSION['tipo_nota_notasCreDe'] ?? '';
 
 ?>
 
-<?php if (!$fecha_inicio && !$fecha_final) { ?>
+<?php if (!$fecha_inicio && !$fecha_final && !$nro_documento && !$tipo_nota) {
+?>
     <div class="container-fluid">
         <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="default" autocomplete="off">
             <input type="hidden" name="modulo" value="notasCreDe">
@@ -44,6 +47,24 @@ $fecha_final_dt  = $fecha_final  ? $fecha_final  . ' 23:59:59' : '';
                             <input type="date" class="form-control" name="fecha_final" id="fecha_final" maxlength="30">
                         </div>
                     </div>
+                    <div class="col-12 col-md-4">
+                        <div class="form-group">
+                            <label>N° Documento</label>
+                            <input type="text" class="form-control" name="nro_documento">
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <div class="form-group">
+                            <label>Tipo</label>
+                            <select name="tipo_nota" class="form-control">
+                                <option value="">Seleccione</option>
+                                <option value="CREDITO">Crédito</option>
+                                <option value="DEBITO">Débito</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div class="col-12 text-center" style="margin-top: 40px;">
                         <button type="submit" class="btn btn-raised btn-info"><i class="fas fa-search"></i> &nbsp; BUSCAR</button>
                     </div>
@@ -65,9 +86,18 @@ $fecha_final_dt  = $fecha_final  ? $fecha_final  . ' 23:59:59' : '';
             <div class="container-fluid">
                 <div class="row justify-content-md-center">
                     <div class="col-12 col-md-6">
-                        <p class="text-center" style="font-size: 20px;">
-                            Fecha de búsqueda: <strong><?php echo $fecha_inicio ?> &nbsp; a &nbsp; <?php echo $fecha_final ?></strong>
+                        <p class="text-center" style="font-size:20px;">
+                            <?php if ($fecha_inicio && $fecha_final) { ?>
+                                Fecha: <strong><?= $fecha_inicio ?> a <?= $fecha_final ?></strong>
+                            <?php } ?>
+                            <?php if ($nro_documento) { ?>
+                                | Documento: <strong><?= $nro_documento ?></strong>
+                            <?php } ?>
+                            <?php if ($tipo_nota) { ?>
+                                | Tipo: <strong><?= $tipo_nota ?></strong>
+                            <?php } ?>
                         </p>
+
                     </div>
                     <div class="col-12 text-center" style="margin-top: 20px;">
                         <button type="submit" class="btn btn-raised btn-danger"><i class="far fa-trash-alt"></i> &nbsp; ELIMINAR BÚSQUEDA</button>
@@ -83,7 +113,17 @@ $fecha_final_dt  = $fecha_final  ? $fecha_final  . ' 23:59:59' : '';
         <?php
         require_once "./controladores/notasCreDeControlador.php";
         $notas = new notasCreDeControlador();
-        echo $notas->paginador_notasCreDe_controlador($pagina[1], 15, $_SESSION['nivel_str'], $pagina[0], $_SESSION['fecha_inicio_notasCreDe'], $_SESSION['fecha_final_notasCreDe']);
+        echo $notas->paginador_notasCreDe_controlador(
+            $pagina[1],
+            15,
+            $_SESSION['nivel_str'],
+            $pagina[0],
+            $_SESSION['fecha_inicio_notasCreDe'] ?? '',
+            $_SESSION['fecha_final_notasCreDe'] ?? '',
+            $_SESSION['nro_documento_notasCreDe'] ?? '',
+            $_SESSION['tipo_nota_notasCreDe'] ?? ''
+        );
+
         ?>
     </div>
 

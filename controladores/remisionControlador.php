@@ -346,8 +346,7 @@ class remisionControlador extends remisionModelo
                     <th>TRANSPORTISTA</th>
                     <th>MOTIVO</th>
                     <th>GENERADO POR</th>
-                    <th>ESTADO</th>
-                    <th>PDF</th>';
+                    <th>ESTADO</th>';
 
         if ($privilegio == 1 || $privilegio == 2) {
             $tabla .= '<th>ANULAR</th>';
@@ -390,14 +389,7 @@ class remisionControlador extends remisionModelo
                 <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
                 <td>' . $estadoBadge . '</td>
 
-                <!-- PDF -->
-                <td>
-                    <a href="' . SERVERURL . 'pdf/remision.php?id=' . mainModel::encryption($rows['idnota_remision']) . '" 
-                       target="_blank"
-                       class="btn btn-info btn-sm">
-                        <i class="fas fa-file-pdf"></i>
-                    </a>
-                </td>';
+                ';
 
                 /* 🔹 ANULAR */
                 if ($privilegio == 1 || $privilegio == 2) {

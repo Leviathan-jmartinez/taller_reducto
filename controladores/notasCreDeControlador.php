@@ -306,13 +306,16 @@ class notasCreDeControlador extends notasCreDeModelo
 
 
     /** Controlador paginar compras */
-    public function paginador_notasCreDe_controlador($pagina, $registros, $privilegio, $url, $busqueda1, $busqueda2)
+    public function paginador_notasCreDe_controlador($pagina, $registros, $privilegio, $url, $busqueda1, $busqueda2, $nro_documento = '', $tipo_nota = '')
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
         $privilegio = mainModel::limpiar_string($privilegio);
         $busqueda1 = mainModel::limpiar_string($busqueda1);
         $busqueda2 = mainModel::limpiar_string($busqueda2);
+        $nro_documento = mainModel::limpiar_string($nro_documento);
+        $tipo_nota     = mainModel::limpiar_string($tipo_nota);
+
 
         $url = mainModel::limpiar_string($url);
         $url = SERVERURL . $url . "/";
@@ -322,31 +325,48 @@ class notasCreDeControlador extends notasCreDeModelo
         $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
 
-        if (!empty($busqueda1) && !empty($busqueda2)) {
-            $consulta = " SELECT SQL_CALC_FOUND_ROWS nc.idnota_compra AS idnota_compra, nc.id_sucursal AS id_sucursal, nc.tipo AS tipo_nota, nc.nro_documento AS nro_documento, nc.fecha AS fecha_nota, nc.total AS 
-            total_nota, nc.estado   AS estado_nota, nc.fecha_creacion   AS fecha_creacion, nc.idcompra_cabecera AS idcompra_cabecera, co.nro_factura  
-            AS nro_factura, co.fecha_factura AS fecha_factura, p.idproveedores AS idproveedor, p.razon_social  AS razon_social, p.ruc   AS ruc, p.telefono  
-            AS telefono, p.direccion AS direccion, p.correo AS correo, p.estado AS estado_proveedor, u.id_usuario AS id_usuario, u.usu_nombre AS usu_nombre, 
-            u.usu_apellido  AS usu_apellido, u.usu_nick  AS usu_nick, u.usu_estado AS usu_estado 
-            FROM nota_compra nc 
-            INNER JOIN proveedores p ON p.idproveedores = nc.idproveedor 
-            INNER JOIN usuarios u ON u.id_usuario = nc.idusuario 
-            INNER JOIN compra_cabecera co ON co.idcompra_cabecera = nc.idcompra_cabecera 
-            WHERE DATE(nc.fecha_creacion) >= '$busqueda1'   AND DATE(nc.fecha_creacion) <= '$busqueda2' AND nc.id_sucursal = " . $_SESSION['nick_sucursal'] . "
-            ORDER BY nc.fecha_creacion ASC LIMIT $inicio, $registros ";
-        } else {
-            $consulta = " SELECT SQL_CALC_FOUND_ROWS nc.idnota_compra AS idnota_compra, nc.id_sucursal AS id_sucursal, nc.tipo AS tipo_nota, nc.nro_documento AS nro_documento, nc.fecha AS fecha_nota, nc.total AS 
-            total_nota, nc.estado   AS estado_nota, nc.fecha_creacion   AS fecha_creacion, nc.idcompra_cabecera AS idcompra_cabecera, co.nro_factura  
-            AS nro_factura, co.fecha_factura AS fecha_factura, p.idproveedores AS idproveedor, p.razon_social  AS razon_social, p.ruc   AS ruc, p.telefono  
-            AS telefono, p.direccion AS direccion, p.correo AS correo, p.estado AS estado_proveedor, u.id_usuario AS id_usuario, u.usu_nombre AS usu_nombre, 
-            u.usu_apellido  AS usu_apellido, u.usu_nick  AS usu_nick, u.usu_estado AS usu_estado 
-            FROM nota_compra nc 
-            INNER JOIN proveedores p ON p.idproveedores = nc.idproveedor 
-            INNER JOIN usuarios u ON u.id_usuario = nc.idusuario 
-            INNER JOIN compra_cabecera co ON co.idcompra_cabecera = nc.idcompra_cabecera 
-            WHERE DATE(nc.fecha_creacion) >= '$busqueda1'   AND DATE(nc.fecha_creacion) <= '$busqueda2' AND nc.id_sucursal = " . $_SESSION['nick_sucursal'] . "
-            ORDER BY nc.fecha_creacion ASC LIMIT $inicio, $registros ";
+        $filtros = "";
+
+        if ($nro_documento != "") {
+            $filtros .= " AND nc.nro_documento LIKE '%$nro_documento%'";
         }
+
+        if ($tipo_nota != "") {
+            $filtros .= " AND nc.tipo = '$tipo_nota'";
+        }
+
+
+        $condicion_fechas = "";
+
+        if (!empty($busqueda1) && !empty($busqueda2)) {
+            $condicion_fechas = " AND DATE(nc.fecha_creacion) BETWEEN '$busqueda1' AND '$busqueda2'";
+        }
+
+        $consulta = "
+        SELECT SQL_CALC_FOUND_ROWS
+            nc.idnota_compra,
+            nc.id_sucursal,
+            nc.tipo AS tipo_nota,
+            nc.nro_documento,
+            nc.fecha AS fecha_nota,
+            nc.total AS total_nota,
+            nc.estado AS estado_nota,
+            nc.fecha_creacion,
+            co.nro_factura,
+            p.razon_social,
+            u.usu_nombre,
+            u.usu_apellido
+        FROM nota_compra nc
+        INNER JOIN proveedores p ON p.idproveedores = nc.idproveedor
+        INNER JOIN usuarios u ON u.id_usuario = nc.idusuario
+        INNER JOIN compra_cabecera co ON co.idcompra_cabecera = nc.idcompra_cabecera
+        WHERE nc.id_sucursal = '{$_SESSION['nick_sucursal']}'
+        $condicion_fechas
+        $filtros
+        ORDER BY nc.fecha_creacion ASC
+        LIMIT $inicio,$registros
+        ";
+
         $conexion = mainModel::conectar();
         $datos = $conexion->query($consulta);
         $datos = $datos->fetchAll();
@@ -357,25 +377,25 @@ class notasCreDeControlador extends notasCreDeModelo
         $Npaginas = ceil($total / $registros);
 
         $tabla .= '<div class="table-responsive">
-					<table class="table table-dark table-sm">
-						<thead>
-							<tr class="text-center roboto-medium">
-								<th>#</th>
-                                <th>PROVEEDOR</th>
-                                <th>NUMERO DE DOCUMENTO</th>
-                                <th>FECHA</th>
-                                <th>TOTAL DOCUMENTO</th>
-                                <th>FACTURA ASOCIADA</th>
-                                <th>TIPO DOCUMENTO</th>
-                                <th>CARGADO POR</th>
-                                <th>ESTADO</th>';
+                        <table class="table table-dark table-sm">
+                            <thead>
+                                <tr class="text-center roboto-medium">
+                                    <th>#</th>
+                                    <th>PROVEEDOR</th>
+                                    <th>NUMERO DE DOCUMENTO</th>
+                                    <th>FECHA</th>
+                                    <th>TOTAL DOCUMENTO</th>
+                                    <th>FACTURA ASOCIADA</th>
+                                    <th>TIPO DOCUMENTO</th>
+                                    <th>CARGADO POR</th>
+                                    <th>ESTADO</th>';
         if ($privilegio == 1 || $privilegio == 2) {
             $tabla .=           '<th>ANULAR</th>';
         }
         $tabla .= '
-						</tr>
-						</thead>
-						<tbody>';
+                            </tr>
+                            </thead>
+                            <tbody>';
         if ($total >= 1 && $pagina <= $Npaginas) {
             $contador = $inicio + 1;
             $reg_inicio = $inicio + 1;
@@ -394,25 +414,25 @@ class notasCreDeControlador extends notasCreDeModelo
                         $estadoBadge = '<span class="badge bg-secondary">Desconocido</span>';
                 }
                 $tabla .= '
-                            <tr class="text-center">
-								<td>' . $contador . '</td>
-								<td>' . $rows['razon_social'] . '</td>
-								<td>' . $rows['nro_documento'] . '</td>
-								<td>' . date("d-m-Y", strtotime($rows['fecha_nota'])) . '</td>
-								<td>' . number_format($rows['total_nota'], 0, ',', '.') . '</td>
-								<td>' . $rows['nro_factura'] . '</td>
-								<td>' . $rows['tipo_nota'] . '</td>
-                                <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
-                                <td>' . $estadoBadge . '</td>';
+                                <tr class="text-center">
+                                    <td>' . $contador . '</td>
+                                    <td>' . $rows['razon_social'] . '</td>
+                                    <td>' . $rows['nro_documento'] . '</td>
+                                    <td>' . date("d-m-Y", strtotime($rows['fecha_nota'])) . '</td>
+                                    <td>' . number_format($rows['total_nota'], 0, ',', '.') . '</td>
+                                    <td>' . $rows['nro_factura'] . '</td>
+                                    <td>' . $rows['tipo_nota'] . '</td>
+                                    <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
+                                    <td>' . $estadoBadge . '</td>';
                 if ($privilegio == 1 || $privilegio == 2) {
                     $tabla .= '<td>
-									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/notasCreDeAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
-                                    <input type="hidden" name="notaCreDe_id_del" value=' . mainModel::encryption($rows['idnota_compra']) . '>
-										<button type="submit" class="btn btn-warning">
-											<i class="far fa-trash-alt"></i>
-										</button>
-									</form>
-								</td>';
+                                        <form class="FormularioAjax" action="' . SERVERURL . 'ajax/notasCreDeAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
+                                        <input type="hidden" name="notaCreDe_id_del" value=' . mainModel::encryption($rows['idnota_compra']) . '>
+                                            <button type="submit" class="btn btn-warning">
+                                                <i class="far fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    </td>';
                 }
 
                 $tabla .= '</tr>';
@@ -428,8 +448,8 @@ class notasCreDeControlador extends notasCreDeModelo
         }
 
         $tabla .= '       </tbody>
-					</table>
-				</div>';
+                        </table>
+                    </div>';
         if ($total >= 1 && $pagina <= $Npaginas) {
             $tabla .= '<p class="text-right"> Mostrando registro ' . $reg_inicio . ' al ' . $reg_final . ' de un total de ' . $total . '</p>';
             $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);

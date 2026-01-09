@@ -293,7 +293,7 @@ class compraControlador extends compraModelo
                 }
             }
 
-                /* ===============================
+            /* ===============================
                 INSERTAR EN LIBRO DE COMPRAS
                 ================================= */
             $datosLibro = [
@@ -620,13 +620,15 @@ class compraControlador extends compraModelo
     /**fin controlador */
 
     /** Controlador paginar compras */
-    public function paginador_compra_controlador($pagina, $registros, $privilegio, $url, $busqueda1, $busqueda2)
+    public function paginador_compra_controlador($pagina, $registros, $privilegio, $url, $busqueda1, $busqueda2, $nro_factura = '', $razon_social = '')
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
         $privilegio = mainModel::limpiar_string($privilegio);
         $busqueda1 = mainModel::limpiar_string($busqueda1);
         $busqueda2 = mainModel::limpiar_string($busqueda2);
+        $nro_factura  = mainModel::limpiar_string($nro_factura);
+        $razon_social = mainModel::limpiar_string($razon_social);
 
         $url = mainModel::limpiar_string($url);
         $url = SERVERURL . $url . "/";
@@ -635,6 +637,15 @@ class compraControlador extends compraModelo
 
         $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
+        $filtros = "";
+
+        if ($nro_factura != "") {
+            $filtros .= " AND co.nro_factura = '$nro_factura'";
+        }
+
+        if ($razon_social != "") {
+            $filtros .= " AND p.razon_social LIKE '%$razon_social%'";
+        }
 
         if (!empty($busqueda1) && !empty($busqueda2)) {
             $consulta = "SELECT SQL_CALC_FOUND_ROWS co.idcompra_cabecera as idcompra_cabecera, co.id_usuario as id_usuario, co.id_sucursal as id_sucursal, co.fecha_creacion as fecha_creacion, co.estado as estadoCO, co.nro_factura AS nro_factura, co.condicion as condicion,
@@ -644,19 +655,45 @@ class compraControlador extends compraModelo
             FROM compra_cabecera co
             INNER JOIN proveedores p on p.idproveedores = co.idproveedores
             INNER JOIN usuarios u on u.id_usuario = co.id_usuario
-            WHERE date(fecha_creacion) >= '$busqueda1' AND date(fecha_creacion) <='$busqueda2' AND id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
+            WHERE date(co.fecha_creacion) >= '$busqueda1'
+            AND date(co.fecha_creacion) <= '$busqueda2'
+            AND co.id_sucursal = '{$_SESSION['nick_sucursal']}'
+            $filtros
             ORDER BY fecha_creacion ASC LIMIT $inicio,$registros";
         } else {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS co.idcompra_cabecera as idcompra_cabecera, co.id_usuario as id_usuario, co.id_sucursal as id_sucursal, co.fecha_creacion as fecha_creacion, co.estado as estadoCO, nro_factura AS nro_factura, condicion as condicion,
-            co.fecha_factura as fecha_factura, total_compra AS total_compra, co.idproveedores as idproveedores, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
-            p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick, co.updated as updated,
-            co.updatedby as updatedby
-            FROM compra_cabecera co
-            INNER JOIN proveedores p on p.idproveedores = co.idproveedores
-            INNER JOIN usuarios u on u.id_usuario = co.id_usuario
-            WHERE oc.estado != 0 and id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
-            ORDER BY pc.idcompra_cabecera ASC LIMIT $inicio,$registros";
+            $consulta = "SELECT SQL_CALC_FOUND_ROWS
+            co.idcompra_cabecera,
+            co.id_usuario,
+            co.id_sucursal,
+            co.fecha_creacion,
+            co.estado AS estadoCO,
+            co.nro_factura,
+            co.condicion,
+            co.fecha_factura,
+            co.total_compra,
+            p.razon_social,
+            p.ruc,
+            p.telefono,
+            p.direccion,
+            p.correo,
+            p.estado AS estadoPro,
+            u.usu_nombre,
+            u.usu_apellido,
+            u.usu_estado,
+            u.usu_nick,
+            co.updated,
+            co.updatedby
+        FROM compra_cabecera co
+        INNER JOIN proveedores p ON p.idproveedores = co.idproveedores
+        INNER JOIN usuarios u ON u.id_usuario = co.id_usuario
+        WHERE co.estado != 0
+          AND co.id_sucursal = '{$_SESSION['nick_sucursal']}'
+          $filtros
+        ORDER BY co.idcompra_cabecera ASC
+        LIMIT $inicio,$registros
+        ";
         }
+
         $conexion = mainModel::conectar();
         $datos = $conexion->query($consulta);
         $datos = $datos->fetchAll();
@@ -807,7 +844,7 @@ class compraControlador extends compraModelo
             ]);
 
             // 2) Obtener detalles de la compra
-            $detalles = compraModelo::datos_detalle_compra_modelo($id,$id_sucursal)->fetchAll(PDO::FETCH_ASSOC);
+            $detalles = compraModelo::datos_detalle_compra_modelo($id, $id_sucursal)->fetchAll(PDO::FETCH_ASSOC);
 
             // 3) Descontar stock y generar movimientos
             foreach ($detalles as $d) {

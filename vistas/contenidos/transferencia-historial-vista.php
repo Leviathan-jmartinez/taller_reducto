@@ -23,18 +23,18 @@ $filtroId     = $resultado['filtroId'];
     <div class="card-header">
         <h3 class="mb-0">
             <i class="fas fa-exchange-alt"></i>
-            Historial de Traspasos entre Sucursales
+            Historial de Transferencias entre Sucursales
         </h3>
 
         <ul class="full-box list-unstyled page-nav-tabs">
             <li>
                 <a href="<?php echo SERVERURL; ?>/transferencia-nuevo/">
-                    <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO TRASPASO
+                    <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVA TRANSFERENCIA
                 </a>
             </li>
             <li>
                 <a class="active" href="<?php echo SERVERURL; ?>/transferencia-historial/">
-                    <i class="fas fa-search fa-fw"></i> &nbsp; HISTORIAL DE TRASPASOS
+                    <i class="fas fa-search fa-fw"></i> &nbsp; HISTORIAL DE TRANSFERENCIAS
                 </a>
             </li>
         </ul>

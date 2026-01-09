@@ -146,14 +146,14 @@ $tipo = $_SESSION['factura_tipo'];
                 </div>
             </div>
 
-            <!-- TABLA DETALLE DE PRODUCTOS -->
+            <!-- TABLA DETALLE DE ARTICULOS -->
             <div class="row" style="margin-top:20px;">
                 <div class="col-12">
-                    <h5>Detalle de productos</h5>
+                    <h5>Detalle de articulos</h5>
                     <table class="table table-dark table-sm" id="tabla-detalle">
                         <thead>
                             <tr>
-                                <th style="width:35%;">Producto</th>
+                                <th style="width:35%;">Articulo</th>
                                 <th class="text-center" style="width:10%;">Cantidad</th>
                                 <th class="text-center" style="width:15%;">Precio unit.</th>
                                 <th class="text-center" style="width:12%;">Subtotal</th>
@@ -235,10 +235,10 @@ $tipo = $_SESSION['factura_tipo'];
             <input type="hidden" name="base0" id="input-base0" value="0.00">
 
             <div class="text-center" style="margin-top: 40px; display: flex; justify-content: center; gap: 15px;">
-                <button type="submit" class="btn btn-info btn-raised btn-lg">
+                <button type="submit" class="btn btn-info btn-raised">
                     <i class="fas fa-save"></i> &nbsp; Guardar factura
                 </button>
-                <button type="button" id="btnCancelarCompra" class="btn btn-danger btn-raised btn-lg">
+                <button type="button" id="btnCancelarCompra" class="btn btn-secondary btn-raised">
                     <i class="fas fa-times"></i> &nbsp; Cancelar factura
                 </button>
             </div>
