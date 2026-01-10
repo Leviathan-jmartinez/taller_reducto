@@ -45,4 +45,32 @@
         let el = document.getElementById("cli_" + id);
         if (el) el.remove();
     }
+
+
+    function eliminarClienteDescuento(id_descuento, id_cliente) {
+
+        let formData = new FormData();
+        formData.append("accion", "eliminar_cliente_descuento");
+        formData.append("id_descuento", id_descuento);
+        formData.append("id_cliente", id_cliente);
+
+        fetch("<?= SERVERURL ?>ajax/descuentoAjax.php", {
+                method: "POST",
+                body: formData
+            })
+            .then(resp => resp.json())
+            .then(data => {
+
+                if (typeof window.alertas_ajax === "function") {
+                    window.alertas_ajax(data);
+                } else {
+                    alert(data.Titulo + ": " + data.Texto);
+                }
+
+                if (data.Tipo === "success") {
+                    location.reload();
+                }
+            })
+            .catch(err => console.error(err));
+    }
 </script>

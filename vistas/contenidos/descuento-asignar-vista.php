@@ -2,6 +2,7 @@
 require_once __DIR__ . "/../../controladores/descuentoControlador.php";
 $insDescuento = new descuentoControlador();
 $descuento = $insDescuento->datos_descuento_controlador($pagina[1]);
+$clientesAsignados = $insDescuento->clientes_asignados_descuento_controlador($pagina[1]);
 
 if (!$descuento) {
     echo '<div class="alert alert-danger">Descuento no encontrado</div>';
@@ -55,7 +56,39 @@ if (!$descuento) {
 
             <div class="col-md-6">
                 <h6>Clientes con descuento</h6>
-                <ul class="list-group" id="clientes_asignados"></ul>
+                <ul class="list-group" id="clientes_asignados">
+
+                    <?php if (!empty($clientesAsignados)): ?>
+                        <?php foreach ($clientesAsignados as $cli): ?>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+
+                                <div>
+                                    <?= $cli['nombre_cliente'] . ' ' . $cli['apellido_cliente']; ?>
+                                    <span class="badge badge-info ml-2">
+                                        CI: <?= $cli['doc_number']; ?>
+                                    </span>
+                                </div>
+
+                                <button type="button"
+                                    class="btn btn-danger btn-sm"
+                                    title="Quitar cliente"
+                                    onclick="eliminarClienteDescuento(
+                        '<?= $insDescuento->encryption($descuento['id_descuento']); ?>',
+                        '<?= $insDescuento->encryption($cli['id_cliente']); ?>'
+                    )">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+
+                            </li>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <li class="list-group-item text-muted">
+                            No hay clientes asignados
+                        </li>
+                    <?php endif; ?>
+
+                </ul>
+
             </div>
         </div>
 

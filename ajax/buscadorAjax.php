@@ -96,6 +96,19 @@ if (in_array($modulo, $modulos_con_fecha)) {
             $fecha_ini = $_POST['fecha_inicio'] ?? '';
             $fecha_fin = $_POST['fecha_final'] ?? '';
 
+            if ($fecha_ini != '' && $fecha_fin != '') {
+                if ($fecha_ini > $fecha_fin) {
+                    echo json_encode([
+                        "Alerta" => "simple",
+                        "Titulo" => "Error en fechas",
+                        "Texto" => "La fecha de inicio no puede ser mayor a la fecha final",
+                        "Tipo" => "error"
+                    ]);
+                    exit();
+                }
+            }
+
+
             $_SESSION['nro_factura_compra']  = $_POST['nro_factura'] ?? '';
             $_SESSION['razon_social_compra'] = $_POST['razon_social'] ?? '';
 
@@ -174,8 +187,21 @@ if (in_array($modulo, $modulos_con_fecha)) {
                 exit();
             }
 
-            $_SESSION[$fecha_inicio_key] = $_POST['fecha_inicio'];
-            $_SESSION[$fecha_final_key]  = $_POST['fecha_final'];
+            $fecha_ini = $_POST['fecha_inicio'];
+            $fecha_fin = $_POST['fecha_final'];
+
+            if ($fecha_ini > $fecha_fin) {
+                echo json_encode([
+                    "Alerta" => "simple",
+                    "Titulo" => "Error en fechas",
+                    "Texto" => "La fecha de inicio no puede ser mayor a la fecha final",
+                    "Tipo" => "error"
+                ]);
+                exit();
+            }
+
+            $_SESSION[$fecha_inicio_key] = $fecha_ini;
+            $_SESSION[$fecha_final_key]  = $fecha_fin;
         }
     }
 }

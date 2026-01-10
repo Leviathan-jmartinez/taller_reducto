@@ -17,7 +17,7 @@ $promos = $insPromocion->listar_promociones_controlador();
     <div class="container-fluid">
         <ul class="full-box list-unstyled page-nav-tabs">
             <li>
-                <a  href="<?php echo SERVERURL; ?>promocion-nuevo/">
+                <a href="<?php echo SERVERURL; ?>promocion-nuevo/">
                     <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVA PROMOCIÓN
                 </a>
             </li>
@@ -40,7 +40,8 @@ $promos = $insPromocion->listar_promociones_controlador();
                     <th>Vigencia</th>
                     <th>Estado</th>
                     <th>Creado por</th>
-                    <th>Acciones</th>
+                    <th>Editar</th>
+                    <th>Estado</th>
                 </tr>
             </thead>
             <tbody>
@@ -60,11 +61,12 @@ $promos = $insPromocion->listar_promociones_controlador();
                             </td>
                             <td><?= $p['creado_por'] ?></td>
                             <td>
-
                                 <!-- EDITAR -->
                                 <a href="<?= SERVERURL ?>promocion-editar/<?= $insPromocion->encryption($p['id_promocion']) ?>/">
                                     <i class="fas fa-edit"></i>
                                 </a>
+                            </td>
+                            <td>
 
 
                                 <!-- ACTIVAR / DESACTIVAR -->
@@ -79,10 +81,15 @@ $promos = $insPromocion->listar_promociones_controlador();
                                     <input type="hidden" name="estado"
                                         value="<?= $p['estado'] == 1 ? 0 : 1 ?>">
 
-                                    <button type="submit" class="btn btn-warning btn-sm">
-                                        <i class="fas fa-power-off"></i>
+                                    <button type="submit"
+                                        class="btn <?= $p['estado'] == 1 ? 'btn-success' : 'btn-secondary' ?> btn-sm"
+                                        title="<?= $p['estado'] == 1 ? 'Desactivar' : 'Activar' ?>">
+                                        <i class="fas <?= $p['estado'] == 1 ? 'fa-toggle-on' : 'fa-toggle-off' ?>"></i>
+                                        <?= $p['estado'] == 1 ? 'Activo' : 'Inactivo' ?>
                                     </button>
+
                                 </form>
+
 
                             </td>
                         </tr>

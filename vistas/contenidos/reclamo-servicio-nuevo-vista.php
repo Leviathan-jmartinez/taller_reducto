@@ -1,11 +1,37 @@
-<div class="container-fluid">
+<style>
+    /* Contenedor principal SOLO registro de servicio */
+    .reclamo-servicio {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 6px;
+    }
+
+    /* Bloques internos */
+    .reclamo-servicio fieldset {
+        background-color: #ffffff;
+        border-radius: 4px;
+    }
+
+    /* Tablas */
+    .reclamo-servicio .table,
+    .reclamo-servicio .table-responsive {
+        background-color: #ffffff;
+    }
+
+    /* Encabezados */
+    .reclamo-servicio h3 {
+        margin-bottom: 15px;
+    }
+</style>
+
+<div class="container-fluid reclamo-servicio">
     <h3>
         <i class="fas fa-exclamation-circle"></i>
         &nbsp; RECLAMO DE SERVICIO
     </h3>
 </div>
 
-<div class="container-fluid">
+<div class="container-fluid reclamo-servicio">
 
     <form class="FormularioAjax"
         action="<?= SERVERURL ?>ajax/reclamoServicioAjax.php"

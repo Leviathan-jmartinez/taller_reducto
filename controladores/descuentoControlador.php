@@ -21,13 +21,42 @@ class descuentoControlador extends descuentoModelo
 
         descuentoModelo::guardar_descuento_cliente_modelo($id, $clientes);
 
-        return json_encode([
+        echo json_encode([
             "Alerta" => "recargar",
             "Titulo" => "Asociación guardada",
             "Texto" => "Clientes asociados correctamente",
             "Tipo" => "success"
         ]);
+        exit;
     }
+
+    public function eliminar_cliente_descuento_controlador()
+    {
+        $id_descuento = mainModel::decryption($_POST['id_descuento']);
+        $id_cliente   = mainModel::decryption($_POST['id_cliente']);
+
+        if ($id_descuento <= 0 || $id_cliente <= 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto"  => "Datos inválidos",
+                "Tipo"   => "error"
+            ]);
+            exit;
+        }
+
+        descuentoModelo::eliminar_cliente_descuento_modelo($id_descuento, $id_cliente);
+
+        echo json_encode([
+            "Alerta" => "simple",
+            "Titulo" => "Eliminado",
+            "Texto"  => "Cliente eliminado del descuento",
+            "Tipo"   => "success"
+        ]);
+        exit;
+    }
+
+
     public function datos_descuento_controlador($id)
     {
         $id = mainModel::decryption($id);
@@ -37,6 +66,17 @@ class descuentoControlador extends descuentoModelo
         }
 
         return descuentoModelo::datos_descuento_modelo($id);
+    }
+
+    public function clientes_asignados_descuento_controlador($id)
+    {
+        $id = mainModel::decryption($id);
+
+        if ($id <= 0) {
+            return [];
+        }
+
+        return descuentoModelo::clientes_asignados_modelo($id);
     }
 
     public function guardar_descuento_controlador()
@@ -131,9 +171,9 @@ class descuentoControlador extends descuentoModelo
         }
 
         $tabla = '
-    <div class="table-responsive">
-    <table class="table table-bordered table-sm">
-        <thead class="text-center">
+        <div class="table-responsive">
+        <table class="table table-bordered table-sm">
+            <thead class="text-center">
             <tr>
                 <th>#</th>
                 <th>Nombre</th>

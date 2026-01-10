@@ -1,8 +1,36 @@
-<div class="container-fluid">
+<style>
+    /* Contenedor principal SOLO registro de servicio */
+    .registro-servicio-bg {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 6px;
+    }
 
-    <div class="container-fluid">
+    /* Bloques internos */
+    .registro-servicio-bg fieldset {
+        background-color: #ffffff;
+        border-radius: 4px;
+    }
+
+    /* Tablas */
+    .registro-servicio-bg .table,
+    .registro-servicio-bg .table-responsive {
+        background-color: #ffffff;
+    }
+
+    /* Encabezados */
+    .registro-servicio-bg h3 {
+        margin-bottom: 15px;
+    }
+</style>
+
+<div class="container-fluid registro-servicio-bg">
+
+    <!-- ================= TÍTULO ================= -->
+    <div class="container-fluid mb-3">
         <h3>
-            <i class="fas fa-clipboard-check"></i> &nbsp; REGISTRO DE SERVICIO
+            <i class="fas fa-clipboard-check"></i>
+            &nbsp; REGISTRO DE SERVICIO
         </h3>
 
         <ul class="full-box list-unstyled page-nav-tabs">
@@ -100,7 +128,8 @@
             <div class="row">
                 <div class="col-md-4">
                     <label>Fecha de ejecución</label>
-                    <input type="date" name="fecha_ejecucion"
+                    <input type="date"
+                        name="fecha_ejecucion"
                         class="form-control"
                         value="<?= date('Y-m-d') ?>"
                         disabled

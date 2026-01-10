@@ -1,21 +1,27 @@
-<div class="container-fluid">
-    <h3 class="text-left">
-        <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR REGISTRO DE SERVICIO
-    </h3>
+<div class="container-fluid mb-3">
+        <h3>
+            <i class="fas fa-clipboard-check"></i>
+            &nbsp; BUSCAR REGISTRO DE SERVICIO
+        </h3>
 
-    <ul class="full-box list-unstyled page-nav-tabs">
-        <li>
-            <a href="<?php echo SERVERURL; ?>registro-servicio-lista/">
-                <i class="fas fa-list fa-fw"></i> &nbsp; LISTADO
-            </a>
-        </li>
-        <li>
-            <a class="active" href="<?php echo SERVERURL; ?>registro-servicio-buscar/">
-                <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR
-            </a>
-        </li>
-    </ul>
-</div>
+        <ul class="full-box list-unstyled page-nav-tabs">
+            <li>
+                <a  href="<?php echo SERVERURL; ?>/registro-servicio-nuevo/">
+                    <i class="fas fa-plus fa-fw"></i> &nbsp; REGISTRO DE SERVICIO
+                </a>
+            </li>
+            <li>
+                <a href="<?php echo SERVERURL; ?>/registro-servicio-lista/">
+                    <i class="fas fa-search fa-fw"></i> &nbsp; HISTORIAL DE SERVICIOS
+                </a>
+            </li>
+            <li>
+                <a class="active"   href="<?php echo SERVERURL; ?>registro-servicio-buscar/">
+                    <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR
+                </a>
+            </li>
+        </ul>
+    </div>
 
 <?php
 $fecha_inicio = $_SESSION['fecha_inicio_registro_servicio'] ?? '';

@@ -34,15 +34,17 @@ class descuentoModelo extends mainModel
 
     protected static function guardar_descuento_cliente_modelo($id, $clientes)
     {
+        if (empty($clientes)) {
+            return false;
+        }
+
         $pdo = mainModel::conectar();
         $pdo->beginTransaction();
 
-        $pdo->prepare("DELETE FROM descuento_cliente WHERE id_descuento = :id")
-            ->execute([":id" => $id]);
+        try {
 
-        if (!empty($clientes)) {
             $sql = $pdo->prepare("
-            INSERT INTO descuento_cliente (id_descuento, id_cliente)
+            INSERT IGNORE INTO descuento_cliente (id_descuento, id_cliente)
             VALUES (:d, :c)
         ");
 
@@ -52,10 +54,28 @@ class descuentoModelo extends mainModel
                     ":c" => $cli
                 ]);
             }
-        }
 
-        $pdo->commit();
-        return true;
+            $pdo->commit();
+            return true;
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            return false;
+        }
+    }
+
+    protected static function eliminar_cliente_descuento_modelo($id_descuento, $id_cliente)
+    {
+        $sql = mainModel::conectar()->prepare("
+        DELETE FROM descuento_cliente
+        WHERE id_descuento = :d
+          AND id_cliente   = :c
+        LIMIT 1
+        ");
+
+        return $sql->execute([
+            ":d" => $id_descuento,
+            ":c" => $id_cliente
+        ]);
     }
 
     protected static function datos_descuento_modelo($id)
@@ -77,6 +97,26 @@ class descuentoModelo extends mainModel
         $sql->execute();
 
         return $sql->fetch(PDO::FETCH_ASSOC);
+    }
+
+    protected static function clientes_asignados_modelo($id_descuento)
+    {
+        $sql = mainModel::conectar()->prepare("
+        SELECT 
+            c.id_cliente,
+            c.nombre_cliente,
+            c.apellido_cliente,
+            c.doc_number
+        FROM descuento_cliente dc
+        INNER JOIN clientes c ON c.id_cliente = dc.id_cliente
+        WHERE dc.id_descuento = :id
+        ORDER BY c.nombre_cliente ASC
+        ");
+
+        $sql->bindParam(":id", $id_descuento, PDO::PARAM_INT);
+        $sql->execute();
+
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 
     protected static function buscar_clientes_modelo($busqueda)
@@ -151,6 +191,7 @@ class descuentoModelo extends mainModel
 
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
+
     protected static function listar_descuentos_modelo()
     {
         $sql = mainModel::conectar()->prepare("
@@ -166,6 +207,7 @@ class descuentoModelo extends mainModel
         $sql->execute();
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
+
     protected static function editar_descuento_modelo($d)
     {
         $sql = mainModel::conectar()->prepare("
