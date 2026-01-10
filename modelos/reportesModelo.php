@@ -4,7 +4,7 @@ require_once "mainModel.php";
 class reportesModelo extends mainModel
 {
     /* =========================================
-       REPORTE DE PEDIDOS (SIN COSTOS)
+       REPORTE DE PEDIDOS 
     ========================================= */
     protected static function reporte_pedidos_modelo($desde, $hasta, $estado, $sucursal)
     {
@@ -14,32 +14,22 @@ class reportesModelo extends mainModel
             pc.fecha,
             pc.estado,
 
-            pc.updatedby,
+            CONCAT(u.usu_nombre, ' ', u.usu_apellido) AS usuario,
+            p.razon_social AS proveedor,
+            s.suc_descri AS sucursal,
 
-            pr.razon_social AS proveedor,
-
-            CONCAT(u.usu_nombre, ' ', u.usu_apellido) AS usuario_crea,
-            CONCAT(uu.usu_nombre, ' ', uu.usu_apellido) AS usuario_actualiza,
-
-            /* cantidad de artículos distintos */
-            COUNT(pd.id_articulo) AS cantidad_items,
-
-            /* cantidad total de unidades */
-            COALESCE(SUM(pd.cantidad), 0) AS cantidad_unidades
+            COUNT(pd.id_articulo) AS cantidad_items
 
         FROM pedido_cabecera pc
 
-        /* proveedor puede ser NULL */
-        LEFT JOIN proveedores pr
-            ON pr.idproveedores = pc.id_proveedor
-
-        /* usuario creador */
-        LEFT JOIN usuarios u
+        INNER JOIN usuarios u
             ON u.id_usuario = pc.id_usuario
 
-        /* usuario que actualizó */
-        LEFT JOIN usuarios uu
-            ON uu.id_usuario = pc.updatedby
+        LEFT JOIN proveedores p
+            ON p.idproveedores = pc.id_proveedor
+
+        LEFT JOIN sucursales s
+            ON s.id_sucursal = pc.id_sucursal
 
         LEFT JOIN pedido_detalle pd
             ON pd.idpedido_cabecera = pc.idpedido_cabecera
@@ -59,20 +49,20 @@ class reportesModelo extends mainModel
             $params[':hasta'] = $hasta;
         }
 
-        if (!empty($estado)) {
+        if ($estado !== null) {
             $sql .= " AND pc.estado = :estado";
-            $params[':estado'] = $estado;
+            $params[':estado'] = (int)$estado;
         }
 
-        if (!empty($sucursal)) {
+        if ($sucursal !== null) {
             $sql .= " AND pc.id_sucursal = :sucursal";
-            $params[':sucursal'] = $sucursal;
+            $params[':sucursal'] = (int)$sucursal;
         }
 
         $sql .= "
         GROUP BY pc.idpedido_cabecera
         ORDER BY pc.fecha ASC
-     ";
+        ";
 
         $stmt = mainModel::conectar()->prepare($sql);
 
@@ -695,6 +685,4 @@ class reportesModelo extends mainModel
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
-
 }

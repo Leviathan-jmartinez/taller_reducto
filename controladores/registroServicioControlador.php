@@ -204,13 +204,7 @@ class registroServicioControlador extends registroServicioModelo
             <td>' . $row['usuario_registra'] . '</td>
             <td>' . $estado . '</td>
             <td>
-                <a href="' . SERVERURL . 'pdf/registroServicio.php?id=' .
-                    mainModel::encryption($row['idregistro_servicio']) . '"
-                    target="_blank"
-                    class="btn btn-info btn-sm"
-                    title="Imprimir registro">
-                    <i class="fas fa-print"></i>
-                </a>';
+                ';
 
                 if ($row['estado'] == 1) {
                     $tabla .= '

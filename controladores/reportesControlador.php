@@ -21,14 +21,11 @@ class reporteControlador extends reportesModelo
             exit();
         }
 
-        /* FILTROS */
-        $desde  = !empty($_POST['desde'])  ? mainModel::limpiar_string($_POST['desde'])  : null;
-        $hasta  = !empty($_POST['hasta'])  ? mainModel::limpiar_string($_POST['hasta'])  : null;
-        $estado = !empty($_POST['estado']) ? mainModel::limpiar_string($_POST['estado']) : null;
+        $desde    = ($_POST['desde'] !== '') ? mainModel::limpiar_string($_POST['desde']) : null;
+        $hasta    = ($_POST['hasta'] !== '') ? mainModel::limpiar_string($_POST['hasta']) : null;
+        $estado   = ($_POST['estado'] !== '') ? mainModel::limpiar_string($_POST['estado']) : null;
+        $sucursal = ($_POST['sucursal'] !== '') ? mainModel::limpiar_string($_POST['sucursal']) : null;
 
-        $sucursal = $_SESSION['nick_sucursal'] ?? null;
-
-        /* DATOS */
         $datos = reportesModelo::reporte_pedidos_modelo(
             $desde,
             $hasta,
@@ -36,18 +33,9 @@ class reporteControlador extends reportesModelo
             $sucursal
         );
 
-        /* DATOS EXTRA PARA EL PDF */
-        $empresa  = $_SESSION['empresa_str']  ?? 'Empresa';
-        $usuario  = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
-        $sucursal_nombre = $_SESSION['sucursal_nombre'] ?? 'Sucursal';
+        $empresa = $_SESSION['empresa_nombre'] ?? 'Empresa';
+        $usuario = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
 
-        $filtros = [
-            'desde'  => $desde,
-            'hasta'  => $hasta,
-            'estado' => $estado ?: 'Todos'
-        ];
-
-        /* PDF */
         ob_start();
         require_once __DIR__ . "/../pdf/pedidos_reporte_pdf.php";
         $html = ob_get_clean();
@@ -59,6 +47,7 @@ class reporteControlador extends reportesModelo
         $dompdf->stream("reporte_pedidos.pdf", ["Attachment" => false]);
         exit();
     }
+
 
     public function imprimir_reporte_presupuestos_controlador()
     {

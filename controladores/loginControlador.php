@@ -72,6 +72,18 @@ class loginControlador extends loginModelo
             $_SESSION['nick_sucursal'] = $row['sucursalid'];
             $_SESSION['id_rol']        = $row['id_rol'];
             $_SESSION['permisos'] = loginModelo::obtener_permisos_usuario($row['id_usuario']);
+            $empresa = mainModel::ejecutar_consulta_simple("
+            SELECT razon_social 
+            FROM empresa 
+            LIMIT 1
+            ");
+
+            if ($empresa && $empresa->rowCount() > 0) {
+                $rowEmp = $empresa->fetch(PDO::FETCH_ASSOC);
+                $_SESSION['empresa_nombre'] = $rowEmp['razon_social'];
+            } else {
+                $_SESSION['empresa_nombre'] = 'Empresa';
+            }
             /**procesar con md5 */
             $_SESSION['token_str'] = md5(uniqid(mt_rand(), true));
             return header("Location: " . SERVERURL . "home/");

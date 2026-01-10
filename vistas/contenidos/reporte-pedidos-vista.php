@@ -1,68 +1,71 @@
+<?php
+require_once "./controladores/sucursalControlador.php";
+$insSucursal = new sucursalControlador();
+$sucursales = $insSucursal->listar_sucursales_controlador();
+?>
+
 <div class="container-fluid">
-    <h4 class="mb-3">
-        <i class="fas fa-file-alt"></i> Informe de Pedidos
-    </h4>
+    <div class="form-neon">
 
-    <form action="<?= SERVERURL ?>ajax/reportesAjax.php"
-        method="POST"
-        target="_blank">
+        <h4 class="text-center mb-3">
+            <i class="fas fa-clipboard-list fa-fw"></i>
+            &nbsp; Informe de Pedidos de Compra
+        </h4>
 
-        <input type="hidden" name="accion" value="imprimir_reporte_pedidos">
+        <form action="<?= SERVERURL ?>ajax/reportesAjax.php"
+            method="POST"
+            target="_blank"
+            autocomplete="off">
 
-        <div class="row">
-            <div class="col-md-3">
-                <label>Desde</label>
-                <input type="date" name="desde" class="form-control">
+            <input type="hidden" name="accion" value="imprimir_reporte_pedidos">
+
+            <div class="row">
+
+                <!-- Desde -->
+                <div class="col-md-3">
+                    <label>Desde</label>
+                    <input type="date" name="desde" class="form-control">
+                </div>
+
+                <!-- Hasta -->
+                <div class="col-md-3">
+                    <label>Hasta</label>
+                    <input type="date" name="hasta" class="form-control">
+                </div>
+
+                <!-- Estado -->
+                <div class="col-md-3">
+                    <label>Estado</label>
+                    <select name="estado" class="form-control">
+                        <option value="">Todos</option>
+                        <option value="1">Pendiente</option>
+                        <option value="2">Procesado</option>
+                        <option value="0">Anulado</option>
+                    </select>
+                </div>
+
+                <!-- Sucursal -->
+                <div class="col-md-3">
+                    <label>Sucursal</label>
+                    <select name="sucursal" class="form-control">
+                        <option value="">Todas</option>
+                        <?php foreach ($sucursales as $s): ?>
+                            <option value="<?= $s['id_sucursal'] ?>">
+                                <?= $s['suc_descri'] ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
             </div>
 
-            <div class="col-md-3">
-                <label>Hasta</label>
-                <input type="date" name="hasta" class="form-control">
-            </div>
-
-            <div class="col-md-3">
-                <label>Estado</label>
-                <select name="estado" class="form-control">
-                    <option value="">Todos</option>
-                    <option value="2">Procesado</option>
-                    <option value="1">Pendiente</option>
-                    <option value="0">Anulado</option>
-                </select>
-            </div>
-
-            <div class="col-md-3 d-flex align-items-end">
-                <button class="btn btn-danger w-100">
-                    <i class="fas fa-print"></i> Imprimir
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-info">
+                    <i class="fas fa-print"></i> &nbsp; Generar PDF
                 </button>
             </div>
-        </div>
-    </form>
 
+        </form>
+
+    </div>
 </div>
-
-<form class="FormularioAjax" method="POST" action="<?= SERVERURL ?>ajax/reportesAjax.php" target="_blank">
-    <input type="hidden" name="reporte_presupuestos" value="1">
-
-    <input type="date" name="desde">
-    <input type="date" name="hasta">
-
-    <select name="estado">
-        <option value="">Todos</option>
-        <option value="0">Pendiente</option>
-        <option value="1">Aprobado</option>
-        <option value="2">Anulado</option>
-    </select>
-
-    <select name="sucursal">
-        <option value="">Todas las sucursales</option>
-        <?php foreach ($sucursales as $s): ?>
-            <option value="<?= $s['id_sucursal'] ?>">
-                <?= $s['nombre'] ?>
-            </option>
-        <?php endforeach; ?>
-    </select>
-
-    <button type="submit" class="btn btn-info">
-        Imprimir
-    </button>
-</form>
