@@ -1,13 +1,13 @@
 <script>
-    /* ================== GUARDAR ESTADO ================== */
+    /* ================== GUARDAR ESTADO ================== 
     function guardarEstadoRecepcion() {
         localStorage.setItem('rec_id_cliente', document.getElementById('id_cliente').value);
         localStorage.setItem('rec_cliente_nombre', document.getElementById('cliente_nombre').value);
         localStorage.setItem('rec_id_vehiculo', document.getElementById('id_vehiculo').value);
         localStorage.setItem('rec_vehiculo_desc', document.getElementById('vehiculo_desc').value);
-    }
+    }*/
 
-    /* ================== RESTAURAR ESTADO ================== */
+    /* ================== RESTAURAR ESTADO ================== 
     function restaurarEstadoRecepcion() {
         if (localStorage.getItem('rec_id_cliente')) {
             document.getElementById('id_cliente').value =
@@ -24,18 +24,18 @@
             document.getElementById('vehiculo_desc').value =
                 localStorage.getItem('rec_vehiculo_desc') || '';
         }
-    }
+    }*/
 
-    /* ================== LIMPIAR ESTADO ================== */
+    /* ================== LIMPIAR ESTADO ================== 
     function limpiarEstadoRecepcion() {
         localStorage.removeItem('rec_id_cliente');
         localStorage.removeItem('rec_cliente_nombre');
         localStorage.removeItem('rec_id_vehiculo');
         localStorage.removeItem('rec_vehiculo_desc');
-    }
+    }*/
 
-    /* Restaurar automáticamente al cargar */
-    window.addEventListener('load', restaurarEstadoRecepcion);
+    /* Restaurar automáticamente al cargar 
+    window.addEventListener('load', restaurarEstadoRecepcion);*/
 
 
     function buscarClienteAjax() {
@@ -61,7 +61,7 @@
         document.getElementById('id_vehiculo').value = '';
         document.getElementById('vehiculo_desc').value = '';
 
-        guardarEstadoRecepcion();
+        //guardarEstadoRecepcion();
 
         $('#modalCliente').modal('hide');
     }
@@ -112,41 +112,41 @@
         document.getElementById('id_vehiculo').value = id;
         document.getElementById('vehiculo_desc').value = desc;
 
-        guardarEstadoRecepcion();
+        //guardarEstadoRecepcion();
 
         $('#modalVehiculo').modal('hide');
     }
 
-
+    /* =================  =================
     function limpiarFormularioRecepcion() {
 
-        /* ================= FORM ================= */
+
         const form = document.querySelector('.FormularioAjax');
         if (form) {
             form.reset();
         }
 
-        /* ================= CAMPOS MANUALES ================= */
+
         document.getElementById('id_cliente').value = '';
         document.getElementById('cliente_nombre').value = '';
 
         document.getElementById('id_vehiculo').value = '';
         document.getElementById('vehiculo_desc').value = '';
 
-        /* ================= TABLAS DE BÚSQUEDA ================= */
+
         const tablaClientes = document.getElementById('tabla_clientes');
         if (tablaClientes) tablaClientes.innerHTML = '';
 
         const tablaVehiculos = document.getElementById('tabla_vehiculos');
         if (tablaVehiculos) tablaVehiculos.innerHTML = '';
 
-        /* ================= LOCAL STORAGE ================= */
+
         limpiarEstadoRecepcion();
 
-        /* ================= FECHA POR DEFECTO ================= */
+
         const fecha = document.querySelector('[name="fecha_ingreso"]');
         if (fecha) {
             fecha.value = new Date().toISOString().slice(0, 16);
         }
-    }
+    } */
 </script>

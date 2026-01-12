@@ -592,7 +592,7 @@ class reportesModelo extends mainModel
     /* =========================================
         REPORTE REGISTRO DE SERVICIOS
     ========================================= */
-    protected static function reporte_registro_servicio_modelo($desde, $hasta, $estado, $sucursal)
+    protected static function reporte_registro_servicio_modelo($desde, $hasta, $estado, $empleado ,$sucursal)
     {
         $sql = "
         SELECT
@@ -608,6 +608,8 @@ class reportesModelo extends mainModel
 
             CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) AS cliente,
             CONCAT(m.mar_descri, ' ', mo.mod_descri, ' ', v.anho) AS vehiculo,
+
+            CONCAT(em.nombre,' ',em.apellido) as tecnico,
 
             s.suc_descri AS sucursal,
 
@@ -640,6 +642,9 @@ class reportesModelo extends mainModel
         INNER JOIN usuarios ur
             ON ur.id_usuario = rs.usuario_registra
 
+        INNER JOIN empleados em
+            ON em.idempleados = rs.tecnico_responsable
+
         LEFT JOIN equipo_trabajo et
             ON et.id_equipo = ot.idtrabajos
 
@@ -664,6 +669,11 @@ class reportesModelo extends mainModel
         if ($estado !== null) {
             $sql .= " AND rs.estado = :estado";
             $params[':estado'] = (int)$estado;
+        }
+
+        if ($empleado !== null) {
+            $sql .= " AND rs.tecnico_responsable = :tecnico_responsable";
+            $params[':tecnico_responsable'] = $empleado;
         }
 
         if ($sucursal !== null) {

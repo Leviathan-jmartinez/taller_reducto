@@ -2,11 +2,13 @@
     const SERVERURL = "<?php echo SERVERURL; ?>";
 
     function abrirModalEquipo(idOT) {
-
         document.getElementById('modal_id_ot').value = idOT;
 
         const select = document.getElementById('modal_idtrabajos');
         select.innerHTML = '<option value="">Cargando...</option>';
+
+        document.getElementById('modal_tecnico').innerHTML =
+            '<option value="">Seleccione un técnico</option>';
 
         fetch(SERVERURL + 'ajax/ordenTrabajoAjax.php', {
                 method: "POST",
@@ -16,20 +18,15 @@
             })
             .then(r => r.json())
             .then(data => {
-
                 let html = '<option value="">Seleccione equipo</option>';
-
                 data.forEach(e => {
-                    html += `<option value="${e.idtrabajos}">
-                        ${e.nombre}
-                     </option>`;
+                    html += `<option value="${e.idtrabajos}">${e.nombre}</option>`;
                 });
-
                 select.innerHTML = html;
-
                 $('#modalAsignarTecnico').modal('show');
             });
     }
+
 
     function cargarEquiposNuevo() {
 
@@ -59,6 +56,19 @@
             });
     }
 
+    function cargarTecnicosOT(idOT) {
+        let datos = new FormData();
+        datos.append("cargar_tecnicos_ot", idOT);
+
+        fetch(SERVERURL + "ajax/ordenTrabajoAjax.php", {
+                method: "POST",
+                body: datos
+            })
+            .then(r => r.text())
+            .then(html => {
+                document.getElementById('tecnico_responsable').innerHTML = html;
+            });
+    }
 
 
     function abrirModalPresupuesto() {
@@ -128,5 +138,61 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         cargarEquiposNuevo();
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const selNuevo = document.getElementById('idtrabajos');
+        if (selNuevo) {
+            selNuevo.addEventListener('change', function() {
+                const idEquipo = this.value;
+                const sel = document.getElementById('tecnico_responsable');
+
+                if (!sel) return;
+
+                if (!idEquipo) {
+                    sel.innerHTML = '<option value="">Seleccione un técnico</option>';
+                    return;
+                }
+
+                let datos = new FormData();
+                datos.append("cargar_tecnicos_equipo", idEquipo);
+
+                fetch(SERVERURL + "ajax/ordenTrabajoAjax.php", {
+                        method: "POST",
+                        body: datos
+                    })
+                    .then(r => r.text())
+                    .then(html => sel.innerHTML = html);
+            });
+        }
+
+        const selModal = document.getElementById('modal_idtrabajos');
+        if (selModal) {
+            selModal.addEventListener('change', function() {
+                const idEquipo = this.value;
+                const selTec = document.getElementById('modal_tecnico');
+
+                if (!selTec) return;
+
+                if (!idEquipo) {
+                    selTec.innerHTML = '<option value="">Seleccione un técnico</option>';
+                    return;
+                }
+
+                let datos = new FormData();
+                datos.append("cargar_tecnicos_equipo", idEquipo);
+
+                fetch(SERVERURL + "ajax/ordenTrabajoAjax.php", {
+                        method: "POST",
+                        body: datos
+                    })
+                    .then(r => r.text())
+                    .then(html => {
+                        selTec.innerHTML = html;
+                    });
+            });
+        }
+
     });
 </script>

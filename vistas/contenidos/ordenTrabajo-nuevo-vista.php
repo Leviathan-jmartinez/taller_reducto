@@ -83,15 +83,21 @@ $id_usuario     = $_SESSION['id_str'];
             <legend class="w-auto px-2">Asignación</legend>
 
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <label>Equipo encargado</label>
                     <select name="idtrabajos" id="idtrabajos" class="form-control" required>
                         <option value="">Seleccione equipo de trabajo</option>
                         <!-- AJAX: equipo_trabajo -->
                     </select>
                 </div>
+                <div class="col-md-4">
+                    <label>Técnico responsable</label>
+                    <select name="tecnico_responsable" id="tecnico_responsable" class="form-control" required>
+                        <option value="">Seleccione un técnico</option>
+                    </select>
+                </div>
 
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <label>Usuario</label>
                     <input type="text"
                         class="form-control"

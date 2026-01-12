@@ -44,6 +44,12 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'anular') {
     echo $insOT->anular_ot_controlador();
     exit();
 }
+if (isset($_POST['cargar_tecnicos_equipo'])) {
+    echo $insOT->cargar_tecnicos_equipo_controlador();
+    exit();
+}
+
+
 
 echo json_encode([
     'Alerta' => 'simple',
@@ -52,10 +58,3 @@ echo json_encode([
     'Tipo'   => 'error'
 ]);
 exit();
-
-
-file_put_contents(
-    __DIR__ . '/debug_ot.txt',
-    print_r($_POST, true),
-    FILE_APPEND
-);

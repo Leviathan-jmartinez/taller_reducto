@@ -2,6 +2,7 @@
 require_once "./controladores/sucursalControlador.php";
 $insSucursal = new sucursalControlador();
 $sucursales = $insSucursal->listar_sucursales_controlador();
+$empleados = $insSucursal->listar_empleados_controlador();
 ?>
 
 <div class="container-fluid">
@@ -31,7 +32,7 @@ $sucursales = $insSucursal->listar_sucursales_controlador();
                     <input type="date" name="hasta" class="form-control">
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label>Estado</label>
                     <select name="estado" class="form-control">
                         <option value="">Todos</option>
@@ -41,7 +42,18 @@ $sucursales = $insSucursal->listar_sucursales_controlador();
                     </select>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-2">
+                    <label>Tecnico Encargado</label>
+                    <select name="empleado" class="form-control">
+                        <option value="">Todas</option>
+                        <?php foreach ($empleados as $s): ?>
+                            <option value="<?= $s['idempleados'] ?>">
+                                <?= $s['nombre'] ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-2">
                     <label>Sucursal</label>
                     <select name="sucursal" class="form-control">
                         <option value="">Todas</option>

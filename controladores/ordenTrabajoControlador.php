@@ -3,6 +3,26 @@ require_once __DIR__ . "/../modelos/ordenTrabajoModelo.php";
 
 class ordenTrabajoControlador extends ordenTrabajoModelo
 {
+    public function cargar_tecnicos_equipo_controlador()
+    {
+        $idEquipo = mainModel::limpiar_string($_POST['cargar_tecnicos_equipo']);
+        $tecnicos = ordenTrabajoModelo::obtener_tecnicos_equipo_modelo($idEquipo);
+
+        $html = '<option value="">Seleccione un técnico</option>';
+
+        if (empty($tecnicos)) {
+            return $html . '<option value="">Sin técnicos</option>';
+        }
+
+        foreach ($tecnicos as $t) {
+            $html .= '<option value="' . $t['idempleados'] . '">' . $t['nombre'] . '</option>';
+        }
+
+        return $html;
+    }
+
+
+
     public function generar_ot_controlador()
     {
         session_start(['name' => 'STR']);
@@ -235,14 +255,19 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
     {
         session_start(['name' => 'STR']);
 
-        if (empty($_POST['id_ot']) || empty($_POST['idtrabajos'])) {
+        if (empty($_POST['id_ot']) || empty($_POST['idtrabajos']) || empty($_POST['tecnico_responsable'])) {
             return json_encode([
                 'Alerta' => 'simple',
                 'Titulo' => 'Error',
-                'Texto'  => 'Datos incompletos',
+                'Texto'  => 'Debe seleccionar equipo y técnico',
                 'Tipo'   => 'error'
             ]);
         }
+
+        $ot       = mainModel::decryption($_POST['id_ot']);
+        $equipo   = intval($_POST['idtrabajos']);
+        $tecnico  = intval($_POST['tecnico_responsable']);
+
 
         $ot     = mainModel::decryption($_POST['id_ot']);
         $equipo = mainModel::limpiar_string($_POST['idtrabajos']);
@@ -264,7 +289,7 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
             ]);
         }
 
-        ordenTrabajoModelo::asignar_equipo_modelo($ot, $equipo);
+        ordenTrabajoModelo::asignar_equipo_modelo($ot, $equipo, $tecnico);
 
         return json_encode([
             'Alerta' => 'recargar',
@@ -421,11 +446,21 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
                 'Tipo'   => 'error'
             ]);
         }
+        if (empty($_POST['idtrabajos']) || empty($_POST['tecnico_responsable'])) {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Error',
+                'Texto'  => 'Debe seleccionar un equipo y un técnico responsable',
+                'Tipo'   => 'warning'
+            ]);
+        }
+
 
         $datos = [
             'idpresupuesto' => $_POST['idpresupuesto_servicio'],
             'idusuario'     => $_POST['id_usuario'],
-            'idtrabajos'    => $_POST['idtrabajos'],
+            'idtrabajos'          => intval($_POST['idtrabajos']),
+            'tecnico_responsable' => intval($_POST['tecnico_responsable']),
             'observacion'   => $_POST['observacion'] ?? ''
         ];
 

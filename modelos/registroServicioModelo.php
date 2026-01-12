@@ -13,7 +13,7 @@ class registroServicioModelo extends mainModel
 
             /* ================= VALIDAR OT ================= */
             $q = $pdo->prepare("
-                SELECT estado, idtrabajos
+                SELECT estado, idtrabajos, tecnico_responsable
                 FROM orden_trabajo
                 WHERE idorden_trabajo = ?
             ");
@@ -54,7 +54,7 @@ class registroServicioModelo extends mainModel
             $ins->execute([
                 $datos['idorden_trabajo'],
                 $datos['fecha_ejecucion'],
-                $ot['idtrabajos'],
+                $ot['tecnico_responsable'],
                 $datos['usuario'],
                 $datos['observacion'],
                 $datos['ip'],

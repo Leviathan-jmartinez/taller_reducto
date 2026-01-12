@@ -302,11 +302,13 @@ class reporteControlador extends reportesModelo
         $hasta    = ($_POST['hasta'] !== '') ? mainModel::limpiar_string($_POST['hasta']) : null;
         $estado   = ($_POST['estado'] !== '') ? mainModel::limpiar_string($_POST['estado']) : null;
         $sucursal = ($_POST['sucursal'] !== '') ? mainModel::limpiar_string($_POST['sucursal']) : null;
+        $empleado = ($_POST['empleado'] !== '') ? mainModel::limpiar_string($_POST['empleado']) : null;
 
         $datos = reportesModelo::reporte_registro_servicio_modelo(
             $desde,
             $hasta,
             $estado,
+            $empleado,
             $sucursal
         );
 

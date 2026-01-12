@@ -100,4 +100,17 @@ class sucursalModelo extends mainModel
         $sql->execute();
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
+    protected static function listar_empleados_modelo()
+    {
+        $sql = mainModel::conectar()->prepare("
+        SELECT ee.id_equipo, CONCAT(et.nombre,' - ',et.descripcion) as equipo ,e.idempleados, CONCAT(e.nombre,' ',e.apellido) AS nombre
+        FROM equipo_empleado ee
+        INNER JOIN empleados e ON e.idempleados = ee.idempleados
+        INNER JOIN equipo_trabajo et ON et.id_equipo = ee.id_equipo
+        WHERE ee.estado = 1 AND e.estado = 1
+        ORDER BY nombre ASC
+        ");
+        $sql->execute();
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

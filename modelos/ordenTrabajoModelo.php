@@ -3,6 +3,25 @@ require_once "mainModel.php";
 
 class ordenTrabajoModelo extends mainModel
 {
+    protected static function obtener_tecnicos_equipo_modelo($idEquipo)
+    {
+        $pdo = self::conectar();
+
+        $qTec = $pdo->prepare("
+        SELECT e.idempleados, CONCAT(e.nombre,' ',e.apellido) AS nombre
+        FROM equipo_empleado ee
+        INNER JOIN empleados e ON e.idempleados = ee.idempleados
+        WHERE ee.id_equipo = ?
+          AND ee.estado = 1
+          AND e.estado = 1
+    ");
+        $qTec->execute([$idEquipo]);
+
+        return $qTec->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+
     /* ================= OBTENER PRESUPUESTO ================= */
     protected static function obtener_presupuesto_modelo($id)
     {
@@ -218,19 +237,23 @@ class ordenTrabajoModelo extends mainModel
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    protected static function asignar_equipo_modelo($ot, $equipo)
+    protected static function asignar_equipo_modelo($ot, $equipo, $tecnico)
     {
         $sql = mainModel::conectar()->prepare("
         UPDATE orden_trabajo
         SET idtrabajos = :equipo,
+            tecnico_responsable = :tecnico,
             estado = 2
         WHERE idorden_trabajo = :ot
-      ");
+        ");
+
         return $sql->execute([
-            ':equipo' => $equipo,
-            ':ot' => $ot
+            ':equipo'  => $equipo,
+            ':tecnico' => $tecnico,
+            ':ot'      => $ot
         ]);
     }
+
 
 
     protected static function obtener_ot_completa($idOT)
@@ -358,15 +381,16 @@ class ordenTrabajoModelo extends mainModel
 
             /* CABECERA OT */
             $cab = $pdo->prepare("
-                INSERT INTO orden_trabajo
-                (idpresupuesto_servicio, idrecepcion, id_usuario, idtrabajos, observacion, estado)
-                VALUES (?, ?, ?, ?, ?, 2)
-            ");
+                    INSERT INTO orden_trabajo
+                    (idpresupuesto_servicio, idrecepcion, id_usuario, idtrabajos, tecnico_responsable, observacion, estado)
+                    VALUES (?, ?, ?, ?, ?, ?, 2)
+                ");
             $cab->execute([
                 $datos['idpresupuesto'],
                 $rec['idrecepcion'],
                 $datos['idusuario'],
                 $datos['idtrabajos'],
+                $datos['tecnico_responsable'],
                 $datos['observacion']
             ]);
 

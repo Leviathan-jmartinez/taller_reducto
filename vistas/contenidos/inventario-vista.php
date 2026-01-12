@@ -27,88 +27,90 @@ $tipo = $_SESSION['inventario_tipo'];
 </div>
 
 <div class="container-fluid">
-    <!-- Botones de acción -->
-
-    <div class="container-fluid">
+    <div class="form-neon">
         <!-- Botones de acción -->
 
-        <div style="display: flex; justify-content: flex-end; margin-bottom: 15px; gap: 10px;">
-            <button class="btn btn-success" data-toggle="modal" data-target="#modalInventario">
-                <i class="fas fa-plus"></i> &nbsp; Generar Inventario
-            </button>
-            <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#ModalBuscarINV">
-                <i class="fas fa-search"></i> &nbsp; Cargar Inventario
-            </button>
+        <div class="container-fluid">
+            <!-- Botones de acción -->
+
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 15px; gap: 10px;">
+                <button class="btn btn-success" data-toggle="modal" data-target="#modalInventario">
+                    <i class="fas fa-plus"></i> &nbsp; Generar Inventario
+                </button>
+                <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#ModalBuscarINV">
+                    <i class="fas fa-search"></i> &nbsp; Cargar Inventario
+                </button>
+            </div>
         </div>
-    </div>
 
 
-    <!-- Buscador -->
-    <div class="row mb-3">
-        <div class="col-md-4">
-            <input type="text"
-                id="filtro-productos"
-                class="form-control"
-                placeholder="🔎 Buscar producto...">
+        <!-- Buscador -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <input type="text"
+                    id="filtro-productos"
+                    class="form-control"
+                    placeholder="🔎 Buscar producto...">
+            </div>
         </div>
-    </div>
 
-    <!-- TABLA DETALLE DE PRODUCTOS -->
-    <div class="row" style="margin-top:20px;">
-        <div class="col-12">
-            <h5>Detalle de productos</h5>
-            <table class="table table-dark table-sm" id="tabla-detalle">
-                <thead>
-                    <tr>
-                        <th style="width:20%;">Código</th>
-                        <th style="width:20%;">Producto</th>
-                        <th class="text-center" style="width:10%;">Costo</th>
-                        <th class="text-center" style="width:20%;">Cantidad en stock</th>
-                        <th class="text-center" style="width:20%;">Cantidad inventariada</th>
-                        <th class="text-center" style="width:20%;">Diferencia</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (!empty($_SESSION['Cdatos_articuloINV'])): ?>
-                        <?php foreach ($_SESSION['Cdatos_articuloINV'] as $i => $item): ?>
-                            <tr data-index="<?= $i ?>">
-                                <td><?= htmlspecialchars($item['codigo']); ?></td>
-                                <td><?= htmlspecialchars($item['descripcion']); ?></td>
+        <!-- TABLA DETALLE DE PRODUCTOS -->
+        <div class="row" style="margin-top:20px;">
+            <div class="col-12">
+                <h5>Detalle de productos</h5>
+                <table class="table table-dark table-sm" id="tabla-detalle">
+                    <thead>
+                        <tr>
+                            <th style="width:20%;">Código</th>
+                            <th style="width:20%;">Producto</th>
+                            <th class="text-center" style="width:10%;">Costo</th>
+                            <th class="text-center" style="width:20%;">Cantidad en stock</th>
+                            <th class="text-center" style="width:20%;">Cantidad inventariada</th>
+                            <th class="text-center" style="width:20%;">Diferencia</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($_SESSION['Cdatos_articuloINV'])): ?>
+                            <?php foreach ($_SESSION['Cdatos_articuloINV'] as $i => $item): ?>
+                                <tr data-index="<?= $i ?>">
+                                    <td><?= htmlspecialchars($item['codigo']); ?></td>
+                                    <td><?= htmlspecialchars($item['descripcion']); ?></td>
 
-                                <td class="text-center">
-                                    <input type="number"
-                                        class="form-control text-center"
-                                        value="<?= $item['costo']; ?>"
-                                        readonly>
-                                </td>
+                                    <td class="text-center">
+                                        <input type="number"
+                                            class="form-control text-center"
+                                            value="<?= $item['costo']; ?>"
+                                            readonly>
+                                    </td>
 
-                                <td class="text-center">
-                                    <input type="number"
-                                        class="form-control text-center teorica"
-                                        value="<?= $item['cantidad_teorica']; ?>"
-                                        readonly>
-                                </td>
+                                    <td class="text-center">
+                                        <input type="number"
+                                            class="form-control text-center teorica"
+                                            value="<?= $item['cantidad_teorica']; ?>"
+                                            readonly>
+                                    </td>
 
-                                <td class="text-center">
-                                    <input type="number"
-                                        name="cantidades_fisicas[]"
-                                        class="form-control text-center cantidad"
-                                        value="<?= $item['cantidad_fisica']; ?>"
-                                        min="0"
-                                        required>
-                                </td>
+                                    <td class="text-center">
+                                        <input type="number"
+                                            name="cantidades_fisicas[]"
+                                            class="form-control text-center cantidad"
+                                            value="<?= $item['cantidad_fisica']; ?>"
+                                            min="0"
+                                            required>
+                                    </td>
 
-                                <td class="text-center">
-                                    <span class="diferencia">
-                                        <?= $item['diferencia']; ?>
-                                    </span>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
+                                    <td class="text-center">
+                                        <span class="diferencia">
+                                            <?= $item['diferencia']; ?>
+                                        </span>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
 
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>

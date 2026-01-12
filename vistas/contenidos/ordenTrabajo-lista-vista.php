@@ -36,6 +36,7 @@
     ?>
 </div>
 <!-- MODAL ASIGNAR TÉCNICO -->
+<!-- MODAL ASIGNAR -->
 <div class="modal fade" id="modalAsignarTecnico" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -46,9 +47,7 @@
                 data-form="update">
 
                 <div class="modal-header">
-                    <h5 class="modal-title">
-                        Asignar equipo de trabajo
-                    </h5>
+                    <h5 class="modal-title">Asignar equipo y técnico</h5>
                     <button type="button" class="close"
                         data-dismiss="modal">&times;</button>
                 </div>
@@ -58,17 +57,24 @@
                     <input type="hidden" name="accion" value="asignar_equipo">
                     <input type="hidden" name="id_ot" id="modal_id_ot">
 
-                    <label>Equipo de trabajo</label>
-                    <select name="idtrabajos" id="modal_idtrabajos" class="form-control">
-                        <option value="">Seleccione equipo de trabajo</option>
-                    </select>
+                    <div class="form-group">
+                        <label>Equipo de trabajo</label>
+                        <select name="idtrabajos" id="modal_idtrabajos" class="form-control" required>
+                            <option value="">Seleccione equipo</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Técnico responsable</label>
+                        <select name="tecnico_responsable" id="modal_tecnico" class="form-control" required>
+                            <option value="">Seleccione un técnico</option>
+                        </select>
+                    </div>
 
                 </div>
 
                 <div class="modal-footer">
-                    <button class="btn btn-primary">
-                        Asignar
-                    </button>
+                    <button class="btn btn-primary">Asignar</button>
                 </div>
 
             </form>
@@ -76,5 +82,6 @@
         </div>
     </div>
 </div>
+
 
 <?php include_once "./vistas/inc/ordenTrabajoJS.php"; ?>
