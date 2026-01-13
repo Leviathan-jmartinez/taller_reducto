@@ -138,6 +138,18 @@ if (!mainModel::tienePermisoVista('empleado.editar')) {
                     </div>
 
                     <div class="col-md-3">
+                            <div class="form-group">
+                            <label>Estado Civil</label>
+                                <select class="form-control" name="estado_civil_up" id="estado_civil_up">
+                                    <option value="Soltero/a" <?php if($campos['estado_civil'] == 'Soltero/a'){echo 'selected=""';}?>>Soltero/a <?php if($campos['estado_civil'] == 'Soltero/a'){echo '(Actual)';}?></option>
+                                    <option value="Casado/a" <?php if($campos['estado_civil'] == 'Casado/a'){echo 'selected=""';}?>>Casado/a <?php if($campos['estado_civil'] == 'Casado/a'){echo '(Actual)';}?></option>
+                                    <option value="Viudo/a" <?php if($campos['estado_civil'] == 'Viudo/a'){echo 'selected=""';}?>>Viudo/a <?php if($campos['estado_civil'] == 'Viudo/a'){echo '(Actual)';}?></option>
+                                    <option value="Divorciado/a" <?php if($campos['estado_civil'] == 'Divorciado/a'){echo 'selected=""';}?>>Divorciado/a <?php if($campos['estado_civil'] == 'Divorciado/a'){echo '(Actual)';}?></option>
+                                </select>
+                            </div>
+                        </div>
+
+                    <div class="col-md-3">
                         <div class="form-group">
                             <label>Estado laboral</label>
                             <select class="form-control" name="empleado_estado_up">

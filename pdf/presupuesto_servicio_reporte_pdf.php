@@ -80,7 +80,18 @@
         </thead>
 
         <tbody>
-            <?php $i = 1; ?>
+            <?php
+            function estadoPreSer($estado)
+            {
+                return match ((int)$estado) {
+                    1 => 'Pendiente',
+                    2 => 'Aprobado',
+                    3 => 'Finalizado',
+                    0 => 'Anulado',
+                    default => 'Desconocido',
+                };
+            }
+            $i = 1; ?>
             <?php foreach ($datos as $row): ?>
                 <tr>
                     <td class="text-center"><?= $i++ ?></td>
@@ -93,7 +104,7 @@
                     <td class="text-right"><?= number_format($row['subtotal'], 0, ',', '.') ?></td>
                     <td class="text-right"><?= number_format($row['total_descuento'], 0, ',', '.') ?></td>
                     <td class="text-right"><?= number_format($row['total_final'], 0, ',', '.') ?></td>
-                    <td class="text-center"><?= $row['estado'] ?></td>
+                    <td class="text-center"><?= estadoPreSer($row['estado']) ?></td>
                     <td><?= $row['sucursal'] ?: '-' ?></td>
                 </tr>
             <?php endforeach; ?>

@@ -91,7 +91,13 @@ if (!mainModel::tienePermisoVista('empleado.crear')) {
                 </div>
 
                 <div class="col-md-3">
-                    <input type="text" class="form-control" name="estado_civil_reg" placeholder="Estado civil">
+                    <select class="form-control" name="estado_civil_reg" id="estado_civil_reg">
+                        <option value="">Seleccione una opción</option>
+                        <option value="Soltero/a">Soltero/a</option>
+                        <option value="Casado/a">Casado/a</option>
+                        <option value="Viudo/a">Viudo/a</option>
+                        <option value="Divorciado/a">Divorciado/a</option>
+                    </select>
                 </div>
 
                 <div class="col-md-3">

@@ -680,6 +680,7 @@ class reportesModelo extends mainModel
             CONCAT(em.nombre,' ',em.apellido) as tecnico,
 
             s.suc_descri AS sucursal,
+            rs.observacion,
 
             COUNT(rsd.id_articulo) AS cantidad_items,
             COALESCE(SUM(rsd.subtotal),0) AS total

@@ -100,6 +100,7 @@ class equipoControlador extends equipoModelo
 
         return equipoModelo::miembros_equipo_modelo($id_equipo);
     }
+
     public function empleados_con_equipo_controlador($id_sucursal)
     {
         $id_sucursal = mainModel::limpiar_string($id_sucursal);

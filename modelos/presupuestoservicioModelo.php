@@ -387,7 +387,7 @@ class presupuestoservicioModelo extends mainModel
             ':id' => $id
         ]);
     }
-    
+
     protected static function obtener_presupuesto_cabecera($id)
     {
         $sql = self::conectar()->prepare("

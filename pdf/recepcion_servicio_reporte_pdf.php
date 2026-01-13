@@ -74,7 +74,18 @@
         </thead>
 
         <tbody>
-            <?php $i = 1; ?>
+            <?php
+            function estadoRecepcion($estado)
+            {
+                return match ((int)$estado) {
+                    1 => 'Activo',
+                    2 => 'En Proceso',
+                    3 => 'Finalizado',
+                    0 => 'Anulado',
+                    default => 'Desconocido',
+                };
+            }
+            $i = 1; ?>
             <?php foreach ($datos as $row): ?>
                 <tr>
                     <td class="text-center"><?= $i++ ?></td>
@@ -85,7 +96,7 @@
                     <td class="text-center"><?= $row['fecha_salida'] ? date('d-m-Y H:i', strtotime($row['fecha_salida'])) : '-' ?></td>
                     <td class="text-center"><?= number_format($row['kilometraje'], 0, ',', '.') ?></td>
                     <td><?= $row['usuario'] ?></td>
-                    <td class="text-center"><?= $row['estado'] ?></td>
+                    <td class="text-center"><?= estadoRecepcion($row['estado']) ?></td>
                     <td><?= $row['sucursal'] ?></td>
                 </tr>
             <?php endforeach; ?>

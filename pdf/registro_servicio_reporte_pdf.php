@@ -68,6 +68,7 @@
                 <th>Ejecución</th>
                 <th>Ítems</th>
                 <th>Tecnico Encargado</th>
+                <th>Observación</th>
                 <th>Estado</th>
                 <th>Sucursal</th>
             </tr>
@@ -98,6 +99,7 @@
                     <td class="text-center"><?= $row['fecha_ejecucion'] ?></td>
                     <td class="text-center"><?= $row['cantidad_items'] ?></td>
                     <td class="text-center"><?= $row['tecnico'] ?></td>
+                    <td class="text-center"><?= $row['observacion'] ?></td>
                     <td class="text-center"><?= estadoRegistroServicio($row['estado']) ?></td>
                     <td><?= $row['sucursal'] ?></td>
                 </tr>
