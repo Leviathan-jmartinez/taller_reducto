@@ -71,7 +71,7 @@
                 <?php } ?>
 
                 <!-- SERVICIOS -->
-                <?php if (mainModel::puedeVerMenu('servicio')) { ?>
+                <?php if (mainModel::tienePermiso('servicio.ver')) { ?>
                     <li>
                         <a href="#" class="nav-btn-submenu">
                             <i class="fas fa-tools fa-fw"></i> &nbsp; Servicios
@@ -111,9 +111,7 @@
 
                 <!-- ADMINISTRACIÓN -->
                 <?php if (
-                    mainModel::tienePermiso('cliente.ver') ||
-                    mainModel::tienePermiso('inventario.ver') ||
-                    mainModel::tienePermiso('empresa.ver')
+                    mainModel::tienePermiso('mantenimiento.ver')
                 ) { ?>
                     <li>
                         <a href="#" class="nav-btn-submenu">
@@ -122,40 +120,41 @@
                         </a>
 
                         <ul>
-                            <!-- COMPRAS -->
-                            <li>
-                                <a href="#" class="nav-btn-submenu">
-                                    <i class="fas fa-cog fa-fw"></i> &nbsp; Compras
-                                    <i class="fas fa-chevron-down"></i>
-                                </a>
+                            <?php if (mainModel::tienePermiso('compra.ver')) { ?>
+                                <!-- COMPRAS -->
+                                <li>
+                                    <a href="#" class="nav-btn-submenu">
+                                        <i class="fas fa-cog fa-fw"></i> &nbsp; Compras
+                                        <i class="fas fa-chevron-down"></i>
+                                    </a>
 
-                                <ul>
-                                    <?php if (mainModel::tienePermiso('sucursal.ver')) { ?>
-                                        <li>
-                                            <a href="<?= SERVERURL; ?>sucursal-nuevo/">
-                                                <i class="fas fa-city fa-fw"></i> &nbsp; Sucursales
-                                            </a>
-                                        </li>
-                                    <?php } ?>
+                                    <ul>
+                                        <?php if (mainModel::tienePermiso('sucursal.ver')) { ?>
+                                            <li>
+                                                <a href="<?= SERVERURL; ?>sucursal-nuevo/">
+                                                    <i class="fas fa-city fa-fw"></i> &nbsp; Sucursales
+                                                </a>
+                                            </li>
+                                        <?php } ?>
 
-                                    <?php if (mainModel::tienePermiso('inventario.ver')) { ?>
-                                        <li>
-                                            <a href="<?= SERVERURL; ?>articulo-lista/">
-                                                <i class="fas fa-pallet fa-fw"></i> &nbsp; Artículos
-                                            </a>
-                                        </li>
-                                    <?php } ?>
+                                        <?php if (mainModel::tienePermiso('inventario.ver')) { ?>
+                                            <li>
+                                                <a href="<?= SERVERURL; ?>articulo-lista/">
+                                                    <i class="fas fa-pallet fa-fw"></i> &nbsp; Artículos
+                                                </a>
+                                            </li>
+                                        <?php } ?>
 
-                                    <?php if (mainModel::tienePermiso('proveedor.ver')) { ?>
-                                        <li>
-                                            <a href="<?= SERVERURL; ?>proveedor-nuevo/">
-                                                <i class="fas fa-truck fa-fw"></i> &nbsp; Proveedores
-                                            </a>
-                                        </li>
-                                    <?php } ?>
-                                </ul>
-                            </li>
-
+                                        <?php if (mainModel::tienePermiso('proveedor.ver')) { ?>
+                                            <li>
+                                                <a href="<?= SERVERURL; ?>proveedor-nuevo/">
+                                                    <i class="fas fa-truck fa-fw"></i> &nbsp; Proveedores
+                                                </a>
+                                            </li>
+                                        <?php } ?>
+                                    </ul>
+                                </li>
+                            <?php } ?>
                             <!-- SERVICIOS -->
                             <li>
                                 <a href="#" class="nav-btn-submenu">
@@ -188,7 +187,7 @@
                                         </li>
                                     <?php } ?>
 
-                                    <?php if (mainModel::tienePermiso('equipo.ver')) { ?>
+                                    <?php if (mainModel::tienePermiso('empleado.ver')) { ?>
                                         <li>
                                             <a href="<?= SERVERURL; ?>empleado-equipo/">
                                                 <i class="fas fa-users fa-fw"></i> &nbsp; Equipos
@@ -254,6 +253,11 @@
                                     <li>
                                         <a href="<?= SERVERURL; ?>reporte-compras/">
                                             <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Informe de Compras
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="<?= SERVERURL; ?>reporte-LibroCompras/">
+                                            <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Informe Libro de Compras
                                         </a>
                                     </li>
 

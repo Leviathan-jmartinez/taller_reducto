@@ -31,6 +31,11 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_compras') 
     $inst_reporte->imprimir_reporte_compras_controlador();
     exit();
 }
+if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_libro_compras') {
+    $inst_reporte->imprimir_reporte_libro_compras_controlador();
+    exit();
+}
+
 
 /* =========================================
     FIN REPORTE DE COMPRAS

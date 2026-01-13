@@ -1,4 +1,9 @@
 <?php
+if (!mainModel::tienePermisoVista('usuarios.asignarrol')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
+
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start(['name' => 'STR']);
 }

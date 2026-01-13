@@ -1,4 +1,10 @@
-            <!-- Page header -->
+<?php
+if (!mainModel::tienePermisoVista('compra.oc.ver')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+} ?>
+
+<!-- Page header -->
             <div class="full-box page-header">
                 <h3 class="text-left">
                     <i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; LISTADO DE ORDENES DE COMPRA

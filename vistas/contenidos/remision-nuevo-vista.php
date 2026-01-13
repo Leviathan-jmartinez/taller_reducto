@@ -1,4 +1,9 @@
 <?php
+if (!mainModel::tienePermisoVista('compra.remision.crear')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
+
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
@@ -199,10 +204,10 @@ $id_usuario = $_SESSION['id_usuario'] ?? null;
 
             <!-- BOTONES -->
             <div class="text-center" style="margin-top: 40px; display: flex; justify-content: center; gap: 15px;">
-                <button type="submit" class="btn btn-info">
-                    <i class="fas fa-save"></i> &nbsp; Guardar remisión
+                <button type="submit" class="btn btn-raised btn-info btn-sm">
+                    <i class="fas fa-save"></i> &nbsp; Guardar
                 </button>
-                <button type="button" id="btnCancelarRemision" class="btn btn-danger">
+                <button type="button" id="btnCancelarRemision" class="btn btn-raised btn-secondary btn-sm">
                     <i class="fas fa-times"></i> &nbsp; Cancelar
                 </button>
             </div>

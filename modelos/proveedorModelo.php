@@ -55,13 +55,39 @@ class proveedorModelo extends mainModel
     /** Eliminar proveedor */
     protected static function eliminar_proveedor_modelo($id)
     {
-        $sql = mainModel::conectar()->prepare(
-            "DELETE FROM proveedores WHERE idproveedores = :id"
-        );
-        $sql->bindParam(":id", $id);
-        $sql->execute();
-        return $sql;
+        $pdo = mainModel::conectar();
+
+        // 1) Verificar si el proveedor está usado en compras o pedidos
+        $check = $pdo->prepare("
+        SELECT 1 
+        FROM pedido_cabecera 
+        WHERE id_proveedor = :id 
+        LIMIT 1
+    ");
+        $check->bindParam(":id", $id, PDO::PARAM_INT);
+        $check->execute();
+
+        if ($check->rowCount() > 0) {
+            // Ya fue usado → solo desactivar
+            $stmt = $pdo->prepare("
+            UPDATE proveedores 
+            SET estado = 0 
+            WHERE idproveedores = :id
+        ");
+        } else {
+            // No está relacionado → se puede eliminar
+            $stmt = $pdo->prepare("
+            DELETE FROM proveedores 
+            WHERE idproveedores = :id
+        ");
+        }
+
+        $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt;
     }
+
 
     /** Actualizar proveedor */
     protected static function actualizar_proveedor_modelo($datos)
@@ -89,5 +115,19 @@ class proveedorModelo extends mainModel
 
         $sql->execute();
         return $sql;
+    }
+
+    protected static function listar_proveedores_modelo()
+    {
+        $sql = mainModel::conectar()->prepare("
+        SELECT
+            idproveedores,
+            razon_social
+        FROM proveedores
+        WHERE estado = 1
+        ORDER BY razon_social ASC
+        ");
+        $sql->execute();
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 }

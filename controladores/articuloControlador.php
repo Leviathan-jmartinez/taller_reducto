@@ -48,9 +48,11 @@ class articuloControlador extends articuloModelo
 								<th>CÓDIGO</th>
                                 <th>NOMBRE</th>
                                 <th>DETALLE</th>';
-        if ($privilegio == 1 || $privilegio == 2) {
-            $tabla .=           '<th>ACTUALIZAR</th>
-                                <th>ELIMINAR</th>';
+        if (mainModel::tienePermisoVista('articulo.editar')) {
+            $tabla .=           '<th>ACTUALIZAR</th>';
+        }
+        if (mainModel::tienePermisoVista('articulo.eliminar')) {
+            $tabla .= '<th>ELIMINAR</th>';
         }
         $tabla .= '
 						</tr>
@@ -70,13 +72,16 @@ class articuloControlador extends articuloModelo
                                     data-content="' . 'Precio Venta: ' . number_format((float)$rows['precio_venta'], 0, ',', '.') . '">
                                          <i class="fas fa-info-circle"></i>
                                 </button></td>';
-                if ($privilegio == 1 || $privilegio == 2) {
+                if (mainModel::tienePermisoVista('articulo.editar')) {
                     $tabla .= '<td>
 									<a href="' . SERVERURL . 'articulo-actualizar/' . mainModel::encryption($rows['id_articulo']) . '/" class="btn btn-success">
 										<i class="fas fa-sync-alt"></i>
 									</a>
 								</td>
-								<td>
+								';
+                }
+                if (mainModel::tienePermisoVista('articulo.eliminar')) {
+                    $tabla .= ' <td>                          
 									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/articuloAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
                                     <input type="hidden" name="articulo_id_del" value=' . mainModel::encryption($rows['id_articulo']) . '>
 										<button type="submit" class="btn btn-warning">

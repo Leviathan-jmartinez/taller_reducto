@@ -1,3 +1,10 @@
+<?php
+if (!mainModel::tienePermisoVista('empresa.ver')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
+?>
+
 <!-- Page header -->
 <div class="full-box page-header">
     <h3 class="text-left">
@@ -63,7 +70,7 @@ if ($datos_empresa->rowCount() == 0) {
         </form>
     </div>
 <?php
-} elseif ($datos_empresa->rowCount() == 1 && $_SESSION['nivel_str'] == 1) {
+} elseif ($datos_empresa->rowCount() == 1 && $_SESSION['nivel_str'] == 1 && mainModel::tienePermisoVista('empresa.editar')) {
     $campos = $datos_empresa->fetch();
 ?>
     <div class="container-fluid">

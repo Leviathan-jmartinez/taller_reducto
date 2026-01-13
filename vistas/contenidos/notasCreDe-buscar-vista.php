@@ -1,3 +1,9 @@
+<?php
+if (!mainModel::tienePermisoVista('compra.nota.ver')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+} ?>
+
 <div class="container-fluid">
     <h3 class="text-left">
         <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR NOTA DE CREDITO/DEBITO

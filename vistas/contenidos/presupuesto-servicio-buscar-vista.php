@@ -1,3 +1,9 @@
+<?php
+if (!mainModel::tienePermisoVista('servicio.presupuesto.ver')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+} ?>
+
 <div class="container-fluid">
     <h3 class="text-left">
         <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR PRESUPUESTO DE SERVICIO
@@ -6,7 +12,7 @@
 <div class="container-fluid">
     <ul class="full-box list-unstyled page-nav-tabs">
         <li>
-            <a  href="<?php echo SERVERURL; ?>presupuesto-servicio-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; CARGAR PRESUPUESTO</a>
+            <a href="<?php echo SERVERURL; ?>presupuesto-servicio-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; CARGAR PRESUPUESTO</a>
         </li>
         <li>
             <a href="<?php echo SERVERURL; ?>presupuesto-servicio-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTADOS DE PRESUPUESTOS</a>

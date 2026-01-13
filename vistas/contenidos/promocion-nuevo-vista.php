@@ -1,3 +1,9 @@
+<?php
+if (!mainModel::tienePermisoVista('servicio.promocion.crear')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+} ?>
+
 <div class="container-fluid">
 
     <h3 class="text-left">
@@ -109,12 +115,12 @@
 
         <!-- BOTONES -->
         <div class="text-center">
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-save"></i> Guardar
+            <button type="submit" class="btn btn-info btn-raised">
+                <i class="fas fa-save"></i> &nbsp; Guardar
             </button>
 
-            <button type="reset" class="btn btn-secondary">
-                <i class="fas fa-undo"></i> Limpiar
+            <button type="reset" class="btn btn-secondary btn-raised">
+                <i class="fas fa-times"></i> &nbsp; Limpiar
             </button>
         </div>
 

@@ -325,6 +325,74 @@ class reportesModelo extends mainModel
     }
 
     /* =========================================
+        REPORTE LIBRO DE COMPRAS
+    ========================================= */
+    protected static function reporte_libro_compras_modelo($desde, $hasta, $proveedor, $estado, $sucursal)
+    {
+        $sql = "
+        SELECT
+            lc.idlibro_compra,
+            lc.fecha,
+            lc.tipo_comprobante,
+            lc.serie,
+            lc.nro_comprobante,
+            lc.proveedor_nombre,
+            lc.proveedor_ruc,
+            lc.estado,
+            lc.exenta,
+            lc.gravada_5,
+            lc.iva_5,
+            lc.gravada_10,
+            lc.iva_10,
+            lc.total,
+            s.suc_descri AS sucursal
+        FROM libro_compra lc
+        INNER JOIN sucursales s
+            ON s.id_sucursal = lc.id_sucursal
+        WHERE 1 = 1
+        ";
+
+        $params = [];
+
+        if (!empty($desde)) {
+            $sql .= " AND lc.fecha >= :desde";
+            $params[':desde'] = $desde;
+        }
+
+        if (!empty($hasta)) {
+            $sql .= " AND lc.fecha <= :hasta";
+            $params[':hasta'] = $hasta;
+        }
+
+        if ($proveedor !== null) {
+            $sql .= " AND lc.idproveedores = :proveedor";
+            $params[':proveedor'] = (int)$proveedor;
+        }
+
+        if ($estado !== null) {
+            $sql .= " AND lc.estado = :estado";
+            $params[':estado'] = (int)$estado;
+        }
+
+        if ($sucursal !== null) {
+            $sql .= " AND lc.id_sucursal = :sucursal";
+            $params[':sucursal'] = (int)$sucursal;
+        }
+
+        $sql .= " ORDER BY lc.fecha ASC";
+
+        $stmt = mainModel::conectar()->prepare($sql);
+
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+    /* =========================================
         REPORTE DE RECEPCIÓN DE SERVICIOS
     ========================================= */
     protected static function reporte_recepcion_servicio_modelo($desde, $hasta, $estado, $sucursal)
@@ -592,7 +660,7 @@ class reportesModelo extends mainModel
     /* =========================================
         REPORTE REGISTRO DE SERVICIOS
     ========================================= */
-    protected static function reporte_registro_servicio_modelo($desde, $hasta, $estado, $empleado ,$sucursal)
+    protected static function reporte_registro_servicio_modelo($desde, $hasta, $estado, $empleado, $sucursal)
     {
         $sql = "
         SELECT

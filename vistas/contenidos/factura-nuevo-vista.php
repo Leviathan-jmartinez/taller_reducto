@@ -1,4 +1,9 @@
 <?php
+if (!mainModel::tienePermisoVista('compra.factura.crear')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
+
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
@@ -236,10 +241,10 @@ $tipo = $_SESSION['factura_tipo'];
 
             <div class="text-center" style="margin-top: 40px; display: flex; justify-content: center; gap: 15px;">
                 <button type="submit" class="btn btn-info btn-raised">
-                    <i class="fas fa-save"></i> &nbsp; Guardar factura
+                    <i class="fas fa-save"></i> &nbsp; Guardar
                 </button>
                 <button type="button" id="btnCancelarCompra" class="btn btn-secondary btn-raised">
-                    <i class="fas fa-times"></i> &nbsp; Cancelar factura
+                    <i class="fas fa-times"></i> &nbsp; Cancelar
                 </button>
             </div>
 

@@ -1,3 +1,11 @@
+<?php
+
+if (!mainModel::tienePermisoVista('empleado.ver')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
+?>
+
 <div class="full-box page-header">
     <h3 class="text-left">
         <i class="fas fa-users fa-fw"></i> &nbsp; LISTA DE EMPLEADOS

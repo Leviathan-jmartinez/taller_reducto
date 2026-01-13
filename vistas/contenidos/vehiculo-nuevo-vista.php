@@ -1,3 +1,10 @@
+<?php
+if (!mainModel::tienePermisoVista('vehiculo.crear')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
+?>
+
 <div class="full-box page-header">
     <h3 class="text-left">
         <i class="fas fa-car fa-fw"></i> &nbsp; AGREGAR VEHÍCULO

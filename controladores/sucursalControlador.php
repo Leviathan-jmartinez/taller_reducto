@@ -218,6 +218,7 @@ class sucursalControlador extends sucursalModelo
     {
         return sucursalModelo::listar_sucursales_modelo();
     }
+
     public function listar_empleados_controlador()
     {
         return sucursalModelo::listar_empleados_modelo();

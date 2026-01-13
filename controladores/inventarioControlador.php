@@ -112,6 +112,9 @@ class inventarioControlador extends inventarioModelo
     =============================== */
     public function buscar_inv_controlador()
     {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start(['name' => 'STR']);
+        }
         $inventario  = mainModel::limpiar_string($_POST['buscar_inv']);
 
         if ($inventario == "") {

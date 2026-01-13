@@ -163,6 +163,47 @@ class reporteControlador extends reportesModelo
         $dompdf->stream("reporte_compras.pdf", ["Attachment" => false]);
         exit();
     }
+
+    public function imprimir_reporte_libro_compras_controlador()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start(['name' => 'STR']);
+        }
+
+        if (!mainModel::tienePermiso('compras.reporte.ver')) {
+            header("Location: " . SERVERURL . "home/");
+            exit();
+        }
+
+        $desde     = ($_POST['desde'] !== '') ? mainModel::limpiar_string($_POST['desde']) : null;
+        $hasta     = ($_POST['hasta'] !== '') ? mainModel::limpiar_string($_POST['hasta']) : null;
+        $proveedor = ($_POST['proveedor'] !== '') ? mainModel::limpiar_string($_POST['proveedor']) : null;
+        $sucursal  = ($_POST['sucursal'] !== '') ? mainModel::limpiar_string($_POST['sucursal']) : null;
+        $estado  = ($_POST['estado'] !== '') ? mainModel::limpiar_string($_POST['estado']) : null;
+
+        $datos = reportesModelo::reporte_libro_compras_modelo(
+            $desde,
+            $hasta,
+            $proveedor,
+            $estado,
+            $sucursal
+        );
+
+        $empresa = $_SESSION['empresa_nombre'] ?? 'Empresa';
+        $usuario = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
+
+        ob_start();
+        require_once __DIR__ . "/../pdf/libro_compras_reporte_pdf.php";
+        $html = ob_get_clean();
+
+        $dompdf = new Dompdf();
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->render();
+        $dompdf->stream("reporte_libro_compras.pdf", ["Attachment" => false]);
+        exit();
+    }
+
     /* =========================================
         FIN INFORMES DE COMPRAS
     ========================================= */

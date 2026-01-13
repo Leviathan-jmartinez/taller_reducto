@@ -94,37 +94,59 @@ class proveedorControlador extends proveedorModelo
         $id = mainModel::limpiar_string($id);
 
         $check = mainModel::ejecutar_consulta_simple(
-            "SELECT idproveedores FROM proveedores WHERE idproveedores='$id'"
+            "SELECT idproveedores, estado FROM proveedores WHERE idproveedores='$id'"
         );
+
         if ($check->rowCount() <= 0) {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Error",
-                "Texto" => "El proveedor no existe",
-                "Tipo" => "error"
+                "Texto"  => "El proveedor no existe",
+                "Tipo"   => "error"
             ]);
             exit();
         }
 
-        $delete = proveedorModelo::eliminar_proveedor_modelo($id);
+        $antes = $check->fetch(PDO::FETCH_ASSOC);
 
-        if ($delete->rowCount() == 1) {
-            $alerta = [
-                "Alerta" => "recargar",
-                "Titulo" => "Proveedor eliminado",
-                "Texto" => "Proveedor eliminado correctamente",
-                "Tipo" => "success"
-            ];
+        $stmt = proveedorModelo::eliminar_proveedor_modelo($id);
+
+        if ($stmt->rowCount() > 0) {
+
+            // Verificar cómo quedó
+            $verificar = mainModel::ejecutar_consulta_simple(
+                "SELECT estado FROM proveedores WHERE idproveedores='$id'"
+            );
+
+            if ($verificar->rowCount() > 0) {
+                // Sigue existiendo → fue desactivado
+                $alerta = [
+                    "Alerta" => "recargar",
+                    "Titulo" => "Proveedor desactivado",
+                    "Texto"  => "El proveedor ya tenía movimientos, por lo que fue desactivado.",
+                    "Tipo"   => "warning"
+                ];
+            } else {
+                // Ya no existe → fue eliminado
+                $alerta = [
+                    "Alerta" => "recargar",
+                    "Titulo" => "Proveedor eliminado",
+                    "Texto"  => "Proveedor eliminado correctamente.",
+                    "Tipo"   => "success"
+                ];
+            }
         } else {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Error",
-                "Texto" => "No se pudo eliminar el proveedor",
-                "Tipo" => "error"
+                "Texto"  => "No se pudo eliminar el proveedor",
+                "Tipo"   => "error"
             ];
         }
+
         echo json_encode($alerta);
     }
+
 
     public function paginador_proveedores_controlador($pagina, $registros, $privilegio, $url, $busqueda)
     {
@@ -374,5 +396,10 @@ class proveedorControlador extends proveedorModelo
 
         echo json_encode($alerta);
         exit();
+    }
+
+    public function listar_proveedores_controlador()
+    {
+        return proveedorModelo::listar_proveedores_modelo();
     }
 }

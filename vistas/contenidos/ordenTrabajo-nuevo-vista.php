@@ -1,4 +1,9 @@
 <?php
+
+if (!mainModel::tienePermisoVista('servicio.ot.generar')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
@@ -70,7 +75,7 @@ $id_usuario     = $_SESSION['id_str'];
                 </div>
 
                 <div class="col-md-8 text-right align-self-end">
-                    <button type="button" class="btn btn-info"
+                    <button type="button" class="btn btn-success"
                         onclick="abrirModalPresupuesto()">
                         <i class="fas fa-search"></i> Buscar presupuesto
                     </button>
@@ -141,14 +146,15 @@ $id_usuario     = $_SESSION['id_str'];
 
         <!-- ================= BOTONES ================= -->
         <div class="text-center">
-            <button type="submit" class="btn btn-success">
-                <i class="fas fa-tools"></i> Generar Orden de Trabajo
+            <button type="submit" class="btn btn-info btn-raised">
+                <i class="fas fa-tools"></i> &nbsp;Generar Orden de Trabajo
             </button>
-
-            <a href="<?= SERVERURL; ?>orden-trabajo-lista/"
-                class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Volver
-            </a>
+            &nbsp;
+            <button type="button"
+                class="btn btn-secondary btn-raised"
+                onclick="limpiarOrdenTrabajo()">
+                <i class="fas fa-times"></i> &nbsp; Cancelar
+            </button>
         </div>
 
     </form>

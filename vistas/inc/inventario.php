@@ -271,26 +271,64 @@
     });
 
 
-    document.getElementById("btn-ajustar-stock").addEventListener("click", function() {
-        Swal.fire({
-            title: '¿Desea aplicar este ajuste al stock?',
-            type: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, aplicar',
-            cancelButtonText: 'Cancelar'
-        }).then(function(result) {
-            // Compatibilidad con diferentes versiones de SweetAlert2
-            const confirmado = result.isConfirmed !== undefined ? result.isConfirmed : result.value;
+    document.addEventListener("DOMContentLoaded", function() {
 
-            if (confirmado) {
-                // Llamada AJAX
+        const btnAjustar = document.getElementById("btn-ajustar-stock");
+        if (btnAjustar) {
+            btnAjustar.addEventListener("click", function() {
+                Swal.fire({
+                    title: '¿Desea aplicar este ajuste al stock?',
+                    type: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, aplicar',
+                    cancelButtonText: 'Cancelar'
+                }).then(function(result) {
+
+                    const confirmado = result.isConfirmed !== undefined ? result.isConfirmed : result.value;
+
+                    if (confirmado) {
+                        fetch("<?= SERVERURL ?>ajax/inventarioAjax.php", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/x-www-form-urlencoded"
+                                },
+                                body: new URLSearchParams({
+                                    aplicar_stock: true
+                                })
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.status === "ok") {
+                                    Swal.fire({
+                                        type: 'success',
+                                        title: 'Stock actualizado',
+                                        text: data.msg
+                                    }).then(() => location.reload());
+                                } else {
+                                    Swal.fire({
+                                        type: 'error',
+                                        title: 'Error',
+                                        text: data.msg
+                                    });
+                                }
+                            });
+                    }
+                });
+            });
+        }
+
+        const btnLimpiar = document.getElementById("btn-limpiar-todo");
+        if (btnLimpiar) {
+            btnLimpiar.addEventListener("click", function() {
+                if (!confirm("¿Desea limpiar todo el ajuste y la tabla?")) return;
+
                 fetch("<?= SERVERURL ?>ajax/inventarioAjax.php", {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/x-www-form-urlencoded"
                         },
                         body: new URLSearchParams({
-                            aplicar_stock: true
+                            limpiar_ajuste: true
                         })
                     })
                     .then(res => res.json())
@@ -298,76 +336,16 @@
                         if (data.status === "ok") {
                             Swal.fire({
                                 type: 'success',
-                                title: 'Stock actualizado',
+                                title: 'Todo limpiado',
                                 text: data.msg
                             }).then(() => location.reload());
-                        } else {
-                            Swal.fire({
-                                type: 'error',
-                                title: 'Error',
-                                text: data.msg
-                            });
                         }
-                    })
-                    .catch(err => {
-                        Swal.fire({
-                            type: 'error',
-                            title: 'Error AJAX',
-                            text: err
-                        });
                     });
-            } else {
-                Swal.fire({
-                    type: 'info',
-                    title: 'Cancelado',
-                    text: 'No se aplicó ningún ajuste al stock'
-                });
-            }
-        });
-    });
-
-
-
-
-    document.getElementById("btn-limpiar-todo").addEventListener("click", function() {
-        if (!confirm("¿Desea limpiar todo el ajuste y la tabla?")) return;
-
-        fetch("<?= SERVERURL ?>ajax/inventarioAjax.php", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
-                body: new URLSearchParams({
-                    limpiar_ajuste: true
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === "ok") {
-                    Swal.fire({
-                        type: 'success',
-                        title: 'Todo limpiado',
-                        text: data.msg
-                    }).then(() => {
-                        // Recargar página o vaciar tabla en front
-                        location.reload();
-                    });
-                } else {
-                    Swal.fire({
-                        type: 'error',
-                        title: 'Error',
-                        text: data.msg
-                    });
-                }
-            })
-            .catch(err => {
-                Swal.fire({
-                    type: 'error',
-                    title: 'Error AJAX',
-                    text: err
-                });
             });
+        }
+
     });
+
 
 
     function anularInventario(id) {

@@ -1,3 +1,10 @@
+<?php
+if (!mainModel::tienePermisoVista('sucursal.ver')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
+?>
+
 <!-- Page header -->
 <div class="full-box page-header">
     <h3 class="text-left">

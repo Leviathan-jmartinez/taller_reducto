@@ -1,3 +1,9 @@
+<?php
+if (!mainModel::tienePermisoVista('servicio.reclamo.crear')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+} ?>
+
 <style>
     /* Contenedor principal SOLO registro de servicio */
     .reclamo-servicio {
@@ -89,8 +95,8 @@
         </fieldset>
 
         <div class="text-center">
-            <button class="btn btn-danger">
-                Registrar reclamo
+            <button class="btn btn-info btn-raised">
+                 <i class="fas fa-save"></i> &nbsp; Registrar reclamo
             </button>
         </div>
 

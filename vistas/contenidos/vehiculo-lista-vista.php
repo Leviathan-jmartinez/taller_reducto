@@ -1,3 +1,10 @@
+<?php
+if (!mainModel::tienePermisoVista('vehiculo.ver')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
+?>
+
 <div class="full-box page-header">
     <h3 class="text-left">
         <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTA DE VEHÍCULOS
@@ -17,7 +24,7 @@
             </a>
         </li>
         <li>
-            <a  href="<?php echo SERVERURL; ?>vehiculo-buscar/">
+            <a href="<?php echo SERVERURL; ?>vehiculo-buscar/">
                 <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR VEHÍCULO
             </a>
         </li>

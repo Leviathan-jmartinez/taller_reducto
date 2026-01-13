@@ -398,4 +398,22 @@
 
             return $sql->execute($d) ? $sql : $sql;
         }
+
+        public static function anular_libro_compra_modelo($idcompra, $idsucursal)
+        {
+            $sql = "
+            UPDATE libro_compra
+            SET estado = 0
+            WHERE idcompra_cabecera = :idcompra
+            AND id_sucursal = :idsucursal
+            AND estado = 1
+            ";
+
+            $stmt = mainModel::conectar()->prepare($sql);
+            $stmt->bindParam(":idcompra", $idcompra, PDO::PARAM_INT);
+            $stmt->bindParam(":idsucursal", $idsucursal, PDO::PARAM_INT);
+            $stmt->execute();
+
+            return $stmt;
+        }
     }

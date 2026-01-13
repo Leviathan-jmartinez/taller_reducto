@@ -1,4 +1,9 @@
 <?php
+
+if (!mainModel::tienePermisoVista('compra.nota.crear')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
 if (session_status() == PHP_SESSION_NONE) {
     session_start(['name' => 'STR']);
 }
@@ -13,7 +18,7 @@ $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
     </h3>
     <ul class="full-box list-unstyled page-nav-tabs">
         <li>
-            <a class="active"  href="<?php echo SERVERURL; ?>notasCreDe-nuevo-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; INGRESO DE NOTA</a>
+            <a class="active" href="<?php echo SERVERURL; ?>notasCreDe-nuevo-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; INGRESO DE NOTA</a>
         </li>
         <li>
             <a href="<?php echo SERVERURL; ?>notasCreDe-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR</a>
@@ -196,12 +201,12 @@ $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
         </fieldset>
 
         <div class="text-center">
-            <button type="submit" class="btn btn-success">
-                <i class="fas fa-save"></i> Guardar Nota
+            <button type="submit" class="btn btn-info btn-raised">
+                <i class="fas fa-save"></i> &nbsp; Guardar
             </button>
-            <button type="button" class="btn btn-danger ml-2"
+            <button type="button" class="btn btn-raised btn-secondary btn-sm"
                 onclick="cancelarNota()">
-                <i class="fas fa-times"></i> Cancelar
+                <i class="fas fa-times"></i> &nbsp; Cancelar
             </button>
         </div>
 

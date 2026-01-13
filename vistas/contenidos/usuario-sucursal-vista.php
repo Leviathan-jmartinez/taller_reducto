@@ -1,4 +1,8 @@
 <?php
+if (!mainModel::tienePermisoVista('usuarios.asignarlocal')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start(['name' => 'STR']);
 }
@@ -46,7 +50,7 @@ $sucursales = $insSucursal->listar_sucursales_controlador();
             <a href="<?php echo SERVERURL; ?>usuario-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR USUARIO</a>
         </li>
         <li>
-            <a  href="<?php echo SERVERURL; ?>usuario-rol/"><i class="fas fa-search fa-fw"></i> &nbsp; ASIGNAR ROL</a>
+            <a href="<?php echo SERVERURL; ?>usuario-rol/"><i class="fas fa-search fa-fw"></i> &nbsp; ASIGNAR ROL</a>
         </li>
         <li>
             <a class="active" href="<?php echo SERVERURL; ?>usuario-sucursal/"><i class="fas fa-store-alt fa-fw"></i> &nbsp; ASIGNAR SUCURSAL</a>

@@ -1,3 +1,9 @@
+<?php
+if (!mainModel::tienePermisoVista('servicio.registro.ver')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+} ?>
+
 <div class="container-fluid">
     <h3>
         <i class="fas fa-clipboard-check"></i> &nbsp; REGISTRO DE SERVICIO

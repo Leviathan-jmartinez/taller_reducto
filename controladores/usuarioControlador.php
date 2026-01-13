@@ -731,13 +731,40 @@ class usuarioControlador extends usuarioModelo
         $idRol = mainModel::limpiar_string($_POST['id_rol']);
         $permisos = usuarioModelo::permisos_por_rol_modelo($idRol);
 
-        $html = '<div class="row">';
+        $grupos = [];
 
         foreach ($permisos as $p) {
+            // "compra.oc.crear" -> "compra"
+            $modulo = explode('.', $p['clave'])[0];
+            $grupos[$modulo][] = $p;
+        }
 
-            $checked = $p['activo'] ? 'checked' : '';
+        $html = '<div class="accordion" id="accordionPermisos">';
+        $i = 0;
+
+        foreach ($grupos as $modulo => $items) {
+            $i++;
+            $titulo = ucfirst($modulo);
 
             $html .= '
+    <div class="card">
+        <div class="card-header p-2" id="heading' . $i . '">
+            <h6 class="mb-0">
+                <button class="btn btn-link" type="button" data-toggle="collapse"
+                    data-target="#collapse' . $i . '" aria-expanded="true">
+                    ' . $titulo . '
+                </button>
+            </h6>
+        </div>
+
+        <div id="collapse' . $i . '" class="collapse" data-parent="#accordionPermisos">
+            <div class="card-body">
+                <div class="row">';
+
+            foreach ($items as $p) {
+                $checked = $p['activo'] ? 'checked' : '';
+
+                $html .= '
         <div class="col-md-4 mb-2">
             <div class="custom-control custom-checkbox">
                 <input type="checkbox"
@@ -746,12 +773,18 @@ class usuarioControlador extends usuarioModelo
                        name="permisos[]"
                        value="' . $p['id_permiso'] . '"
                        ' . $checked . '>
-                <label class="custom-control-label"
-                       for="perm_' . $p['id_permiso'] . '">
-                    <small>' . $p['clave'] . '</small>
+                <label class="custom-control-label" for="perm_' . $p['id_permiso'] . '">
+                    <small>' . $p['descripcion'] . '</small>
                 </label>
             </div>
         </div>';
+            }
+
+            $html .= '
+                </div>
+            </div>
+        </div>
+    </div>';
         }
 
         $html .= '</div>';

@@ -1,27 +1,33 @@
-<div class="container-fluid mb-3">
-        <h3>
-            <i class="fas fa-clipboard-check"></i>
-            &nbsp; BUSCAR REGISTRO DE SERVICIO
-        </h3>
+<?php
+if (!mainModel::tienePermisoVista('servicio.registro.ver')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+} ?>
 
-        <ul class="full-box list-unstyled page-nav-tabs">
-            <li>
-                <a  href="<?php echo SERVERURL; ?>/registro-servicio-nuevo/">
-                    <i class="fas fa-plus fa-fw"></i> &nbsp; REGISTRO DE SERVICIO
-                </a>
-            </li>
-            <li>
-                <a href="<?php echo SERVERURL; ?>/registro-servicio-lista/">
-                    <i class="fas fa-search fa-fw"></i> &nbsp; HISTORIAL DE SERVICIOS
-                </a>
-            </li>
-            <li>
-                <a class="active"   href="<?php echo SERVERURL; ?>registro-servicio-buscar/">
-                    <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR
-                </a>
-            </li>
-        </ul>
-    </div>
+<div class="container-fluid mb-3">
+    <h3>
+        <i class="fas fa-clipboard-check"></i>
+        &nbsp; BUSCAR REGISTRO DE SERVICIO
+    </h3>
+
+    <ul class="full-box list-unstyled page-nav-tabs">
+        <li>
+            <a href="<?php echo SERVERURL; ?>/registro-servicio-nuevo/">
+                <i class="fas fa-plus fa-fw"></i> &nbsp; REGISTRO DE SERVICIO
+            </a>
+        </li>
+        <li>
+            <a href="<?php echo SERVERURL; ?>/registro-servicio-lista/">
+                <i class="fas fa-search fa-fw"></i> &nbsp; HISTORIAL DE SERVICIOS
+            </a>
+        </li>
+        <li>
+            <a class="active" href="<?php echo SERVERURL; ?>registro-servicio-buscar/">
+                <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR
+            </a>
+        </li>
+    </ul>
+</div>
 
 <?php
 $fecha_inicio = $_SESSION['fecha_inicio_registro_servicio'] ?? '';

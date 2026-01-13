@@ -1,4 +1,8 @@
 <?php
+if (!mainModel::tienePermisoVista('compra.transferencia.recibir')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
 require_once "./controladores/transferenciaControlador.php";
 
 $ctrl = new transferenciaControlador();

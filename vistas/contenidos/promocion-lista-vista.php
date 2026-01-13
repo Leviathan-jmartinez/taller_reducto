@@ -1,4 +1,9 @@
 <?php
+if (!mainModel::tienePermisoVista('servicio.promocion.ver')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
+
 if (!isset($insPromocion)) {
     require_once "./controladores/promocionControlador.php";
     $insPromocion = new promocionControlador();

@@ -1,4 +1,8 @@
 <?php
+if (!mainModel::tienePermisoVista('inventario.ver')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
@@ -33,13 +37,21 @@ $tipo = $_SESSION['inventario_tipo'];
         <div class="container-fluid">
             <!-- Botones de acción -->
 
+
+
             <div style="display: flex; justify-content: flex-end; margin-bottom: 15px; gap: 10px;">
-                <button class="btn btn-success" data-toggle="modal" data-target="#modalInventario">
-                    <i class="fas fa-plus"></i> &nbsp; Generar Inventario
-                </button>
-                <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#ModalBuscarINV">
-                    <i class="fas fa-search"></i> &nbsp; Cargar Inventario
-                </button>
+                <?php
+                if (mainModel::tienePermisoVista('inventario.crear')) { ?>
+                    <button class="btn btn-success" data-toggle="modal" data-target="#modalInventario">
+                        <i class="fas fa-plus"></i> &nbsp; Generar Inventario
+                    </button>
+                <?php } ?>
+                <?php
+                if (mainModel::tienePermisoVista('inventario.editar')) { ?>
+                    <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#ModalBuscarINV">
+                        <i class="fas fa-search"></i> &nbsp; Cargar Inventario
+                    </button>
+                <?php } ?>
             </div>
         </div>
 
@@ -116,15 +128,22 @@ $tipo = $_SESSION['inventario_tipo'];
 </div>
 <div class="row mt-3">
     <div class="col-12 text-center">
-        <button id="guardar-ajuste" class="btn btn-success">
-            <i class="fas fa-save"></i> Guardar cambios
+        <?php
+        if (mainModel::tienePermisoVista('inventario.editar')) { ?>
+            <button id="guardar-ajuste" class="btn btn-info btn-raised">
+                <i class="fas fa-save"></i>&nbsp; Guardar
+            </button>
+        <?php } ?>
+        <button id="btn-limpiar-todo" class="btn btn-raised btn-secondary btn-sm">
+            <i class="fas fa-trash-alt"></i>&nbsp; Cancelar
         </button>
-        <button id="btn-ajustar-stock" class="btn btn-danger">
-            <i class="fas fa-sync-alt"></i> Ajustar Stock
-        </button>
-        <button id="btn-limpiar-todo" class="btn btn-default">
-            <i class="fas fa-trash-alt"></i> Limpiar Todo
-        </button>
+
+        <?php
+        if (mainModel::tienePermisoVista('inventario.ajustar')) { ?>
+            <button id="btn-ajustar-stock" class="btn btn-raised btn-danger btn-sm">
+                <i class="fas fa-sync-alt"></i> Ajustar Stock
+            </button>
+        <?php } ?>
     </div>
 </div>
 
@@ -198,7 +217,7 @@ $tipo = $_SESSION['inventario_tipo'];
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <button type="submit" class="btn btn-info">Guardar</button>
                 </div>
 
             </div>

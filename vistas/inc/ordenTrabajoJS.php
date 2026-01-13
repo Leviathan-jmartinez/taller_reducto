@@ -195,4 +195,36 @@
         }
 
     });
+
+    function limpiarOrdenTrabajo() {
+
+        const form = document.querySelector('form.FormularioAjax');
+
+        // Resetear campos del form
+        form.reset();
+
+        // Limpiar hidden relacionados
+        document.getElementById('idpresupuesto_servicio').value = '';
+        document.getElementById('idrecepcion').value = '';
+
+        // Limpiar campos readonly
+        document.getElementById('cliente').value = '';
+        document.getElementById('vehiculo').value = '';
+        document.getElementById('nro_presupuesto').value = '';
+
+        // Resetear selects
+        document.getElementById('idtrabajos').value = '';
+        document.getElementById('tecnico_responsable').innerHTML =
+            '<option value="">Seleccione un técnico</option>';
+
+        // Limpiar detalle de servicios
+        const tbody = document.getElementById('detalle_presupuesto');
+        tbody.innerHTML = `
+        <tr>
+            <td colspan="4" class="text-center text-muted">
+                Seleccione un presupuesto
+            </td>
+        </tr>
+    `;
+    }
 </script>

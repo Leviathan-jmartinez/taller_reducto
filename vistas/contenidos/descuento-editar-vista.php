@@ -1,4 +1,11 @@
 <?php
+
+if (!mainModel::tienePermisoVista('servicio.descuento.editar')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
+
+
 require_once __DIR__ . "/../../controladores/descuentoControlador.php";
 
 $insDescuento = new descuentoControlador();

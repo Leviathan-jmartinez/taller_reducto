@@ -1,4 +1,8 @@
 <?php
+if (!mainModel::tienePermisoVista('compra.transferencia.crear')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -216,13 +220,13 @@ $productosStock    = $productosStock ?? [];
                     </h6>
 
                     <div class="d-flex justify-content-between">
-                        <a href="<?= SERVERURL ?>dashboard/" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Cancelar
+                        <a href="<?= SERVERURL ?>dashboard/" class="btn btn-raised btn-secondary btn-sm">
+                            <i class="fas fa-times"></i> &nbsp; Cancelar
                         </a>
 
-                        <button type="submit" class="btn btn-success">
+                        <button type="submit" class="btn btn-info btn-raised">
                             <i class="fas fa-paper-plane"></i>
-                            Confirmar Envío
+                            &nbsp; Confirmar Envío
                         </button>
                     </div>
                 </div>

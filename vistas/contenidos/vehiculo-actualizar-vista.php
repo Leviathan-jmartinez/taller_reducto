@@ -1,3 +1,9 @@
+<?php
+if (!mainModel::tienePermisoVista('vehiculo.editar')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
+?>
 
 <!-- Page header -->
 <div class="full-box page-header">

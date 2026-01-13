@@ -137,7 +137,7 @@ class compraControlador extends compraModelo
     }
     /**fin controlador */
 
-    public function guardar_compra_controlador()
+    /* public function oldguardar_compra_controlador()
     {
         if (empty($_SESSION['Cdatos_articuloCO'])) {
             return [
@@ -152,9 +152,7 @@ class compraControlador extends compraModelo
         $pdo->beginTransaction();
 
         try {
-            /* ===============================
-            DATOS DE LA CABECERA
-        ================================= */
+
             $datosCab = [
                 "proveedor"           => $_SESSION['datos_proveedorCO']['ID'],
                 "usuario"             => $_SESSION['id_str'],
@@ -177,9 +175,7 @@ class compraControlador extends compraModelo
             }
             $idcab = $guardarCab["last_id"];
 
-            /* ===============================
-            GUARDAR DETALLES + ACTUALIZAR STOCK + ACUMULADORES LIBRO COMPRA
-            ================================= */
+
             $exenta     = 0;
             $gravada5   = 0;
             $iva5       = 0;
@@ -253,9 +249,6 @@ class compraControlador extends compraModelo
                 compraModelo::upsert_stock_modelo($datos_stock);
             }
 
-            /* ===============================
-            ACTUALIZAR ORDEN DE COMPRA
-            ================================= */
             if (!empty($datosCab['idoc'])) {
                 compraModelo::actualizar_oc_modelo([
                     "idorden_compra" => $datosCab['idoc'],
@@ -264,10 +257,6 @@ class compraControlador extends compraModelo
                     "id_sucursal" => $_SESSION['nick_sucursal']
                 ]);
             }
-
-            /* ===============================
-            GENERAR CUENTAS A PAGAR
-            ================================= */
             $condicion = $_POST['condicion'];
             $intervalo = intval($_POST['intervalo']);
             $cuotas    = intval($_POST['cuotas']);
@@ -293,9 +282,6 @@ class compraControlador extends compraModelo
                 }
             }
 
-            /* ===============================
-                INSERTAR EN LIBRO DE COMPRAS
-                ================================= */
             $datosLibro = [
                 "idcompra"   => $idcab,
                 "id_sucursal" => $_SESSION['nick_sucursal'],
@@ -344,8 +330,241 @@ class compraControlador extends compraModelo
                 "Tipo" => "error"
             ];
         }
+    }*/
+
+    public function guardar_compra_controlador()
+    {
+        if (empty($_SESSION['Cdatos_articuloCO'])) {
+            return [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "No hay detalles para guardar la compra.",
+                "Tipo" => "error"
+            ];
+        }
+
+        $pdo = mainModel::conectar();
+        $pdo->beginTransaction();
+
+        try {
+
+            /* ===============================
+                DATOS DE LA CABECERA
+            ================================ */
+            $datosCab = [
+                "proveedor"            => $_SESSION['datos_proveedorCO']['ID'],
+                "usuario"              => $_SESSION['id_str'],
+                "idsucursal"           => $_SESSION['nick_sucursal'],
+                "nro_factura"          => $_POST['factura_numero'],
+                "fecha_factura"        => $_POST['fecha_emision'],
+                "timbrado"             => $_POST['timbrado'],
+                "vencimiento_timbrado" => $_POST['vencimiento_timbrado'],
+                "estado"               => "1",
+                "total"                => round((float)$_POST['total_factura'], 2),
+                "condicion"            => $_POST['condicion'],
+                "intervalo"            => $_POST['intervalo'],
+                "idoc"                 => isset($_SESSION['id_oc_seleccionado']) ? $_SESSION['id_oc_seleccionado'] : null
+            ];
+            $proveedor = $_SESSION['datos_proveedorCO']['ID'];
+            $nro       = $_POST['factura_numero'];
+            $timbrado  = $_POST['timbrado'];
+            $sucursal  = $_SESSION['nick_sucursal'];
+
+            $validarFactura = mainModel::ejecutar_consulta_simple("
+                SELECT 1
+                FROM compra_cabecera
+                WHERE idproveedores = '$proveedor'
+                AND nro_factura = '$nro'
+                AND nro_timbrado = '$timbrado'
+                AND id_sucursal = '$sucursal'
+                AND estado <> 0
+            ")->rowCount();
+
+            if ($validarFactura > 0) {
+                return [
+                    "Alerta" => "simple",
+                    "Titulo" => "Factura duplicada",
+                    "Texto"  => "Esta factura ya fue registrada para este proveedor.",
+                    "Tipo"   => "warning"
+                ];
+            }
+
+            $guardarCab = compraModelo::insertar_compra_cabecera_modelo($datosCab);
+            if ($guardarCab["stmt"]->rowCount() < 1) {
+                throw new Exception("No se pudo guardar la cabecera de la compra.");
+            }
+            $idcab = $guardarCab["last_id"];
+
+            /* ===============================
+           DETALLES + STOCK + ACUMULADORES
+        ================================ */
+            $exenta     = 0.00;
+            $gravada5   = 0.00;
+            $iva5       = 0.00;
+            $gravada10  = 0.00;
+            $iva10      = 0.00;
+            $totalLibro = 0.00;
+
+            foreach ($_SESSION['Cdatos_articuloCO'] as $item) {
+
+                if ((float)$item['cantidad'] <= 0) continue;
+
+                $subtotal = round((float)$item['subtotal'], 2);
+                $ivaItem  = round((float)$item['iva'], 2);
+
+                $totalLibro = round($totalLibro + $subtotal, 2);
+
+                switch ($item['tipo_iva']) {
+                    case '1': // IVA 5%
+                        $base = round($subtotal - $ivaItem, 2);
+                        $gravada5 = round($gravada5 + $base, 2);
+                        $iva5     = round($iva5 + $ivaItem, 2);
+                        break;
+
+                    case '2': // IVA 10%
+                        $base = round($subtotal - $ivaItem, 2);
+                        $gravada10 = round($gravada10 + $base, 2);
+                        $iva10     = round($iva10 + $ivaItem, 2);
+                        break;
+
+                    default: // EXENTA
+                        $exenta = round($exenta + $subtotal, 2);
+                        break;
+                }
+
+                /* ===== Guardar detalle ===== */
+                $detalle = [
+                    "idcab"       => $idcab,
+                    "id_articulo" => $item['ID'],
+                    "precio"      => round((float)$item['precio'], 2),
+                    "cantidad"    => (float)$item['cantidad'],
+                    "tipo_iva"    => $item['tipo_iva'],
+                    "subtotal"    => $subtotal,
+                    "iva"         => $ivaItem
+                ];
+
+                $guardarDet = compraModelo::insertar_compra_detalle_modelo($detalle);
+                if ($guardarDet->rowCount() < 1) {
+                    throw new Exception("Error al guardar detalle del artículo ID " . $item['ID']);
+                }
+
+                /* ===== Movimiento de stock ===== */
+                $mov = [
+                    "local"        => $_SESSION['nick_sucursal'],
+                    "tipo"         => "RECEPCION COMPRA",
+                    "producto"     => $item['ID'],
+                    "cantidad"     => (float)$item['cantidad'],
+                    "precioVenta"  => 0,
+                    "costo"        => round((float)$item['precio'], 2),
+                    "nroTicket"    => $_POST['factura_numero'],
+                    "pos"          => null,
+                    "usuario"      => $_SESSION['id_str'],
+                    "signo"        => 1,
+                    "referencia"   => $idcab
+                ];
+                compraModelo::agregar_movimiento_stock($mov);
+
+                $stockActual = compraModelo::obtener_stock_actual_modelo($_SESSION['nick_sucursal'], $item['ID']);
+                $nuevoStock  = (float)$stockActual + (float)$item['cantidad'];
+
+                $datos_stock = [
+                    "id_sucursal"                 => $_SESSION['nick_sucursal'],
+                    "id_articulo"                => $item['ID'],
+                    "stockDisponible"            => $nuevoStock,
+                    "stockUltActualizacion"      => date("Y-m-d H:i:s"),
+                    "stockUsuActualizacion"      => $_SESSION['id_str'],
+                    "stockultimoIdActualizacion" => $idcab
+                ];
+                compraModelo::upsert_stock_modelo($datos_stock);
+            }
+            /* ===============================
+                ACTUALIZAR ORDEN DE COMPRA
+            ================================ */
+            if (!empty($datosCab['idoc'])) {
+                compraModelo::actualizar_oc_modelo([
+                    "idorden_compra"      => $datosCab['idoc'],
+                    "idcompra_cabecera"   => $idcab,
+                    "updatedby"           => $_SESSION['id_str'],
+                    "id_sucursal"         => $_SESSION['nick_sucursal']
+                ]);
+            }
+            /* ===============================
+                CUENTAS A PAGAR
+            ================================ */
+            $condicion = $_POST['condicion'];
+            $intervalo = (int)$_POST['intervalo'];
+            $cuotas    = (int)$_POST['cuotas'];
+            $total     = round((float)$_POST['total_factura'], 2);
+
+            if ($condicion === 'contado') $cuotas = 1;
+
+            $monto_cuota = round($total / $cuotas, 2);
+
+            for ($i = 1; $i <= $cuotas; $i++) {
+                $fecha_vencimiento = date('Y-m-d', strtotime("+" . ($intervalo * $i) . " days"));
+                $datos_cuenta = [
+                    "idcompra"          => $idcab,
+                    "idsucursal"        => $_SESSION['nick_sucursal'],
+                    "monto"             => $monto_cuota,
+                    "saldo"             => $monto_cuota,
+                    "cuotas"            => $i,
+                    "fecha_vencimiento" => $fecha_vencimiento,
+                    "observacion"       => "Factura " . $_POST['factura_numero'],
+                    "estado"            => 1
+                ];
+
+                $guardarCuenta = compraModelo::insertar_cuentas_a_pagar_modelo($datos_cuenta);
+                if ($guardarCuenta->rowCount() < 1) {
+                    throw new Exception("Error al guardar cuenta a pagar cuota $i");
+                }
+            }
+
+            /* ===============================
+           LIBRO DE COMPRAS
+        ================================ */
+            $datosLibro = [
+                "idcompra"   => $idcab,
+                "id_sucursal" => $_SESSION['nick_sucursal'],
+                "fecha"      => $_POST['fecha_emision'],
+                "tipo"       => "factura",
+                "serie"      => substr($_POST['factura_numero'], 0, 7),
+                "numero"     => $_POST['factura_numero'],
+                "proveedor"  => $_SESSION['datos_proveedorCO']['ID'],
+                "prov_nom"   => $_SESSION['datos_proveedorCO']['RAZON'],
+                "prov_ruc"   => $_SESSION['datos_proveedorCO']['RUC'],
+                "exenta"     => round($exenta, 2),
+                "gravada5"   => round($gravada5, 2),
+                "iva5"       => round($iva5, 2),
+                "gravada10"  => round($gravada10, 2),
+                "iva10"      => round($iva10, 2),
+                "total"      => round($totalLibro, 2)
+            ];
+
+            $guardarLibro = compraModelo::insertar_libro_compra_modelo($datosLibro);
+            if ($guardarLibro->rowCount() < 1) {
+                throw new Exception("No se pudo guardar el libro de compras.");
+            }
+
+            $pdo->commit();
+
+            unset($_SESSION['Cdatos_articuloCO'], $_SESSION['datos_proveedorCO'], $_SESSION['id_oc_seleccionado']);
+
+            return [
+                "Alerta" => "recargar",
+                "Titulo" => "Compra registrada",
+                "Texto" => "La compra se guardó correctamente.",
+                "Tipo" => "success"
+            ];
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            return [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrió un error inesperado!",
+                "Texto" => $e->getMessage(),
+                "Tipo" => "error"
+            ];
+        }
     }
-    /**fin controlador */
 
     /**controlador buscador proveedor */
     public function buscar_proveedor_controlador()
@@ -870,6 +1089,9 @@ class compraControlador extends compraModelo
 
             // 4) Anular cuentas a pagar
             compraModelo::anular_cuentas_pagar_modelo($id, $id_sucursal);
+
+            // 5) Anular libro de compras
+            compraModelo::anular_libro_compra_modelo($id, $id_sucursal);
 
             // Confirmar transacción
             $pdo->commit();

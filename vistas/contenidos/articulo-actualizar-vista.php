@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('compra.articulo.editar')) {
+if (!mainModel::tienePermisoVista('articulo.editar')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }   

@@ -1,4 +1,8 @@
 <?php
+if (!mainModel::tienePermisoVista('servicio.recepcion.crear')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
@@ -110,14 +114,14 @@ if (session_status() == PHP_SESSION_NONE) {
 
         <!-- BOTONES -->
         <div class="text-center">
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-save"></i> &nbsp; Guardar Recepción
+            <button type="submit" class="btn btn-info btn-raised">
+                <i class="fas fa-save"></i> &nbsp; Guardar
             </button>
 
             <button type="button"
-                class="btn btn-secondary"
+                class="btn btn-secondary btn-raised"
                 onclick="limpiarFormularioRecepcion()">
-                <i class="fas fa-undo"></i> &nbsp; Limpiar
+                <i class="fas fa-times"></i> &nbsp; Cancelar
             </button>
         </div>
 

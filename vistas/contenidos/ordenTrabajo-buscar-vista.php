@@ -1,3 +1,9 @@
+<?php
+if (!mainModel::tienePermisoVista('servicio.ot.ver')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+} ?>
+
 <div class="container-fluid">
     <h3 class="text-left">
         <i class="fas fa-tools fa-fw"></i> &nbsp; ÓRDENES DE TRABAJO

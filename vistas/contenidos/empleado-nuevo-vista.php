@@ -1,3 +1,11 @@
+<?php
+
+if (!mainModel::tienePermisoVista('empleado.crear')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
+?>
+
 <div class="full-box page-header">
     <h3 class="text-left">
         <i class="fas fa-user-plus fa-fw"></i> &nbsp; AGREGAR EMPLEADO

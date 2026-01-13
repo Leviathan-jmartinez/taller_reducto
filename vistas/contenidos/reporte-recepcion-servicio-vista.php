@@ -1,4 +1,8 @@
 <?php
+if (!mainModel::tienePermisoVista('servicio.reportes.ver')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
 require_once "./controladores/sucursalControlador.php";
 $insSucursal = new sucursalControlador();
 $sucursales = $insSucursal->listar_sucursales_controlador();

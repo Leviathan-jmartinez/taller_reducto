@@ -1,3 +1,9 @@
+<?php
+if (!mainModel::tienePermisoVista('servicio.registro.crear')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+} ?>
+
 <style>
     /* Contenedor principal SOLO registro de servicio */
     .registro-servicio-bg {
@@ -151,8 +157,8 @@
         </fieldset>
 
         <div class="text-center">
-            <button class="btn btn-success" id="btnRegistrar" disabled>
-                <i class="fas fa-check"></i> Registrar servicio
+            <button class="btn btn-info btn-raised " id="btnRegistrar">
+                <i class="fas fa-save"></i> &nbsp; Registrar Servicio
             </button>
         </div>
 

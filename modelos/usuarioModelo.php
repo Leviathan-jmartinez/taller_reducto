@@ -120,7 +120,7 @@ class usuarioModelo extends mainModel
         LEFT JOIN rol_permiso rp 
             ON rp.id_permiso = p.id_permiso
            AND rp.id_rol = ?
-        ORDER BY p.clave
+        ORDER BY p.clave ASC
     ");
         $sql->execute([$idRol]);
         return $sql->fetchAll(PDO::FETCH_ASSOC);

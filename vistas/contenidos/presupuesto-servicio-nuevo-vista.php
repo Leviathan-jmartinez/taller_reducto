@@ -1,4 +1,8 @@
 <?php
+if (!mainModel::tienePermisoVista('servicio.presupuesto.crear')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
@@ -191,8 +195,8 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
 
         <!-- ================= BOTONES ================= -->
         <div class="text-center">
-            <button type="submit" class="btn btn-primary">
-                <i class="fas fa-save"></i> Guardar presupuesto
+            <button type="submit" class="btn btn-info btn-raised ">
+                <i class="fas fa-save"></i> &nbsp; Guardar
             </button>
 
             <a href="<?= SERVERURL; ?>presupuesto-servicio-lista/"

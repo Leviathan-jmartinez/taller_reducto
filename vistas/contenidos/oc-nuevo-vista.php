@@ -1,4 +1,8 @@
 <?php
+if (!mainModel::tienePermisoVista('compra.oc.crear')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
 
 // Iniciar sesión solo si no está activa
 if (session_status() == PHP_SESSION_NONE) {
@@ -234,11 +238,11 @@ if (isset($_POST['tipo_ordencompra'])) {
 
             <div class="row">
                 <div class="col-12 text-md-left mb-3">
-                    <label for="fecha_entrega">Fecha Entrega:  <label>
+                    <label for="fecha_entrega">Fecha Entrega: <label>
                             <input type="date" class="form-control d-inline-block"
-                                name="fecha_entrega" id="fecha_entrega" value= "<?php echo date('Y-m-d'); ?>"
+                                name="fecha_entrega" id="fecha_entrega" value="<?php echo date('Y-m-d'); ?>"
                                 style="width: 180px;" required>
-                            
+
                 </div>
             </div>
 

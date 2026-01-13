@@ -1,4 +1,8 @@
 <?php
+if (!mainModel::tienePermisoVista('compra.presupuesto.crear')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
 
 // Iniciar sesión solo si no está activa
 if (session_status() == PHP_SESSION_NONE) {
@@ -278,7 +282,7 @@ if (isset($_POST['tipo_presupuesto'])) {
                 data-form="loans" autocomplete="off">
                 <input type="hidden" name="limpiar_presupuesto" value="1">
                 <button type="submit" class="btn btn-raised btn-secondary btn-sm">
-                    <i class="fas fa-paint-roller"></i> &nbsp; LIMPIAR
+                    <i class="fas fa-times"></i> &nbsp; Cancelar
                 </button>
             </form>
         </div>

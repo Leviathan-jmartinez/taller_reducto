@@ -1,8 +1,7 @@
 <?php
-if ($_SESSION['nivel_str'] > 2 || $_SESSION['nivel_str'] < 1) {
-    session_destroy();
-    header("Location: " . SERVERURL);
-    exit();
+if (!mainModel::tienePermisoVista('cliente.editar')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
 }
 ?>
 <div class="full-box page-header">

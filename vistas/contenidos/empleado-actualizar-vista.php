@@ -1,3 +1,11 @@
+<?php
+
+if (!mainModel::tienePermisoVista('empleado.editar')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
+?>
+
 <div class="full-box page-header">
     <h3 class="text-left">
         <i class="fas fa-sync-alt fa-fw"></i> &nbsp; ACTUALIZAR EMPLEADO
