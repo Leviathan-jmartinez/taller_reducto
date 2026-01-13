@@ -15,6 +15,7 @@ class articuloModelo extends mainModel
         $sql->execute();
         return $sql;
     }
+
     protected static function obtener_impuestos_modelo()
     {
         $sql = mainModel::conectar()->prepare("SELECT idiva, tipo_impuesto_descri FROM tipo_impuesto ORDER BY idiva ASC");
@@ -35,12 +36,14 @@ class articuloModelo extends mainModel
         $sql->execute();
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
+
     protected static function obtener_cate_modelo()
     {
         $sql = mainModel::conectar()->prepare("SELECT id_categoria, cat_descri FROM categorias ORDER BY cat_descri ASC");
         $sql->execute();
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
+
     protected static function obtener_marca_modelo()
     {
         $sql = mainModel::conectar()->prepare("SELECT id_marcas, mar_descri FROM marcas ORDER BY mar_descri ASC");
@@ -48,6 +51,7 @@ class articuloModelo extends mainModel
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
     /** modelo agregar articulo*/
+
     protected static function agregar_articulo_modelo($datos)
     {
         $sql = mainModel::conectar()->prepare("INSERT INTO articulos 
@@ -68,15 +72,45 @@ class articuloModelo extends mainModel
         return $sql;
     }
     /** fin modelo*/
+
     /** modelo eliminar articulo */
     protected static function eliminar_articulo_modelo($id)
     {
-        $sql = mainModel::conectar()->prepare("DELETE FROM articulos WHERE id_articulo = :id");
-        $sql->bindParam(":id", $id);
-        $sql->execute();
-        return $sql;
+        $pdo = mainModel::conectar();
+
+        // 1) Verificar si el artículo ya fue usado
+        $check = $pdo->prepare("
+        SELECT 1 
+        FROM pedido_detalle 
+        WHERE id_articulo = :id
+        LIMIT 1
+        ");
+        $check->bindParam(":id", $id, PDO::PARAM_INT);
+        $check->execute();
+
+        if ($check->rowCount() > 0) {
+            // Ya fue usado → solo desactivar
+            $stmt = $pdo->prepare("
+            UPDATE articulos 
+            SET estado = 0 
+            WHERE id_articulo = :id
+        ");
+        } else {
+            // No está relacionado → se puede eliminar
+            $stmt = $pdo->prepare("
+            DELETE FROM articulos 
+            WHERE id_articulo = :id
+        ");
+        }
+
+        $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt;
     }
+
     /**fin modelo */
+
     /**modelo actualizar articulo */
     protected static function actualizar_articulo_modelo($datos)
     {

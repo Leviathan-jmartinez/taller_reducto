@@ -104,11 +104,36 @@ class vehiculoModelo extends mainModel
     /** eliminar vehiculo */
     protected static function eliminar_vehiculo_modelo($id)
     {
-        $sql = mainModel::conectar()->prepare(
-            "DELETE FROM vehiculos WHERE id_vehiculo=:id"
-        );
-        $sql->bindParam(":id", $id);
-        $sql->execute();
-        return $sql;
+        $pdo = mainModel::conectar();
+
+        // 1) Verificar si el vehículo ya fue usado
+        $check = $pdo->prepare("
+        SELECT 1 
+        FROM recepcion_servicio 
+        WHERE id_vehiculo = :id
+        LIMIT 1
+        ");
+        $check->bindParam(":id", $id, PDO::PARAM_INT);
+        $check->execute();
+
+        if ($check->rowCount() > 0) {
+            // Ya fue usado → solo desactivar
+            $stmt = $pdo->prepare("
+            UPDATE vehiculos 
+            SET estado = 0 
+            WHERE id_vehiculo = :id
+        ");
+        } else {
+            // No está relacionado → se puede eliminar
+            $stmt = $pdo->prepare("
+            DELETE FROM vehiculos 
+            WHERE id_vehiculo = :id
+        ");
+        }
+
+        $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt;
     }
 }

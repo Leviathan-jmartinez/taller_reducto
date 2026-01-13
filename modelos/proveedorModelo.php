@@ -63,7 +63,7 @@ class proveedorModelo extends mainModel
         FROM pedido_cabecera 
         WHERE id_proveedor = :id 
         LIMIT 1
-    ");
+        ");
         $check->bindParam(":id", $id, PDO::PARAM_INT);
         $check->execute();
 

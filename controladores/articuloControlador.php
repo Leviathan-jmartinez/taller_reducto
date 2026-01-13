@@ -334,59 +334,73 @@ class articuloControlador extends articuloModelo
         $id = mainModel::decryption($_POST['articulo_id_del']);
         $id = mainModel::limpiar_string($id);
 
-        $check_article = mainModel::ejecutar_consulta_simple("SELECT id_articulo FROM articulos WHERE id_articulo = '$id'");
-        if ($check_article->rowCount() < 0) {
-            $alerta = [
-                "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "El ARTICULO que intenta eliminar no existe en el sistema",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
-        }
+        $check_article = mainModel::ejecutar_consulta_simple(
+            "SELECT id_articulo, estado 
+         FROM articulos 
+         WHERE id_articulo = '$id'"
+        );
 
-        $check_compras = mainModel::ejecutar_consulta_simple("SELECT id_articulo FROM pedido_detalle WHERE id_articulo = '$id' LIMIT 1");
-        if ($check_compras->rowCount() < 0) {
-            $alerta = [
+        if ($check_article->rowCount() <= 0) {
+            echo json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "El ARTICULO no puede ser eliminado debido a que el registro tiene compras asociadas",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
+                "Titulo" => "Error",
+                "Texto"  => "El artículo no existe en el sistema",
+                "Tipo"   => "error"
+            ]);
             exit();
         }
 
         session_start(['name' => 'STR']);
         if ($_SESSION['nivel_str'] == 3) {
-            $alerta = [
+            echo json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "No tiene los permisos necesario para realizar esta operación",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
+                "Titulo" => "Error",
+                "Texto"  => "No tiene los permisos necesarios para realizar esta operación",
+                "Tipo"   => "error"
+            ]);
             exit();
         }
-        $eliminar_articulo = articuloModelo::eliminar_articulo_modelo($id);
-        if ($eliminar_articulo->rowCount() == 1) {
-            $alerta = [
-                "Alerta" => "recargar",
-                "Titulo" => "Articulo eliminado!",
-                "Texto" => "El ARTICULO ha sido eliminado correctamente",
-                "Tipo" => "success"
-            ];
+
+        $stmt = articuloModelo::eliminar_articulo_modelo($id);
+
+        if ($stmt->rowCount() > 0) {
+
+            // Verificar cómo quedó
+            $verificar = mainModel::ejecutar_consulta_simple(
+                "SELECT estado 
+             FROM articulos 
+             WHERE id_articulo = '$id'"
+            );
+
+            if ($verificar->rowCount() > 0) {
+                // Sigue existiendo → fue desactivado
+                $alerta = [
+                    "Alerta" => "recargar",
+                    "Titulo" => "Artículo desactivado",
+                    "Texto"  => "El artículo ya tiene movimientos asociados, por lo que fue desactivado.",
+                    "Tipo"   => "warning"
+                ];
+            } else {
+                // Ya no existe → fue eliminado
+                $alerta = [
+                    "Alerta" => "recargar",
+                    "Titulo" => "Artículo eliminado",
+                    "Texto"  => "El artículo fue eliminado correctamente.",
+                    "Tipo"   => "success"
+                ];
+            }
         } else {
             $alerta = [
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "No se pudo eliminar el ARTICULO seleccionado",
-                "Tipo" => "error"
+                "Titulo" => "Error",
+                "Texto"  => "No se pudo eliminar el artículo seleccionado",
+                "Tipo"   => "error"
             ];
         }
+
         echo json_encode($alerta);
     }
+
     /**fin controlador */
 
     /** controlador actualizar articulo */

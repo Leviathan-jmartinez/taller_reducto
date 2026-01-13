@@ -107,8 +107,6 @@ class proveedorControlador extends proveedorModelo
             exit();
         }
 
-        $antes = $check->fetch(PDO::FETCH_ASSOC);
-
         $stmt = proveedorModelo::eliminar_proveedor_modelo($id);
 
         if ($stmt->rowCount() > 0) {

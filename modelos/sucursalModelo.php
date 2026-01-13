@@ -80,13 +80,40 @@ class sucursalModelo extends mainModel
     /** eliminar sucursal */
     protected static function eliminar_sucursal_modelo($id)
     {
-        $sql = mainModel::conectar()->prepare(
-            "DELETE FROM sucursales WHERE id_sucursal = :id"
-        );
-        $sql->bindParam(":id", $id);
-        $sql->execute();
-        return $sql;
+        $pdo = mainModel::conectar();
+
+        // 1) Verificar si la sucursal está siendo usada
+        $check = $pdo->prepare("
+        SELECT 1 
+        FROM empleados 
+        WHERE id_sucursal = :id 
+        LIMIT 1
+        ");
+        $check->bindParam(":id", $id, PDO::PARAM_INT);
+        $check->execute();
+
+        if ($check->rowCount() > 0) {
+            // Ya fue usada → solo desactivar
+            $stmt = $pdo->prepare("
+            UPDATE sucursales 
+            SET estado = 0 
+            WHERE id_sucursal = :id
+        ");
+        } else {
+            // No está relacionada → se puede eliminar
+            $stmt = $pdo->prepare("
+            DELETE FROM sucursales 
+            WHERE id_sucursal = :id
+        ");
+        }
+
+        $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt;
     }
+
+
     protected static function listar_sucursales_modelo()
     {
         $sql = mainModel::conectar()->prepare("
@@ -96,10 +123,11 @@ class sucursalModelo extends mainModel
         FROM sucursales
         WHERE estado = 1
         ORDER BY suc_descri ASC
-    ");
+        ");
         $sql->execute();
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
+
     protected static function listar_empleados_modelo()
     {
         $sql = mainModel::conectar()->prepare("

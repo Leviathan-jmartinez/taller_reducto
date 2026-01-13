@@ -88,11 +88,36 @@ class empleadoModelo extends mainModel
     /* ========= ELIMINAR ========= */
     protected static function eliminar_empleado_modelo($id)
     {
-        $sql = mainModel::conectar()->prepare(
-            "DELETE FROM empleados WHERE idempleados = :id"
-        );
-        $sql->bindParam(":id", $id);
-        $sql->execute();
-        return $sql;
+        $pdo = mainModel::conectar();
+
+        // 1) Verificar si el empleado ya fue usado
+        $check = $pdo->prepare("
+        SELECT 1 
+        FROM orden_trabajo 
+        WHERE tecnico_responsable = :id
+        LIMIT 1
+        ");
+        $check->bindParam(":id", $id, PDO::PARAM_INT);
+        $check->execute();
+
+        if ($check->rowCount() > 0) {
+            // Ya fue usado → solo desactivar
+            $stmt = $pdo->prepare("
+            UPDATE empleados 
+            SET estado = 0 
+            WHERE idempleados = :id
+        ");
+        } else {
+            // No está relacionado → se puede eliminar
+            $stmt = $pdo->prepare("
+            DELETE FROM empleados 
+            WHERE idempleados = :id
+        ");
+        }
+
+        $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt;
     }
 }

@@ -70,6 +70,7 @@ class sucursalControlador extends sucursalModelo
         }
         echo json_encode($alerta);
     }
+
     public function paginador_sucursales_controlador($pagina, $registros, $privilegio, $url, $busqueda)
     {
         $pagina = mainModel::limpiar_string($pagina);
@@ -187,33 +188,69 @@ class sucursalControlador extends sucursalModelo
             "Tipo" => "success"
         ]);
     }
+
     public function eliminar_sucursal_controlador()
     {
         $id = mainModel::decryption($_POST['sucursal_id_del']);
+        $id = mainModel::limpiar_string($id);
 
         $check = mainModel::ejecutar_consulta_simple(
-            "SELECT id_sucursal FROM recepcion_servicio WHERE id_sucursal='$id' LIMIT 1"
+            "SELECT id_sucursal, estado 
+         FROM sucursales 
+         WHERE id_sucursal='$id'"
         );
 
-        if ($check->rowCount() > 0) {
+        if ($check->rowCount() <= 0) {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Error",
-                "Texto" => "La sucursal está en uso y no puede eliminarse",
-                "Tipo" => "error"
+                "Texto"  => "La sucursal no existe",
+                "Tipo"   => "error"
             ]);
             exit();
         }
 
-        sucursalModelo::eliminar_sucursal_modelo($id);
+        $stmt = sucursalModelo::eliminar_sucursal_modelo($id);
 
-        echo json_encode([
-            "Alerta" => "recargar",
-            "Titulo" => "Sucursal eliminada",
-            "Texto" => "Sucursal eliminada correctamente",
-            "Tipo" => "success"
-        ]);
+        if ($stmt->rowCount() > 0) {
+
+            // Verificar cómo quedó
+            $verificar = mainModel::ejecutar_consulta_simple(
+                "SELECT sucursal_estado 
+             FROM sucursales 
+             WHERE id_sucursal='$id'"
+            );
+
+            if ($verificar->rowCount() > 0) {
+                // Sigue existiendo → fue desactivada
+                $alerta = [
+                    "Alerta" => "recargar",
+                    "Titulo" => "Sucursal desactivada",
+                    "Texto"  => "La sucursal ya tenía movimientos, por lo que fue desactivada.",
+                    "Tipo"   => "warning"
+                ];
+            } else {
+                // Ya no existe → fue eliminada
+                $alerta = [
+                    "Alerta" => "recargar",
+                    "Titulo" => "Sucursal eliminada",
+                    "Texto"  => "Sucursal eliminada correctamente.",
+                    "Tipo"   => "success"
+                ];
+            }
+        } else {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto"  => "No se pudo eliminar la sucursal",
+                "Tipo"   => "error"
+            ];
+        }
+
+        echo json_encode($alerta);
     }
+
+
     public function listar_sucursales_controlador()
     {
         return sucursalModelo::listar_sucursales_modelo();

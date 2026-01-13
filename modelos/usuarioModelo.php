@@ -23,11 +23,39 @@ class usuarioModelo extends mainModel
     /**modelo eliminar usuario */
     protected static function eliminar_usuario_modelo($id)
     {
-        $sql = mainModel::conectar()->prepare("DELETE FROM usuarios where id_usuario = :id ");
-        $sql->bindParam(":id", $id);
-        $sql->execute();
-        return $sql;
+        $pdo = mainModel::conectar();
+
+        // 1) Verificar si el usuario ya fue usado en el sistema
+        $check = $pdo->prepare("
+        SELECT 1 
+        FROM pedido_cabecera 
+        WHERE id_usuario = :id
+        LIMIT 1
+        ");
+        $check->bindParam(":id", $id, PDO::PARAM_INT);
+        $check->execute();
+
+        if ($check->rowCount() > 0) {
+            // Ya fue usado → solo desactivar
+            $stmt = $pdo->prepare("
+            UPDATE usuarios 
+            SET usu_estado = 0 
+            WHERE id_usuario = :id
+        ");
+        } else {
+            // No está relacionado → se puede eliminar
+            $stmt = $pdo->prepare("
+            DELETE FROM usuarios 
+            WHERE id_usuario = :id
+        ");
+        }
+
+        $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt;
     }
+
 
     /**modelo datos usuario */
     protected static function datos_usuario_modelo($tipo, $id)
@@ -74,7 +102,7 @@ class usuarioModelo extends mainModel
         UPDATE usuarios
         SET id_rol = ?
         WHERE id_usuario = ?
-    ");
+        ");
         return $sql->execute([$idRol, $idUsuario]);
     }
 
@@ -88,7 +116,7 @@ class usuarioModelo extends mainModel
             ON rp.id_permiso = p.id_permiso
            AND rp.id_rol = ?
         ORDER BY p.clave
-    ");
+      ");
         $sql->execute([$idRol]);
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -103,7 +131,7 @@ class usuarioModelo extends mainModel
         FROM usuarios
         WHERE usu_estado = 1
         ORDER BY usu_nombre, usu_apellido
-    ");
+        ");
         $sql->execute();
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -121,7 +149,7 @@ class usuarioModelo extends mainModel
             ON rp.id_permiso = p.id_permiso
            AND rp.id_rol = ?
         ORDER BY p.clave ASC
-    ");
+        ");
         $sql->execute([$idRol]);
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -137,7 +165,7 @@ class usuarioModelo extends mainModel
         $stmt = $pdo->prepare("
         INSERT INTO rol_permiso (id_rol, id_permiso)
         VALUES (?, ?)
-    ");
+        ");
 
         foreach ($permisos as $idPermiso) {
             $stmt->execute([$idRol, $idPermiso]);
@@ -146,13 +174,14 @@ class usuarioModelo extends mainModel
         $pdo->commit();
         return true;
     }
+
     protected static function asignar_sucursal_modelo($idUsuario, $idSucursal)
     {
         $sql = mainModel::conectar()->prepare("
         UPDATE usuarios
         SET sucursalid = :sucursal
         WHERE id_usuario = :usuario
-    ");
+        ");
 
         return $sql->execute([
             ':sucursal' => $idSucursal,

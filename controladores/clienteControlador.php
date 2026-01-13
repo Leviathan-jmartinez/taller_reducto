@@ -304,59 +304,73 @@ class clienteControlador extends clienteModelo
         $id = mainModel::decryption($_POST['cliente_id_del']);
         $id = mainModel::limpiar_string($id);
 
-        $check_client = mainModel::ejecutar_consulta_simple("SELECT id_cliente FROM clientes WHERE id_cliente = '$id'");
-        if ($check_client->rowCount() < 0) {
-            $alerta = [
-                "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "El CLIENTE que intenta eliminar no existe en el sistema",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
-        }
+        $check_client = mainModel::ejecutar_consulta_simple(
+            "SELECT id_cliente, estado_cliente 
+         FROM clientes 
+         WHERE id_cliente = '$id'"
+        );
 
-        $check_ventas = mainModel::ejecutar_consulta_simple("SELECT id_cliente FROM factura WHERE id_cliente = '$id' LIMIT 1");
-        if ($check_ventas->rowCount() < 0) {
-            $alerta = [
+        if ($check_client->rowCount() <= 0) {
+            echo json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "El CLIENTE no puede ser eliminado debido a que el cliente tiene facturas asociadas",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
+                "Titulo" => "Error",
+                "Texto"  => "El cliente no existe en el sistema",
+                "Tipo"   => "error"
+            ]);
             exit();
         }
 
         session_start(['name' => 'STR']);
         if ($_SESSION['nivel_str'] == 3) {
-            $alerta = [
+            echo json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "No tiene los permisos necesario para realizar esta operación",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
+                "Titulo" => "Error",
+                "Texto"  => "No tiene los permisos necesarios para realizar esta operación",
+                "Tipo"   => "error"
+            ]);
             exit();
         }
-        $eliminar_cliente = clienteModelo::eliminar_cliente_modelo($id);
-        if ($eliminar_cliente->rowCount() == 1) {
-            $alerta = [
-                "Alerta" => "recargar",
-                "Titulo" => "Cliente eliminado!",
-                "Texto" => "El Cliente ha sido eliminado correctamente",
-                "Tipo" => "success"
-            ];
+
+        $stmt = clienteModelo::eliminar_cliente_modelo($id);
+
+        if ($stmt->rowCount() > 0) {
+
+            // Verificar cómo quedó
+            $verificar = mainModel::ejecutar_consulta_simple(
+                "SELECT estado_cliente
+             FROM clientes 
+             WHERE id_cliente = '$id'"
+            );
+
+            if ($verificar->rowCount() > 0) {
+                // Sigue existiendo → fue desactivado
+                $alerta = [
+                    "Alerta" => "recargar",
+                    "Titulo" => "Cliente desactivado",
+                    "Texto"  => "El cliente ya tiene movimientos asociados, por lo que fue desactivado.",
+                    "Tipo"   => "warning"
+                ];
+            } else {
+                // Ya no existe → fue eliminado
+                $alerta = [
+                    "Alerta" => "recargar",
+                    "Titulo" => "Cliente eliminado",
+                    "Texto"  => "El cliente fue eliminado correctamente.",
+                    "Tipo"   => "success"
+                ];
+            }
         } else {
             $alerta = [
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "No se pudo eliminar el Cliente seleccionado",
-                "Tipo" => "error"
+                "Titulo" => "Error",
+                "Texto"  => "No se pudo eliminar el cliente seleccionado",
+                "Tipo"   => "error"
             ];
         }
+
         echo json_encode($alerta);
     }
+
     /**fin controlador */
 
     /** controlador datos clientes  */

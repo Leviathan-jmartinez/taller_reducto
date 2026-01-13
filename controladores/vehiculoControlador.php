@@ -241,28 +241,72 @@ class vehiculoControlador extends vehiculoModelo
     public function eliminar_vehiculo_controlador()
     {
         $id = mainModel::decryption($_POST['vehiculo_id_del']);
+        $id = mainModel::limpiar_string($id);
 
         $check = mainModel::ejecutar_consulta_simple(
-            "SELECT id_vehiculo FROM recepcion_servicio WHERE id_vehiculo='$id' LIMIT 1"
+            "SELECT id_vehiculo, estado 
+         FROM vehiculos 
+         WHERE id_vehiculo = '$id'"
         );
 
-        if ($check->rowCount() > 0) {
+        if ($check->rowCount() <= 0) {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Error",
-                "Texto" => "El vehículo tiene recepciones asociadas",
-                "Tipo" => "error"
+                "Texto"  => "El vehículo no existe en el sistema",
+                "Tipo"   => "error"
             ]);
             exit();
         }
 
-        vehiculoModelo::eliminar_vehiculo_modelo($id);
+        session_start(['name' => 'STR']);
+        if ($_SESSION['nivel_str'] == 3) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto"  => "No tiene los permisos necesarios para realizar esta operación",
+                "Tipo"   => "error"
+            ]);
+            exit();
+        }
 
-        echo json_encode([
-            "Alerta" => "recargar",
-            "Titulo" => "Vehículo",
-            "Texto" => "Vehículo eliminado correctamente",
-            "Tipo" => "success"
-        ]);
+        $stmt = vehiculoModelo::eliminar_vehiculo_modelo($id);
+
+        if ($stmt->rowCount() > 0) {
+
+            // Verificar cómo quedó
+            $verificar = mainModel::ejecutar_consulta_simple(
+                "SELECT estado 
+             FROM vehiculos 
+             WHERE id_vehiculo = '$id'"
+            );
+
+            if ($verificar->rowCount() > 0) {
+                // Sigue existiendo → fue desactivado
+                $alerta = [
+                    "Alerta" => "recargar",
+                    "Titulo" => "Vehículo desactivado",
+                    "Texto"  => "El vehículo ya tiene movimientos asociados, por lo que fue desactivado.",
+                    "Tipo"   => "warning"
+                ];
+            } else {
+                // Ya no existe → fue eliminado
+                $alerta = [
+                    "Alerta" => "recargar",
+                    "Titulo" => "Vehículo eliminado",
+                    "Texto"  => "El vehículo fue eliminado correctamente.",
+                    "Tipo"   => "success"
+                ];
+            }
+        } else {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto"  => "No se pudo eliminar el vehículo seleccionado",
+                "Tipo"   => "error"
+            ];
+        }
+
+        echo json_encode($alerta);
     }
 }

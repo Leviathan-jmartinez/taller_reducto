@@ -305,53 +305,79 @@ class usuarioControlador extends usuarioModelo
         $usuario = mainModel::limpiar_string($usuario);
 
         if ($usuario == 1) {
-            $alerta = [
+            echo json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "No podemos eliminar el usuario principal del sistema",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
+                "Titulo" => "Error",
+                "Texto"  => "No podemos eliminar el usuario principal del sistema",
+                "Tipo"   => "error"
+            ]);
             exit();
         }
-        $check_user = mainModel::ejecutar_consulta_simple("SELECT id_usuario FROM usuarios WHERE id_usuario = '$usuario'");
-        if ($check_user->rowCount() < 0) {
-            $alerta = [
+
+        $check_user = mainModel::ejecutar_consulta_simple(
+            "SELECT id_usuario, usu_estado 
+         FROM usuarios 
+         WHERE id_usuario = '$usuario'"
+        );
+
+        if ($check_user->rowCount() <= 0) {
+            echo json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "El usuario que intenta eliminar no existe en el sistema",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
+                "Titulo" => "Error",
+                "Texto"  => "El usuario no existe en el sistema",
+                "Tipo"   => "error"
+            ]);
             exit();
         }
+
         session_start(['name' => 'STR']);
         if ($_SESSION['nivel_str'] != 1) {
-            $alerta = [
+            echo json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "No tiene los permisos necesario para realizar esta operación",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
+                "Titulo" => "Error",
+                "Texto"  => "No tiene los permisos necesarios para realizar esta operación",
+                "Tipo"   => "error"
+            ]);
             exit();
         }
-        $eliminar_user = usuarioModelo::eliminar_usuario_modelo($usuario);
-        if ($eliminar_user->rowCount() == 1) {
-            $alerta = [
-                "Alerta" => "recargar",
-                "Titulo" => "Usuario eliminado!",
-                "Texto" => "El usuario ha sido eliminado correctamente",
-                "Tipo" => "success"
-            ];
+
+        $stmt = usuarioModelo::eliminar_usuario_modelo($usuario);
+
+        if ($stmt->rowCount() > 0) {
+
+            // Verificar cómo quedó
+            $verificar = mainModel::ejecutar_consulta_simple(
+                "SELECT usu_estado 
+             FROM usuarios 
+             WHERE id_usuario = '$usuario'"
+            );
+
+            if ($verificar->rowCount() > 0) {
+                // Sigue existiendo → fue desactivado
+                $alerta = [
+                    "Alerta" => "recargar",
+                    "Titulo" => "Usuario desactivado",
+                    "Texto"  => "El usuario ya tenía movimientos en el sistema, por lo que fue desactivado.",
+                    "Tipo"   => "warning"
+                ];
+            } else {
+                // Ya no existe → fue eliminado
+                $alerta = [
+                    "Alerta" => "recargar",
+                    "Titulo" => "Usuario eliminado",
+                    "Texto"  => "El usuario fue eliminado correctamente.",
+                    "Tipo"   => "success"
+                ];
+            }
         } else {
             $alerta = [
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "No se pudo eliminar el usuario seleccionado",
-                "Tipo" => "error"
+                "Titulo" => "Error",
+                "Texto"  => "No se pudo eliminar el usuario seleccionado",
+                "Tipo"   => "error"
             ];
         }
+
         echo json_encode($alerta);
     }
     /**fin controlador */
@@ -365,6 +391,7 @@ class usuarioControlador extends usuarioModelo
         return usuarioModelo::datos_usuario_modelo($tipo, $id);
     }
     /**controlador actualizar usuario */
+
     public function actualizar_usuario_controlador()
     {
         // recibir ID usuario
@@ -711,7 +738,6 @@ class usuarioControlador extends usuarioModelo
         return usuarioModelo::listar_usuarios_modelo();
     }
 
-
     public function listar_roles_controlador()
     {
         return usuarioModelo::listar_roles_modelo();
@@ -747,7 +773,7 @@ class usuarioControlador extends usuarioModelo
             $titulo = ucfirst($modulo);
 
             $html .= '
-    <div class="card">
+        <div class="card">
         <div class="card-header p-2" id="heading' . $i . '">
             <h6 class="mb-0">
                 <button class="btn btn-link" type="button" data-toggle="collapse"
@@ -784,7 +810,7 @@ class usuarioControlador extends usuarioModelo
                 </div>
             </div>
         </div>
-    </div>';
+        </div>';
         }
 
         $html .= '</div>';
@@ -820,6 +846,7 @@ class usuarioControlador extends usuarioModelo
             "Tipo"   => "success"
         ]);
     }
+
     public function asignar_sucursal_controlador()
     {
         session_start(['name' => 'STR']);

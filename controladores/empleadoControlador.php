@@ -108,29 +108,76 @@ class empleadoControlador extends empleadoModelo
     public function eliminar_empleado_controlador()
     {
         $id = mainModel::decryption($_POST['empleado_id_del']);
+        $id = mainModel::limpiar_string($id);
 
         $check = mainModel::ejecutar_consulta_simple(
-            "SELECT idempleados FROM equipo_empleado WHERE idempleados='$id' LIMIT 1"
+            "SELECT idempleados, estado 
+         FROM empleados 
+         WHERE idempleados = '$id'"
         );
-        if ($check->rowCount() > 0) {
+
+        if ($check->rowCount() <= 0) {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Error",
-                "Texto" => "El empleado está asignado a un equipo",
-                "Tipo" => "error"
+                "Texto"  => "El empleado no existe en el sistema",
+                "Tipo"   => "error"
             ]);
             exit();
         }
 
-        empleadoModelo::eliminar_empleado_modelo($id);
+        session_start(['name' => 'STR']);
+        if ($_SESSION['nivel_str'] == 3) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto"  => "No tiene los permisos necesarios para realizar esta operación",
+                "Tipo"   => "error"
+            ]);
+            exit();
+        }
 
-        echo json_encode([
-            "Alerta" => "recargar",
-            "Titulo" => "Empleado",
-            "Texto" => "Empleado eliminado correctamente",
-            "Tipo" => "success"
-        ]);
+        $stmt = empleadoModelo::eliminar_empleado_modelo($id);
+
+        if ($stmt->rowCount() > 0) {
+
+            // Verificar cómo quedó
+            $verificar = mainModel::ejecutar_consulta_simple(
+                "SELECT estado 
+             FROM empleados 
+             WHERE idempleados = '$id'"
+            );
+
+            if ($verificar->rowCount() > 0) {
+                // Sigue existiendo → fue desactivado
+                $alerta = [
+                    "Alerta" => "recargar",
+                    "Titulo" => "Empleado desactivado",
+                    "Texto"  => "El empleado ya tiene movimientos asociados, por lo que fue desactivado.",
+                    "Tipo"   => "warning"
+                ];
+            } else {
+                // Ya no existe → fue eliminado
+                $alerta = [
+                    "Alerta" => "recargar",
+                    "Titulo" => "Empleado eliminado",
+                    "Texto"  => "El empleado fue eliminado correctamente.",
+                    "Tipo"   => "success"
+                ];
+            }
+        } else {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto"  => "No se pudo eliminar el empleado seleccionado",
+                "Tipo"   => "error"
+            ];
+        }
+
+        echo json_encode($alerta);
     }
+
+
     public function paginador_empleados_controlador(
         $pagina,
         $registros,
@@ -180,10 +227,10 @@ class empleadoControlador extends empleadoModelo
         $Npaginas = ceil($total / $registros);
 
         $tabla = '<div class="table-responsive">
-    <table class="table table-dark table-sm">
-    <thead>
-    <tr class="text-center">
-        <th>#</th>
+        <table class="table table-dark table-sm">
+        <thead>
+        <tr class="text-center">
+            <th>#</th>
         <th>Empleado</th>
         <th>Cargo</th>
         <th>Sucursal</th>';

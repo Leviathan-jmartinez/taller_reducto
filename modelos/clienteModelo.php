@@ -38,10 +38,37 @@ class clienteModelo extends mainModel
     /**eliminar cliente */
     protected static function eliminar_cliente_modelo($id)
     {
-        $sql = mainModel::conectar()->prepare("DELETE FROM clientes WHERE id_cliente = :id");
-        $sql->bindParam(":id", $id);
-        $sql->execute();
-        return $sql;
+        $pdo = mainModel::conectar();
+
+        // 1) Verificar si el cliente ya fue usado en ventas o pedidos
+        $check = $pdo->prepare("
+        SELECT 1 
+        FROM recepcion_servicio 
+        WHERE id_cliente = :id
+        LIMIT 1
+        ");
+        $check->bindParam(":id", $id, PDO::PARAM_INT);
+        $check->execute();
+
+        if ($check->rowCount() > 0) {
+            // Ya fue usado → solo desactivar
+            $stmt = $pdo->prepare("
+            UPDATE clientes 
+            SET estado_cliente = 0 
+            WHERE id_cliente = :id
+        ");
+        } else {
+            // No está relacionado → se puede eliminar
+            $stmt = $pdo->prepare("
+            DELETE FROM clientes 
+            WHERE id_cliente = :id
+        ");
+        }
+
+        $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return $stmt;
     }
 
     protected static function obtener_ciudades_modelo()
