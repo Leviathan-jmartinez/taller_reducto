@@ -102,7 +102,7 @@ if (!mainModel::tienePermisoVista('empleado.ver')) {
                     <th>Equipo</th>
                     <th>Sucursal</th>
                     <th>Estado</th>
-                    <th>Ver miembros</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -125,6 +125,21 @@ if (!mainModel::tienePermisoVista('empleado.ver')) {
                                 class="btn btn-info btn-sm">
                                 <i class="fas fa-eye"></i>
                             </a>
+                            <?php if (mainModel::tienePermisoVista('empleado.eliminar')): ?>
+                                <form class="FormularioAjax d-inline"
+                                    action="<?php echo SERVERURL; ?>ajax/equipoAjax.php"
+                                    method="POST"
+                                    data-form="delete"
+                                    autocomplete="off">
+
+                                    <input type="hidden" name="accion" value="eliminar_equipo">
+                                    <input type="hidden" name="equipo_id_del" value="<?php echo $lc->encryption($eq['id_equipo']); ?>">
+
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

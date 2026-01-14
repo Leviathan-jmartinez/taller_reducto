@@ -144,38 +144,7 @@ if ($_SESSION['nivel_str'] == 1) { ?>
 			</fieldset>
 			<?php
 			if ($_SESSION['nivel_str'] == 1 && $campos['id_usuario'] != 1) { ?>
-				<br><br><br>
-				<fieldset>
-					<legend><i class="fas fa-medal"></i> &nbsp; Nivel de privilegio</legend>
-					<div class="container-fluid">
-						<div class="row">
-							<div class="col-12">
-								<p><span class="badge badge-info">Control total</span> Permisos para registrar, actualizar y eliminar</p>
-								<p><span class="badge badge-success">Edición</span> Permisos para registrar y actualizar</p>
-								<p><span class="badge badge-dark">Registrar</span> Solo permisos para registrar</p>
-								<div class="form-group">
-									<select class="form-control" name="usuario_privilegio_up">
-										<option value="1" <?php if ($campos['usu_nivel'] == 1) {
-																echo 'selected=""';
-															} ?>>Control total <?php if ($campos['usu_nivel'] == 1) {
-																					echo '(Actual)';
-																				} ?></option>
-										<option value="2" <?php if ($campos['usu_nivel'] == 2) {
-																echo 'selected=""';
-															} ?>>Edición <?php if ($campos['usu_nivel'] == 2) {
-																				echo '(Actual)';
-																			} ?></option>
-										<option value="3" <?php if ($campos['usu_nivel'] == 3) {
-																echo 'selected=""';
-															} ?>>Registrar <?php if ($campos['usu_nivel'] == 3) {
-																				echo '(Actual)';
-																			} ?></option>
-									</select>
-								</div>
-							</div>
-						</div>
-					</div>
-				</fieldset>
+				
 			<?php } ?>
 			<br><br><br>
 			<fieldset>

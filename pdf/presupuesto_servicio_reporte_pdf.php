@@ -91,8 +91,14 @@
                     default => 'Desconocido',
                 };
             }
-            $i = 1; ?>
-            <?php foreach ($datos as $row): ?>
+            $i = 1;
+            $totalDescuentos = 0;
+            $totalGeneral = 0;
+            ?>
+            <?php foreach ($datos as $row):
+                $totalDescuentos += $row['total_descuento'];
+                $totalGeneral += $row['total_final'];
+            ?>
                 <tr>
                     <td class="text-center"><?= $i++ ?></td>
                     <td class="text-center"><?= $row['idpresupuesto_servicio'] ?></td>
@@ -109,6 +115,15 @@
                 </tr>
             <?php endforeach; ?>
         </tbody>
+        <tfoot>
+            <tr>
+                <th colspan="8" class="text-right">TOTAL GENERAL</th>
+                <th class="text-right"><?= number_format($totalDescuentos, 0, ',', '.') ?></th>
+                <th class="text-right"><?= number_format($totalGeneral, 0, ',', '.') ?></th>
+                <th></th>
+                <th></th>
+            </tr>
+        </tfoot>
     </table>
 
 </body>

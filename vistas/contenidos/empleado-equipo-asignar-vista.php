@@ -28,60 +28,62 @@ if (!mainModel::tienePermisoVista('empleado.ver')) {
 </div>
 
 <div class="container-fluid">
-    <?php
-    require_once "./controladores/equipoControlador.php";
-    $eq = new equipoControlador();
-
-    $equipos = $eq->listar_equipos_controlador();
-    ?>
-
-    <form class="FormularioAjax"
-        action="<?php echo SERVERURL; ?>ajax/equipoAjax.php"
-        method="POST"
-        data-form="save">
-
-        <label>Equipo</label>
-        <select name="id_equipo" class="form-control">
-            <?php foreach ($equipos as $e): ?>
-                <option value="<?= $e['id_equipo']; ?>">
-                    <?= $e['nombre']; ?> (<?= $e['suc_descri']; ?>)
-                </option>
-            <?php endforeach; ?>
-        </select>
-
-        <hr>
-
-        <h5>Empleados</h5>
+    <div class="form-neon">
         <?php
+        require_once "./controladores/equipoControlador.php";
+        $eq = new equipoControlador();
 
-        $empleados = $eq->empleados_con_equipo_controlador($_SESSION['nick_sucursal']);
+        $equipos = $eq->listar_equipos_controlador();
         ?>
 
-        <?php foreach ($empleados as $emp): ?>
-            <div class="form-check mb-1">
-                <input class="form-check-input"
-                    type="checkbox"
-                    name="empleados[]"
-                    value="<?= $emp['idempleados']; ?>">
+        <form class="FormularioAjax"
+            action="<?php echo SERVERURL; ?>ajax/equipoAjax.php"
+            method="POST"
+            data-form="save">
 
-                <label class="form-check-label">
-                    <?= $emp['apellido'] . ' ' . $emp['nombre']; ?>
+            <label>Equipo</label>
+            <select name="id_equipo" class="form-control">
+                <?php foreach ($equipos as $e): ?>
+                    <option value="<?= $e['id_equipo']; ?>">
+                        <?= $e['nombre']; ?> (<?= $e['suc_descri']; ?>)
+                    </option>
+                <?php endforeach; ?>
+            </select>
 
-                    <?php if (!empty($emp['equipos'])): ?>
-                        <span class="badge badge-info ml-2">
-                            <?= $emp['equipos']; ?>
-                        </span>
-                    <?php else: ?>
-                        <span class="badge badge-secondary ml-2">
-                            Sin equipo
-                        </span>
-                    <?php endif; ?>
-                </label>
-            </div>
-        <?php endforeach; ?>
+            <hr>
+
+            <h5>Empleados</h5>
+            <?php
+
+            $empleados = $eq->empleados_con_equipo_controlador($_SESSION['nick_sucursal']);
+            ?>
+
+            <?php foreach ($empleados as $emp): ?>
+                <div class="form-check mb-1">
+                    <input class="form-check-input"
+                        type="checkbox"
+                        name="empleados[]"
+                        value="<?= $emp['idempleados']; ?>">
+
+                    <label class="form-check-label">
+                        <?= $emp['apellido'] . ' ' . $emp['nombre']; ?>
+
+                        <?php if (!empty($emp['equipos'])): ?>
+                            <span class="badge badge-info ml-2">
+                                <?= $emp['equipos']; ?>
+                            </span>
+                        <?php else: ?>
+                            <span class="badge badge-secondary ml-2">
+                                Sin equipo
+                            </span>
+                        <?php endif; ?>
+                    </label>
+                </div>
+            <?php endforeach; ?>
 
 
 
-        <button class="btn btn-info mt-3">ASIGNAR</button>
-    </form>
+            <button class="btn btn-info mt-3">ASIGNAR</button>
+        </form>
+    </div>
 </div>

@@ -218,10 +218,60 @@
                         </ul>
                     </li>
                 <?php } ?>
+                <li>
+                    <a href="#" class="nav-btn-submenu">
+                        <i class="fas fa-chart-bar fa-fw"></i> &nbsp; Informes Referenciales
+                        <i class="fas fa-chevron-down"></i>
+                    </a>
+                    <ul>
+
+                        <!-- ================= COMPRAS ================= -->
+                        <li>
+                            <a href="#" class="nav-btn-submenu">
+                                <i class="fas fa-shopping-cart fa-fw"></i> &nbsp; Referenciales de Compras
+                                <i class="fas fa-chevron-down"></i>
+                            </a>
+                            <ul>
+                                <li>
+                                    <a href="<?= SERVERURL; ?>reporte-articulos/">
+                                        <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Artículos
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="<?= SERVERURL; ?>reporte-proveedores/">
+                                        <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Proveedores
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <!-- ================= SERVICIOS ================= -->
+                        <li>
+                            <a href="#" class="nav-btn-submenu">
+                                <i class="fas fa-tools fa-fw"></i> &nbsp; Referenciales de Servicios
+                                <i class="fas fa-chevron-down"></i>
+                            </a>
+                            <ul>
+                                <li>
+                                    <a href="<?= SERVERURL; ?>reporte-clientes/">
+                                        <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Clientes
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="<?= SERVERURL; ?>reporte-empleados/">
+                                        <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Empleados
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+
+                    </ul>
+                </li>
+
 
                 <li>
                     <a href="#" class="nav-btn-submenu">
-                        <i class="fas fa-chart-bar fa-fw"></i> &nbsp; Informes
+                        <i class="fas fa-chart-bar fa-fw"></i> &nbsp; Informes de movimientos
                         <i class="fas fa-chevron-down"></i>
                     </a>
 
@@ -234,7 +284,6 @@
                                     <i class="fas fa-chevron-down"></i>
                                 </a>
                                 <ul>
-
                                     <li>
                                         <a href="<?= SERVERURL; ?>reporte-pedidos/">
                                             <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Informe de Pedidos
@@ -272,6 +321,7 @@
                                     <i class="fas fa-chevron-down"></i>
                                 </a>
                                 <ul>
+
 
                                     <li>
                                         <a href="<?= SERVERURL; ?>reporte-recepcion-servicio/">

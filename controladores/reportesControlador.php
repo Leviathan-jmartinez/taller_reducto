@@ -6,6 +6,253 @@ use Dompdf\Dompdf;
 
 class reporteControlador extends reportesModelo
 {
+    public function listar_sucursales_controlador()
+    {
+        $sql = mainModel::conectar()->query("SELECT id_sucursal, suc_descri FROM sucursales");
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function listar_categorias_controlador()
+    {
+        $sql = mainModel::conectar()->query("SELECT id_categoria, cat_descri FROM categorias");
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function listar_proveedores_controlador()
+    {
+        $sql = mainModel::conectar()->query("SELECT idproveedores, razon_social FROM proveedores");
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+    public function listar_cargos_controlador()
+    {
+        $sql = mainModel::conectar()->query("SELECT idcargos, descripcion FROM cargos");
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+
+    /* ==================================================
+        REPORTE ARTICULOS
+    ================================================== */
+    public function reporte_articulos_controlador()
+    {
+        $filtros = [
+            "sucursal"  => mainModel::limpiar_string($_POST['sucursal']) ?? 0,
+            "categoria" => mainModel::limpiar_string($_POST['categoria']) ?? 0,
+            "proveedor" => mainModel::limpiar_string($_POST['proveedor']) ?? 0,
+            "estado"    => mainModel::limpiar_string($_POST['estado']) ?? 'T',
+            "codigo"    => trim($_POST['codigo']) ?? '',
+            "stock"     => mainModel::limpiar_string($_POST['stock']) ?? 'T'
+        ];
+
+
+        $data = reportesModelo::reporte_articulos_modelo($filtros);
+        $resumen = reportesModelo::resumen_articulos_modelo($filtros);
+
+        return json_encode([
+            "data"    => $data,
+            "resumen" => $resumen
+        ]);
+    }
+    public function imprimir_reporte_articulos_controlador()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start(['name' => 'STR']);
+        }
+
+        if (!mainModel::tienePermiso('articulo.ver')) {
+            header("Location: " . SERVERURL . "home/");
+            exit();
+        }
+
+        $filtros = [
+            "sucursal"  => ($_POST['sucursal'] !== '') ? mainModel::limpiar_string($_POST['sucursal']) : 0,
+            "categoria" => ($_POST['categoria'] !== '') ? mainModel::limpiar_string($_POST['categoria']) : 0,
+            "proveedor" => ($_POST['proveedor'] !== '') ? mainModel::limpiar_string($_POST['proveedor']) : 0,
+            "estado"    => ($_POST['estado'] !== '') ? mainModel::limpiar_string($_POST['estado']) : 'T',
+            "stock"     => ($_POST['stock'] !== '') ? mainModel::limpiar_string($_POST['stock']) : 'T',
+            "codigo"    => trim($_POST['codigo'] ?? '')
+        ];
+
+        $datos = reportesModelo::reporte_articulos_modelo($filtros);
+
+        $empresa = $_SESSION['empresa_nombre'] ?? 'Empresa';
+        $usuario = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
+
+        ob_start();
+        require_once __DIR__ . "/../pdf/articulos_reporte_pdf.php";
+        $html = ob_get_clean();
+
+        $dompdf = new Dompdf();
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->render();
+        $dompdf->stream("reporte_articulos.pdf", ["Attachment" => false]);
+        exit();
+    }
+
+    /* ==================================================
+        REPORTE PROVEEDORES (PREVISUALIZACIÓN)
+    ================================================== */
+    public function reporte_proveedores_controlador()
+    {
+        $filtros = [
+            "estado" => mainModel::limpiar_string($_POST['estado'] ?? 'T'),
+            "buscar" => trim($_POST['buscar'] ?? '')
+        ];
+
+        $data = reportesModelo::reporte_proveedores_modelo($filtros);
+        $resumen = reportesModelo::resumen_proveedores_modelo($filtros);
+
+        return json_encode([
+            "data"    => $data,
+            "resumen" => $resumen
+        ]);
+    }
+
+    public function imprimir_reporte_proveedores_controlador()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start(['name' => 'STR']);
+        }
+
+        if (!mainModel::tienePermiso('proveedor.ver')) {
+            header("Location: " . SERVERURL . "home/");
+            exit();
+        }
+
+        $filtros = [
+            "estado" => mainModel::limpiar_string($_POST['estado'] ?? 'T'),
+            "buscar" => trim($_POST['buscar'] ?? '')
+        ];
+
+        $datos = reportesModelo::reporte_proveedores_modelo($filtros);
+
+        $empresa = $_SESSION['empresa_nombre'] ?? 'Empresa';
+        $usuario = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
+
+        ob_start();
+        require_once __DIR__ . "/../pdf/proveedores_reporte_pdf.php";
+        $html = ob_get_clean();
+
+        $dompdf = new Dompdf();
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->render();
+        $dompdf->stream("reporte_proveedores.pdf", ["Attachment" => false]);
+        exit();
+    }
+
+    /* ==================================================
+        REPORTE CLIENTES (PREVISUALIZACIÓN)
+    ================================================== */
+    public function reporte_clientes_controlador()
+    {
+        $filtros = [
+            "estado" => mainModel::limpiar_string($_POST['estado'] ?? 'T'),
+            "buscar" => trim($_POST['buscar'] ?? '')
+        ];
+
+        $data = reportesModelo::reporte_clientes_modelo($filtros);
+        $resumen = reportesModelo::resumen_clientes_modelo($filtros);
+
+        return json_encode([
+            "data"    => $data,
+            "resumen" => $resumen
+        ]);
+    }
+
+    public function imprimir_reporte_clientes_controlador()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start(['name' => 'STR']);
+        }
+
+        if (!mainModel::tienePermiso('cliente.ver')) {
+            header("Location: " . SERVERURL . "home/");
+            exit();
+        }
+
+        $filtros = [
+            "estado" => mainModel::limpiar_string($_POST['estado'] ?? 'T'),
+            "buscar" => trim($_POST['buscar'] ?? '')
+        ];
+
+        $datos = reportesModelo::reporte_clientes_modelo($filtros);
+
+        $empresa = $_SESSION['empresa_nombre'] ?? 'Empresa';
+        $usuario = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
+
+        ob_start();
+        require_once __DIR__ . "/../pdf/clientes_reporte_pdf.php";
+        $html = ob_get_clean();
+
+        $dompdf = new Dompdf();
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->render();
+        $dompdf->stream("reporte_clientes.pdf", ["Attachment" => false]);
+        exit();
+    }
+
+    /* ==================================================
+        REPORTE EMPLEADOS (PREVISUALIZACIÓN)
+    ================================================== */
+    public function reporte_empleados_controlador()
+    {
+        $filtros = [
+            "sucursal" => mainModel::limpiar_string($_POST['sucursal'] ?? 0),
+            "cargo"    => mainModel::limpiar_string($_POST['cargo'] ?? 0),
+            "estado"   => mainModel::limpiar_string($_POST['estado'] ?? 'T'),
+            "buscar"   => trim($_POST['buscar'] ?? '')
+        ];
+
+        $data = reportesModelo::reporte_empleados_modelo($filtros);
+        $resumen = reportesModelo::resumen_empleados_modelo($filtros);
+
+        return json_encode([
+            "data"    => $data,
+            "resumen" => $resumen
+        ]);
+    }
+
+    /* ==================================================
+        REPORTE EMPLEADOS (PDF)
+    ================================================== */
+    public function imprimir_reporte_empleados_controlador()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start(['name' => 'STR']);
+        }
+
+        if (!mainModel::tienePermiso('empleado.ver')) {
+            header("Location: " . SERVERURL . "home/");
+            exit();
+        }
+
+        $filtros = [
+            "sucursal" => mainModel::limpiar_string($_POST['sucursal'] ?? 0),
+            "cargo"    => mainModel::limpiar_string($_POST['cargo'] ?? 0),
+            "estado"   => mainModel::limpiar_string($_POST['estado'] ?? 'T'),
+            "buscar"   => trim($_POST['buscar'] ?? '')
+        ];
+
+        $datos = reportesModelo::reporte_empleados_modelo($filtros);
+
+        $empresa = $_SESSION['empresa_nombre'] ?? 'Empresa';
+        $usuario = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
+
+        ob_start();
+        require_once __DIR__ . "/../pdf/empleados_reporte_pdf.php";
+        $html = ob_get_clean();
+
+        $dompdf = new Dompdf();
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->render();
+        $dompdf->stream("reporte_empleados.pdf", ["Attachment" => false]);
+        exit();
+    }
+
 
     /* =========================================
         INFORMES DE COMPRAS 

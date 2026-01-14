@@ -36,7 +36,7 @@ if (!mainModel::tienePermisoVista('compra.reportes.ver')) {
                     <select name="estado" class="form-control">
                         <option value="">Todos</option>
                         <option value="1">Pendiente</option>
-                        <option value="2">Aprobado</option>
+                        <option value="2">Procesado</option>
                         <option value="0">Anulado</option>
                     </select>
                 </div>

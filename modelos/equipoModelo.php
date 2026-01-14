@@ -53,10 +53,14 @@ class equipoModelo extends mainModel
     protected static function asignar_empleado_equipo_modelo($id_equipo, $id_empleado, $rol)
     {
         $sql = mainModel::conectar()->prepare(
-            "INSERT IGNORE INTO equipo_empleado
-            (id_equipo, idempleados, rol, estado)
-            VALUES (:equipo, :empleado, :rol, 1)"
+            "INSERT INTO equipo_empleado
+        (id_equipo, idempleados, rol, estado)
+        VALUES (:equipo, :empleado, :rol, 1)
+        ON DUPLICATE KEY UPDATE
+            estado = 1,
+            rol = VALUES(rol)"
         );
+
         $sql->bindParam(":equipo", $id_equipo);
         $sql->bindParam(":empleado", $id_empleado);
         $sql->bindParam(":rol", $rol);
@@ -101,5 +105,33 @@ class equipoModelo extends mainModel
         $sql->bindParam(":sucursal", $id_sucursal);
         $sql->execute();
         return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /* ===== ELIMINAR (ANULAR) EQUIPO ===== */
+    protected static function eliminar_equipo_modelo($id_equipo)
+    {
+        $sql = mainModel::conectar()->prepare(
+            "UPDATE equipo_trabajo
+         SET estado = 0
+         WHERE id_equipo = :id"
+        );
+        $sql->bindParam(":id", $id_equipo);
+        $sql->execute();
+        return $sql;
+    }
+
+    /* ===== QUITAR MIEMBRO DE EQUIPO ===== */
+    protected static function quitar_miembro_modelo($id_equipo, $id_empleado)
+    {
+        $sql = mainModel::conectar()->prepare(
+            "UPDATE equipo_empleado
+         SET estado = 0
+         WHERE id_equipo = :equipo
+         AND idempleados = :empleado"
+        );
+        $sql->bindParam(":equipo", $id_equipo);
+        $sql->bindParam(":empleado", $id_empleado);
+        $sql->execute();
+        return $sql;
     }
 }

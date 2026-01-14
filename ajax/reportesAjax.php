@@ -10,6 +10,71 @@ require_once "../controladores/reportesControlador.php";
 $inst_reporte = new reporteControlador();
 
 /* =========================================
+   REPORTE DE ARTICULOS (PREVIEW)
+========================================= */
+
+if (isset($_POST['modulo']) && $_POST['modulo'] == "articulos") {
+    echo $inst_reporte->reporte_articulos_controlador();
+    exit();
+}
+
+/* =========================================
+   REPORTE DE ARTICULOS (PDF)
+========================================= */
+
+if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_articulos') {
+    $inst_reporte->imprimir_reporte_articulos_controlador();
+    exit();
+}
+/* =========================================
+   REPORTE DE PROVEEDORES (PREVIEW)
+========================================= */
+if (isset($_POST['modulo']) && $_POST['modulo'] == "proveedores") {
+    echo $inst_reporte->reporte_proveedores_controlador();
+    exit();
+}
+
+/* =========================================
+   REPORTE DE PROVEEDORES (PDF)
+========================================= */
+if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_proveedores') {
+    $inst_reporte->imprimir_reporte_proveedores_controlador();
+    exit();
+}
+
+/* =========================================
+   REPORTE DE CLIENTES (PREVIEW)
+========================================= */
+if (isset($_POST['modulo']) && $_POST['modulo'] == "clientes") {
+    echo $inst_reporte->reporte_clientes_controlador();
+    exit();
+}
+
+/* =========================================
+   REPORTE DE CLIENTES (PDF)
+========================================= */
+if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_clientes') {
+    $inst_reporte->imprimir_reporte_clientes_controlador();
+    exit();
+}
+
+/* =========================================
+   REPORTE DE EMPLEADOS (PREVIEW)
+========================================= */
+if (isset($_POST['modulo']) && $_POST['modulo'] == "empleados") {
+    echo $inst_reporte->reporte_empleados_controlador();
+    exit();
+}
+
+/* =========================================
+   REPORTE DE EMPLEADOS (PDF)
+========================================= */
+if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_empleados') {
+    $inst_reporte->imprimir_reporte_empleados_controlador();
+    exit();
+}
+
+/* =========================================
    REPORTE DE COMPRAS
 ========================================= */
 if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_pedidos') {

@@ -37,6 +37,7 @@ if (!mainModel::tienePermisoVista('empleado.ver')) {
                     <th>Empleado</th>
                     <th>Rol</th>
                     <th>Estado</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -54,6 +55,24 @@ if (!mainModel::tienePermisoVista('empleado.ver')) {
                                 <?= ($m['estado'] == 1)
                                     ? '<span class="badge badge-success">Activo</span>'
                                     : '<span class="badge badge-danger">Inactivo</span>'; ?>
+                            </td>
+                            <td>
+                                <?php if (mainModel::tienePermisoVista('empleado.eliminar')): ?>
+                                    <form class="FormularioAjax d-inline"
+                                        action="<?php echo SERVERURL; ?>ajax/equipoAjax.php"
+                                        method="POST"
+                                        data-form="delete"
+                                        autocomplete="off">
+
+                                        <input type="hidden" name="accion" value="quitar_miembro">
+                                        <input type="hidden" name="equipo_id" value="<?php echo $pagina[1]; ?>">
+                                        <input type="hidden" name="empleado_id" value="<?php echo $lc->encryption($m['idempleados']); ?>">
+
+                                        <button type="submit" class="btn btn-warning btn-sm">
+                                            <i class="fas fa-user-minus"></i>
+                                        </button>
+                                    </form>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach;

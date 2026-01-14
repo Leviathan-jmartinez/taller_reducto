@@ -83,7 +83,7 @@ class equipoControlador extends equipoModelo
         }
 
         echo json_encode([
-            "Alerta" => "simple",
+            "Alerta" => "recargar",
             "Titulo" => "Equipo",
             "Texto" => "Empleados asignados correctamente",
             "Tipo" => "success"
@@ -105,5 +105,64 @@ class equipoControlador extends equipoModelo
     {
         $id_sucursal = mainModel::limpiar_string($id_sucursal);
         return equipoModelo::empleados_con_equipo_modelo($id_sucursal);
+    }
+
+    /* ==================================================
+        ELIMINAR EQUIPO
+    ================================================== */
+    public function eliminar_equipo_controlador()
+    {
+        $id = mainModel::decryption($_POST['equipo_id_del']);
+        $id = mainModel::limpiar_string($id);
+
+        if ($id == "") {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "ID de equipo no válido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        equipoModelo::eliminar_equipo_modelo($id);
+
+        echo json_encode([
+            "Alerta" => "recargar",
+            "Titulo" => "Equipo",
+            "Texto" => "Equipo eliminado correctamente",
+            "Tipo" => "success"
+        ]);
+    }
+
+    /* ==================================================
+        QUITAR MIEMBRO DE EQUIPO
+    ================================================== */
+    public function quitar_miembro_controlador()
+    {
+        $id_equipo = mainModel::decryption($_POST['equipo_id']);
+        $id_equipo = mainModel::limpiar_string($id_equipo);
+
+        $id_empleado = mainModel::decryption($_POST['empleado_id']);
+        $id_empleado = mainModel::limpiar_string($id_empleado);
+
+        if ($id_equipo == "" || $id_empleado == "") {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Datos incompletos",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        equipoModelo::quitar_miembro_modelo($id_equipo, $id_empleado);
+
+        echo json_encode([
+            "Alerta" => "recargar",
+            "Titulo" => "Equipo",
+            "Texto" => "Empleado quitado del equipo",
+            "Tipo" => "success"
+        ]);
     }
 }

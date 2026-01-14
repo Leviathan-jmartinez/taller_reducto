@@ -21,7 +21,7 @@ class usuarioControlador extends usuarioModelo
 
         $clave1 = mainModel::limpiar_string($_POST['usuario_clave_1_reg']);
         $clave2 = mainModel::limpiar_string($_POST['usuario_clave_2_reg']);
-        $nivel = mainModel::limpiar_string($_POST['usuario_privilegio_reg']);
+
         /** Comprobar campos vacios */
         if ($nombre == "" || $apellido == "" || $nick == "" || $clave1 == "" || $clave2 == "") {
             $alerta = [
@@ -158,17 +158,6 @@ class usuarioControlador extends usuarioModelo
         } else {
             $clave = mainModel::encryption($clave1);
         }
-        /**Comprobar privilegios */
-        if ($nivel < 1 || $nivel > 3) {
-            $alerta = [
-                "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "No ha seleccionado un nivel de usuario valido",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
-        }
         $datos_usuario_reg = [
             "ci" => $ci,
             "nombre" => $nombre,
@@ -177,7 +166,6 @@ class usuarioControlador extends usuarioModelo
             "email" => $email,
             "telefono" => $telefono,
             "clave" => $clave,
-            "nivel" => $nivel,
             "estado" => "1"
         ];
         $agregar_usuario = usuarioModelo::agregar_usuario_modelo($datos_usuario_reg);
@@ -425,12 +413,6 @@ class usuarioControlador extends usuarioModelo
         } else {
             $estado = $campos_usuario_up['usu_estado'];
         }
-        /**validar estado si viene definido */
-        if (isset($_POST['usuario_privilegio_up'])) {
-            $nivel = mainModel::limpiar_string($_POST['usuario_privilegio_up']);
-        } else {
-            $nivel = $campos_usuario_up['usu_nivel'];
-        }
         $admin_user = mainModel::limpiar_string($_POST['usuario_admin']);
         $admin_clave = mainModel::limpiar_string($_POST['clave_admin']);
         $tipo_cuenta = mainModel::limpiar_string($_POST['tipo_cuenta']);
@@ -520,16 +502,7 @@ class usuarioControlador extends usuarioModelo
             exit();
         }
         $admin_clave = mainModel::encryption($admin_clave);
-        if ($nivel < 1 || $nivel > 3) {
-            $alerta = [
-                "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "El nivel de Privelegio seleccionado no corresponde",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
-        }
+        
         if ($estado != "1" && $estado != "2") {
             $alerta = [
                 "Alerta" => "simple",
@@ -656,7 +629,6 @@ class usuarioControlador extends usuarioModelo
             "nick" => $nick,
             "clave" => $clave,
             "estado" => $estado,
-            "nivel" => $nivel,
             "iduser" => $id
         ];
 

@@ -229,9 +229,24 @@ class ordencompraControlador extends ordencompraModelo
                 $errores++;
             }
         }
+        // -----------------------------
+        // 8) Actualizar presupuesto
+        // -----------------------------
+        if ($errores === 0) {
+            $upd = $conexion->prepare("
+            UPDATE presupuesto_compra 
+            SET estado = 2
+            WHERE idpresupuesto_compra = :id
+            AND id_sucursal = :sucursal
+            ");
+            $upd->execute([
+                ":id" => $idpresupuesto,
+                ":sucursal" => $_SESSION['nick_sucursal']
+            ]);
+        }
 
         // -----------------------------
-        // 8) Respuesta final al AJAX
+        // 9) Respuesta final al AJAX
         // -----------------------------
         if ($errores > 0) {
             echo "warning:" . $idOC;

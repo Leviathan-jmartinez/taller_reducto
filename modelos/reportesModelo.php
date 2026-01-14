@@ -3,6 +3,380 @@ require_once "mainModel.php";
 
 class reportesModelo extends mainModel
 {
+
+    /* ==================================================
+        REPORTE ARTICULOS - DETALLE
+    ================================================== */
+    protected static function reporte_articulos_modelo($f)
+    {
+        $where = " WHERE 1=1 ";
+        $params = [];
+
+        if (!empty($f['sucursal']) && $f['sucursal'] != 0) {
+            $where .= " AND suc.id_sucursal = :sucursal ";
+            $params[':sucursal'] = $f['sucursal'];
+        }
+
+        if (!empty($f['categoria']) && $f['categoria'] != 0) {
+            $where .= " AND c.id_categoria = :categoria ";
+            $params[':categoria'] = $f['categoria'];
+        }
+
+        if (!empty($f['proveedor']) && $f['proveedor'] != 0) {
+            $where .= " AND p.idproveedores = :proveedor ";
+            $params[':proveedor'] = $f['proveedor'];
+        }
+
+        if (!empty($f['codigo'])) {
+            $where .= " AND a.codigo = :codigo ";
+            $params[':codigo'] = $f['codigo'];
+        }
+
+        if (!empty($f['estado']) && $f['estado'] != 'T') {
+            if ($f['estado'] == 'A') {
+                $where .= " AND a.estado = 1 ";
+            } elseif ($f['estado'] == 'I') {
+                $where .= " AND a.estado = 0 ";
+            }
+        }
+
+        if (!empty($f['stock']) && $f['stock'] != 'T') {
+            if ($f['stock'] == 'C') {
+                $where .= " AND IFNULL(st.stockDisponible,0) > 0 ";
+            } elseif ($f['stock'] == 'S') {
+                $where .= " AND IFNULL(st.stockDisponible,0) = 0 ";
+            } elseif ($f['stock'] == 'B') {
+                $where .= " AND IFNULL(st.stockDisponible,0) <= IFNULL(st.stockcant_min,0) ";
+            }
+        }
+
+        $sql = self::conectar()->prepare("
+        SELECT
+            a.id_articulo,
+            a.codigo,
+            a.desc_articulo,
+            a.tipo,
+            a.precio_compra,
+            a.precio_venta,
+            a.estado,
+
+            c.cat_descri AS categoria,
+            m.mar_descri AS marca,
+            p.razon_social AS proveedor,
+            u.medida AS unidad,
+
+            suc.suc_descri AS sucursal,
+            IFNULL(st.stockDisponible, 0) AS stock,
+            st.stockcant_min,
+            st.stockcant_max
+        FROM articulos a
+        INNER JOIN categorias c ON c.id_categoria = a.id_categoria
+        INNER JOIN marcas m ON m.id_marcas = a.id_marcas
+        INNER JOIN proveedores p ON p.idproveedores = a.idproveedores
+        INNER JOIN unidad_medida u ON u.idunidad_medida = a.idunidad_medida
+        LEFT JOIN stock st ON st.id_articulo = a.id_articulo
+        LEFT JOIN sucursales suc ON suc.id_sucursal = st.id_sucursal
+        $where
+        ORDER BY a.desc_articulo
+        ");
+
+        $sql->execute($params);
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /* ==================================================
+        REPORTE ARTICULOS - RESUMEN
+    ================================================== */
+    protected static function resumen_articulos_modelo($f)
+    {
+        $sql = self::conectar()->prepare("
+        SELECT
+            COUNT(DISTINCT a.id_articulo) AS total,
+            SUM(CASE WHEN a.estado = 1 THEN 1 ELSE 0 END) AS activos,
+            SUM(CASE WHEN a.estado = 0 THEN 1 ELSE 0 END) AS inactivos,
+            SUM(CASE WHEN IFNULL(st.stockDisponible,0) > 0 THEN 1 ELSE 0 END) AS con_stock,
+            SUM(CASE WHEN IFNULL(st.stockDisponible,0) = 0 THEN 1 ELSE 0 END) AS sin_stock,
+            SUM(CASE WHEN IFNULL(st.stockDisponible,0) <= IFNULL(st.stockcant_min,0) THEN 1 ELSE 0 END) AS bajo_minimo
+        FROM articulos a
+        LEFT JOIN stock st ON st.id_articulo = a.id_articulo
+        LEFT JOIN sucursales suc ON suc.id_sucursal = st.id_sucursal
+        WHERE (:sucursal = 0 OR suc.id_sucursal = :sucursal)
+        ");
+
+        $sql->execute([
+            ":sucursal" => $f['sucursal']
+        ]);
+
+        return $sql->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /* ==================================================
+        REPORTE PROVEEDORES - DETALLE
+    ================================================== */
+    public static function reporte_proveedores_modelo($f)
+    {
+        $where = " WHERE 1=1 ";
+        $params = [];
+
+        if (!empty($f['estado']) && $f['estado'] != 'T') {
+            if ($f['estado'] == 'A') {
+                $where .= " AND p.estado = 1 ";
+            } elseif ($f['estado'] == 'I') {
+                $where .= " AND p.estado = 0 ";
+            }
+        }
+
+        if (!empty($f['buscar'])) {
+            $where .= " AND (p.razon_social LIKE :buscar OR p.ruc LIKE :buscar) ";
+            $params[':buscar'] = '%' . $f['buscar'] . '%';
+        }
+
+        $sql = self::conectar()->prepare("
+        SELECT
+            p.idproveedores,
+            p.razon_social,
+            p.ruc,
+            p.telefono,
+            p.correo,
+            p.direccion,
+            p.estado
+        FROM proveedores p
+        $where
+        ORDER BY p.razon_social
+        ");
+
+        $sql->execute($params);
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /* ==================================================
+        REPORTE PROVEEDORES - RESUMEN
+    ================================================== */
+    public static function resumen_proveedores_modelo($f)
+    {
+        $where = " WHERE 1=1 ";
+        $params = [];
+
+        if (!empty($f['estado']) && $f['estado'] != 'T') {
+            if ($f['estado'] == 'A') {
+                $where .= " AND p.estado = 1 ";
+            } elseif ($f['estado'] == 'I') {
+                $where .= " AND p.estado = 0 ";
+            }
+        }
+
+        if (!empty($f['buscar'])) {
+            $where .= " AND (p.razon_social LIKE :buscar OR p.ruc LIKE :buscar) ";
+            $params[':buscar'] = '%' . $f['buscar'] . '%';
+        }
+
+        $sql = self::conectar()->prepare("
+        SELECT
+            COUNT(*) AS total,
+            SUM(CASE WHEN p.estado = 1 THEN 1 ELSE 0 END) AS activos,
+            SUM(CASE WHEN p.estado = 0 THEN 1 ELSE 0 END) AS inactivos
+        FROM proveedores p
+        $where
+        ");
+
+        $sql->execute($params);
+        return $sql->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /* ==================================================
+        REPORTE CLIENTES - DETALLE
+    ================================================== */
+    public static function reporte_clientes_modelo($f)
+    {
+        $where = " WHERE 1=1 ";
+        $params = [];
+
+        if (!empty($f['estado']) && $f['estado'] != 'T') {
+            if ($f['estado'] == 'A') {
+                $where .= " AND c.estado_cliente = 1 ";
+            } elseif ($f['estado'] == 'I') {
+                $where .= " AND c.estado_cliente = 0 ";
+            }
+        }
+
+        if (!empty($f['buscar'])) {
+            $where .= " AND (
+            c.nombre_cliente LIKE :buscar
+            OR c.apellido_cliente LIKE :buscar
+            OR c.doc_number LIKE :buscar
+            OR c.email_cliente LIKE :buscar
+        ) ";
+            $params[':buscar'] = '%' . $f['buscar'] . '%';
+        }
+
+        $sql = self::conectar()->prepare("
+        SELECT
+            c.id_cliente,
+            c.doc_type,
+            c.doc_number,
+            c.digito_v,
+            c.nombre_cliente,
+            c.apellido_cliente,
+            c.direccion_cliente,
+            c.celular_cliente,
+            c.email_cliente,
+            c.estado_cliente,
+            ci.ciu_descri AS ciudad
+        FROM clientes c
+        LEFT JOIN ciudades ci ON ci.id_ciudad = c.id_ciudad
+        $where
+        ORDER BY c.apellido_cliente, c.nombre_cliente
+        ");
+
+        $sql->execute($params);
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /* ==================================================
+        REPORTE CLIENTES - RESUMEN
+    ================================================== */
+    public static function resumen_clientes_modelo($f)
+    {
+        $where = " WHERE 1=1 ";
+        $params = [];
+
+        if (!empty($f['estado']) && $f['estado'] != 'T') {
+            if ($f['estado'] == 'A') {
+                $where .= " AND c.estado_cliente = 1 ";
+            } elseif ($f['estado'] == 'I') {
+                $where .= " AND c.estado_cliente = 0 ";
+            }
+        }
+
+        if (!empty($f['buscar'])) {
+            $where .= " AND (
+            c.nombre_cliente LIKE :buscar
+            OR c.apellido_cliente LIKE :buscar
+            OR c.doc_number LIKE :buscar
+            OR c.email_cliente LIKE :buscar
+        ) ";
+            $params[':buscar'] = '%' . $f['buscar'] . '%';
+        }
+
+        $sql = self::conectar()->prepare("
+        SELECT
+            COUNT(*) AS total,
+            SUM(CASE WHEN c.estado_cliente = 1 THEN 1 ELSE 0 END) AS activos,
+            SUM(CASE WHEN c.estado_cliente = 0 THEN 1 ELSE 0 END) AS inactivos
+        FROM clientes c
+        $where
+        ");
+
+        $sql->execute($params);
+        return $sql->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /* ==================================================
+        REPORTE EMPLEADOS - DETALLE
+    ================================================== */
+    public static function reporte_empleados_modelo($f)
+    {
+        $where = " WHERE 1=1 ";
+        $params = [];
+
+        if (!empty($f['sucursal']) && $f['sucursal'] != 0) {
+            $where .= " AND e.id_sucursal = :sucursal ";
+            $params[':sucursal'] = $f['sucursal'];
+        }
+
+        if (!empty($f['cargo']) && $f['cargo'] != 0) {
+            $where .= " AND e.idcargos = :cargo ";
+            $params[':cargo'] = $f['cargo'];
+        }
+
+        if (!empty($f['estado']) && $f['estado'] != 'T') {
+            if ($f['estado'] == 'A') {
+                $where .= " AND e.estado = 1 ";
+            } elseif ($f['estado'] == 'I') {
+                $where .= " AND e.estado = 0 ";
+            }
+        }
+
+        if (!empty($f['buscar'])) {
+            $where .= " AND (
+            e.nombre LIKE :buscar
+            OR e.apellido LIKE :buscar
+            OR e.nro_cedula LIKE :buscar
+        ) ";
+            $params[':buscar'] = '%' . $f['buscar'] . '%';
+        }
+
+        $sql = self::conectar()->prepare("
+        SELECT
+            e.idempleados,
+            e.nro_cedula,
+            e.nombre,
+            e.apellido,
+            e.celular,
+            e.direccion,
+            e.estado,
+
+            c.descripcion AS cargo,
+            s.suc_descri AS sucursal
+        FROM empleados e
+        INNER JOIN cargos c ON c.idcargos = e.idcargos
+        INNER JOIN sucursales s ON s.id_sucursal = e.id_sucursal
+        $where
+        ORDER BY e.apellido, e.nombre
+        ");
+
+        $sql->execute($params);
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /* ==================================================
+        REPORTE EMPLEADOS - RESUMEN
+    ================================================== */
+    public static function resumen_empleados_modelo($f)
+    {
+        $where = " WHERE 1=1 ";
+        $params = [];
+
+        if (!empty($f['sucursal']) && $f['sucursal'] != 0) {
+            $where .= " AND e.id_sucursal = :sucursal ";
+            $params[':sucursal'] = $f['sucursal'];
+        }
+
+        if (!empty($f['cargo']) && $f['cargo'] != 0) {
+            $where .= " AND e.idcargos = :cargo ";
+            $params[':cargo'] = $f['cargo'];
+        }
+
+        if (!empty($f['estado']) && $f['estado'] != 'T') {
+            if ($f['estado'] == 'A') {
+                $where .= " AND e.estado = 1 ";
+            } elseif ($f['estado'] == 'I') {
+                $where .= " AND e.estado = 0 ";
+            }
+        }
+
+        if (!empty($f['buscar'])) {
+            $where .= " AND (
+            e.nombre LIKE :buscar
+            OR e.apellido LIKE :buscar
+            OR e.nro_cedula LIKE :buscar
+        ) ";
+            $params[':buscar'] = '%' . $f['buscar'] . '%';
+        }
+
+        $sql = self::conectar()->prepare("
+        SELECT
+            COUNT(*) AS total,
+            SUM(CASE WHEN e.estado = 1 THEN 1 ELSE 0 END) AS activos,
+            SUM(CASE WHEN e.estado = 0 THEN 1 ELSE 0 END) AS inactivos
+        FROM empleados e
+        $where
+        ");
+
+        $sql->execute($params);
+        return $sql->fetch(PDO::FETCH_ASSOC);
+    }
+
     /* =========================================
        REPORTE DE PEDIDOS 
     ========================================= */
