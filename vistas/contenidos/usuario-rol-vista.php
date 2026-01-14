@@ -58,54 +58,54 @@ $roles    = $insUsuario->listar_roles_controlador();
 
 
 <div class="container-fluid">
+    <div class="form-neon">
+        <form class="FormularioAjax"
+            action="<?= SERVERURL ?>ajax/usuarioAjax.php"
+            method="POST"
+            data-form="update"
+            autocomplete="off">
 
-    <form class="FormularioAjax"
-        action="<?= SERVERURL ?>ajax/usuarioAjax.php"
-        method="POST"
-        data-form="update"
-        autocomplete="off">
+            <input type="hidden" name="accion" value="asignar_rol">
 
-        <input type="hidden" name="accion" value="asignar_rol">
+            <div class="row">
 
-        <div class="row">
+                <!-- ================= USUARIO ================= -->
+                <div class="col-md-6">
+                    <label>Usuario</label>
+                    <select name="id_usuario" class="form-control" required>
+                        <option value="">Seleccione usuario</option>
+                        <?php foreach ($usuarios as $u): ?>
+                            <option value="<?= $u['id_usuario'] ?>">
+                                <?= $u['usu_nombre'] ?>
+                                <?= $u['usu_apellido'] ?>
+                                (<?= $u['usu_nick'] ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
 
-            <!-- ================= USUARIO ================= -->
-            <div class="col-md-6">
-                <label>Usuario</label>
-                <select name="id_usuario" class="form-control" required>
-                    <option value="">Seleccione usuario</option>
-                    <?php foreach ($usuarios as $u): ?>
-                        <option value="<?= $u['id_usuario'] ?>">
-                            <?= $u['usu_nombre'] ?>
-                            <?= $u['usu_apellido'] ?>
-                            (<?= $u['usu_nick'] ?>)
-                        </option>
-                    <?php endforeach; ?>
-                </select>
+                <!-- ================= ROL ================= -->
+                <div class="col-md-6">
+                    <label>Rol</label>
+                    <select name="id_rol" class="form-control" required>
+                        <option value="">Seleccione rol</option>
+                        <?php foreach ($roles as $r): ?>
+                            <option value="<?= $r['id_rol'] ?>">
+                                <?= $r['nombre'] ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
             </div>
 
-            <!-- ================= ROL ================= -->
-            <div class="col-md-6">
-                <label>Rol</label>
-                <select name="id_rol" class="form-control" required>
-                    <option value="">Seleccione rol</option>
-                    <?php foreach ($roles as $r): ?>
-                        <option value="<?= $r['id_rol'] ?>">
-                            <?= $r['nombre'] ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
+            <div class="text-center mt-4">
+                <button class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    Asignar rol
+                </button>
             </div>
 
-        </div>
-
-        <div class="text-center mt-4">
-            <button class="btn btn-primary">
-                <i class="fas fa-save"></i>
-                Asignar rol
-            </button>
-        </div>
-
-    </form>
-
+        </form>
+    </div>
 </div>

@@ -15,7 +15,7 @@ class usuarioControlador extends usuarioModelo
         $nombre = mainModel::limpiar_string($_POST['usuario_nombre_reg']);
         $apellido = mainModel::limpiar_string($_POST['usuario_apellido_reg']);
         $telefono = mainModel::limpiar_string($_POST['usuario_telefono_reg']);
-
+        $nivel = mainModel::limpiar_string($_POST['usuario_privilegio_reg']);
         $nick = mainModel::limpiar_string($_POST['usuario_usuario_reg']);
         $email = mainModel::limpiar_string($_POST['usuario_email_reg']);
 
@@ -166,6 +166,7 @@ class usuarioControlador extends usuarioModelo
             "email" => $email,
             "telefono" => $telefono,
             "clave" => $clave,
+            "nivel" => $nivel,
             "estado" => "1"
         ];
         $agregar_usuario = usuarioModelo::agregar_usuario_modelo($datos_usuario_reg);
@@ -406,7 +407,7 @@ class usuarioControlador extends usuarioModelo
         $telefono = mainModel::limpiar_string($_POST['usuario_telefono_up']);
         $nick = mainModel::limpiar_string($_POST['usuario_usuario_up']);
         $email = mainModel::limpiar_string($_POST['usuario_email_up']);
-
+        $nivel = mainModel::limpiar_string($_POST['usuario_privilegio_up']);
         /**validar estado si viene definido */
         if (isset($_POST['usuario_estado_up'])) {
             $estado = mainModel::limpiar_string($_POST['usuario_estado_up']);
@@ -628,6 +629,7 @@ class usuarioControlador extends usuarioModelo
             "email" => $email,
             "nick" => $nick,
             "clave" => $clave,
+            "nivel" => $nivel,
             "estado" => $estado,
             "iduser" => $id
         ];

@@ -59,53 +59,53 @@ $sucursales = $insSucursal->listar_sucursales_controlador();
 </div>
 
 <div class="container-fluid">
+    <div class="form-neon">
+        <form class="FormularioAjax"
+            action="<?= SERVERURL ?>ajax/usuarioAjax.php"
+            method="POST"
+            data-form="update"
+            autocomplete="off">
 
-    <form class="FormularioAjax"
-        action="<?= SERVERURL ?>ajax/usuarioAjax.php"
-        method="POST"
-        data-form="update"
-        autocomplete="off">
+            <input type="hidden" name="accion" value="asignar_sucursal">
 
-        <input type="hidden" name="accion" value="asignar_sucursal">
+            <div class="row">
 
-        <div class="row">
+                <!-- USUARIO -->
+                <div class="col-md-6">
+                    <label>Usuario</label>
+                    <select name="id_usuario" class="form-control" required>
+                        <option value="">Seleccione usuario</option>
+                        <?php foreach ($usuarios as $u): ?>
+                            <option value="<?= $u['id_usuario'] ?>">
+                                <?= $u['usu_nombre'] ?> <?= $u['usu_apellido'] ?>
+                                (<?= $u['usu_nick'] ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
 
-            <!-- USUARIO -->
-            <div class="col-md-6">
-                <label>Usuario</label>
-                <select name="id_usuario" class="form-control" required>
-                    <option value="">Seleccione usuario</option>
-                    <?php foreach ($usuarios as $u): ?>
-                        <option value="<?= $u['id_usuario'] ?>">
-                            <?= $u['usu_nombre'] ?> <?= $u['usu_apellido'] ?>
-                            (<?= $u['usu_nick'] ?>)
-                        </option>
-                    <?php endforeach; ?>
-                </select>
+                <!-- SUCURSAL -->
+                <div class="col-md-6">
+                    <label>Sucursal</label>
+                    <select name="id_sucursal" class="form-control" required>
+                        <option value="">Seleccione sucursal</option>
+                        <?php foreach ($sucursales as $s): ?>
+                            <option value="<?= $s['id_sucursal'] ?>">
+                                <?= $s['suc_descri'] ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
             </div>
 
-            <!-- SUCURSAL -->
-            <div class="col-md-6">
-                <label>Sucursal</label>
-                <select name="id_sucursal" class="form-control" required>
-                    <option value="">Seleccione sucursal</option>
-                    <?php foreach ($sucursales as $s): ?>
-                        <option value="<?= $s['id_sucursal'] ?>">
-                            <?= $s['suc_descri'] ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
+            <div class="text-center mt-4">
+                <button class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    Asignar sucursal
+                </button>
             </div>
 
-        </div>
-
-        <div class="text-center mt-4">
-            <button class="btn btn-primary">
-                <i class="fas fa-save"></i>
-                Asignar sucursal
-            </button>
-        </div>
-
-    </form>
-
+        </form>
+    </div>
 </div>

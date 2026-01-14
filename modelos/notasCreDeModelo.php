@@ -84,11 +84,11 @@ class notasCreDeModelo extends mainModel
     {
         $sql = $pdo->prepare("
         INSERT INTO nota_compra
-        (idproveedor, id_sucursal, tipo, nro_documento, fecha,
+        (idproveedor, id_sucursal, tipo, movimiento_stock, nro_documento, fecha,
          idcompra_cabecera, total, descripcion,
          estado, idusuario, fecha_creacion, timbrado)
         VALUES
-        (:prov, :sucursal, :tipo, :nro, :fecha,
+        (:prov, :sucursal, :tipo, :mov_stock, :nro, :fecha,
          :idcompra, :total, :desc,
          1, :usuario, NOW(), :timbrado)");
 
@@ -96,6 +96,7 @@ class notasCreDeModelo extends mainModel
             ':prov'     => $d['idproveedor'],
             ':sucursal' => $d['id_sucursal'],
             ':tipo'     => $d['tipo'],
+            ':mov_stock' => $d['movimiento_stock'],
             ':nro'      => $d['nro'],
             ':fecha'    => $d['fecha'],
             ':idcompra' => $d['idcompra'],
@@ -204,7 +205,7 @@ class notasCreDeModelo extends mainModel
         WHERE idcompra_cabecera = :id
           AND tipo = 'credito'
           AND estado = 1
-    ");
+        ");
         $sql->bindValue(':id', $idcompra, PDO::PARAM_INT);
         $sql->execute();
         return (float)$sql->fetchColumn();

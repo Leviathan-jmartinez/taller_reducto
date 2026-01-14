@@ -72,7 +72,8 @@ class notasCreDeControlador extends notasCreDeModelo
             'nro_factura'       => $factura['nro_factura'],
             'fecha_factura'     => $factura['fecha_factura'],
             'total'             => $factura['total_compra'],
-            'idproveedor'       => $factura['idproveedores'],
+            'idproveedor'       => (int)$factura['idproveedores'],
+            'ruc'               => $factura['ruc'],
             'proveedor'         => $factura['razon_social']
         ];
 
@@ -194,21 +195,14 @@ class notasCreDeControlador extends notasCreDeModelo
 
         $factura = $_SESSION['NC_FACTURA'] ?? null;
 
-        if (
-            !isset($_SESSION['NC_FACTURA']) ||
-            empty($_SESSION['NC_FACTURA']['idcompra_cabecera'])
-        ) {
-            return [
-                'status' => 'error',
-                'msg' => 'Debe seleccionar una factura válida'
-            ];
+        if (!isset($_SESSION['NC_FACTURA']) || empty($_SESSION['NC_FACTURA']['idcompra_cabecera'])) {
+            return ['status' => 'error', 'msg' => 'Debe seleccionar una factura válida'];
         }
 
         if (empty($_SESSION['NC_DETALLE'])) {
             return ['status' => 'error', 'msg' => 'No hay detalle'];
         }
 
-        /* ================= FILTRAR ÍTEMS EN CERO ================= */
         $detalle = array_filter($_SESSION['NC_DETALLE'], function ($d) {
             return $d['cantidad'] > 0 && $d['precio'] > 0;
         });
@@ -217,26 +211,47 @@ class notasCreDeControlador extends notasCreDeModelo
             return ['status' => 'error', 'msg' => 'Todos los ítems están en cero'];
         }
 
-        /* ================= TOTALES (IVA INCLUIDO) ================= */
         $total = 0;
         foreach ($detalle as $d) {
             $total += round($d['cantidad'] * $d['precio'], 2);
         }
 
-        /* ==========================================================
-       🔒 VALIDACIÓN TOPE NOTA DE CRÉDITO (ACÁ VA)
-       ========================================================== */
+        /* ================= VALIDAR DUPLICADO NC/ND ================= */
+        $tipoNota = $_POST['tipo']; // credito | debito
+        $timbrado = trim($_POST['timbrado'] ?? '');
+        $nroNota  = trim($_POST['nro_nota']);
+
+        $dup = mainModel::conectar()->prepare("
+            SELECT COUNT(*) 
+            FROM nota_compra
+            WHERE tipo = :tipo
+            AND nro_documento = :nro
+            AND timbrado = :timbrado
+            AND id_sucursal = :suc
+            AND estado = 1
+        ");
+        $dup->execute([
+            ':tipo'     => $tipoNota,
+            ':nro'      => $nroNota,
+            ':timbrado' => $timbrado,
+            ':suc'      => $_SESSION['nick_sucursal']
+        ]);
+
+        if ((int)$dup->fetchColumn() > 0) {
+            return [
+                "Alerta" => "simple",
+                "Titulo" => "Documento duplicado",
+                "Texto"  => "Ya existe una nota con el mismo tipo, timbrado y número en esta sucursal.",
+                "Tipo"   => "error"
+            ];
+        }
+
+
         if ($_POST['tipo'] === 'credito') {
-
             $totalFactura = (float)$factura['total'];
+            $totalNCPrevias = notasCreDeModelo::totalNCActivasPorFactura($factura['idcompra_cabecera']);
 
-            $totalNCPrevias = notasCreDeModelo::totalNCActivasPorFactura(
-                $factura['idcompra_cabecera']
-            );
-
-            $totalNCResultado = $totalNCPrevias + $total;
-
-            if ($totalNCResultado > $totalFactura) {
+            if (($totalNCPrevias + $total) > $totalFactura) {
                 return [
                     "Alerta" => "simple",
                     "Titulo" => "Error",
@@ -246,13 +261,13 @@ class notasCreDeControlador extends notasCreDeModelo
                 ];
             }
         }
-        /* ========================================================== */
 
-        /* ================= SIGNO CONTABLE ================= */
         $montoMovimiento = $total;
         if ($_POST['tipo'] === 'credito') {
             $montoMovimiento *= -1;
         }
+
+        $movStock = $_POST['movimiento_stock'] ?? 'NINGUNO';
 
         $pdo = mainModel::conectar();
 
@@ -260,9 +275,10 @@ class notasCreDeControlador extends notasCreDeModelo
             $pdo->beginTransaction();
 
             $idNota = notasCreDeModelo::insertarNotaCompraModelo($pdo, [
-                'idproveedor' => $factura['idproveedor'],
+                'idproveedor' => (int)$factura['idproveedor'],
                 'id_sucursal' => $_SESSION['nick_sucursal'],
                 'tipo'        => $_POST['tipo'],
+                'movimiento_stock' => $movStock,
                 'nro'         => $_POST['nro_nota'],
                 'fecha'       => $_POST['fecha'],
                 'idcompra'    => $factura['idcompra_cabecera'],
@@ -273,6 +289,106 @@ class notasCreDeControlador extends notasCreDeModelo
             ]);
 
             notasCreDeModelo::insertarDetalleNotaCompraModelo($pdo, $idNota, $detalle);
+            $signo = ($_POST['tipo'] === 'credito') ? -1 : 1;
+
+            // Totales ya calculados desde $_SESSION['NC_DETALLE']
+            $exenta   = 0;
+            $grav5    = 0;
+            $iva5     = 0;
+            $grav10   = 0;
+            $iva10    = 0;
+            $totalLC = 0;
+
+            foreach ($detalle as $d) {
+                $monto = round($d['cantidad'] * $d['precio'], 2);
+
+                if ($d['divisor'] == 11) {           // IVA 10
+                    $iva10   += round($monto / 11, 2);
+                    $grav10  += $monto - round($monto / 11, 2);
+                } elseif ($d['divisor'] == 21) {     // IVA 5
+                    $iva5   += round($monto / 21, 2);
+                    $grav5  += $monto - round($monto / 21, 2);
+                } else {                             // Exenta
+                    $exenta += $monto;
+                }
+
+                $totalLC += $monto;
+            }
+
+            // Aplicar signo según NC o ND
+            $exenta  *= $signo;
+            $grav5   *= $signo;
+            $iva5    *= $signo;
+            $grav10  *= $signo;
+            $iva10   *= $signo;
+            $totalLC *= $signo;
+
+            $pdo->prepare("
+                INSERT INTO libro_compra
+                (idcompra_cabecera, id_sucursal, fecha, tipo_comprobante,
+                serie, nro_comprobante, idproveedores,
+                proveedor_nombre, proveedor_ruc,
+                exenta, gravada_5, iva_5, gravada_10, iva_10, total)
+                VALUES
+                (:idcompra, :suc, :fecha, :tipo,
+                :serie, :nro, :prov,
+                :prov_nom, :prov_ruc,
+                :exenta, :g5, :iva5, :g10, :iva10, :total)
+            ")->execute([
+                ':idcompra' => $factura['idcompra_cabecera'],
+                ':suc'      => $_SESSION['nick_sucursal'],
+                ':fecha'    => $_POST['fecha'],
+                ':tipo'     => ($_POST['tipo'] === 'credito') ? 'NC' : 'ND',
+                ':serie'    => substr($_POST['nro_nota'], 0, 7),
+                ':nro'      => $_POST['nro_nota'],
+                ':prov'     => (int)$factura['idproveedor'],
+                ':prov_nom' => $factura['proveedor'],
+                ':prov_ruc' => $factura['ruc'] ?? '',
+                ':exenta'   => $exenta,
+                ':g5'       => $grav5,
+                ':iva5'     => $iva5,
+                ':g10'      => $grav10,
+                ':iva10'    => $iva10,
+                ':total'    => $totalLC
+            ]);
+
+            if ($movStock === 'DEVOLUCION') {
+                foreach ($detalle as $d) {
+
+                    $pdo->prepare("
+                    UPDATE stock
+                    SET stockDisponible = stockDisponible - :cant,
+                        stockUltActualizacion = NOW(),
+                        stockUsuActualizacion = :usu
+                    WHERE id_sucursal = :suc AND id_articulo = :art
+                ")->execute([
+                        ':cant' => $d['cantidad'],
+                        ':usu'  => $_SESSION['id_str'],
+                        ':suc'  => $_SESSION['nick_sucursal'],
+                        ':art'  => $d['id_articulo']
+                    ]);
+
+                    $pdo->prepare("
+                    INSERT INTO sucmovimientostock
+                    (id_sucursal, TipoMovStockId, MovStockProductoId,
+                     MovStockCantidad, MovStockPrecioVenta, MovStockCosto,
+                     MovStockFechaHora, MovStockUsuario,
+                     MovStockSigno, MovStockReferencia)
+                    VALUES
+                    (:suc, 'NC_COMPRA_DEV', :art,
+                     :cant, 0, :costo,
+                     NOW(), :usu,
+                     -1, :ref)
+                ")->execute([
+                        ':suc'   => $_SESSION['nick_sucursal'],
+                        ':art'   => $d['id_articulo'],
+                        ':cant'  => $d['cantidad'],
+                        ':costo' => $d['precio'],
+                        ':usu'   => $_SESSION['id_str'],
+                        ':ref'   => 'NC ' . $_POST['nro_nota']
+                    ]);
+                }
+            }
 
             notasCreDeModelo::impactarNotaCompraModelo($pdo, [
                 'idcompra'   => $factura['idcompra_cabecera'],
@@ -280,7 +396,7 @@ class notasCreDeControlador extends notasCreDeModelo
                 'tipo'       => $_POST['tipo'],
                 'idnota'     => $idNota,
                 'monto'      => $montoMovimiento,
-                'obs'        => 'Nota ' . $_POST['tipo']
+                'obs'        => 'Nota ' . $_POST['tipo'] . ' ' . $_POST['nro_nota']
             ]);
 
             $pdo->commit();
@@ -296,10 +412,7 @@ class notasCreDeControlador extends notasCreDeModelo
             exit;
         } catch (Exception $e) {
             $pdo->rollBack();
-            echo json_encode([
-                'status' => 'error',
-                'msg' => $e->getMessage()
-            ]);
+            echo json_encode(['status' => 'error', 'msg' => $e->getMessage()]);
             exit;
         }
     }
@@ -469,8 +582,8 @@ class notasCreDeControlador extends notasCreDeModelo
         }
 
         $idNota = mainModel::decryption($_POST['notaCreDe_id_del']);
-
         $nota = notasCreDeModelo::obtenerNotaCompraPorId($idNota);
+
         if (!$nota) {
             return ['status' => 'error', 'msg' => 'Nota no encontrada'];
         }
@@ -487,7 +600,7 @@ class notasCreDeControlador extends notasCreDeModelo
             /* 1️⃣ Anular nota */
             notasCreDeModelo::anularNotaCompraModelo($pdo, $idNota);
 
-            /* 2️⃣ Movimiento inverso */
+            /* 2️⃣ Movimiento inverso en cuentas a pagar */
             if ($nota['tipo'] === 'credito') {
                 $montoInverso = abs($nota['total']);
             } else {
@@ -495,13 +608,75 @@ class notasCreDeControlador extends notasCreDeModelo
             }
 
             notasCreDeModelo::impactarAnulacionNotaModelo($pdo, [
-                'idcompra' => $nota['idcompra_cabecera'],
+                'idcompra'   => $nota['idcompra_cabecera'],
                 'id_sucursal' => $nota['id_sucursal'],
-                'idnota'   => $idNota,
-                'monto'    => $montoInverso,
-                'obs'      => 'Anulación nota ' . $nota['tipo']
+                'idnota'     => $idNota,
+                'monto'      => $montoInverso,
+                'obs'        => 'Anulación Nota ' . $nota['tipo']
             ]);
 
+            /* 3️⃣ Revertir stock si correspondía */
+            if ($nota['movimiento_stock'] === 'DEVOLUCION') {
+
+                $det = $pdo->prepare("
+                SELECT id_articulo, cantidad, precio_unitario
+                FROM nota_compra_detalle
+                WHERE idnota_compra = :id
+            ");
+                $det->execute([':id' => $idNota]);
+                $items = $det->fetchAll(PDO::FETCH_ASSOC);
+
+                foreach ($items as $d) {
+
+                    $pdo->prepare("
+                    UPDATE stock
+                    SET stockDisponible = stockDisponible + :cant,
+                        stockUltActualizacion = NOW(),
+                        stockUsuActualizacion = :usu
+                    WHERE id_sucursal = :suc AND id_articulo = :art
+                ")->execute([
+                        ':cant' => $d['cantidad'],
+                        ':usu'  => $_SESSION['id_str'],
+                        ':suc'  => $nota['id_sucursal'],
+                        ':art'  => $d['id_articulo']
+                    ]);
+
+                    $pdo->prepare("
+                    INSERT INTO sucmovimientostock
+                    (id_sucursal, TipoMovStockId, MovStockProductoId,
+                     MovStockCantidad, MovStockPrecioVenta, MovStockCosto,
+                     MovStockFechaHora, MovStockUsuario,
+                     MovStockSigno, MovStockReferencia)
+                    VALUES
+                    (:suc, 'ANULA_NC_COMPRA', :art,
+                     :cant, 0, :costo,
+                     NOW(), :usu,
+                     1, :ref)
+                ")->execute([
+                        ':suc'   => $nota['id_sucursal'],
+                        ':art'   => $d['id_articulo'],
+                        ':cant'  => $d['cantidad'],
+                        ':costo' => $d['precio_unitario'],
+                        ':usu'   => $_SESSION['id_str'],
+                        ':ref'   => 'ANULA NC ' . $nota['nro_documento']
+                    ]);
+                }
+            }
+
+            /* 4️⃣ Anular en Libro de Compras */
+            $pdo->prepare("
+            UPDATE libro_compra
+            SET estado = 0
+            WHERE idcompra_cabecera = :idcompra
+              AND nro_comprobante = :nro
+              AND tipo_comprobante = :tipo
+              AND id_sucursal = :suc
+        ")->execute([
+                ':idcompra' => $nota['idcompra_cabecera'],
+                ':nro'      => $nota['nro_documento'],
+                ':tipo'     => ($nota['tipo'] === 'credito') ? 'NC' : 'ND',
+                ':suc'      => $nota['id_sucursal']
+            ]);
 
             $pdo->commit();
 

@@ -139,7 +139,7 @@ class transferenciaModelo extends mainModel
                 $pdo->prepare("
                 INSERT INTO sucmovimientostock
                     (
-                        LocalId,
+                        id_sucursal,
                         TipoMovStockId,
                         MovStockProductoId,
                         MovStockCantidad,

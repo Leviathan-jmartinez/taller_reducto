@@ -137,7 +137,7 @@
                                             </li>
                                         <?php } ?>
 
-                                        <?php if (mainModel::tienePermiso('inventario.ver')) { ?>
+                                        <?php if (mainModel::tienePermiso('articulo.ver')) { ?>
                                             <li>
                                                 <a href="<?= SERVERURL; ?>articulo-lista/">
                                                     <i class="fas fa-pallet fa-fw"></i> &nbsp; Artículos
@@ -155,47 +155,49 @@
                                     </ul>
                                 </li>
                             <?php } ?>
-                            <!-- SERVICIOS -->
-                            <li>
-                                <a href="#" class="nav-btn-submenu">
-                                    <i class="fas fa-cog fa-fw"></i> &nbsp; Servicios
-                                    <i class="fas fa-chevron-down"></i>
-                                </a>
+                            <?php if (mainModel::tienePermiso('servicio.ver')) { ?>
+                                <!-- SERVICIOS -->
+                                <li>
+                                    <a href="#" class="nav-btn-submenu">
+                                        <i class="fas fa-cog fa-fw"></i> &nbsp; Servicios
+                                        <i class="fas fa-chevron-down"></i>
+                                    </a>
 
-                                <ul>
-                                    <?php if (mainModel::tienePermiso('cliente.ver')) { ?>
-                                        <li>
-                                            <a href="<?= SERVERURL; ?>cliente-lista/">
-                                                <i class="fas fa-users fa-fw"></i> &nbsp; Clientes
-                                            </a>
-                                        </li>
-                                    <?php } ?>
+                                    <ul>
+                                        <?php if (mainModel::tienePermiso('cliente.ver')) { ?>
+                                            <li>
+                                                <a href="<?= SERVERURL; ?>cliente-lista/">
+                                                    <i class="fas fa-users fa-fw"></i> &nbsp; Clientes
+                                                </a>
+                                            </li>
+                                        <?php } ?>
 
-                                    <?php if (mainModel::tienePermiso('vehiculo.ver')) { ?>
-                                        <li>
-                                            <a href="<?= SERVERURL; ?>vehiculo-lista/">
-                                                <i class="fas fa-car fa-fw"></i> &nbsp; Vehículos
-                                            </a>
-                                        </li>
-                                    <?php } ?>
+                                        <?php if (mainModel::tienePermiso('vehiculo.ver')) { ?>
+                                            <li>
+                                                <a href="<?= SERVERURL; ?>vehiculo-lista/">
+                                                    <i class="fas fa-car fa-fw"></i> &nbsp; Vehículos
+                                                </a>
+                                            </li>
+                                        <?php } ?>
 
-                                    <?php if (mainModel::tienePermiso('empleado.ver')) { ?>
-                                        <li>
-                                            <a href="<?= SERVERURL; ?>empleado-lista/">
-                                                <i class="fas fa-user fa-fw"></i> &nbsp; Empleados
-                                            </a>
-                                        </li>
-                                    <?php } ?>
+                                        <?php if (mainModel::tienePermiso('empleado.ver')) { ?>
+                                            <li>
+                                                <a href="<?= SERVERURL; ?>empleado-lista/">
+                                                    <i class="fas fa-user fa-fw"></i> &nbsp; Empleados
+                                                </a>
+                                            </li>
+                                        <?php } ?>
 
-                                    <?php if (mainModel::tienePermiso('empleado.ver')) { ?>
-                                        <li>
-                                            <a href="<?= SERVERURL; ?>empleado-equipo/">
-                                                <i class="fas fa-users fa-fw"></i> &nbsp; Equipos
-                                            </a>
-                                        </li>
-                                    <?php } ?>
-                                </ul>
-                            </li>
+                                        <?php if (mainModel::tienePermiso('empleado.ver')) { ?>
+                                            <li>
+                                                <a href="<?= SERVERURL; ?>empleado-equipo/">
+                                                    <i class="fas fa-users fa-fw"></i> &nbsp; Equipos
+                                                </a>
+                                            </li>
+                                        <?php } ?>
+                                    </ul>
+                                </li>
+                            <?php } ?>
                         </ul>
                     </li>
                 <?php } ?>
@@ -224,47 +226,48 @@
                         <i class="fas fa-chevron-down"></i>
                     </a>
                     <ul>
-
-                        <!-- ================= COMPRAS ================= -->
-                        <li>
-                            <a href="#" class="nav-btn-submenu">
-                                <i class="fas fa-shopping-cart fa-fw"></i> &nbsp; Referenciales de Compras
-                                <i class="fas fa-chevron-down"></i>
-                            </a>
-                            <ul>
-                                <li>
-                                    <a href="<?= SERVERURL; ?>reporte-articulos/">
-                                        <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Artículos
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="<?= SERVERURL; ?>reporte-proveedores/">
-                                        <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Proveedores
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-
-                        <!-- ================= SERVICIOS ================= -->
-                        <li>
-                            <a href="#" class="nav-btn-submenu">
-                                <i class="fas fa-tools fa-fw"></i> &nbsp; Referenciales de Servicios
-                                <i class="fas fa-chevron-down"></i>
-                            </a>
-                            <ul>
-                                <li>
-                                    <a href="<?= SERVERURL; ?>reporte-clientes/">
-                                        <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Clientes
-                                    </a>
-                                </li>
-                                <li>
-                                    <a href="<?= SERVERURL; ?>reporte-empleados/">
-                                        <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Empleados
-                                    </a>
-                                </li>
-                            </ul>
-                        </li>
-
+                        <?php if (mainModel::tienePermiso('compra.reportes.ver')) { ?>
+                            <!-- ================= COMPRAS ================= -->
+                            <li>
+                                <a href="#" class="nav-btn-submenu">
+                                    <i class="fas fa-shopping-cart fa-fw"></i> &nbsp; Referenciales de Compras
+                                    <i class="fas fa-chevron-down"></i>
+                                </a>
+                                <ul>
+                                    <li>
+                                        <a href="<?= SERVERURL; ?>reporte-articulos/">
+                                            <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Artículos
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="<?= SERVERURL; ?>reporte-proveedores/">
+                                            <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Proveedores
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        <?php } ?>
+                        <?php if (mainModel::tienePermiso('servicio.reportes.ver')) { ?>
+                            <!-- ================= SERVICIOS ================= -->
+                            <li>
+                                <a href="#" class="nav-btn-submenu">
+                                    <i class="fas fa-tools fa-fw"></i> &nbsp; Referenciales de Servicios
+                                    <i class="fas fa-chevron-down"></i>
+                                </a>
+                                <ul>
+                                    <li>
+                                        <a href="<?= SERVERURL; ?>reporte-clientes/">
+                                            <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Clientes
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="<?= SERVERURL; ?>reporte-empleados/">
+                                            <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Empleados
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        <?php } ?>
                     </ul>
                 </li>
 

@@ -70,6 +70,16 @@ $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
                         <option value="debito">Nota de Débito</option>
                     </select>
                 </div>
+                <div class="col-md-3">
+                    <label>Movimiento de Stock</label>
+                    <select name="movimiento_stock" class="form-control" required>
+                        <option value="NINGUNO">Sin movimiento</option>
+                        <option value="DEVOLUCION">Devolución física</option>
+                    </select>
+                    <small class="text-muted">
+                        Use “Devolución física” solo si la mercadería vuelve al proveedor.
+                    </small>
+                </div>
 
                 <div class="col-md-3">
                     <label>Número de Nota</label>
