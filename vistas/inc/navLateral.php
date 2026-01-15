@@ -312,6 +312,11 @@
                                             <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Informe Libro de Compras
                                         </a>
                                     </li>
+                                    <li>
+                                        <a href="<?= SERVERURL; ?>reporte-movimientostock/">
+                                            <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Movimientos de Stock
+                                        </a>
+                                    </li>
 
                                 </ul>
                             </li>

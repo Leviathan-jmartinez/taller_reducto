@@ -128,7 +128,7 @@ class inventarioControlador extends inventarioModelo
         /**seleccionar proveedor */
         $datosINV = mainModel::ejecutar_consulta_simple("SELECT  idajuste_inventario, id_usuario, sucursal_id,estado, fecha, tipo_inv, descripcion, fecha_ajuste
         FROM ajuste_inventario
-        where (idajuste_inventario like '%$inventario%' or descripcion like '%$inventario%' or tipo_inv like '%$inventario%') and estado = '1' and sucursal_id = '" . $_SESSION['nick_sucursal'] . "'
+        where (idajuste_inventario like '%$inventario%' or descripcion like '%$inventario%' or tipo_inv like '%$inventario%') and estado in ('1','2') and sucursal_id = '" . $_SESSION['nick_sucursal'] . "'
         order by idajuste_inventario desc
         LIMIT 15");
 
@@ -164,7 +164,7 @@ class inventarioControlador extends inventarioModelo
         }
     }
     /* ===============================
-         Cargar INV en sesión   
+        Cargar INV en sesión   
     =============================== */
     public function cargar_inv_controlador()
     {
@@ -189,7 +189,7 @@ class inventarioControlador extends inventarioModelo
        1️⃣ CABECERA DEL AJUSTE
         ================================================== */
         $sqlCabecera = mainModel::ejecutar_consulta_simple("
-        SELECT ai.idajuste_inventario, ai.sucursal_id,ai.tipo_inv, ai.descripcion, ai.fecha_ajuste, u.usu_nombre
+        SELECT ai.idajuste_inventario, ai.sucursal_id,ai.tipo_inv, ai.descripcion, ai.fecha_ajuste, u.usu_nombre, ai.estado
         FROM ajuste_inventario ai
         INNER JOIN usuarios u ON u.id_usuario = ai.id_usuario
         WHERE ai.idajuste_inventario = '$idajuste' and ai.sucursal_id = '$idSucursal'");
@@ -202,7 +202,8 @@ class inventarioControlador extends inventarioModelo
                 "TIPO"        => $cabecera['tipo_inv'],
                 "DESCRIPCION" => $cabecera['descripcion'],
                 "FECHA"       => $cabecera['fecha_ajuste'],
-                "USUARIO"     => $cabecera['usuario']
+                "USUARIO"     => $cabecera['usuario'],
+                "ESTADO"     => $cabecera['estado']
             ];
         }
 
@@ -334,6 +335,25 @@ class inventarioControlador extends inventarioModelo
                 }
             }
 
+            // 🔄 Cambiar estado del ajuste a 2
+            $updEstado = $conexion->prepare("
+                UPDATE ajuste_inventario
+                SET estado = 2
+                WHERE idajuste_inventario = :idajuste
+                AND sucursal_id = :sucursal_id
+            ");
+
+            $updEstado->execute([
+                ":idajuste"    => $idajuste,
+                ":sucursal_id" => $idSucursal
+            ]);
+
+            if ($updEstado->rowCount() === 0) {
+                throw new Exception("No se pudo actualizar el estado del ajuste");
+            }
+            if (isset($_SESSION['datos_ajuste_inv'])) {
+                $_SESSION['datos_ajuste_inv']['ESTADO'] = 2;
+            }
             $conexion->commit();
             return ["status" => "ok"];
         } catch (Exception $e) {
@@ -366,6 +386,27 @@ class inventarioControlador extends inventarioModelo
         $usuario  = $_SESSION['id_str'];
         $fecha    = date("Y-m-d H:i:s");
 
+        $checkEstado = mainModel::ejecutar_consulta_simple("
+            SELECT estado
+            FROM ajuste_inventario
+            WHERE idajuste_inventario = '$idajuste'
+            AND sucursal_id = '$idsucursal'
+            LIMIT 1
+        ")->fetch();
+
+        if (!$checkEstado) {
+            return [
+                "status" => "error",
+                "msg" => "El ajuste no existe o no pertenece a la sucursal"
+            ];
+        }
+
+        if ((int)$checkEstado['estado'] !== 2) {
+            return [
+                "status" => "error",
+                "msg" => "El ajuste no está en estado válido para aplicar"
+            ];
+        }
         $ajustesAplicados = 0;
 
         foreach ($_SESSION['Cdatos_articuloINV'] as $item) {
@@ -457,7 +498,7 @@ class inventarioControlador extends inventarioModelo
         /* ================= CERRAR AJUSTE ================= */
         mainModel::ejecutar_consulta_simple("
         UPDATE ajuste_inventario
-        SET estado = 2,
+        SET estado = 3,
             ajustadoPor = '$usuario',
             fecha_ajuste = NOW()
         WHERE idajuste_inventario = '$idajuste'
@@ -545,13 +586,16 @@ class inventarioControlador extends inventarioModelo
             foreach ($datos as $rows) {
                 switch ($rows['estadoInv']) {
                     case 1:
-                        $estadoBadge = '<span class="badge bg-primary">Activo</span>';
+                        $estadoBadge = '<span class="badge bg-primary">Pendiente</span>';
                         break;
                     case 2:
-                        $estadoBadge = '<span class="badge bg-success">Procesado</span>';
+                        $estadoBadge = '<span class="badge bg-success">Modificado</span>';
+                        break;
+                    case 3:
+                        $estadoBadge = '<span class="badge bg-danger">Ajustado</span>';
                         break;
                     case 0:
-                        $estadoBadge = '<span class="badge bg-danger">Anulado</span>';
+                        $estadoBadge = '<span class="badge bg-secondary">Anulado</span>';
                         break;
                     default:
                         $estadoBadge = '<span class="badge bg-secondary">Desconocido</span>';

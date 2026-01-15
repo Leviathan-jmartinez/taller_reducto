@@ -86,7 +86,7 @@ class inventarioModelo extends mainModel
                     LEFT JOIN stock s 
                         ON s.id_articulo = a.id_articulo
                        AND s.id_sucursal = :sucursal
-                    WHERE a.estado = 1");
+                    WHERE a.estado = 1 and a.tipo='producto' ");
                     $stmtArt->execute([
                         ':sucursal' => $data['sucursal_id']
                     ]);

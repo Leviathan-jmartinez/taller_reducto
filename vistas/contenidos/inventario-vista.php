@@ -139,7 +139,12 @@ $tipo = $_SESSION['inventario_tipo'];
         </button>
 
         <?php
-        if (mainModel::tienePermisoVista('inventario.ajustar')) { ?>
+        $estadoInv = $_SESSION['datos_ajuste_inv']['ESTADO'] ?? null;
+
+        if (
+            mainModel::tienePermisoVista('inventario.ajustar') &&
+            (int)$estadoInv === 2
+        ) { ?>
             <button id="btn-ajustar-stock" class="btn btn-raised btn-danger btn-sm">
                 <i class="fas fa-sync-alt"></i> Ajustar Stock
             </button>
