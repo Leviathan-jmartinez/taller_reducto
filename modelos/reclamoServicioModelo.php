@@ -81,4 +81,61 @@ class reclamoServicioModelo extends mainModel
 
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /* ================= LISTAR / BUSCAR RECLAMOS ================= */
+    protected static function listar_reclamos_modelo($inicio, $registros, $busqueda = "")
+    {
+        $filtro = "";
+        if ($busqueda != "") {
+            $filtro = "WHERE  (
+            c.nombre_cliente LIKE :b
+            OR c.apellido_cliente LIKE :b
+            OR v.placa LIKE :b
+        )";
+        }
+
+        $sql = self::conectar()->prepare("
+        SELECT SQL_CALC_FOUND_ROWS
+            rs.idreclamo_servicio,
+            rs.fecha_reclamo,
+            rs.descripcion,
+            rs.estado,
+            c.nombre_cliente,
+            c.apellido_cliente,
+            v.placa
+        FROM reclamo_servicio rs
+        INNER JOIN registro_servicio rgs ON rgs.idregistro_servicio = rs.idregistro_servicio
+        INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rgs.idorden_trabajo
+        INNER JOIN recepcion_servicio r ON r.idrecepcion = ot.idrecepcion
+        INNER JOIN clientes c ON c.id_cliente = r.id_cliente
+        INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
+        $filtro
+        ORDER BY rs.idreclamo_servicio DESC
+        LIMIT :ini,:reg
+        ");
+
+        if ($busqueda != "") {
+            $sql->bindValue(":b", "%$busqueda%");
+        }
+
+        $sql->bindValue(":ini", (int)$inicio, PDO::PARAM_INT);
+        $sql->bindValue(":reg", (int)$registros, PDO::PARAM_INT);
+        $sql->execute();
+
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /* ================= ANULAR RECLAMO ================= */
+    protected static function anular_reclamo_modelo($id, $usuario)
+    {
+        $sql = self::conectar()->prepare("
+        UPDATE reclamo_servicio
+        SET estado = 0,
+            usuario_cierre = ?,
+            fecha_cierre = NOW(),
+            observacion_cierre = 'Anulado'
+        WHERE idreclamo_servicio = ?
+        ");
+        return $sql->execute([$usuario, $id]);
+    }
 }

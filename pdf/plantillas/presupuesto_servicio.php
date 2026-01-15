@@ -22,7 +22,7 @@
         }
 
         th {
-            background: #0d6efd;
+            background: #2f6f6f;
             color: #fff;
         }
 
@@ -37,10 +37,14 @@
 </head>
 
 <body>
-
-    <table width="100%" style="margin-bottom:10px;">
+    <table width="100%" style="background:#2f6f6f; color:#fff; margin-bottom:10px;">
         <tr>
-            <td><strong>PRESUPUESTO DE SERVICIO</strong></td>
+            <td width="20%" align="left" style="padding:8px;">
+                <img src="<?= __DIR__ . '/../assets/logo.png' ?>" height="50">
+            </td>
+            <td width="50%" align="center">
+                <h2 style="margin:0;">PRESUPUESTO DE SERVICIO</h2>
+            </td>
             <td align="right">
                 N° <?= str_pad($cabecera['idpresupuesto_servicio'], 6, '0', STR_PAD_LEFT) ?><br>
                 Fecha: <?= date('d/m/Y', strtotime($cabecera['fecha'])) ?><br>
@@ -94,7 +98,24 @@
         </tr>
     </table>
 
+
     <br><br><br>
+
+    <table width="100%" style="margin-top:40px; border:none;">
+        <tr>
+            <td style="width:50%; text-align:center; border:none;">
+                _______________________________<br>
+                <strong>Firma del Cliente</strong><br>
+                <?= $cabecera['nombre_cliente'] . ' ' . $cabecera['apellido_cliente'] ?>
+            </td>
+
+            <td style="width:50%; text-align:center; border:none;">
+                _______________________________<br>
+                <strong>Firma Autorizada</strong><br>
+                <?= $cabecera['usu_nombre'] . ' ' . $cabecera['usu_apellido'] ?>
+            </td>
+        </tr>
+    </table>
 
 </body>
 

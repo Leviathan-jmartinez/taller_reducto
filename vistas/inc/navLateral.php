@@ -355,7 +355,7 @@
 
 
                 <li>
-                    <a href="<?= SERVERURL; ?>public/docs/ayuda.pdf" download>
+                    <a href="<?= SERVERURL; ?>public/docs/userManual.pdf" download>
                         <i class="fas fa-question-circle fa-fw"></i> &nbsp; Ayuda
                     </a>
                 </li>

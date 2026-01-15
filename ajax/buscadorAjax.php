@@ -38,6 +38,7 @@ $data_url = [
     "presupuesto_servicio" => "presupuesto-servicio-buscar",
     "orden_trabajo" => "ordenTrabajo-buscar",
     "registro_servicio" => "registro-servicio-buscar",
+    "reclamo_servicio" => "reclamo-servicio-lista"
 ];
 
 if (!isset($data_url[$modulo])) {
@@ -63,7 +64,7 @@ $modulos_con_fecha = [
     "notasCreDe",
     "presupuesto_servicio",
     "orden_trabajo",
-    "registro_servicio"
+    "registro_servicio"    
 ];
 
 if (in_array($modulo, $modulos_con_fecha)) {

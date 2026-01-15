@@ -13,3 +13,8 @@ if ($_POST['accion'] === 'buscar_registro') {
     echo $ins->buscar_registro_controlador();
     exit();
 }
+
+if ($_POST['accion'] === 'anular_reclamo') {
+    echo $ins->anular_reclamo_controlador();
+    exit();
+}

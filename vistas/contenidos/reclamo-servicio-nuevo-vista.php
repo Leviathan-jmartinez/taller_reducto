@@ -33,8 +33,20 @@ if (!mainModel::tienePermisoVista('servicio.reclamo.crear')) {
 <div class="container-fluid reclamo-servicio">
     <h3>
         <i class="fas fa-exclamation-circle"></i>
-        &nbsp; RECLAMO DE SERVICIO
+        &nbsp; RECLAMOS DE SERVICIO
     </h3>
+    <ul class="full-box list-unstyled page-nav-tabs">
+        <li>
+            <a class="active" href="<?php echo SERVERURL; ?>/reclamo-servicio-nuevo/">
+                <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO
+            </a>
+        </li>
+        <li>
+            <a href="<?php echo SERVERURL; ?>/reclamo-servicio-lista/">
+                <i class="fas fa-search fa-fw"></i> &nbsp; LISTADO DE RECLAMOS
+            </a>
+        </li>
+    </ul>
 </div>
 
 <div class="container-fluid reclamo-servicio">
@@ -96,7 +108,7 @@ if (!mainModel::tienePermisoVista('servicio.reclamo.crear')) {
 
         <div class="text-center">
             <button class="btn btn-info btn-raised">
-                 <i class="fas fa-save"></i> &nbsp; Registrar reclamo
+                <i class="fas fa-save"></i> &nbsp; Registrar reclamo
             </button>
         </div>
 
