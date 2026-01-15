@@ -26,6 +26,10 @@ if (
     if (isset($_POST['id_agregar_articuloPre'])) {
         echo $inst_presu->articulo_controlador();
     }
+    if (isset($_POST['id_eliminar_articuloPre'])) {
+        echo $inst_presu->eliminar_articulo_controlador();
+    }
+
     if (isset($_POST['agregar_presupuesto'])) {
         echo $inst_presu->agregar_presupuesto_controlador();
     }

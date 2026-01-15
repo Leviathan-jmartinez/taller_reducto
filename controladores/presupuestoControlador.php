@@ -316,7 +316,7 @@ class presupuestoControlador extends presupuestoModelo
             } else {
                 $alerta = [
                     "Alerta" => "recargar",
-                    "Titulo" => "Pedido guardado!",
+                    "Titulo" => "Presupuesto guardado!",
                     "Texto" => "El presupuesto se registró correctamente",
                     "Tipo" => "success"
                 ];
@@ -359,6 +359,7 @@ class presupuestoControlador extends presupuestoModelo
 
             presupuestoModelo::actualizar_pedido_modelo([
                 "idpedido_cabecera" => $_SESSION['id_pedido_seleccionado'],
+                "sucursal" => $_SESSION['nick_sucursal'],
                 "updatedby" => $_SESSION['id_str']
             ]);
 
@@ -403,7 +404,7 @@ class presupuestoControlador extends presupuestoModelo
 
             echo json_encode([
                 "Alerta" => "recargar",
-                "Titulo" => "Pedido guardado!",
+                "Titulo" => "Presupuesto guardado!",
                 "Texto" => "El presupuesto se registró correctamente",
                 "Tipo" => "success"
             ]);
@@ -731,4 +732,40 @@ class presupuestoControlador extends presupuestoModelo
     }
 
     /**fin controlador */
+
+    public function eliminar_articulo_controlador()
+    {
+        session_start(['name' => 'STR']);
+
+        $id = $_POST['id_eliminar_articuloPre'] ?? null;
+        $tipo = $_POST['tipo_presupuesto'] ?? ($_SESSION['tipo_presupuesto'] ?? 'sin_pedido');
+
+        if (!$id) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "ID inválido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($tipo === 'sin_pedido') {
+            if (isset($_SESSION['Sdatos_articuloPre'][$id])) {
+                unset($_SESSION['Sdatos_articuloPre'][$id]);
+            }
+        } else { // con_pedido
+            if (isset($_SESSION['Cdatos_articuloPre'][$id])) {
+                unset($_SESSION['Cdatos_articuloPre'][$id]);
+            }
+        }
+
+        echo json_encode([
+            "Alerta" => "recargar",
+            "Titulo" => "Artículo eliminado",
+            "Texto" => "El artículo fue eliminado del presupuesto",
+            "Tipo" => "success"
+        ]);
+        exit();
+    }
 }

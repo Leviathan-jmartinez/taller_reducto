@@ -107,22 +107,6 @@ if (isset($_POST['index'])) {
         $cantidad = floatval($_POST['cantidad']);
         $precio   = floatval($_POST['precio']);
 
-        // ❌ BLOQUEAR CANTIDADES O PRECIOS EN CERO
-        if ($cantidad <= 0) {
-            echo json_encode([
-                "status" => "error",
-                "msg" => "La cantidad no puede ser cero"
-            ]);
-            exit();
-        }
-
-        if ($precio <= 0) {
-            echo json_encode([
-                "status" => "error",
-                "msg" => "El precio no puede ser cero"
-            ]);
-            exit();
-        }
 
         // ✔️ ACTUALIZAR SESIÓN SOLO SI LOS DATOS SON VÁLIDOS
         $_SESSION['Cdatos_articuloCO'][$i]['cantidad'] = $cantidad;

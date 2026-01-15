@@ -343,14 +343,38 @@ class compraControlador extends compraModelo
             ];
         }
 
+        // 1) Filtrar solo artículos con cantidad > 0
+        $itemsValidos = [];
+        foreach ($_SESSION['Cdatos_articuloCO'] as $item) {
+            if ((float)$item['cantidad'] > 0) {
+                $itemsValidos[] = $item;
+            }
+        }
+
+        if (count($itemsValidos) === 0) {
+            return [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Debes ingresar al menos un producto con cantidad mayor a 0.",
+                "Tipo" => "error"
+            ];
+        }
+
+        // 2) Recalcular total real
+        $totalReal = 0;
+        foreach ($itemsValidos as $item) {
+            $totalReal += round((float)$item['subtotal'], 2);
+        }
+        $totalReal = round($totalReal, 2);
+
         $pdo = mainModel::conectar();
         $pdo->beginTransaction();
 
         try {
 
             /* ===============================
-                DATOS DE LA CABECERA
-            ================================ */
+            CABECERA
+        ================================ */
             $datosCab = [
                 "proveedor"            => $_SESSION['datos_proveedorCO']['ID'],
                 "usuario"              => $_SESSION['id_str'],
@@ -360,25 +384,26 @@ class compraControlador extends compraModelo
                 "timbrado"             => $_POST['timbrado'],
                 "vencimiento_timbrado" => $_POST['vencimiento_timbrado'],
                 "estado"               => "1",
-                "total"                => round((float)$_POST['total_factura'], 2),
+                "total"                => $totalReal,
                 "condicion"            => $_POST['condicion'],
                 "intervalo"            => $_POST['intervalo'],
                 "idoc"                 => isset($_SESSION['id_oc_seleccionado']) ? $_SESSION['id_oc_seleccionado'] : null
             ];
+
             $proveedor = $_SESSION['datos_proveedorCO']['ID'];
             $nro       = $_POST['factura_numero'];
             $timbrado  = $_POST['timbrado'];
             $sucursal  = $_SESSION['nick_sucursal'];
 
             $validarFactura = mainModel::ejecutar_consulta_simple("
-                SELECT 1
-                FROM compra_cabecera
-                WHERE idproveedores = '$proveedor'
-                AND nro_factura = '$nro'
-                AND nro_timbrado = '$timbrado'
-                AND id_sucursal = '$sucursal'
-                AND estado <> 0
-            ")->rowCount();
+            SELECT 1
+            FROM compra_cabecera
+            WHERE idproveedores = '$proveedor'
+              AND nro_factura = '$nro'
+              AND nro_timbrado = '$timbrado'
+              AND id_sucursal = '$sucursal'
+              AND estado <> 0
+        ")->rowCount();
 
             if ($validarFactura > 0) {
                 return [
@@ -405,9 +430,7 @@ class compraControlador extends compraModelo
             $iva10      = 0.00;
             $totalLibro = 0.00;
 
-            foreach ($_SESSION['Cdatos_articuloCO'] as $item) {
-
-                if ((float)$item['cantidad'] <= 0) continue;
+            foreach ($itemsValidos as $item) {
 
                 $subtotal = round((float)$item['subtotal'], 2);
                 $ivaItem  = round((float)$item['iva'], 2);
@@ -477,24 +500,26 @@ class compraControlador extends compraModelo
                 ];
                 compraModelo::upsert_stock_modelo($datos_stock);
             }
+
             /* ===============================
-                ACTUALIZAR ORDEN DE COMPRA
-            ================================ */
+            ACTUALIZAR ORDEN DE COMPRA
+        ================================ */
             if (!empty($datosCab['idoc'])) {
                 compraModelo::actualizar_oc_modelo([
-                    "idorden_compra"      => $datosCab['idoc'],
-                    "idcompra_cabecera"   => $idcab,
-                    "updatedby"           => $_SESSION['id_str'],
-                    "id_sucursal"         => $_SESSION['nick_sucursal']
+                    "idorden_compra"    => $datosCab['idoc'],
+                    "idcompra_cabecera" => $idcab,
+                    "updatedby"         => $_SESSION['id_str'],
+                    "id_sucursal"       => $_SESSION['nick_sucursal']
                 ]);
             }
+
             /* ===============================
-                CUENTAS A PAGAR
-            ================================ */
+            CUENTAS A PAGAR
+        ================================ */
             $condicion = $_POST['condicion'];
             $intervalo = (int)$_POST['intervalo'];
             $cuotas    = (int)$_POST['cuotas'];
-            $total     = round((float)$_POST['total_factura'], 2);
+            $total     = $totalReal;
 
             if ($condicion === 'contado') $cuotas = 1;
 
@@ -520,24 +545,24 @@ class compraControlador extends compraModelo
             }
 
             /* ===============================
-           LIBRO DE COMPRAS
+            LIBRO DE COMPRAS
         ================================ */
             $datosLibro = [
-                "idcompra"   => $idcab,
+                "idcompra"    => $idcab,
                 "id_sucursal" => $_SESSION['nick_sucursal'],
-                "fecha"      => $_POST['fecha_emision'],
-                "tipo"       => "factura",
-                "serie"      => substr($_POST['factura_numero'], 0, 7),
-                "numero"     => $_POST['factura_numero'],
-                "proveedor"  => $_SESSION['datos_proveedorCO']['ID'],
-                "prov_nom"   => $_SESSION['datos_proveedorCO']['RAZON'],
-                "prov_ruc"   => $_SESSION['datos_proveedorCO']['RUC'],
-                "exenta"     => round($exenta, 2),
-                "gravada5"   => round($gravada5, 2),
-                "iva5"       => round($iva5, 2),
-                "gravada10"  => round($gravada10, 2),
-                "iva10"      => round($iva10, 2),
-                "total"      => round($totalLibro, 2)
+                "fecha"       => $_POST['fecha_emision'],
+                "tipo"        => "factura",
+                "serie"       => substr($_POST['factura_numero'], 0, 7),
+                "numero"      => $_POST['factura_numero'],
+                "proveedor"   => $_SESSION['datos_proveedorCO']['ID'],
+                "prov_nom"    => $_SESSION['datos_proveedorCO']['RAZON'],
+                "prov_ruc"    => $_SESSION['datos_proveedorCO']['RUC'],
+                "exenta"      => round($exenta, 2),
+                "gravada5"    => round($gravada5, 2),
+                "iva5"        => round($iva5, 2),
+                "gravada10"   => round($gravada10, 2),
+                "iva10"       => round($iva10, 2),
+                "total"       => round($totalLibro, 2)
             ];
 
             $guardarLibro = compraModelo::insertar_libro_compra_modelo($datosLibro);
@@ -552,19 +577,20 @@ class compraControlador extends compraModelo
             return [
                 "Alerta" => "recargar",
                 "Titulo" => "Compra registrada",
-                "Texto" => "La compra se guardó correctamente.",
-                "Tipo" => "success"
+                "Texto"  => "La compra se guardó correctamente.",
+                "Tipo"   => "success"
             ];
         } catch (Exception $e) {
             $pdo->rollBack();
             return [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrió un error inesperado!",
-                "Texto" => $e->getMessage(),
-                "Tipo" => "error"
+                "Texto"  => $e->getMessage(),
+                "Tipo"   => "error"
             ];
         }
     }
+
 
     /**controlador buscador proveedor */
     public function buscar_proveedor_controlador()

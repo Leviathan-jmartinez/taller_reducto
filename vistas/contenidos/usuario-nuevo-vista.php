@@ -112,7 +112,7 @@ if (!mainModel::tienePermisoVista('usuarios.crear')) {
 						<p><span class="badge badge-success">Edición</span> Permisos para registrar y actualizar</p>
 						<p><span class="badge badge-dark">Registrar</span> Solo permisos para registrar</p>
 						<div class="form-group">
-							<select class="form-control" name="usuario_privilegio_reg">
+							<select class="form-control" name="usuario_privilegio_reg" required>
 								<option value="" selected="" disabled="">Seleccione una opción</option>
 								<option value="1">Control total</option>
 								<option value="2">Edición</option>

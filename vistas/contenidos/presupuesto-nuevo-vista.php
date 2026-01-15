@@ -9,15 +9,18 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
+// Valor por defecto: CON PEDIDO
+if (!isset($_SESSION['tipo_presupuesto'])) {
+    $_SESSION['tipo_presupuesto'] = "con_pedido";
+}
 
-$tipo = $_SESSION['tipo_presupuesto'] ?? null;
+$tipo = $_SESSION['tipo_presupuesto'];
 
-
+// Si se envió un nuevo valor por POST, sobrescribe
 if (isset($_POST['tipo_presupuesto'])) {
     $_SESSION['tipo_presupuesto'] = $_POST['tipo_presupuesto'];
     $tipo = $_SESSION['tipo_presupuesto'];
 }
-
 ?>
 
 <!-- Page header -->
@@ -25,6 +28,7 @@ if (isset($_POST['tipo_presupuesto'])) {
     <h3 class="text-left">
         <i class="fas fa-plus fa-fw"></i> &nbsp; CARGAR PRESUPUESTO
         <?php if ($tipo == 'con_pedido') echo "(a partir de pedido)"; ?>
+        <?php if ($tipo == 'sin_pedido') echo "(manual)"; ?>
     </h3>
 </div>
 
@@ -43,11 +47,30 @@ if (isset($_POST['tipo_presupuesto'])) {
     </ul>
 </div>
 
-<div class="container-fluid form-neon">
+<!-- BARRA SUPERIOR DE CAMBIO DE MODO (como OC) -->
 
-    <!-- Contenido según tipo de presupuesto -->
+
+<div class="container-fluid form-neon mt-3">
+    <div class="container-fluid mt-3 text-right">
+        <?php if ($tipo === 'con_pedido') { ?>
+            <form action="" method="POST" style="display:inline;">
+                <input type="hidden" name="tipo_presupuesto" value="sin_pedido">
+                <button class="btn btn-primary btn-lg" type="submit">
+                    + Presupuesto sin pedido
+                </button>
+            </form>
+        <?php } else { ?>
+            <form action="" method="POST" style="display:inline;">
+                <input type="hidden" name="tipo_presupuesto" value="con_pedido">
+                <button class="btn btn-secondary btn-sm" type="submit">
+                    Volver a con pedido
+                </button>
+            </form>
+        <?php } ?>
+    </div>
+    <!-- CONTENIDO SEGÚN TIPO -->
     <?php if ($tipo === 'sin_pedido') { ?>
-        <!-- SIN PEDIDO: agregar proveedor y artículos manualmente -->
+        <!-- SIN PEDIDO: proveedor + artículos manuales -->
         <div class="text-center mb-3">
             <?php if (empty($_SESSION['Sdatos_proveedorPre'])) { ?>
                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalproveedorPre">
@@ -58,18 +81,7 @@ if (isset($_POST['tipo_presupuesto'])) {
                 <i class="fas fa-box-open"></i> &nbsp; Agregar artículo
             </button>
         </div>
-    <?php } elseif ($tipo === 'con_pedido') { ?>
-        <!-- CON PEDIDO: buscar pedido en BD -->
-        <?php if (empty($_SESSION['Cdatos_proveedorPre'])) { ?>
-            <div class="text-center mb-3">
-                <button type="button" class="btn btn-info" data-toggle="modal" data-target="#ModalBuscarPedido">
-                    <i class="fas fa-search"></i> &nbsp; Buscar Pedido
-                </button>
-            </div>
-        <?php } ?>
-    <?php } ?>
 
-    <?php if ($tipo === 'sin_pedido' || $tipo == null) { ?>
         <div class="col-12 col-md-6">
             <span class="roboto-medium">PROVEEDOR:</span>
             <?php if (empty($_SESSION['Sdatos_proveedorPre'])) { ?>
@@ -84,24 +96,7 @@ if (isset($_POST['tipo_presupuesto'])) {
                 </form>
             <?php } ?>
         </div>
-    <?php } elseif ($tipo === 'con_pedido') { ?>
-        <div class="col-12 col-md-6">
-            <span class="roboto-medium">PROVEEDOR:</span>
-            <?php if (empty($_SESSION['Cdatos_proveedorPre'])) { ?>
-                <span class="text-danger">&nbsp;
-                    <i class="fas fa-exclamation-triangle"></i> Seleccione un Proveedor
-                </span>
-            <?php } else { ?>
-                <form class="FormularioAjax d-inline-block" action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php" method="POST" data-form="loans">
-                    <input type="hidden" name="id_eliminar_proveedorPre" value="<?php echo $_SESSION['Cdatos_proveedorPre']['ID']; ?>">
-                    <?php echo $_SESSION['Cdatos_proveedorPre']['RAZON'] . " (" . $_SESSION['Cdatos_proveedorPre']['RUC'] . ")"; ?>
-                    <button type="submit" class="btn btn-danger"><i class="fas fa-user-times"></i></button>
-                </form>
-            <?php } ?>
-        </div>
-    <?php } ?>
 
-    <?php if ($tipo === 'sin_pedido' || $tipo == null) { ?>
         <div class="table-responsive mt-3">
             <table class="table table-dark table-sm">
                 <thead>
@@ -140,7 +135,6 @@ if (isset($_POST['tipo_presupuesto'])) {
                                 </td>
                             </tr>
                         <?php endforeach; ?>
-                        <tr class="text-center bg-light">
                         <tr class="text-center bg-light total-fila">
                             <td><strong>TOTAL</strong></td>
                             <td colspan="2"></td>
@@ -148,8 +142,6 @@ if (isset($_POST['tipo_presupuesto'])) {
                             <td></td>
                             <td id="total-general"><strong><?php echo number_format($_SESSION['total_pre'], 0, ',', '.'); ?></strong></td>
                             <td></td>
-                        </tr>
-
                         </tr>
                     <?php
                     } else {
@@ -162,7 +154,32 @@ if (isset($_POST['tipo_presupuesto'])) {
                 </tbody>
             </table>
         </div>
-    <?php } elseif ($tipo === 'con_pedido') { ?>
+
+    <?php } else { ?>
+        <!-- CON PEDIDO: buscar pedido -->
+        <?php if (empty($_SESSION['Cdatos_proveedorPre'])) { ?>
+            <div class="text-center mb-3">
+                <button type="button" class="btn btn-info" data-toggle="modal" data-target="#ModalBuscarPedido">
+                    <i class="fas fa-search"></i> &nbsp; Buscar Pedido
+                </button>
+            </div>
+        <?php } ?>
+
+        <div class="col-12 col-md-6">
+            <span class="roboto-medium">PROVEEDOR:</span>
+            <?php if (empty($_SESSION['Cdatos_proveedorPre'])) { ?>
+                <span class="text-danger">&nbsp;
+                    <i class="fas fa-exclamation-triangle"></i> Seleccione un Proveedor
+                </span>
+            <?php } else { ?>
+                <form class="FormularioAjax d-inline-block" action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php" method="POST" data-form="loans">
+                    <input type="hidden" name="id_eliminar_proveedorPre" value="<?php echo $_SESSION['Cdatos_proveedorPre']['ID']; ?>">
+                    <?php echo $_SESSION['Cdatos_proveedorPre']['RAZON'] . " (" . $_SESSION['Cdatos_proveedorPre']['RUC'] . ")"; ?>
+                    <button type="submit" class="btn btn-danger"><i class="fas fa-user-times"></i></button>
+                </form>
+            <?php } ?>
+        </div>
+
         <div class="table-responsive mt-3">
             <table class="table table-dark table-sm">
                 <thead>
@@ -199,7 +216,6 @@ if (isset($_POST['tipo_presupuesto'])) {
                                 <td class="subtotal-articulo" data-id="<?php echo $article['ID']; ?>">
                                     <?php echo number_format($article['subtotal'], 0, ',', '.'); ?>
                                 </td>
-
                                 <td>
                                     <form class="FormularioAjax" action="<?php echo SERVERURL; ?>ajax/presupuestoAjax.php" method="POST" data-form="loans">
                                         <input type="hidden" name="id_eliminar_articuloPre" value="<?php echo $article['ID']; ?>">
@@ -208,7 +224,6 @@ if (isset($_POST['tipo_presupuesto'])) {
                                 </td>
                             </tr>
                         <?php endforeach; ?>
-                        <tr class="text-center bg-light">
                         <tr class="text-center bg-light total-fila">
                             <td><strong>TOTAL</strong></td>
                             <td colspan="2"></td>
@@ -216,8 +231,6 @@ if (isset($_POST['tipo_presupuesto'])) {
                             <td></td>
                             <td id="total-general"><strong><?php echo number_format($_SESSION['total_pre'], 0, ',', '.'); ?></strong></td>
                             <td></td>
-                        </tr>
-
                         </tr>
                     <?php
                     } else {
@@ -231,28 +244,9 @@ if (isset($_POST['tipo_presupuesto'])) {
             </table>
         </div>
     <?php } ?>
-    <!-- Botones GUARDAR y LIMPIAR 
-    <div style="display: flex; justify-content: center; gap: 25px; margin-top: 30px;">
-        <form class="FormularioAjax" action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php" method="POST" data-form="save" autocomplete="off" style="margin:0;">
-            <input type="hidden" name="agregar_presupuesto" value="1">
-            
-            <button type="submit" class="btn btn-raised btn-info btn-sm">
-                <i class="far fa-save"></i> &nbsp; GUARDAR
-            </button>
-        </form>
-        <form action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php" method="POST" data-form="loans" autocomplete="off" style="margin:0;">
-            <input type="hidden" name="limpiar_presupuesto" value="1">
-            <button type="submit" class="btn btn-raised btn-secondary btn-sm">
-                <i class="fas fa-paint-roller"></i> &nbsp; LIMPIAR
-            </button>
-        </form>
-    </div>
-    -->
 
-    <!-- CONTENEDOR GENERAL -->
+    <!-- FORM GUARDAR -->
     <div class="container-fluid mt-3">
-
-        <!-- FECHA (dentro del form GUARDAR) -->
         <form class="FormularioAjax" action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php"
             method="POST" data-form="save" autocomplete="off">
 
@@ -267,16 +261,13 @@ if (isset($_POST['tipo_presupuesto'])) {
 
             <input type="hidden" name="agregar_presupuesto" value="1">
 
-            <!-- BOTONES ABAJO CENTRADOS -->
             <div class="text-center mt-3">
                 <button type="submit" class="btn btn-raised btn-info btn-sm">
                     <i class="far fa-save"></i> &nbsp; GUARDAR
                 </button>
             </div>
-
         </form>
 
-        <!-- BOTÓN LIMPIAR (separado, como en tu versión original) -->
         <div class="text-center mt-3">
             <form action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php" method="POST"
                 data-form="loans" autocomplete="off">
@@ -286,34 +277,8 @@ if (isset($_POST['tipo_presupuesto'])) {
                 </button>
             </form>
         </div>
-
     </div>
 
-
-</div>
-
-
-
-<!-- Modal de selección inicial -->
-<div class="modal fade" id="ModalTipoPresupuesto" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
-        <div class="modal-content text-center">
-            <div class="modal-header">
-                <h5 class="modal-title">Seleccione tipo de presupuesto</h5>
-            </div>
-            <div class="modal-body">
-                <form method="POST">
-                    <button type="submit" name="tipo_presupuesto" value="sin_pedido" class="btn btn-primary m-2">Sin pedido</button>
-                    <button type="submit" name="tipo_presupuesto" value="con_pedido" class="btn btn-success m-2">Con pedido</button>
-                </form>
-            </div>
-            <div class="modal-footer justify-content-center">
-                <button type="button" class="btn btn-raised btn-danger btn-sm" onclick="window.location.href='<?php echo SERVERURL; ?>presupuesto-lista/'">
-                    Cancelar
-                </button>
-            </div>
-        </div>
-    </div>
 </div>
 
 <!-- MODAL proveedor -->
@@ -334,10 +299,7 @@ if (isset($_POST['tipo_presupuesto'])) {
                     </div>
                 </div>
                 <br>
-                <div class="container-fluid" id="tabla_proveedorPre">
-
-                </div>
-
+                <div class="container-fluid" id="tabla_proveedorPre"></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" onclick="buscar_proveedorPre()"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar</button>
@@ -347,7 +309,6 @@ if (isset($_POST['tipo_presupuesto'])) {
         </div>
     </div>
 </div>
-
 
 <!-- MODAL ITEM -->
 <div class="modal fade" id="ModalArticuloPre" tabindex="-1" role="dialog" aria-labelledby="ModalArticuloPre" aria-hidden="true">
@@ -364,13 +325,10 @@ if (isset($_POST['tipo_presupuesto'])) {
                     <div class="form-group">
                         <label for="input_item" class="bmd-label-floating">Código, descripción</label>
                         <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" class="form-control" name="input_articulo" id="input_articulo" maxlength="30">
-
                     </div>
                 </div>
                 <br>
-                <div class="container-fluid" id="tabla_articulosPre">
-                </div>
-
+                <div class="container-fluid" id="tabla_articulosPre"></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" onclick="buscar_articuloPre()"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar</button>
@@ -381,8 +339,7 @@ if (isset($_POST['tipo_presupuesto'])) {
     </div>
 </div>
 
-
-<!-- MODAL ITEM -->
+<!-- MODAL BUSCAR PEDIDO -->
 <div class="modal fade" id="ModalBuscarPedido" tabindex="-1" role="dialog" aria-labelledby="ModalBuscarPedido" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -400,9 +357,7 @@ if (isset($_POST['tipo_presupuesto'])) {
                     </div>
                 </div>
                 <br>
-                <div class="container-fluid" id="tabla_pedidosPre">
-                </div>
-
+                <div class="container-fluid" id="tabla_pedidosPre"></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" onclick="buscar_pedidoPre()"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar</button>
@@ -413,16 +368,5 @@ if (isset($_POST['tipo_presupuesto'])) {
     </div>
 </div>
 
-
-
 <?php include_once "./vistas/inc/presupuestoCompra.php";
 include_once "./vistas/inc/scripts.php"; ?>
-
-<!-- Mostrar modal si no hay selección -->
-<script>
-    $(document).ready(function() {
-        <?php if (empty($_SESSION['tipo_presupuesto'])): ?>
-            $('#ModalTipoPresupuesto').modal({});
-        <?php endif; ?>
-    });
-</script>
