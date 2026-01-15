@@ -15,17 +15,52 @@ $pdo = mainModel::conectar();
 /* ================= CABECERA ================= */
 $qCab = $pdo->prepare("
     SELECT 
-        nr.*,
+        nr.idnota_remision,
+        nr.nro_remision,
+        nr.fecha_emision,
+
+        -- Datos del traslado
+        nr.fechaenvio,
+        nr.fechallegada,
+        nr.motivo_remision,
+        nr.tipo,
+
+        -- Transportista / Conductor
+        nr.nombre_transpo,
+        nr.ci_transpo,
+        nr.cel_transpo,
+        nr.transportista,
+        nr.ruc_transport,
+
+        -- Vehículo
+        nr.vehimarca,
+        nr.vehimodelo,
+        nr.vehichapa,
+
+        -- Empresa / Sucursal
         s.suc_descri,
         s.nro_establecimiento,
+
+        e.razon_social,
+        e.direccion,
+        e.telefono_empresa,
+        e.ruc,
+
+        -- Timbrado
+        st.fecha_inicio,
         st.timbrado,
         st.fecha_vencimiento
+
     FROM nota_remision nr
-    INNER JOIN sucursales s ON s.id_sucursal = nr.id_sucursal
-    INNER JOIN sucursal_timbrado st 
+    INNER JOIN sucursales s 
+        ON s.id_sucursal = nr.id_sucursal
+    INNER JOIN empresa e 
+        ON e.id_empresa = s.id_empresa
+    LEFT JOIN sucursal_timbrado st 
         ON st.id_sucursal = nr.id_sucursal AND st.activo = 1
     WHERE nr.idnota_remision = :id
 ");
+
 $qCab->execute([':id' => $id]);
 $cab = $qCab->fetch(PDO::FETCH_ASSOC);
 
@@ -75,93 +110,181 @@ ob_start();
 
     th,
     td {
+        
         border: 1px solid #000;
         padding: 4px;
     }
 
-    .no-border td {
+    .no-border td { 
         border: none;
     }
 </style>
 
-<h3>NOTA DE REMISIÓN</h3>
+<table width="100%" style="border:2px solid #000; padding:6px; margin-bottom:10px;">
+    <tr>
+        <!-- Caja izquierda -->
+        <td width="65%" style="padding:8px;">
+            <table width="100%" style="border:2px solid #000; border-radius:8px;">
+                <tr>
+                    <td style="text-align:center; padding:10px;">
+                        <div style="font-size:20px; font-weight:bold;"><?= $cab['razon_social'] ?></div>
+                        <div style="font-size:12px; margin-top:4px;">
+                            <?= $cab['direccion'] ?><br>
+                            Taller de mantenimiento y Venta de Repuestos<br>
+                            Teléfono <?= $cab['telefono_empresa'] ?>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </td>
 
-<table class="no-border">
-    <tr>
-        <td><b>Sucursal:</b> <?= $cab['suc_descri'] ?></td>
-        <td><b>Establecimiento:</b> <?= $cab['nro_establecimiento'] ?></td>
-    </tr>
-    <tr>
-        <td><b>Timbrado:</b> <?= $cab['timbrado'] ?></td>
-        <td><b>Válido hasta:</b> <?= $cab['fecha_vencimiento'] ?></td>
-    </tr>
-    <tr>
-        <td><b>Nº Remisión:</b> <?= $cab['nro_remision'] ?></td>
-        <td><b>Fecha:</b> <?= $cab['fecha_emision'] ?></td>
+        <!-- Caja derecha -->
+        <td width="35%" style="padding:8px;">
+            <table width="100%" style="border:2px solid #000; border-radius:8px;">
+                <tr>
+                    <td style="text-align:center; padding:10px; font-size:11px;">
+                        <div><strong>TIMBRADO Nº</strong> <?= $cab['timbrado'] ?></div>
+                        <div>Fecha Inicio Vigencia: <?= $cab['fecha_inicio'] ?></div>
+                        <div>Fecha Fin Vigencia: <?= $cab['fecha_vencimiento'] ?></div>
+                        <div style="margin-top:6px;"><strong>RUC:</strong> <?= $cab['ruc'] ?></div>
+
+                        <div style="margin-top:8px; font-size:14px; font-weight:bold;">
+                            NOTA DE REMISIÓN
+                        </div>
+                        <div style="font-size:13px; font-weight:bold;">
+                            <?= $cab['nro_remision'] ?>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </td>
     </tr>
 </table>
+
+
 
 <hr>
 
-<b>Datos del Transporte</b>
-<table>
+<!-- 2. DATOS DEL TRASLADO -->
+<table width="100%" style="border:1px solid #000; border-collapse:collapse; margin-bottom:6px;">
     <tr>
-        <td>Transportista</td>
-        <td><?= $cab['transportista'] ?></td>
+        <td colspan="4" style="padding:4px; font-weight:bold;">
+            2. DATOS DEL TRASLADO
+        </td>
     </tr>
     <tr>
-        <td>RUC</td>
-        <td><?= $cab['ruc_transport'] ?></td>
+        <td style="width:25%; padding:4px;">Motivo del traslado</td>
+        <td style="width:25%; padding:4px;"><?= $cab['motivo_remision'] ?? '' ?></td>
+        <td style="width:25%; padding:4px;">Tipo</td>
+        <td style="width:25%; padding:4px;"><?= $cab['tipo'] ?? '' ?></td>
     </tr>
     <tr>
-        <td>Chofer</td>
-        <td><?= $cab['nombre_transpo'] ?></td>
-    </tr>
-    <tr>
-        <td>CI</td>
-        <td><?= $cab['ci_transpo'] ?></td>
-    </tr>
-    <tr>
-        <td>Chapa</td>
-        <td><?= $cab['vehichapa'] ?></td>
-    </tr>
-    <tr>
-        <td>Vehículo</td>
-        <td><?= $cab['vehimarca'] ?> <?= $cab['vehimodelo'] ?></td>
+        <td style="padding:4px;">Fecha de inicio</td>
+        <td style="padding:4px;"><?= $cab['fechaenvio'] ?? '' ?></td>
+        <td style="padding:4px;">Fecha estimada de llegada</td>
+        <td style="padding:4px;"><?= $cab['fechallegada'] ?? '' ?></td>
     </tr>
 </table>
 
-<br>
-
-<b>Detalle de Mercaderías</b>
-<table>
-    <thead>
-        <tr>
-            <th>Cant.</th>
-            <th>Descripción</th>
-            <th>Costo</th>
-            <th>Subtotal</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php
-        $total = 0;
-        foreach ($detalle as $d):
-            $total += $d['subtotal'];
-        ?>
-            <tr>
-                <td><?= number_format($d['cantidad'], 2) ?></td>
-                <td><?= $d['desc_articulo'] ?></td>
-                <td><?= number_format($d['costo'], 2) ?></td>
-                <td><?= number_format($d['subtotal'], 2) ?></td>
-            </tr>
-        <?php endforeach; ?>
-        <tr>
-            <td colspan="3"><b>Total</b></td>
-            <td><b><?= number_format($total, 2) ?></b></td>
-        </tr>
-    </tbody>
+<!-- 3. DATOS DEL TRANSPORTISTA -->
+<table width="100%" style="border:1px solid #000; border-collapse:collapse; margin-bottom:6px;">
+    <tr>
+        <td colspan="2" style="padding:4px; font-weight:bold;">
+            3. DATOS DEL TRANSPORTISTA
+        </td>
+    </tr>
+    <tr>
+        <td style="width:30%; padding:4px;">Razón Social</td>
+        <td style="padding:4px;"><?= $cab['transportista'] ?? '' ?></td>
+    </tr>
+    <tr>
+        <td style="padding:4px;">RUC</td>
+        <td style="padding:4px;"><?= $cab['ruc_transport'] ?? '' ?></td>
+    </tr>
 </table>
+
+<!-- 4. DATOS DEL VEHÍCULO -->
+<table width="100%" style="border:1px solid #000; border-collapse:collapse; margin-bottom:6px;">
+    <tr>
+        <td colspan="2" style="padding:4px; font-weight:bold;">
+            4. DATOS DEL VEHÍCULO DE TRANSPORTE
+        </td>
+    </tr>
+    <tr>
+        <td style="width:30%; padding:4px;">Marca / Modelo</td>
+        <td style="padding:4px;">
+            <?= ($cab['vehimarca'] ?? '') . ' ' . ($cab['vehimodelo'] ?? '') ?>
+        </td>
+    </tr>
+    <tr>
+        <td style="padding:4px;">Chapa</td>
+        <td style="padding:4px;"><?= $cab['vehichapa'] ?? '' ?></td>
+    </tr>
+</table>
+
+<!-- 5. DATOS DEL CONDUCTOR -->
+<table width="100%" style="border:1px solid #000; border-collapse:collapse; margin-bottom:6px;">
+    <tr>
+        <td colspan="2" style="padding:4px; font-weight:bold;">
+            5. DATOS DEL CONDUCTOR DEL VEHÍCULO
+        </td>
+    </tr>
+    <tr>
+        <td style="width:30%; padding:4px;">Nombre y Apellido</td>
+        <td style="padding:4px;"><?= $cab['nombre_transpo'] ?? '' ?></td>
+    </tr>
+    <tr>
+        <td style="padding:4px;">C.I.</td>
+        <td style="padding:4px;"><?= $cab['ci_transpo'] ?? '' ?></td>
+    </tr>
+</table>
+
+<!-- 6. DATOS DE LA MERCADERÍA -->
+<table width="100%" style="border:1px solid #000; border-collapse:collapse; margin-bottom:6px;">
+    <tr>
+        <td colspan="4" style="padding:4px; font-weight:bold;">
+            6. DATOS DE LA MERCADERÍA
+        </td>
+    </tr>
+    <tr>
+        <th style="border:1px solid #000; padding:4px;">Cantidad</th>
+        <th style="border:1px solid #000; padding:4px;">Unidad</th>
+        <th style="border:1px solid #000; padding:4px;">Descripción</th>
+        <th style="border:1px solid #000; padding:4px;">Subtotal</th>
+    </tr>
+
+    <?php
+    $total = 0;
+    foreach ($detalle as $d):
+        $total += $d['subtotal'];
+    ?>
+        <tr>
+            <td style="border:1px solid #000; padding:4px; text-align:right;">
+                <?= number_format($d['cantidad'], 2) ?>
+            </td>
+            <td style="border:1px solid #000; padding:4px; text-align:center;">
+                <?= $d['unidad'] ?? 'UND' ?>
+            </td>
+            <td style="border:1px solid #000; padding:4px;">
+                <?= $d['desc_articulo'] ?>
+            </td>
+            <td style="border:1px solid #000; padding:4px; text-align:right;">
+                <?= number_format($d['subtotal'], 2) ?>
+            </td>
+        </tr>
+    <?php endforeach; ?>
+
+    <tr>
+        <td colspan="3" style="border:1px solid #000; padding:4px; text-align:right;">
+            <strong>Total</strong>
+        </td>
+        <td style="border:1px solid #000; padding:4px; text-align:right;">
+            <strong><?= number_format($total, 2) ?></strong>
+        </td>
+    </tr>
+</table>
+
+
 
 <?php
 $html = ob_get_clean();

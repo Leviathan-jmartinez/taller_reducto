@@ -33,16 +33,21 @@
 </head>
 
 <body>
-
-    <table width="100%" style="margin-bottom:10px;">
+    <table width="100%" style="background:#2f6f6f; color:#fff; margin-bottom:10px;">
         <tr>
-            <td><strong>PEDIDO DE COMPRA</strong></td>
+            <td width="20%" align="left" style="padding:8px;">
+                <img src="<?= __DIR__ . '/../assets/logo.png' ?>" height="50">
+            </td>
+            <td width="50%" align="center">
+                <h2 style="margin:0;">PEDIDO DE COMPRA</h2>
+            </td>
             <td align="right">
                 Pedido N° <?= str_pad($cabecera['idpedido_cabecera'], 6, '0', STR_PAD_LEFT) ?><br>
                 <?= date('d/m/Y', strtotime($cabecera['fecha'])) ?>
             </td>
         </tr>
     </table>
+
 
     <strong>Proveedor</strong><br>
     <?= $cabecera['razon_social'] ?><br>

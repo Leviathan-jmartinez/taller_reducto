@@ -22,7 +22,7 @@
         }
 
         th {
-            background: #1f3b5b;
+            background: #2f6f6f;
             color: #fff;
         }
 
@@ -38,8 +38,11 @@
 
 <body>
 
-    <table width="100%" style="margin-bottom:10px;">
+    <table width="100%" style="background:#2f6f6f; color:#fff; margin-bottom:10px;">
         <tr>
+            <td width="20%" align="left" style="padding:8px;">
+                <img src="<?= __DIR__ . '/../assets/logo.png' ?>" height="50">
+            </td>
             <td><strong>ORDEN DE COMPRA</strong></td>
             <td align="right">
                 OC Nº <?= str_pad($cabecera['idorden_compra'], 6, '0', STR_PAD_LEFT) ?><br>
