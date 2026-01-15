@@ -287,8 +287,6 @@ class transferenciaControlador extends transferenciaModelo
         return $data;
     }
 
-
-
     public function recibir_transferencia_controlador()
     {
         if (session_status() === PHP_SESSION_NONE) {
