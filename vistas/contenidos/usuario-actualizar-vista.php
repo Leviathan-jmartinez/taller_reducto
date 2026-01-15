@@ -130,13 +130,13 @@ if ($_SESSION['nivel_str'] == 1) { ?>
 						<div class="col-12 col-md-6">
 							<div class="form-group">
 								<label for="usuario_clave_nueva_1" class="bmd-label-floating">Contraseña</label>
-								<input type="password" class="form-control" name="usuario_clave_nueva_1" id="usuario_clave_nueva_1" pattern="[a-zA-Z0-9$@.-]{7,100}" maxlength="100">
+								<input type="password" class="form-control" name="usuario_clave_nueva_1" id="usuario_clave_nueva_1" pattern="[a-zA-Z0-9$@._-]{7,18}" maxlength="18">
 							</div>
 						</div>
 						<div class="col-12 col-md-6">
 							<div class="form-group">
 								<label for="usuario_clave_nueva_2" class="bmd-label-floating">Repetir contraseña</label>
-								<input type="password" class="form-control" name="usuario_clave_nueva_2" id="usuario_clave_nueva_2" pattern="[a-zA-Z0-9$@.-]{7,100}" maxlength="100">
+								<input type="password" class="form-control" name="usuario_clave_nueva_2" id="usuario_clave_nueva_2" pattern="[a-zA-Z0-9$@._-]{7,18}" maxlength="18">
 							</div>
 						</div>
 					</div>

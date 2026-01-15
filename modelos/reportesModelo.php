@@ -764,6 +764,205 @@ class reportesModelo extends mainModel
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+    /* =========================================
+        REPORTE TRANSFERENCIAS
+    ========================================= */
+    protected static function reporte_transferencias_modelo($f)
+    {
+        $where = " WHERE 1=1 ";
+        $params = [];
+
+        if (!empty($f['sucursal']) && $f['sucursal'] != 0) {
+
+            if (!empty($f['tipo']) && $f['tipo'] != 'T') {
+
+                if ($f['tipo'] == 'E') {
+                    // Envíos
+                    $where .= " AND t.sucursal_origen = :suc ";
+                } elseif ($f['tipo'] == 'R') {
+                    // Recepciones
+                    $where .= " AND t.sucursal_destino = :suc ";
+                }
+            } else {
+                // Todos (comportamiento actual)
+                $where .= " AND (t.sucursal_origen = :suc OR t.sucursal_destino = :suc) ";
+            }
+
+            $params[':suc'] = $f['sucursal'];
+        }
+
+
+        if (!empty($f['estado']) && $f['estado'] != 'T') {
+            $where .= " AND t.estado = :estado ";
+            $params[':estado'] = $f['estado'];
+        }
+
+        if (!empty($f['desde']) && !empty($f['hasta'])) {
+            $where .= " AND DATE(t.fecha) BETWEEN :desde AND :hasta ";
+            $params[':desde'] = $f['desde'];
+            $params[':hasta'] = $f['hasta'];
+        }
+
+        $sql = self::conectar()->prepare("
+        SELECT
+            t.idtransferencia,
+            t.fecha,
+            t.estado,
+
+            so.suc_descri AS suc_origen,
+            sd.suc_descri AS suc_destino,
+
+            nr.idnota_remision,
+            nr.nro_remision,
+            nr.fechaenvio,
+            nr.fechallegada,
+            nr.motivo_remision
+        FROM transferencia_stock t
+        INNER JOIN sucursales so ON so.id_sucursal = t.sucursal_origen
+        INNER JOIN sucursales sd ON sd.id_sucursal = t.sucursal_destino
+        LEFT JOIN nota_remision nr ON nr.idtransferencia = t.idtransferencia
+        $where
+        ORDER BY t.fecha DESC
+        ");
+
+        $sql->execute($params);
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    protected static function resumen_transferencias_modelo($f)
+    {
+        $where = " WHERE 1=1 ";
+        $params = [];
+
+        if (!empty($f['sucursal']) && $f['sucursal'] != 0) {
+            $where .= " AND (t.sucursal_origen = :suc OR t.sucursal_destino = :suc) ";
+            $params[':suc'] = $f['sucursal'];
+        }
+
+        $sql = self::conectar()->prepare("
+        SELECT
+            COUNT(*) AS total,
+            SUM(CASE WHEN t.estado = 'en_transito' THEN 1 ELSE 0 END) AS en_transito,
+            SUM(CASE WHEN t.estado = 'recibido' THEN 1 ELSE 0 END) AS recibidos,
+            SUM(CASE WHEN t.estado = 'recibido_parcial' THEN 1 ELSE 0 END) AS parciales
+        FROM transferencia_stock t
+        $where
+        ");
+
+        $sql->execute($params);
+        return $sql->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /* ==================================================
+        REPORTE MOVIMIENTOS DE STOCK - DETALLE
+    ================================================== */
+    protected static function reporte_movimientos_stock_modelo($f)
+    {
+        $where = " WHERE 1=1 ";
+        $params = [];
+
+        if (!empty($f['sucursal']) && $f['sucursal'] != 0) {
+            $where .= " AND m.id_sucursal = :suc ";
+            $params[':suc'] = $f['sucursal'];
+        }
+
+        if (!empty($f['tipo']) && $f['tipo'] != 'T') {
+            $where .= " AND m.TipoMovStockId = :tipo ";
+            $params[':tipo'] = $f['tipo'];
+        }
+
+        if (!empty($f['signo']) && $f['signo'] != 'T') {
+            if ($f['signo'] == 'P') {
+                $where .= " AND m.MovStockSigno = 1 ";
+            } elseif ($f['signo'] == 'N') {
+                $where .= " AND m.MovStockSigno = -1 ";
+            }
+        }
+
+        if (!empty($f['desde'])) {
+            $where .= " AND DATE(m.MovStockFechaHora) >= :desde ";
+            $params[':desde'] = $f['desde'];
+        }
+
+        if (!empty($f['hasta'])) {
+            $where .= " AND DATE(m.MovStockFechaHora) <= :hasta ";
+            $params[':hasta'] = $f['hasta'];
+        }
+
+        $sql = self::conectar()->prepare("
+        SELECT
+            m.MovStockId,
+            m.MovStockFechaHora,
+            s.suc_descri AS sucursal,
+            m.TipoMovStockId,
+            a.desc_articulo,
+            m.MovStockCantidad,
+            m.MovStockSigno,
+            m.MovStockCosto,
+            m.MovStockPrecioVenta,
+            m.MovStockNroTicket,
+            m.MovStockReferencia,
+            CONCAT(u.usu_nombre,' ',u.usu_apellido) AS usuario
+        FROM sucmovimientostock m
+        INNER JOIN sucursales s ON s.id_sucursal = m.id_sucursal
+        LEFT JOIN articulos a ON a.id_articulo = m.MovStockProductoId
+        INNER JOIN usuarios u ON u.id_usuario = m.MovStockUsuario
+        $where
+        ORDER BY m.MovStockFechaHora DESC
+        ");
+
+        $sql->execute($params);
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /* ==================================================
+        REPORTE MOVIMIENTOS DE STOCK - RESUMEN
+    ================================================== */
+    protected static function resumen_movimientos_stock_modelo($f)
+    {
+        $where = " WHERE 1=1 ";
+        $params = [];
+
+        if (!empty($f['sucursal']) && $f['sucursal'] != 0) {
+            $where .= " AND m.id_sucursal = :suc ";
+            $params[':suc'] = $f['sucursal'];
+        }
+
+        if (!empty($f['tipo']) && $f['tipo'] != 'T') {
+            $where .= " AND m.TipoMovStockId = :tipo ";
+            $params[':tipo'] = $f['tipo'];
+        }
+
+        if (!empty($f['signo']) && $f['signo'] != 'T') {
+            if ($f['signo'] == 'P') {
+                $where .= " AND m.MovStockSigno = 1 ";
+            } elseif ($f['signo'] == 'N') {
+                $where .= " AND m.MovStockSigno = -1 ";
+            }
+        }
+
+        if (!empty($f['desde'])) {
+            $where .= " AND DATE(m.MovStockFechaHora) >= :desde ";
+            $params[':desde'] = $f['desde'];
+        }
+
+        if (!empty($f['hasta'])) {
+            $where .= " AND DATE(m.MovStockFechaHora) <= :hasta ";
+            $params[':hasta'] = $f['hasta'];
+        }
+
+        $sql = self::conectar()->prepare("
+        SELECT
+            COUNT(*) AS total,
+            SUM(CASE WHEN m.MovStockSigno = 1 THEN 1 ELSE 0 END) AS entradas,
+            SUM(CASE WHEN m.MovStockSigno = -1 THEN 1 ELSE 0 END) AS salidas
+        FROM sucmovimientostock m
+        $where
+        ");
+
+        $sql->execute($params);
+        return $sql->fetch(PDO::FETCH_ASSOC);
+    }
 
 
     /* =========================================

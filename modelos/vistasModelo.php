@@ -16,7 +16,7 @@ class vistasModelo
         "presupuesto-servicio-lista", "presupuesto-servicio-buscar", "ordenTrabajo-lista","ordenTrabajo-nuevo","ordenTrabajo-buscar","registro-servicio-nuevo","registro-servicio-lista",
         "registro-servicio-buscar"   ,"reclamo-servicio-nuevo","reclamo-servicio-lista","transferencia-nuevo","transferencia-historial","transferencia-recibir",
         "reporte-pedidos", "reporte-presupuestos", "reporte-ordenes-compra", "reporte-compras", "reporte-recepcion-servicio", "reporte-presupuesto-servicio","reporte-orden-trabajo"
-         ,"reporte-registro-servicio", "reporte-LibroCompras","reporte-articulos", "reporte-proveedores", "reporte-clientes", "reporte-empleados"];
+         ,"reporte-registro-servicio", "reporte-LibroCompras","reporte-articulos", "reporte-proveedores", "reporte-clientes", "reporte-empleados","reporte-transferencias","reporte-movimientostock"];
         if (in_array($vistas, $lista_blanca)) {
             if (is_file("./vistas/contenidos/" . $vistas . "-vista.php")) {
                 $contenido = "./vistas/contenidos/" . $vistas . "-vista.php";

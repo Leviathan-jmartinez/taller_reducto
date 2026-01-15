@@ -451,6 +451,123 @@ class reporteControlador extends reportesModelo
         exit();
     }
 
+    public function reporte_transferencias_controlador()
+    {
+        $filtros = [
+            "sucursal" => mainModel::limpiar_string($_POST['sucursal']) ?? 0,
+            "estado"   => mainModel::limpiar_string($_POST['estado']) ?? 'T',
+            "desde"    => trim($_POST['desde'] ?? ''),
+            "hasta"    => trim($_POST['hasta'] ?? ''),
+            "tipo"     => mainModel::limpiar_string($_POST['tipo']) ?? 'T'
+        ];
+
+
+        $data = reportesModelo::reporte_transferencias_modelo($filtros);
+        $resumen = reportesModelo::resumen_transferencias_modelo($filtros);
+
+        return json_encode([
+            "data"    => $data,
+            "resumen" => $resumen
+        ]);
+    }
+
+    public function imprimir_reporte_transferencias_controlador()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start(['name' => 'STR']);
+        }
+
+        if (!mainModel::tienePermiso('transferencia.ver')) {
+            header("Location: " . SERVERURL . "home/");
+            exit();
+        }
+
+        $filtros = [
+            "sucursal" => ($_POST['sucursal'] !== '') ? mainModel::limpiar_string($_POST['sucursal']) : 0,
+            "estado"   => ($_POST['estado'] !== '') ? mainModel::limpiar_string($_POST['estado']) : 'T',
+            "desde"    => trim($_POST['desde'] ?? ''),
+            "hasta"    => trim($_POST['hasta'] ?? '')
+        ];
+
+        $datos = reportesModelo::reporte_transferencias_modelo($filtros);
+
+        $empresa = $_SESSION['empresa_nombre'] ?? 'Empresa';
+        $usuario = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
+
+        ob_start();
+        require_once __DIR__ . "/../pdf/transferencias_reporte_pdf.php";
+        $html = ob_get_clean();
+
+        $dompdf = new Dompdf();
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->render();
+        $dompdf->stream("reporte_transferencias.pdf", ["Attachment" => false]);
+        exit();
+    }
+
+
+    /* ==================================================
+        REPORTE MOVIMIENTOS DE STOCK - PREVIEW
+    ================================================== */
+    public function reporte_movimientos_stock_controlador()
+    {
+        $filtros = [
+            "sucursal" => mainModel::limpiar_string($_POST['sucursal']) ?? 0,
+            "tipo"     => mainModel::limpiar_string($_POST['tipo']) ?? 'T',
+            "signo"    => mainModel::limpiar_string($_POST['signo']) ?? 'T',
+            "desde"    => trim($_POST['desde'] ?? ''),
+            "hasta"    => trim($_POST['hasta'] ?? '')
+        ];
+
+        $data = reportesModelo::reporte_movimientos_stock_modelo($filtros);
+        $resumen = reportesModelo::resumen_movimientos_stock_modelo($filtros);
+
+        return json_encode([
+            "data"    => $data,
+            "resumen" => $resumen
+        ]);
+    }
+
+    /* ==================================================
+        REPORTE MOVIMIENTOS DE STOCK - PDF
+    ================================================== */
+    public function imprimir_reporte_movimientos_stock_controlador()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start(['name' => 'STR']);
+        }
+
+        if (!mainModel::tienePermiso('stock.movimientos.ver')) {
+            header("Location: " . SERVERURL . "home/");
+            exit();
+        }
+
+        $filtros = [
+            "sucursal" => ($_POST['sucursal'] !== '') ? mainModel::limpiar_string($_POST['sucursal']) : 0,
+            "tipo"     => ($_POST['tipo'] !== '') ? mainModel::limpiar_string($_POST['tipo']) : 'T',
+            "signo"    => ($_POST['signo'] !== '') ? mainModel::limpiar_string($_POST['signo']) : 'T',
+            "desde"    => trim($_POST['desde'] ?? ''),
+            "hasta"    => trim($_POST['hasta'] ?? '')
+        ];
+
+        $datos = reportesModelo::reporte_movimientos_stock_modelo($filtros);
+
+        $empresa = $_SESSION['empresa_nombre'] ?? 'Empresa';
+        $usuario = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
+
+        ob_start();
+        require_once __DIR__ . "/../pdf/movimientos_stock_reporte_pdf.php";
+        $html = ob_get_clean();
+
+        $dompdf = new Dompdf();
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->render();
+        $dompdf->stream("reporte_movimientos_stock.pdf", ["Attachment" => false]);
+        exit();
+    }
+
     /* =========================================
         FIN INFORMES DE COMPRAS
     ========================================= */

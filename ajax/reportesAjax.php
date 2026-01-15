@@ -100,6 +100,32 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_libro_comp
     $inst_reporte->imprimir_reporte_libro_compras_controlador();
     exit();
 }
+if (isset($_POST['modulo']) && $_POST['modulo'] == "movimientos_stock") {
+    echo $inst_reporte->reporte_movimientos_stock_controlador();
+    exit();
+}
+
+if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_movimientos_stock') {
+    $inst_reporte->imprimir_reporte_movimientos_stock_controlador();
+    exit();
+}
+
+
+/* =========================================
+   REPORTE DE TRANSFERENCIAS (PREVIEW)
+========================================= */
+if (isset($_POST['modulo']) && $_POST['modulo'] == "transferencias") {
+    echo $inst_reporte->reporte_transferencias_controlador();
+    exit();
+}
+
+/* =========================================
+   REPORTE DE TRANSFERENCIAS (PDF)
+========================================= */
+if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_transferencias') {
+    $inst_reporte->imprimir_reporte_transferencias_controlador();
+    exit();
+}
 
 
 /* =========================================

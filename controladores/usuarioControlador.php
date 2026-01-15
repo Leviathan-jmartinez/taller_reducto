@@ -86,7 +86,7 @@ class usuarioControlador extends usuarioModelo
             echo json_encode($alerta);
             exit();
         }
-        if (mainModel::verificarDatos("[a-zA-Z0-9$@.-]{7,100}", $clave1) || mainModel::verificarDatos("[a-zA-Z0-9$@.-]{7,100}", $clave2)) {
+        if (mainModel::verificarDatos("[a-zA-Z0-9$@._-]{7,18}", $clave1) || mainModel::verificarDatos("[a-zA-Z0-9$@._-]{7,18}", $clave2)) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
@@ -578,11 +578,11 @@ class usuarioControlador extends usuarioModelo
                 echo json_encode($alerta);
                 exit();
             } else {
-                if (mainModel::verificarDatos("[a-zA-Z0-9$@.-]{7,100}", $_POST['usuario_clave_nueva_1']) || mainModel::verificarDatos("[a-zA-Z0-9$@.-]{7,100}", $_POST['usuario_clave_nueva_2'])) {
+                if (mainModel::verificarDatos("[a-zA-Z0-9$@._-]{7,18}", $_POST['usuario_clave_nueva_1']) || mainModel::verificarDatos("[a-zA-Z0-9$@._-]{7,18}", $_POST['usuario_clave_nueva_2'])) {
                     $alerta = [
                         "Alerta" => "simple",
                         "Titulo" => "Ocurrio un error inesperado!",
-                        "Texto" => "Las nuevas claves ingresadas no coinciden con el formato solicitado",
+                        "Texto" => "Las contraseñas nuevas deben tener entre 7 y 18 caracteres y solo puede contener letras, números y los símbolos: $ @ . _ - (sin espacios ni acentos).",
                         "Tipo" => "error"
                     ];
                     echo json_encode($alerta);
