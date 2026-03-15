@@ -43,7 +43,6 @@ class recepcionservicioControlador extends recepcionservicioModelo
         if (
             empty($_POST['id_cliente']) ||
             empty($_POST['id_vehiculo']) ||
-            empty($_POST['fecha_ingreso']) ||
             empty($_POST['kilometraje']) ||
             empty($_POST['observacion'])
         ) {
@@ -55,13 +54,28 @@ class recepcionservicioControlador extends recepcionservicioModelo
             ]);
         }
 
+        $accesorios = "";
+        if (isset($_POST['accesorios'])) {
+            $accesorios = implode(",", $_POST['accesorios']);
+        }
+
         $datos = [
             "id_usuario"   => $_SESSION['id_str'],
             "id_cliente"   => intval($_POST['id_cliente']),
             "id_sucursal"  => intval($_SESSION['nick_sucursal']),
             "id_vehiculo"  => intval($_POST['id_vehiculo']),
-            "fecha_ingreso" => $_POST['fecha_ingreso'],
             "kilometraje"  => intval($_POST['kilometraje']),
+
+            "nivel_combustible" => $_POST['nivel_combustible'] ?? null,
+            "estado_exterior"   => $_POST['estado_exterior'] ?? null,
+            "objetos_vehiculo"  => $_POST['objetos_vehiculo'] ?? null,
+
+            "tipo_servicio" => $_POST['tipo_servicio'] ?? null,
+            "area_problema" => $_POST['area_problema'] ?? null,
+            "prioridad"     => $_POST['prioridad'] ?? null,
+
+            "accesorios"   => $accesorios,
+
             "observacion"  => trim($_POST['observacion']),
             "estado"       => 1
         ];
@@ -70,21 +84,46 @@ class recepcionservicioControlador extends recepcionservicioModelo
 
         $guardar = recepcionServicioModelo::guardar_recepcion_modelo($datos);
 
-        if ($guardar === true) {
+        if (is_array($guardar) && isset($guardar['success'])) {
+
+            $id_recepcion = $guardar['id_recepcion'];
+
+            /* ================= GUARDAR FOTOS ================= */
+
+            if (!empty($_FILES['fotos_vehiculo']['name'][0])) {
+
+                $total = count($_FILES['fotos_vehiculo']['name']);
+
+                for ($i = 0; $i < $total; $i++) {
+
+                    $nombre = time() . '_' . $i . '_' . $_FILES['fotos_vehiculo']['name'][$i];
+                    $ruta = "uploads/recepciones/" . $nombre;
+
+                    move_uploaded_file(
+                        $_FILES['fotos_vehiculo']['tmp_name'][$i],
+                        "../" . $ruta
+                    );
+
+                    $pdo = mainModel::conectar();
+
+                    $sqlFoto = $pdo->prepare("
+                INSERT INTO recepcion_fotos
+                (id_recepcion,ruta_foto)
+                VALUES
+                (:recepcion,:ruta)
+            ");
+
+                    $sqlFoto->bindParam(":recepcion", $id_recepcion);
+                    $sqlFoto->bindParam(":ruta", $ruta);
+                    $sqlFoto->execute();
+                }
+            }
+
             return json_encode([
                 "Alerta" => "limpiar",
                 "Titulo" => "Recepción registrada",
                 "Texto"  => "La recepción fue guardada correctamente",
                 "Tipo"   => "success"
-            ]);
-        }
-
-        if (is_array($guardar) && isset($guardar['msg'])) {
-            return json_encode([
-                "Alerta" => "simple",
-                "Titulo" => "Error SQL",
-                "Texto"  => $guardar['msg'],
-                "Tipo"   => "error"
             ]);
         }
     }

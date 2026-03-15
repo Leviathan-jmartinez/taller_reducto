@@ -150,20 +150,26 @@ class recepcionservicioModelo extends mainModel
             $pdo->beginTransaction();
 
             $sql = $pdo->prepare("
-            INSERT INTO recepcion_servicio
-            (id_usuario, id_cliente, id_sucursal,id_vehiculo, fecha_ingreso, kilometraje, observacion, estado)
+            INSERT INTO recepcion_servicio(id_usuario,id_cliente,id_sucursal,id_vehiculo,fecha_ingreso,kilometraje,nivel_combustible,estado_exterior,objetos_vehiculo,tipo_servicio,area_problema,prioridad,accesorios,observacion,estado)
             VALUES
-            (:usuario, :cliente, :sucursal, :vehiculo, :fecha, :km, :obs, :estado)
-        ");
+            (:usuario,:cliente,:sucursal,:vehiculo,now(),:km,:combustible,:estado_exterior,:objetos,:tipo_servicio,:area_problema,:prioridad,:accesorios,:obs,:estado)");
 
             $sql->bindParam(":usuario",  $d['id_usuario'],   PDO::PARAM_INT);
             $sql->bindParam(":cliente",  $d['id_cliente'],   PDO::PARAM_INT);
             $sql->bindParam(":sucursal", $d['id_sucursal'],  PDO::PARAM_INT);
             $sql->bindParam(":vehiculo", $d['id_vehiculo'],  PDO::PARAM_INT);
-            $sql->bindParam(":fecha",    $d['fecha_ingreso']);
             $sql->bindParam(":km",       $d['kilometraje'],  PDO::PARAM_INT);
             $sql->bindParam(":obs",      $d['observacion']);
             $sql->bindParam(":estado",   $d['estado'],       PDO::PARAM_INT);
+            $sql->bindParam(":combustible", $d['nivel_combustible']);
+            $sql->bindParam(":estado_exterior", $d['estado_exterior']);
+            $sql->bindParam(":objetos", $d['objetos_vehiculo']);
+
+            $sql->bindParam(":tipo_servicio", $d['tipo_servicio']);
+            $sql->bindParam(":area_problema", $d['area_problema']);
+            $sql->bindParam(":prioridad", $d['prioridad']);
+
+            $sql->bindParam(":accesorios", $d['accesorios']);
 
             if (!$sql->execute()) {
                 $error = $sql->errorInfo();
@@ -174,10 +180,20 @@ class recepcionservicioModelo extends mainModel
                 ];
             }
 
+            /* obtener ID antes del commit */
+            $id_recepcion = $pdo->lastInsertId();
+
             $pdo->commit();
-            return true;
+
+            /* devolver ID */
+            return [
+                "success" => true,
+                "id_recepcion" => $id_recepcion
+            ];
         } catch (Exception $e) {
+
             $pdo->rollBack();
+
             return [
                 "error" => true,
                 "msg"   => $e->getMessage()
@@ -186,7 +202,7 @@ class recepcionservicioModelo extends mainModel
     }
 
     protected static function anular_recepcion_modelo($id, $sucursal)
-    {   
+    {
         $sql = mainModel::conectar()->prepare("
         UPDATE recepcion_servicio
         SET estado = 0,

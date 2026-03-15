@@ -29,7 +29,8 @@ if (session_status() == PHP_SESSION_NONE) {
         action="<?php echo SERVERURL; ?>ajax/recepcionservicioAjax.php"
         method="POST"
         data-form="save"
-        autocomplete="off">
+        autocomplete="off"
+        enctype="multipart/form-data">
 
         <!-- ACCIÓN -->
         <input type="hidden" name="accion" value="guardar_recepcion">
@@ -77,30 +78,127 @@ if (session_status() == PHP_SESSION_NONE) {
             </div>
         </fieldset>
 
-        <!-- DATOS DE RECEPCIÓN -->
+       <!-- ESTADO DEL VEHÍCULO -->
         <fieldset class="border p-3 mb-3">
-            <legend class="w-auto px-2">Datos de Recepción</legend>
+            <legend class="w-auto px-2">Estado del Vehículo al Ingreso</legend>
 
             <div class="row">
-                <div class="col-md-4">
-                    <label>Fecha y hora de ingreso</label>
-                    <input type="datetime-local" class="form-control"
-                        name="fecha_ingreso" required>
-                </div>
-
                 <div class="col-md-4">
                     <label>Kilometraje</label>
                     <input type="number" class="form-control"
                         name="kilometraje" min="0" required>
                 </div>
-
                 <div class="col-md-4">
-                    <label>Estado</label>
-                    <select name="estado" class="form-control" required>
-                        <option value="1" selected>Recepcionado</option>
+                    <label>Nivel de combustible</label>
+                    <select name="nivel_combustible" class="form-control">
+                        <option value="">Seleccione</option>
+                        <option value="vacio">Vacío</option>
+                        <option value="1/4">1/4</option>
+                        <option value="1/2">1/2</option>
+                        <option value="3/4">3/4</option>
+                        <option value="lleno">Lleno</option>
                     </select>
                 </div>
+
+                <div class="col-md-4">
+                    <label>Estado exterior</label>
+                    <select name="estado_exterior" class="form-control">
+                        <option value="sin_danos">Sin daños visibles</option>
+                        <option value="rayones">Rayones</option>
+                        <option value="golpes">Golpes</option>
+                        <option value="varios">Varios daños</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label>Objetos dentro del vehículo</label>
+                    <input type="text" name="objetos_vehiculo" class="form-control"
+                        placeholder="Ej: herramientas, documentos">
+                </div>
+
             </div>
+        </fieldset>
+
+        <!-- DATOS DEL SERVICIO -->
+        <fieldset class="border p-3 mb-3">
+            <legend class="w-auto px-2">Datos del Servicio</legend>
+
+            <div class="row">
+
+                <div class="col-md-4">
+                    <label>Tipo de servicio</label>
+                    <select name="tipo_servicio" class="form-control">
+                        <option value="diagnostico">Diagnóstico</option>
+                        <option value="mantenimiento">Mantenimiento</option>
+                        <option value="reparacion">Reparación</option>
+                        <option value="garantia">Garantía</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label>Área del problema</label>
+                    <select name="area_problema" class="form-control">
+                        <option value="motor">Motor</option>
+                        <option value="chasis">Chasis</option>
+                        <option value="transmision">Transmisión</option>
+                        <option value="frenos">Frenos</option>
+                        <option value="suspension">Suspensión</option>
+                        <option value="direccion">Dirección</option>
+                        <option value="electricidad">Sistema Eléctrico</option>
+                        <option value="aire_acondicionado">Aire acondicionado</option>
+                        <option value="otros">Otros</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label>Prioridad</label>
+                    <select name="prioridad" class="form-control">
+                        <option value="normal">Normal</option>
+                        <option value="urgente">Urgente</option>
+                    </select>
+                </div>
+
+            </div>
+
+        </fieldset>
+
+        <!-- ACCESORIOS -->
+        <fieldset class="border p-3 mb-3">
+            <legend class="w-auto px-2">Accesorios Entregados</legend>
+
+            <div class="row">
+
+                <div class="col-md-3">
+                    <input type="checkbox" name="accesorios[]" value="llave">
+                    Llave
+                </div>
+
+                <div class="col-md-3">
+                    <input type="checkbox" name="accesorios[]" value="llave_repuesto">
+                    Llave de repuesto
+                </div>
+
+                <div class="col-md-3">
+                    <input type="checkbox" name="accesorios[]" value="herramientas">
+                    Herramientas
+                </div>
+
+                <div class="col-md-3">
+                    <input type="checkbox" name="accesorios[]" value="rueda_auxilio">
+                    Rueda de auxilio
+                </div>
+
+                <div class="col-md-3">
+                    <input type="checkbox" name="accesorios[]" value="baliza">
+                    Baliza
+                </div>
+
+            </div>
+        </fieldset>
+
+         <fieldset class="border p-3 mb-4">
+            <legend class="w-auto px-2">Adjuntar imagen del Vehiculo</legend>
+            <input type="file" name="fotos_vehiculo[]" multiple class="form-control">
         </fieldset>
 
         <!-- OBSERVACIÓN -->
