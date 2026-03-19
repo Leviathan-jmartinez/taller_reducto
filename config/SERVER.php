@@ -1,8 +1,8 @@
 <?php
 const SERVER = "localhost";
-const DB = "bd_reduc";
+const DB = "test";
 const USER = "root";
-const PASS="8520123";
+const PASS="";
 
 
 const SGBD = "mysql:host=" . SERVER . ";dbname=" . DB;

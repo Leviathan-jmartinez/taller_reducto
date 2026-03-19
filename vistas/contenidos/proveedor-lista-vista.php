@@ -2,7 +2,7 @@
 if (!mainModel::tienePermisoVista('proveedor.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
-} 
+}
 
 if ($peticionAjax) {
     require_once "../controladores/proveedorControlador.php";
@@ -42,19 +42,8 @@ if ($peticionAjax) {
 <!-- CONTENT -->
 <div class="container-fluid">
     <?php
-    $pagina = explode("/", $_GET['views'] ?? "");
-    $pagina = isset($pagina[1]) && is_numeric($pagina[1]) ? $pagina[1] : 1;
-
-    $registros = 10;
-    $busqueda = "";
-
-    $lc = new proveedorControlador();
-    echo $lc->paginador_proveedores_controlador(
-        $pagina,
-        $registros,
-        $_SESSION['nivel_str'],
-        "proveedor-lista",
-        $busqueda
-    );
+    require_once "./controladores/proveedorControlador.php";
+    $ins_proveedor = new proveedorControlador();
+    echo $ins_proveedor->paginador_proveedores_controlador($pagina[1], 10, $_SESSION['nivel_str'], $pagina[0], "");
     ?>
 </div>
