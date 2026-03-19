@@ -267,7 +267,11 @@ class notasCreDeControlador extends notasCreDeModelo
             $montoMovimiento *= -1;
         }
 
+        if ($_POST['tipo'] === 'debito') {
+        $movStock = 'NINGUNO'; 
+        } else {
         $movStock = $_POST['movimiento_stock'] ?? 'NINGUNO';
+        }
 
         $pdo = mainModel::conectar();
 
@@ -328,12 +332,12 @@ class notasCreDeControlador extends notasCreDeModelo
                 (idcompra_cabecera, id_sucursal, fecha, tipo_comprobante,
                 serie, nro_comprobante, idproveedores,
                 proveedor_nombre, proveedor_ruc,
-                exenta, gravada_5, iva_5, gravada_10, iva_10, total)
+                exenta, gravada_5, iva_5, gravada_10, iva_10, total, estado, fecha_registro)
                 VALUES
                 (:idcompra, :suc, :fecha, :tipo,
                 :serie, :nro, :prov,
                 :prov_nom, :prov_ruc,
-                :exenta, :g5, :iva5, :g10, :iva10, :total)
+                :exenta, :g5, :iva5, :g10, :iva10, :total, 1, NOW())
             ")->execute([
                 ':idcompra' => $factura['idcompra_cabecera'],
                 ':suc'      => $_SESSION['nick_sucursal'],
@@ -352,7 +356,7 @@ class notasCreDeControlador extends notasCreDeModelo
                 ':total'    => $totalLC
             ]);
 
-            if ($movStock === 'DEVOLUCION') {
+            if ($_POST['tipo'] === 'credito' && $movStock === 'DEVOLUCION') {
                 foreach ($detalle as $d) {
 
                     $pdo->prepare("

@@ -24,40 +24,36 @@ class transferenciaModelo extends mainModel
         try {
             $pdo->beginTransaction();
 
-            /* ================= VALIDAR TIMBRADO ================= */
-            $qTim = $pdo->prepare("
-                SELECT timbrado, fecha_vencimiento
-                FROM sucursal_timbrado
-                WHERE id_sucursal = :suc
-                  AND activo = 1
-                  AND fecha_vencimiento >= CURDATE()
-                LIMIT 1
-                FOR UPDATE
-            ");
-            $qTim->execute([':suc' => $d['id_sucursal_origen']]);
-            $timbrado = $qTim->fetch(PDO::FETCH_ASSOC);
-
-            if (!$timbrado) {
-                throw new Exception("La sucursal no tiene timbrado activo");
-            }
-
-            /* ================= NUMERACIÓN ================= */
+            /* ================= TIMBRADO NUMERACIÓN ================= */
             $qDoc = $pdo->prepare("
-                SELECT id_documento, establecimiento, punto_expedicion, numero_actual
-                FROM sucursal_documento
-                WHERE id_sucursal = :suc
-                  AND tipo_documento = 'remision'
-                  AND activo = 1
+                SELECT 
+                    d.id_documento,
+                    d.establecimiento,
+                    d.punto_expedicion,
+                    d.numero_actual,
+                    t.timbrado,
+                    t.fecha_vencimiento
+                FROM sucursal_documento d
+                INNER JOIN sucursal_timbrado t 
+                    ON t.id_timbrado = d.id_timbrado
+                WHERE d.id_sucursal = :suc
+                AND d.tipo_documento = 'REMISION'
+                AND d.id_caja IS NULL
+                AND d.activo = 1
+                AND t.activo = 1
+                AND t.fecha_vencimiento >= CURDATE()
                 LIMIT 1
                 FOR UPDATE
             ");
-            $qDoc->execute([':suc' => $d['id_sucursal_origen']]);
+            $qDoc->execute([
+                ':suc' => $d['id_sucursal_origen']
+            ]);
+
             $doc = $qDoc->fetch(PDO::FETCH_ASSOC);
 
             if (!$doc) {
-                throw new Exception("No hay numeración de remisión configurada");
+                throw new Exception("No hay timbrado o numeración válida para remisión");
             }
-
             $nuevoNumero = $doc['numero_actual'] + 1;
             $nroRemision = sprintf(
                 "%s-%s-%07d",
@@ -69,8 +65,8 @@ class transferenciaModelo extends mainModel
             /* ================= CREAR TRANSFERENCIA ================= */
             $qTrans = $pdo->prepare("
                 INSERT INTO transferencia_stock
-                (sucursal_origen, sucursal_destino, estado, observacion, usuario_envia)
-                VALUES (:origen,:destino,'en_transito',:obs,:usr)
+                (sucursal_origen, sucursal_destino,fecha, estado, observacion, usuario_envia)
+                VALUES (:origen,:destino,NOW(),'en_transito',:obs,:usr)
             ");
             $qTrans->execute([
                 ':origen' => $d['id_sucursal_origen'],
@@ -80,6 +76,23 @@ class transferenciaModelo extends mainModel
             ]);
 
             $idTransferencia = $pdo->lastInsertId();
+
+            if (empty($d['productos'])) {
+                throw new Exception("No hay productos en la transferencia");
+            }
+            $ids = array_map('intval', array_keys($d['productos']));
+
+            $qArt = $pdo->prepare("
+                SELECT id_articulo, precio_compra
+                FROM articulos
+                WHERE id_articulo IN (" . implode(',', $ids) . ")
+            ");
+            $qArt->execute();
+
+            $costos = [];
+            foreach ($qArt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                $costos[$row['id_articulo']] = (float)$row['precio_compra'];
+            }
 
             /* ================= DETALLE + STOCK ================= */
             foreach ($d['productos'] as $idProducto => $cantidad) {
@@ -129,12 +142,7 @@ class transferenciaModelo extends mainModel
                 // ================= MOVIMIENTO DE STOCK (SALIDA) =================
 
                 // obtener costo (ya lo usás para remisión)
-                $qCosto = $pdo->prepare("
-                SELECT precio_compra
-                FROM articulos
-                WHERE id_articulo = :id");
-                $qCosto->execute([':id' => $idProducto]);
-                $costo = (float)$qCosto->fetchColumn();
+                $costo = $costos[$idProducto];
 
                 $pdo->prepare("
                 INSERT INTO sucmovimientostock
@@ -178,7 +186,7 @@ class transferenciaModelo extends mainModel
             /* ================= NOTA DE REMISIÓN ================= */
             $pdo->prepare("
                 INSERT INTO nota_remision
-                (idcompra_cabecera,id_usuario,id_sucursal,
+                (idcompra_cabecera,id_usuario,id_sucursal,fecha_emision,
                 nro_remision,nombre_transpo,ci_transpo,cel_transpo,
                 transportista,ruc_transport,
                 vehimarca,vehimodelo,vehichapa,
@@ -186,7 +194,7 @@ class transferenciaModelo extends mainModel
                 tipo,idtransferencia)
                 VALUES
                 (NULL,:usr,:suc,
-                :nro,:chofer,:ci,:cel,
+                NOW(),:nro,:chofer,:ci,:cel,
                 :transp,:ruc,
                 :marca,:modelo,:chapa,
                 :envio,:llegada,:motivo,
@@ -214,12 +222,7 @@ class transferenciaModelo extends mainModel
                 $cantidad = (float)$cantidad;
 
                 // Traer costo actual del artículo
-                $qArt = $pdo->prepare("
-                SELECT precio_compra
-                FROM articulos
-                WHERE id_articulo = :id");
-                $qArt->execute([':id' => $idProducto]);
-                $costo = (float)$qArt->fetchColumn();
+                $costo = $costos[$idProducto];
 
                 $subtotal = $cantidad * $costo;
 
@@ -237,14 +240,22 @@ class transferenciaModelo extends mainModel
 
 
             /* ================= ACTUALIZAR NUMERACIÓN ================= */
-            $pdo->prepare("
+            $stmt = $pdo->prepare("
                 UPDATE sucursal_documento
                 SET numero_actual = :num
                 WHERE id_documento = :id
-            ")->execute([
-                ':num' => $nuevoNumero,
-                ':id' => $doc['id_documento']
+                AND numero_actual = :prev
+            ");
+
+            $stmt->execute([
+                ':num'  => $nuevoNumero,
+                ':id'   => $doc['id_documento'],
+                ':prev' => $doc['numero_actual']
             ]);
+
+            if ($stmt->rowCount() === 0) {
+                throw new Exception("Conflicto de numeración (otro proceso usó el número)");
+            }
 
             $pdo->commit();
             return [

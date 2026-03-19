@@ -46,19 +46,31 @@ $qCab = $pdo->prepare("
         e.telefono_empresa,
         e.ruc,
 
-        -- Timbrado
-        st.fecha_inicio,
+        -- Timbrado (nuevo modelo)
         st.timbrado,
+        st.fecha_inicio,
         st.fecha_vencimiento
 
     FROM nota_remision nr
+
     INNER JOIN sucursales s 
         ON s.id_sucursal = nr.id_sucursal
+
     INNER JOIN empresa e 
         ON e.id_empresa = s.id_empresa
-    LEFT JOIN sucursal_timbrado st 
-        ON st.id_sucursal = nr.id_sucursal AND st.activo = 1
+
+    -- 🔥 NUEVO JOIN
+    INNER JOIN sucursal_documento sd
+        ON sd.id_sucursal = nr.id_sucursal
+        AND sd.tipo_documento = 'REMISION'
+        AND sd.id_caja IS NULL
+        AND sd.activo = 1
+
+    INNER JOIN sucursal_timbrado st 
+        ON st.id_timbrado = sd.id_timbrado
+
     WHERE nr.idnota_remision = :id
+    LIMIT 1
 ");
 
 $qCab->execute([':id' => $id]);

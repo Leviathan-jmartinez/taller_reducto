@@ -248,5 +248,30 @@ $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
         </div>
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        const tipoSelect = document.querySelector('[name="tipo"]');
+        const movStock = document.querySelector('[name="movimiento_stock"]');
+
+        function actualizar() {
+            const tipo = tipoSelect.value;
+
+            if (tipo === 'debito') {
+                movStock.value = 'NINGUNO';
+                movStock.style.pointerEvents = 'none';
+                movStock.style.backgroundColor = '#e9ecef';
+            } else {
+                movStock.style.pointerEvents = 'auto';
+                movStock.style.backgroundColor = '';
+            }
+        }
+
+        tipoSelect.addEventListener('change', actualizar);
+
+        // Ejecutar al cargar
+        actualizar();
+    });
+</script>
 
 <?php require_once "./vistas/inc/notasCreDe.php"; ?>
