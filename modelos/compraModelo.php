@@ -393,8 +393,8 @@
         {
             $sql = mainModel::conectar()->prepare("
             INSERT INTO libro_compra (idcompra_cabecera, id_sucursal,fecha, tipo_comprobante, serie, nro_comprobante, idproveedores, proveedor_nombre, proveedor_ruc, exenta, 
-            gravada_5, iva_5, gravada_10, iva_10, total) 
-            VALUES (:idcompra, :id_sucursal, :fecha, :tipo, :serie, :numero, :proveedor, :prov_nom, :prov_ruc, :exenta, :gravada5, :iva5, :gravada10, :iva10, :total)");
+            gravada_5, iva_5, gravada_10, iva_10, total,estado, fecha_registro) 
+            VALUES (:idcompra, :id_sucursal, :fecha, :tipo, :serie, :numero, :proveedor, :prov_nom, :prov_ruc, :exenta, :gravada5, :iva5, :gravada10, :iva10, :total, 1, NOW())");
 
             return $sql->execute($d) ? $sql : $sql;
         }

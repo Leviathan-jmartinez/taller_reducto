@@ -34,17 +34,7 @@ if (!mainModel::tienePermisoVista('vehiculo.ver')) {
 <div class="container-fluid">
     <?php
     require_once "./controladores/vehiculoControlador.php";
-    $ins = new vehiculoControlador();
-
-    $paginaActual = explode("/", $_GET['views'] ?? "");
-    $paginaActual = isset($paginaActual[1]) ? $paginaActual[1] : 1;
-
-    echo $ins->paginador_vehiculos_controlador(
-        $paginaActual,
-        10,
-        $_SESSION['nivel_str'],
-        "vehiculo-lista",
-        ""
-    );
+    $ins_vehiculo = new vehiculoControlador();
+    echo $ins_vehiculo->paginador_vehiculos_controlador($pagina[1], 10, $_SESSION['nivel_str'], $pagina[0], "");
     ?>
 </div>

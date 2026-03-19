@@ -45,7 +45,7 @@ if (!mainModel::tienePermisoVista('empleado.ver')) {
             <select name="id_equipo" class="form-control">
                 <?php foreach ($equipos as $e): ?>
                     <option value="<?= $e['id_equipo']; ?>">
-                        <?= $e['nombre']; ?> (<?= $e['suc_descri']; ?>)
+                        <?= $e['nombre'] . ' - ' . $e['descripcion']; ?> (<?= $e['suc_descri']; ?>)
                     </option>
                 <?php endforeach; ?>
             </select>
