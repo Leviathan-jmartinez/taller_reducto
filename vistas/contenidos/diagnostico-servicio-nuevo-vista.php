@@ -3,34 +3,13 @@ if (!mainModel::tienePermisoVista('servicio.diagnostico.crear')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
-
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
-$id_recepcion = $_GET['id'] ?? 0;
 ?>
 
 <div class="container-fluid">
 
-    <div class="container-fluid">
-        <h3 class="text-left">
-            <i class="fas fa-stethoscope fa-fw"></i> &nbsp; DIAGNÓSTICO DEL VEHÍCULO
-        </h3>
-
-        <ul class="full-box list-unstyled page-nav-tabs">
-            <li>
-                <a class="active" href="#">
-                    <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO DIAGNÓSTICO
-                </a>
-            </li>
-            <li>
-                <a href="<?php echo SERVERURL; ?>recepcionServicio-buscar/">
-                    <i class="fas fa-search fa-fw"></i> &nbsp; RECEPCIONES
-                </a>
-            </li>
-        </ul>
-    </div>
+    <h3 class="text-left">
+        <i class="fas fa-stethoscope fa-fw"></i> &nbsp; NUEVO DIAGNÓSTICO
+    </h3>
 
     <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/diagnosticoAjax.php"
@@ -39,102 +18,127 @@ $id_recepcion = $_GET['id'] ?? 0;
         autocomplete="off">
 
         <input type="hidden" name="accion" value="guardar_diagnostico">
-        <input type="hidden" name="id_recepcion" value="<?php echo $id_recepcion; ?>">
 
-        <!-- DATOS GENERALES -->
+        <!-- RECEPCIÓN -->
+        <fieldset class="border p-3 mb-3">
+            <legend class="w-auto px-2">Recepción</legend>
+
+            <div class="row">
+                <div class="col-md-10">
+                    <input type="hidden" name="idrecepcion" id="idrecepcion">
+                    <input type="text" class="form-control" id="recepcion_info"
+                        placeholder="Seleccione una recepción" readonly>
+                </div>
+
+                <div class="col-md-2">
+                    <button type="button"
+                        class="btn btn-info btn-block"
+                        onclick="abrirModalRecepcion()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- DATOS DIAGNÓSTICO -->
         <fieldset class="border p-3 mb-3">
             <legend class="w-auto px-2">Datos del Diagnóstico</legend>
 
             <div class="row">
 
                 <div class="col-md-4">
-                    <label>Fecha diagnóstico</label>
-                    <input type="datetime-local"
-                        name="fecha_diagnostico"
-                        class="form-control"
-                        value="<?php echo date('Y-m-d\TH:i'); ?>"
-                        required>
+                    <label>Fecha</label>
+                    <input type="datetime-local" name="fecha"
+                        class="form-control" required>
                 </div>
 
                 <div class="col-md-4">
-                    <label>Mecánico responsable</label>
-                    <select name="id_usuario" class="form-control" required>
-                        <option value="">Seleccione mecánico</option>
-
-                        <?php
-                        $sql = mainModel::conectar()->query("
-                            select CONCAT(e.nombre ,' ',e.apellido) as mecanico from equipo_empleado ee
-                    inner join empleados e on e.idempleados = ee.idempleados 
-                    where e.empleado_estado ='1'
-                        ");
-
-                        while ($row = $sql->fetch()) {
-                            echo '<option value="' . $row['idempleados'] . '">' . $row['mecanico'] . '</option>';
-                        }
-                        ?>
+                    <label>Estado</label>
+                    <select name="estado" class="form-control">
+                        <option value="0">Pendiente</option>
+                        <option value="1" selected>En proceso</option>
+                        <option value="2">Finalizado</option>
                     </select>
-                </div>
-
-                <div class="col-md-4">
-                    <label>Costo estimado</label>
-                    <input type="number"
-                        name="costo_estimado"
-                        class="form-control"
-                        step="0.01"
-                        min="0">
                 </div>
 
             </div>
 
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <label>Observación general</label>
+                    <textarea name="observacion"
+                        class="form-control"
+                        rows="3"></textarea>
+                </div>
+            </div>
+
         </fieldset>
 
-        <!-- FALLA DETECTADA -->
+        <!-- DETALLES -->
         <fieldset class="border p-3 mb-3">
-            <legend class="w-auto px-2">Falla Detectada</legend>
+            <legend class="w-auto px-2">Detalle del Diagnóstico</legend>
 
-            <textarea class="form-control"
-                name="descripcion_falla"
-                rows="4"
-                placeholder="Describa la falla detectada"></textarea>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Descripción</th>
+                        <th>Tipo</th>
+                        <th width="50">Acción</th>
+                    </tr>
+                </thead>
 
-        </fieldset>
+                <tbody id="detalleDiagnostico"></tbody>
+            </table>
 
-        <!-- PRUEBAS REALIZADAS -->
-        <fieldset class="border p-3 mb-3">
-            <legend class="w-auto px-2">Pruebas Realizadas</legend>
-
-            <textarea class="form-control"
-                name="pruebas_realizadas"
-                rows="4"
-                placeholder="Describa las pruebas realizadas para detectar la falla"></textarea>
-
-        </fieldset>
-
-        <!-- CONCLUSIÓN -->
-        <fieldset class="border p-3 mb-4">
-            <legend class="w-auto px-2">Conclusión del Diagnóstico</legend>
-
-            <textarea class="form-control"
-                name="conclusion"
-                rows="4"
-                placeholder="Conclusión y recomendación de reparación"></textarea>
+            <button type="button" class="btn btn-success"
+                onclick="agregarDetalleDiagnostico()">
+                <i class="fas fa-plus"></i> Agregar
+            </button>
 
         </fieldset>
 
         <!-- BOTONES -->
         <div class="text-center">
-
             <button type="submit" class="btn btn-info btn-raised">
-                <i class="fas fa-save"></i> &nbsp; Guardar Diagnóstico
+                <i class="fas fa-save"></i> Guardar Diagnóstico
             </button>
 
-            <a href="<?php echo SERVERURL; ?>recepcionServicio-buscar/"
-                class="btn btn-secondary btn-raised">
-                <i class="fas fa-arrow-left"></i> &nbsp; Volver
-            </a>
-
+            <button type="button"
+                class="btn btn-secondary btn-raised"
+                onclick="limpiarDiagnostico()">
+                <i class="fas fa-times"></i> Limpiar
+            </button>
         </div>
 
     </form>
+    <div class="modal fade" id="modalRecepcion" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
 
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-search"></i> Buscar Recepción
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">
+                        &times;
+                    </button>
+                </div>
+
+                <div class="modal-body">
+
+                    <input type="text"
+                        id="buscar_recepcion"
+                        class="form-control mb-3"
+                        placeholder="Buscar cliente o placa"
+                        onkeyup="buscarRecepcionAjax()">
+
+                    <div id="tabla_recepciones"></div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
 </div>
+
+<?php include "./vistas/inc/diagnosticoJS.php"; ?>

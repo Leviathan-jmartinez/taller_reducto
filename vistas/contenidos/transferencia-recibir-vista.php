@@ -96,5 +96,5 @@ $detalle = $data['detalle'];
 </form>
 
 
-<!-- 🔥 EL JS SIEMPRE VA DESPUÉS DEL FORM -->
+
 <?php include "./vistas/inc/transferenciaRecibirJS.php"; ?>
