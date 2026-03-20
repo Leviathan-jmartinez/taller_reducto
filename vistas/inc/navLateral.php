@@ -82,6 +82,10 @@
                                 <li><a href="<?= SERVERURL; ?>recepcionServicio-nuevo/"><i class="fas fa-file-signature fa-fw"></i> &nbsp; Solicitud de Servicios</a></li>
                             <?php } ?>
 
+                            <?php if (mainModel::tienePermiso('servicio.diagnostico.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>diagnostico-servicio-nuevo/"><i class="fas fa-stethoscope fa-fw"></i> &nbsp; Diagnostico</a></li>
+                            <?php } ?>
+
                             <?php if (mainModel::tienePermiso('servicio.promocion.ver')) { ?>
                                 <li><a href="<?= SERVERURL; ?>promocion-nuevo/"><i class="fas fa-tags fa-fw"></i> &nbsp; Promociones</a></li>
                             <?php } ?>

@@ -12,7 +12,7 @@ class vistasModelo
         "empleado-equipo","empleado-equipo-miembros",
         "presupuesto-nuevo", "presupuesto-lista","presupuesto-buscar","oc-nuevo","oc-lista","oc-buscar","factura-nuevo","factura-lista","factura-buscar"
         ,"inventario", "inventario-buscar", "remision-nuevo", "remision-buscar", "notasCreDe-nuevo", "notasCreDe-buscar","recepcionServicio-nuevo","recepcionServicio-buscar",
-        "diagnostico-servicio-nuevo", "promocion-nuevo","promocion-lista", "promocion-editar","descuento-nuevo","descuento-asignar","descuento-lista","descuento-editar","presupuesto-servicio-nuevo",
+        "diagnostico-servicio-nuevo", "diagnostico-servicio-buscar","promocion-nuevo","promocion-lista", "promocion-editar","descuento-nuevo","descuento-asignar","descuento-lista","descuento-editar","presupuesto-servicio-nuevo",
         "presupuesto-servicio-lista", "presupuesto-servicio-buscar", "ordenTrabajo-lista","ordenTrabajo-nuevo","ordenTrabajo-buscar","registro-servicio-nuevo","registro-servicio-lista",
         "registro-servicio-buscar"   ,"reclamo-servicio-nuevo","reclamo-servicio-lista","transferencia-nuevo","transferencia-historial","transferencia-recibir",
         "reporte-pedidos", "reporte-presupuestos", "reporte-ordenes-compra", "reporte-compras", "reporte-recepcion-servicio", "reporte-presupuesto-servicio","reporte-orden-trabajo"

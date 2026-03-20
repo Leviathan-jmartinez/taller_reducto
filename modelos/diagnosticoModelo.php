@@ -20,10 +20,10 @@ class diagnosticoModelo extends mainModel
         FROM recepcion_servicio rs
         INNER JOIN clientes c ON c.id_cliente = rs.id_cliente
         INNER JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
-        WHERE rs.estado = 1
+        WHERE rs.estado = 1 AND tipo_servicio ='diagnostico'
           AND (
                 c.nombre_cliente LIKE :b
-             OR c.apellido_cliente LIKE :b
+             OR c.apellido_cliente LIKE :b OR c.doc_number LIKE :b
              OR v.placa LIKE :b
           )
         ORDER BY rs.fecha_ingreso DESC
@@ -149,7 +149,7 @@ class diagnosticoModelo extends mainModel
                     $sql_det->bindParam(":diag", $id_diagnostico, PDO::PARAM_INT);
                     $sql_det->bindParam(":item", $item, PDO::PARAM_INT);
                     $sql_det->bindParam(":desc", $det['descripcion']);
-                    $sql_det->bindParam(":tipo", $det['tipo'], PDO::PARAM_INT);
+                    $sql_det->bindParam(":tipo", $det['tipo']);
 
                     if (!$sql_det->execute()) {
                         $error = $sql_det->errorInfo();

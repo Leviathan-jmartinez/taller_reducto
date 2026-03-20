@@ -10,9 +10,9 @@
         </td>
         <td>
             <select name="tipo[]" class="form-control">
-                <option value="1">Problema</option>
-                <option value="2">Recomendación</option>
-                <option value="3">Urgente</option>
+                <option value="problema">Problema</option>
+                <option value="recomendacion">Recomendación</option>
+                <option value="urgente">Urgente</option>
             </select>
         </td>
         <td>

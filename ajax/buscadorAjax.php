@@ -38,7 +38,8 @@ $data_url = [
     "presupuesto_servicio" => "presupuesto-servicio-buscar",
     "orden_trabajo" => "ordenTrabajo-buscar",
     "registro_servicio" => "registro-servicio-buscar",
-    "reclamo_servicio" => "reclamo-servicio-lista"
+    "reclamo_servicio" => "reclamo-servicio-lista",
+    "diagnostico" => "diagnostico-servicio-buscar"
 ];
 
 if (!isset($data_url[$modulo])) {
@@ -64,10 +65,64 @@ $modulos_con_fecha = [
     "notasCreDe",
     "presupuesto_servicio",
     "orden_trabajo",
-    "registro_servicio"    
+    "registro_servicio",
+    "diagnostico"
 ];
 
 if (in_array($modulo, $modulos_con_fecha)) {
+
+    if ($modulo == "diagnostico") {
+
+    $fecha_ini = $_POST['fecha_inicio'] ?? '';
+    $fecha_fin = $_POST['fecha_final'] ?? '';
+    $cliente   = $_POST['cliente'] ?? '';
+    $placa     = $_POST['placa'] ?? '';
+
+    if (
+        $fecha_ini == '' &&
+        $fecha_fin == '' &&
+        $cliente == '' &&
+        $placa == ''
+    ) {
+        echo json_encode([
+            "Alerta" => "simple",
+            "Titulo" => "Búsqueda inválida",
+            "Texto" => "Debe ingresar al menos un criterio",
+            "Tipo" => "error"
+        ]);
+        exit();
+    }
+
+    $_SESSION['cliente_diag'] = $cliente;
+    $_SESSION['placa_diag']   = $placa;
+
+    if ($fecha_ini != '' && $fecha_fin != '') {
+
+        if ($fecha_ini > $fecha_fin) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error en fechas",
+                "Texto" => "La fecha inicial no puede ser mayor",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        $_SESSION['fecha_inicio_diag'] = $fecha_ini;
+        $_SESSION['fecha_final_diag']  = $fecha_fin;
+
+    } else {
+        unset($_SESSION['fecha_inicio_diag']);
+        unset($_SESSION['fecha_final_diag']);
+    }
+
+    // 🔥 ESTE ES EL FIX CLAVE
+    echo json_encode([
+        "Alerta" => "redireccionar",
+        "URL" => SERVERURL . $data_url[$modulo] . "/"
+    ]);
+    exit();
+}
 
     $fecha_inicio_key = "fecha_inicio_" . $modulo;
     $fecha_final_key  = "fecha_final_" . $modulo;

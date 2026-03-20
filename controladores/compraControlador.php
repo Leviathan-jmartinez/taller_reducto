@@ -546,7 +546,7 @@ class compraControlador extends compraModelo
 
             /* ===============================
             LIBRO DE COMPRAS
-        ================================ */
+            ================================ */
             $datosLibro = [
                 "idcompra"    => $idcab,
                 "id_sucursal" => $_SESSION['nick_sucursal'],
