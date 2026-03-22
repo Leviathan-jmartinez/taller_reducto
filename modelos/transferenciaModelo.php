@@ -34,7 +34,7 @@ class transferenciaModelo extends mainModel
                     t.timbrado,
                     t.fecha_vencimiento
                 FROM sucursal_documento d
-                INNER JOIN sucursal_timbrado t 
+                INNER JOIN timbrado t 
                     ON t.id_timbrado = d.id_timbrado
                 WHERE d.id_sucursal = :suc
                 AND d.tipo_documento = 'REMISION'

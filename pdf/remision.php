@@ -66,7 +66,7 @@ $qCab = $pdo->prepare("
         AND sd.id_caja IS NULL
         AND sd.activo = 1
 
-    INNER JOIN sucursal_timbrado st 
+    INNER JOIN timbrado st 
         ON st.id_timbrado = sd.id_timbrado
 
     WHERE nr.idnota_remision = :id
