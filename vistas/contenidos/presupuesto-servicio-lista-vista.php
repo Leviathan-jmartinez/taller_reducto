@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('servicio.presupuesto.ver')) {
+if (!mainModel::tienePermiso('servicio.presupuesto.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 } ?>
@@ -25,6 +25,6 @@ if (!mainModel::tienePermisoVista('servicio.presupuesto.ver')) {
     <?php
     require_once "./controladores/presupuestoservicioControlador.php";
     $ins_presupuestoservi = new presupuestoservicioControlador();
-    echo $ins_presupuestoservi->paginador_presupuestoservi_controlador($pagina[1], 15, $_SESSION['nivel_str'], $pagina[0], "", "");
+    echo $ins_presupuestoservi->paginador_presupuestoservi_controlador($pagina[1], 15, $pagina[0], "", "");
     ?>
 </div>

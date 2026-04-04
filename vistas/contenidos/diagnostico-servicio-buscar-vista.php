@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('servicio.diagnostico.ver')) {
+if (!mainModel::tienePermiso('servicio.diagnostico.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
@@ -57,7 +57,6 @@ $diag = new diagnosticoControlador();
 echo $diag->paginador_diagnostico_controlador(
     $pagina[1],
     3,
-    $_SESSION['nivel_str'],
     $pagina[0],
     $_SESSION['fecha_inicio_diag'] ?? '',
     $_SESSION['fecha_final_diag'] ?? '',

@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('servicio.recepcion.ver')) {
+if (!mainModel::tienePermiso('servicio.recepcion.ver')) {
 	echo '<div class="alert alert-danger">Acceso no autorizado</div>';
 	return;
 } ?>
@@ -65,7 +65,7 @@ if (!mainModel::tienePermisoVista('servicio.recepcion.ver')) {
 		<?php
 		require_once "./controladores/recepcionservicioControlador.php";
 		$ins_recepcion = new recepcionservicioControlador();
-		echo $ins_recepcion->paginador_recepcion_servicio_controlador($pagina[1], 15, $_SESSION['nivel_str'], $pagina[0], $_SESSION['busqueda_recepcion']);
+		echo $ins_recepcion->paginador_recepcion_servicio_controlador($pagina[1], 15, $pagina[0], $_SESSION['busqueda_recepcion']);
 		?>
 	</div>
 <?php

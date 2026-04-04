@@ -92,11 +92,10 @@ class diagnosticoControlador extends diagnosticoModelo
         ]);
     }
 
-    public function paginador_diagnostico_controlador($pagina, $registros, $privilegio, $url, $busqueda1, $busqueda2, $cliente = '', $placa = '')
+    public function paginador_diagnostico_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $cliente = '', $placa = '')
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
-        $privilegio = mainModel::limpiar_string($privilegio);
         $busqueda1 = mainModel::limpiar_string($busqueda1);
         $busqueda2 = mainModel::limpiar_string($busqueda2);
         $cliente = mainModel::limpiar_string($cliente);

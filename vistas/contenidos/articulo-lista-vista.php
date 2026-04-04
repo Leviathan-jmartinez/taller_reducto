@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('articulo.ver')) {
+if (!mainModel::tienePermiso('articulo.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }   
@@ -31,6 +31,6 @@ if (!mainModel::tienePermisoVista('articulo.ver')) {
     <?php
     require_once "./controladores/articuloControlador.php";
     $ins_articulo = new articuloControlador();
-    echo $ins_articulo->paginador_articulos_controlador($pagina[1], 10, $_SESSION['nivel_str'], $pagina[0], "");
+    echo $ins_articulo->paginador_articulos_controlador($pagina[1], 10, $pagina[0], "");
     ?>
 </div>

@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('compra.presupuesto.crear')) {
+if (!mainModel::tienePermiso('compra.presupuesto.crear')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }

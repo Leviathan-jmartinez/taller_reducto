@@ -1,6 +1,6 @@
 <?php
 
-if (!mainModel::tienePermisoVista('inventario.ver')) {
+if (!mainModel::tienePermiso('inventario.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
@@ -88,7 +88,7 @@ $fecha_final_dt  = $fecha_final  ? $fecha_final  . ' 23:59:59' : '';
         <?php
         require_once "./controladores/inventarioControlador.php";
         $ins_inventario = new inventarioControlador();
-        echo $ins_inventario->paginador_inv_controlador($pagina[1], 15, $_SESSION['nivel_str'], $pagina[0], $_SESSION['fecha_inicio_inventario'], $_SESSION['fecha_final_inventario']);
+        echo $ins_inventario->paginador_inv_controlador($pagina[1], 15, $pagina[0], $_SESSION['fecha_inicio_inventario'], $_SESSION['fecha_final_inventario']);
         ?>
     </div>
 

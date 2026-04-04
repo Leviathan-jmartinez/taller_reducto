@@ -524,11 +524,10 @@ class presupuestoControlador extends presupuestoModelo
     /**fin controlador */
 
     /**Controlador paginar presupuestos */
-    public function paginador_presupuestos_controlador($pagina, $registros, $privilegio, $url, $busqueda1, $busqueda2)
+    public function paginador_presupuestos_controlador($pagina, $registros,  $url, $busqueda1, $busqueda2)
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
-        $privilegio = mainModel::limpiar_string($privilegio);
         $busqueda1 = mainModel::limpiar_string($busqueda1);
         $busqueda2 = mainModel::limpiar_string($busqueda2);
 
@@ -580,8 +579,8 @@ class presupuestoControlador extends presupuestoModelo
                                 <th>FECHA</th>
                                 <th>CREADO POR</th>
                                 <th>ESTADO</th>';
-        if ($privilegio == 1 || $privilegio == 2) {
-            $tabla .=           '<th>ELIMINAR</th>';
+        if (mainModel::tienePermiso('compra.presupuesto.anular')) {
+            $tabla .=           '<th>ANULAR</th>';
         }
         $tabla .= '
 						</tr>
@@ -612,7 +611,7 @@ class presupuestoControlador extends presupuestoModelo
 								<td>' . date("d-m-Y", strtotime($rows['fecha'])) . '</td>
                                 <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
                                 <td>' . $estadoBadge . '</td>';
-                if ($privilegio == 1 || $privilegio == 2) {
+                if (mainModel::tienePermiso('compra.presupuesto.anular')) {
                     $tabla .= '<td>
 									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/presupuestoAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
                                     <input type="hidden" name="presupuesto_id_del" value=' . mainModel::encryption($rows['idpresupuesto_compra']) . '>
@@ -676,15 +675,13 @@ class presupuestoControlador extends presupuestoModelo
         }
 
 
-        if ($_SESSION['nivel_str'] > 2) {
-            $alerta = [
+        if (!mainModel::tienePermiso('compra.presupuesto.anular')) {
+            return json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "No tiene los permisos necesario para realizar esta operación",
+                "Titulo" => "Advertencia!",
+                "Texto" => "No posee los permisos necesarios para realizar esta acción",
                 "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
+            ]);
         }
         $datos_presupuesto_del = [
             "updatedby" => $_SESSION['id_str'],

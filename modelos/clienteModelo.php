@@ -43,7 +43,7 @@ class clienteModelo extends mainModel
         // 1) Verificar si el cliente ya fue usado en ventas o pedidos
         $check = $pdo->prepare("
         SELECT 1 
-        FROM recepcion_servicio 
+        FROM vehiculos 
         WHERE id_cliente = :id
         LIMIT 1
         ");

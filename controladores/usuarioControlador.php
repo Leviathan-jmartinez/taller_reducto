@@ -15,7 +15,6 @@ class usuarioControlador extends usuarioModelo
         $nombre = mainModel::limpiar_string($_POST['usuario_nombre_reg']);
         $apellido = mainModel::limpiar_string($_POST['usuario_apellido_reg']);
         $telefono = mainModel::limpiar_string($_POST['usuario_telefono_reg']);
-        $nivel = mainModel::limpiar_string($_POST['usuario_privilegio_reg']);
         $nick = mainModel::limpiar_string($_POST['usuario_usuario_reg']);
         $email = mainModel::limpiar_string($_POST['usuario_email_reg']);
 
@@ -166,7 +165,6 @@ class usuarioControlador extends usuarioModelo
             "email" => $email,
             "telefono" => $telefono,
             "clave" => $clave,
-            "nivel" => $nivel,
             "estado" => "1"
         ];
         $agregar_usuario = usuarioModelo::agregar_usuario_modelo($datos_usuario_reg);
@@ -190,11 +188,10 @@ class usuarioControlador extends usuarioModelo
     /**Fin controlador agregar_usuario_controlador */
 
     /**Controlador paginar usuarios */
-    public function paginador_usuario_controlador($pagina, $registros, $privilegio, $id, $url, $busqueda)
+    public function paginador_usuario_controlador($pagina, $registros, $id, $url, $busqueda)
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
-        $privilegio = mainModel::limpiar_string($privilegio);
         $id = mainModel::limpiar_string($id);
         $busqueda = mainModel::limpiar_string($busqueda);
 
@@ -233,12 +230,15 @@ class usuarioControlador extends usuarioModelo
 								<th>NOMBRE COMPLETO</th>
 								<th>TELÉFONO</th>
 								<th>USUARIO</th>
-								<th>EMAIL</th>
-								<th>ACTUALIZAR</th>
-								<th>ELIMINAR</th>
-							</tr>
-						</thead>
-						<tbody>';
+								<th>EMAIL</th>';
+
+        if (mainModel::tienePermiso('usuarios.editar')) {
+            $tabla .=           '<th>ACTUALIZAR</th>';
+        }
+        if (mainModel::tienePermiso('usuarios.eliminar')) {
+            $tabla .= '         <th>ELIMINAR</th>';
+        }
+        $tabla .= '</tr></thead><tbody>';
         if ($total >= 1 && $pagina <= $Npaginas) {
             $contador = $inicio + 1;
             $reg_inicio = $inicio + 1;
@@ -251,11 +251,17 @@ class usuarioControlador extends usuarioModelo
 								<td>' . $rows['usu_telefono'] . '</td>
 								<td>' . $rows['usu_nick'] . '</td>
 								<td>' . $rows['usu_email'] . '</td>
+                ';
+                if (mainModel::tienePermiso('usuarios.editar')) {
+                    $tabla .= '
 								<td>
 									<a href="' . SERVERURL . 'usuario-actualizar/' . mainModel::encryption($rows['id_usuario']) . '/" class="btn btn-success">
 										<i class="fas fa-sync-alt"></i>
 									</a>
-								</td>
+								</td>';
+                }
+                if (mainModel::tienePermiso('usuarios.eliminar')) {
+                    $tabla .= '
 								<td>
 									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/usuarioAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
                                     <input type="hidden" name="usuario_id_del" value=' . mainModel::encryption($rows['id_usuario']) . '>
@@ -263,8 +269,9 @@ class usuarioControlador extends usuarioModelo
 											<i class="far fa-trash-alt"></i>
 										</button>
 									</form>
-								</td>
-							</tr>';
+								</td>';
+                }
+                $tabla .= '</tr>';
                 $contador++;
             }
             $reg_final = $contador - 1;
@@ -320,14 +327,13 @@ class usuarioControlador extends usuarioModelo
         }
 
         session_start(['name' => 'STR']);
-        if ($_SESSION['nivel_str'] != 1) {
-            echo json_encode([
+        if (!mainModel::tienePermiso('usuarios.eliminar')) {
+            return json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Error",
-                "Texto"  => "No tiene los permisos necesarios para realizar esta operación",
-                "Tipo"   => "error"
+                "Titulo" => "Advertencia!",
+                "Texto" => "No posee los permisos necesarios para realizar esta acción",
+                "Tipo" => "error"
             ]);
-            exit();
         }
 
         $stmt = usuarioModelo::eliminar_usuario_modelo($usuario);
@@ -407,7 +413,6 @@ class usuarioControlador extends usuarioModelo
         $telefono = mainModel::limpiar_string($_POST['usuario_telefono_up']);
         $nick = mainModel::limpiar_string($_POST['usuario_usuario_up']);
         $email = mainModel::limpiar_string($_POST['usuario_email_up']);
-        $nivel = mainModel::limpiar_string($_POST['usuario_privilegio_up']);
         /**validar estado si viene definido */
         if (isset($_POST['usuario_estado_up'])) {
             $estado = mainModel::limpiar_string($_POST['usuario_estado_up']);
@@ -503,8 +508,8 @@ class usuarioControlador extends usuarioModelo
             exit();
         }
         $admin_clave = mainModel::encryption($admin_clave);
-        
-        if ($estado != "1" && $estado != "2") {
+
+        if ($estado != "1" && $estado != "0") {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
@@ -598,15 +603,13 @@ class usuarioControlador extends usuarioModelo
             $check_cuenta = mainModel::ejecutar_consulta_simple("SELECT id_usuario from usuarios where usu_nick='$admin_user' and usu_clave = '$admin_clave' and id_usuario ='$id'");
         } else {
             session_start(['name' => 'STR']);
-            if ($_SESSION['nivel_str'] != 1) {
-                $alerta = [
+            if (!mainModel::tienePermiso('usuarios.editar')) {
+                return json_encode([
                     "Alerta" => "simple",
-                    "Titulo" => "Ocurrio un error inesperado!",
-                    "Texto" => "No tienes los permisos necesarios para realizar esta operación",
+                    "Titulo" => "Advertencia!",
+                    "Texto" => "No posee los permisos necesarios para realizar esta acción",
                     "Tipo" => "error"
-                ];
-                echo json_encode($alerta);
-                exit();
+                ]);
             }
             $check_cuenta = mainModel::ejecutar_consulta_simple("SELECT id_usuario from usuarios where usu_nick='$admin_user' and usu_clave = '$admin_clave'");
         }
@@ -629,7 +632,6 @@ class usuarioControlador extends usuarioModelo
             "email" => $email,
             "nick" => $nick,
             "clave" => $clave,
-            "nivel" => $nivel,
             "estado" => $estado,
             "iduser" => $id
         ];
@@ -658,7 +660,6 @@ class usuarioControlador extends usuarioModelo
         session_start(['name' => 'STR']);
 
         if (
-            $_SESSION['nivel_str'] != 1 &&
             !mainModel::tienePermiso('seguridad.roles.editar')
         ) {
             return json_encode([
@@ -703,7 +704,6 @@ class usuarioControlador extends usuarioModelo
     public function listar_usuarios_controlador()
     {
         if (
-            $_SESSION['nivel_str'] != 1 &&
             !mainModel::tienePermiso('seguridad.roles.ver')
         ) {
             return [];
@@ -722,7 +722,6 @@ class usuarioControlador extends usuarioModelo
         session_start(['name' => 'STR']);
 
         if (
-            $_SESSION['nivel_str'] != 1 &&
             !mainModel::tienePermiso('seguridad.roles.editar')
         ) {
             return '<div class="alert alert-danger">Acceso denegado</div>';
@@ -797,7 +796,6 @@ class usuarioControlador extends usuarioModelo
         session_start(['name' => 'STR']);
 
         if (
-            $_SESSION['nivel_str'] != 1 &&
             !mainModel::tienePermiso('seguridad.roles.editar')
         ) {
             return json_encode([
@@ -835,8 +833,7 @@ class usuarioControlador extends usuarioModelo
         }
 
         if (
-            $_SESSION['nivel_str'] != 1 &&
-            !mainModel::tienePermiso('seguridad.usuarios.editar')
+            !mainModel::tienePermiso('usuarios.asignarlocal')
         ) {
             return json_encode([
                 'Alerta' => 'simple',

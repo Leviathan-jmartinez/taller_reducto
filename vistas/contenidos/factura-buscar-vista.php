@@ -1,6 +1,6 @@
 <?php
 
-if (!mainModel::tienePermisoVista('compra.factura.ver')) {
+if (!mainModel::tienePermiso('compra.factura.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
@@ -122,7 +122,6 @@ $razon_social = $_SESSION['razon_social_compra'] ?? '';
         echo $compra->paginador_compra_controlador(
             $pagina[1],
             15,
-            $_SESSION['nivel_str'],
             $pagina[0],
             $_SESSION['fecha_inicio_compra'] ?? '',
             $_SESSION['fecha_final_compra'] ?? '',

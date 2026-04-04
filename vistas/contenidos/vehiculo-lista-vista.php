@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('vehiculo.ver')) {
+if (!mainModel::tienePermiso('vehiculo.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
@@ -35,6 +35,6 @@ if (!mainModel::tienePermisoVista('vehiculo.ver')) {
     <?php
     require_once "./controladores/vehiculoControlador.php";
     $ins_vehiculo = new vehiculoControlador();
-    echo $ins_vehiculo->paginador_vehiculos_controlador($pagina[1], 10, $_SESSION['nivel_str'], $pagina[0], "");
+    echo $ins_vehiculo->paginador_vehiculos_controlador($pagina[1], 10, $pagina[0], "");
     ?>
 </div>

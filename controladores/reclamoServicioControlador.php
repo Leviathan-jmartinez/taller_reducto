@@ -96,7 +96,7 @@ class reclamoServicioControlador extends reclamoServicioModelo
         return $html . '</tbody></table>';
     }
 
-    public function paginador_reclamo_controlador($pagina, $registros, $privilegio, $url, $busqueda = "")
+    public function paginador_reclamo_controlador($pagina, $registros, $url, $busqueda = "")
     {
         $pagina   = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
@@ -154,8 +154,8 @@ class reclamoServicioControlador extends reclamoServicioModelo
                     <th>Descripción</th>
                     <th>Estado</th>';
 
-        if ($privilegio == 1 || $privilegio == 2) {
-            $tabla .= '<th>ANULAR</th>';
+        if (mainModel::tienePermiso('servicio.reclamo.anular')) {
+            $tabla .=           '<th>ANULAR</th>';
         }
 
         $tabla .= '</tr></thead><tbody>';
@@ -177,7 +177,7 @@ class reclamoServicioControlador extends reclamoServicioModelo
                 <td>' . $r['descripcion'] . '</td>
                 <td>' . $estado . '</td>';
 
-                if ($privilegio == 1 || $privilegio == 2) {
+                if (mainModel::tienePermiso('servicio.reclamo.anular')) {
                     $tabla .= '<td>
                     <form class="FormularioAjax" action="' . SERVERURL . 'ajax/reclamoServicioAjax.php" method="POST" data-form="delete">
                         <input type="hidden" name="accion" value="anular_reclamo">

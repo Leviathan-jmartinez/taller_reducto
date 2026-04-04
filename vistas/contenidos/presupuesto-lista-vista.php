@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('compra.presupuesto.ver')) {
+if (!mainModel::tienePermiso('compra.presupuesto.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 } ?>
@@ -29,6 +29,6 @@ if (!mainModel::tienePermisoVista('compra.presupuesto.ver')) {
     <?php
     require_once "./controladores/presupuestoControlador.php";
     $ins_presupuesto = new presupuestoControlador();
-    echo $ins_presupuesto->paginador_presupuestos_controlador($pagina[1], 15, $_SESSION['nivel_str'], $pagina[0], "", "");
+    echo $ins_presupuesto->paginador_presupuestos_controlador($pagina[1], 15, $pagina[0], "", "");
     ?>
 </div>

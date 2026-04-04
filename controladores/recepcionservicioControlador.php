@@ -129,11 +129,10 @@ class recepcionservicioControlador extends recepcionservicioModelo
     }
 
     /**Controlador paginar clientes */
-    public function paginador_recepcion_servicio_controlador($pagina, $registros, $privilegio, $url, $busqueda)
+    public function paginador_recepcion_servicio_controlador($pagina, $registros, $url, $busqueda)
     {
         $pagina     = mainModel::limpiar_string($pagina);
         $registros  = mainModel::limpiar_string($registros);
-        $privilegio = mainModel::limpiar_string($privilegio);
         $busqueda   = mainModel::limpiar_string($busqueda);
 
         $url = mainModel::limpiar_string($url);
@@ -219,8 +218,8 @@ class recepcionservicioControlador extends recepcionservicioModelo
                     <th>Usuario</th>
                     <th>Estado</th>';
 
-        if ($privilegio == 1 || $privilegio == 2) {
-            $tabla .= '<th>ANULAR</th>';
+        if (mainModel::tienePermiso('servicio.recepcion.anular')) {
+            $tabla .=           '<th>ANULAR</th>';
         }
 
         $tabla .= '</tr>
@@ -263,7 +262,7 @@ class recepcionservicioControlador extends recepcionservicioModelo
                 <td>' . $rows['usuario'] . '</td>
                 <td>' . $estado . '</td>';
 
-                if ($privilegio == 1 || $privilegio == 2) {
+                if (mainModel::tienePermiso('servicio.recepcion.anular')) {
                     $tabla .= '
                 
                 <td>

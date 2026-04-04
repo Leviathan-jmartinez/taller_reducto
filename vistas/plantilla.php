@@ -28,7 +28,6 @@
         if (
             !isset($_SESSION['token_str']) ||
             !isset($_SESSION['nick_str']) ||
-            !isset($_SESSION['nivel_str']) ||
             !isset($_SESSION['id_str'])
         ) {
             $lc->forzarCierre_sesion_controlador();
@@ -55,5 +54,5 @@
     include "./vistas/inc/scripts.php"; ?>
 
 </body>
- 
+
 </html>

@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('servicio.registro.ver')) {
+if (!mainModel::tienePermiso('servicio.registro.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 } ?>
@@ -37,7 +37,6 @@ if (!mainModel::tienePermisoVista('servicio.registro.ver')) {
     echo $insRS->paginador_registro_servicio_controlador(
         $pagina[1],
         15,
-        $_SESSION['nivel_str'],
         $pagina[0],
         "",
         ""

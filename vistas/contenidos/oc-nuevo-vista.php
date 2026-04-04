@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('compra.oc.crear')) {
+if (!mainModel::tienePermiso('compra.oc.crear')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
@@ -163,7 +163,7 @@ if (isset($_POST['tipo_ordencompra'])) {
         <?php
             require_once "./controladores/ordencompraControlador.php";
             $ins_ordencompra = new ordencompraControlador();
-            echo $ins_ordencompra->paginador_presupuestos_controlador($pagina[1], 15, $_SESSION['nivel_str'], $pagina[0], $_SESSION['busqueda_ordencompra']);
+            echo $ins_ordencompra->paginador_presupuestos_controlador($pagina[1], 15, $pagina[0], $_SESSION['busqueda_ordencompra']);
         ?>
     </div>
 <?php

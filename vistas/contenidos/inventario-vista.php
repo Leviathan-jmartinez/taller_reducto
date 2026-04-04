@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('inventario.ver')) {
+if (!mainModel::tienePermiso('inventario.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
@@ -41,13 +41,13 @@ $tipo = $_SESSION['inventario_tipo'];
 
             <div style="display: flex; justify-content: flex-end; margin-bottom: 15px; gap: 10px;">
                 <?php
-                if (mainModel::tienePermisoVista('inventario.crear')) { ?>
+                if (mainModel::tienePermiso('inventario.crear')) { ?>
                     <button class="btn btn-success" data-toggle="modal" data-target="#modalInventario">
                         <i class="fas fa-plus"></i> &nbsp; Generar Inventario
                     </button>
                 <?php } ?>
                 <?php
-                if (mainModel::tienePermisoVista('inventario.editar')) { ?>
+                if (mainModel::tienePermiso('inventario.editar')) { ?>
                     <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#ModalBuscarINV">
                         <i class="fas fa-search"></i> &nbsp; Cargar Inventario
                     </button>
@@ -129,7 +129,7 @@ $tipo = $_SESSION['inventario_tipo'];
 <div class="row mt-3">
     <div class="col-12 text-center">
         <?php
-        if (mainModel::tienePermisoVista('inventario.editar')) { ?>
+        if (mainModel::tienePermiso('inventario.editar')) { ?>
             <button id="guardar-ajuste" class="btn btn-info btn-raised">
                 <i class="fas fa-save"></i>&nbsp; Guardar
             </button>
@@ -142,7 +142,7 @@ $tipo = $_SESSION['inventario_tipo'];
         $estadoInv = $_SESSION['datos_ajuste_inv']['ESTADO'] ?? null;
 
         if (
-            mainModel::tienePermisoVista('inventario.ajustar') &&
+            mainModel::tienePermiso('inventario.ajustar') &&
             (int)$estadoInv === 2
         ) { ?>
             <button id="btn-ajustar-stock" class="btn btn-raised btn-danger btn-sm">

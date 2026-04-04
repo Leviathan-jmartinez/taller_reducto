@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('compra.factura.crear')) {
+if (!mainModel::tienePermiso('compra.factura.crear')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }

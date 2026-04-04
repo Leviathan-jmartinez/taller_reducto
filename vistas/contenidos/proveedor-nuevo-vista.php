@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('proveedor.crear')) {
+if (!mainModel::tienePermiso('proveedor.crear')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 } ?>

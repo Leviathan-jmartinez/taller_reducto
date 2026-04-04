@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('compra.nota.ver')) {
+if (!mainModel::tienePermiso('compra.nota.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 } ?>
@@ -122,7 +122,6 @@ $tipo_nota     = $_SESSION['tipo_nota_notasCreDe'] ?? '';
         echo $notas->paginador_notasCreDe_controlador(
             $pagina[1],
             15,
-            $_SESSION['nivel_str'],
             $pagina[0],
             $_SESSION['fecha_inicio_notasCreDe'] ?? '',
             $_SESSION['fecha_final_notasCreDe'] ?? '',

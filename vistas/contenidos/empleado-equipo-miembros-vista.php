@@ -1,6 +1,6 @@
 <?php
 
-if (!mainModel::tienePermisoVista('empleado.ver')) {
+if (!mainModel::tienePermiso('empleado.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
@@ -57,7 +57,7 @@ if (!mainModel::tienePermisoVista('empleado.ver')) {
                                     : '<span class="badge badge-danger">Inactivo</span>'; ?>
                             </td>
                             <td>
-                                <?php if (mainModel::tienePermisoVista('empleado.eliminar')): ?>
+                                <?php if (mainModel::tienePermiso('empleado.eliminar')): ?>
                                     <form class="FormularioAjax d-inline"
                                         action="<?php echo SERVERURL; ?>ajax/equipoAjax.php"
                                         method="POST"

@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('servicio.reclamo.ver')) {
+if (!mainModel::tienePermiso('servicio.reclamo.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
@@ -102,7 +102,6 @@ $busqueda = $_SESSION['busqueda_reclamo_servicio'] ?? '';
     echo $reclamo->paginador_reclamo_controlador(
         $pagina[1],
         15,
-        $_SESSION['nivel_str'],
         $pagina[0],
         $_SESSION['busqueda_reclamo_servicio'] ?? ''
     );

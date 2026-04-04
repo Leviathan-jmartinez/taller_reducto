@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('servicio.reclamo.crear')) {
+if (!mainModel::tienePermiso('servicio.reclamo.crear')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 } ?>

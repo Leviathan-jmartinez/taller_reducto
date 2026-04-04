@@ -127,14 +127,13 @@ class empleadoControlador extends empleadoModelo
         }
 
         session_start(['name' => 'STR']);
-        if ($_SESSION['nivel_str'] == 3) {
-            echo json_encode([
+        if (!mainModel::tienePermiso('empleado.eliminar')) {
+            return json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Error",
-                "Texto"  => "No tiene los permisos necesarios para realizar esta operación",
-                "Tipo"   => "error"
+                "Titulo" => "Advertencia!",
+                "Texto" => "No posee los permisos necesarios para realizar esta acción",
+                "Tipo" => "error"
             ]);
-            exit();
         }
 
         $stmt = empleadoModelo::eliminar_empleado_modelo($id);
@@ -181,7 +180,6 @@ class empleadoControlador extends empleadoModelo
     public function paginador_empleados_controlador(
         $pagina,
         $registros,
-        $privilegio,
         $url,
         $busqueda
     ) {
@@ -235,8 +233,11 @@ class empleadoControlador extends empleadoModelo
         <th>Cargo</th>
         <th>Sucursal</th>';
 
-        if ($privilegio == 1 || $privilegio == 2) {
-            $tabla .= '<th>Actualizar</th><th>Eliminar</th>';
+        if (mainModel::tienePermiso('empleado.editar')) {
+            $tabla .=           '<th>ACTUALIZAR</th>';
+        }
+        if (mainModel::tienePermiso('empleado.eliminar')) {
+            $tabla .= '<th>ELIMINAR</th>';
         }
 
         $tabla .= '</tr></thead><tbody>';
@@ -250,7 +251,7 @@ class empleadoControlador extends empleadoModelo
             <td>' . $row['cargo'] . '</td>
             <td>' . $row['sucursal'] . '</td>';
 
-                if ($privilegio == 1 || $privilegio == 2) {
+                if (mainModel::tienePermiso('empleado.editar')) {
                     $tabla .= '
                 <td>
                     <a href="' . SERVERURL . 'empleado-actualizar/' . mainModel::encryption($row['idempleados']) . '/" 
@@ -258,6 +259,10 @@ class empleadoControlador extends empleadoModelo
                         <i class="fas fa-sync-alt"></i>
                     </a>
                 </td>
+                ';
+                }
+                if (mainModel::tienePermiso('empleado.eliminar')) {
+                    $tabla .= '
                 <td>
                     <form class="FormularioAjax"
                         action="' . SERVERURL . 'ajax/empleadoAjax.php"

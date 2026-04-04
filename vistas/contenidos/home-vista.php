@@ -68,7 +68,7 @@
 		</div>
 	</a>
 	<?php
-	if ($_SESSION['nivel_str'] == 1) {
+	if (mainModel::tienePermiso('usuarios.ver')) {
 		require_once "./controladores/usuarioControlador.php";
 		$insHome = new usuarioControlador();
 		$total_user = $insHome->datos_usuario_controlador("Conteo", 0)

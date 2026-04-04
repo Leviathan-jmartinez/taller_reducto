@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('cliente.ver')) {
+if (!mainModel::tienePermiso('cliente.ver')) {
 	echo '<div class="alert alert-danger">Acceso no autorizado</div>';
 	return;
 }
@@ -73,7 +73,7 @@ if (!mainModel::tienePermisoVista('cliente.ver')) {
 		<?php
 		require_once "./controladores/clienteControlador.php";
 		$ins_cliente = new clienteControlador();
-		echo $ins_cliente->paginador_cliente_controlador($pagina[1], 15, $_SESSION['nivel_str'], $pagina[0], $_SESSION['busqueda_cliente']);
+		echo $ins_cliente->paginador_cliente_controlador($pagina[1], 15, $pagina[0], $_SESSION['busqueda_cliente']);
 		?>
 	</div>
 <?php

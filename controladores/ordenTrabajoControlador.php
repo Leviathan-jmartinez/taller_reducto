@@ -21,8 +21,6 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
         return $html;
     }
 
-
-
     public function generar_ot_controlador()
     {
         session_start(['name' => 'STR']);
@@ -102,7 +100,7 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
         ]);
     }
 
-    public function paginador_ot_controlador($pagina, $registros, $privilegio, $url, $busqueda1, $busqueda2)
+    public function paginador_ot_controlador($pagina, $registros, $url, $busqueda1, $busqueda2)
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);

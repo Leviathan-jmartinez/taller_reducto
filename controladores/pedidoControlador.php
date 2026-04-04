@@ -310,11 +310,10 @@ class pedidoControlador extends pedidoModelo
     }
     /**fin controlador */
     /**Controlador paginar articulos */
-    public function paginador_pedidos_controlador($pagina, $registros, $privilegio, $url, $busqueda1, $busqueda2)
+    public function paginador_pedidos_controlador($pagina, $registros, $url, $busqueda1, $busqueda2)
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
-        $privilegio = mainModel::limpiar_string($privilegio);
         $busqueda1 = mainModel::limpiar_string($busqueda1);
         $busqueda2 = mainModel::limpiar_string($busqueda2);
 
@@ -412,8 +411,8 @@ class pedidoControlador extends pedidoModelo
                     <th>ESTADO</th>
                     <th>PDF</th>';
 
-        if ($privilegio == 1 || $privilegio == 2) {
-            $tabla .= '<th>ELIMINAR</th>';
+        if (mainModel::tienePermiso('compra.pedido.anular')) {
+            $tabla .=           '<th>ANULAR</th>';
         }
 
         $tabla .= '
@@ -468,8 +467,7 @@ class pedidoControlador extends pedidoModelo
                     $tabla .= '<td>-</td>';
                 }
 
-                /* ===== ELIMINAR ===== */
-                if ($privilegio == 1 || $privilegio == 2) {
+                if (mainModel::tienePermiso('compra.pedido.anular')) {
                     $tabla .= '
                     <td>
                         <form class="FormularioAjax"
@@ -559,15 +557,13 @@ class pedidoControlador extends pedidoModelo
             exit();
         }
 
-        if ($_SESSION['nivel_str'] > 2) {
-            $alerta = [
+        if (!mainModel::tienePermiso('compra.pedido.anular')) {
+            return json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "No tiene los permisos necesario para realizar esta operación",
+                "Titulo" => "Advertencia!",
+                "Texto" => "No posee los permisos necesarios para realizar esta acción",
                 "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
+            ]);
         }
         $datos_pedido_del = [
             "updatedby" => $_SESSION['id_str'],

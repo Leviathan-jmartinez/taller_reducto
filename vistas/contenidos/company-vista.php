@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('empresa.ver')) {
+if (!mainModel::tienePermiso('empresa.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
@@ -70,7 +70,7 @@ if ($datos_empresa->rowCount() == 0) {
         </form>
     </div>
 <?php
-} elseif ($datos_empresa->rowCount() == 1 && $_SESSION['nivel_str'] == 1 && mainModel::tienePermisoVista('empresa.editar')) {
+} elseif ($datos_empresa->rowCount() == 1 && mainModel::tienePermiso('empresa.editar')) {
     $campos = $datos_empresa->fetch();
 ?>
     <div class="container-fluid">

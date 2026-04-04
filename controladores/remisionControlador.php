@@ -269,11 +269,10 @@ class remisionControlador extends remisionModelo
     /**fin controlador */
 
     /**controlador paginador remision */
-    public function paginador_remision_controlador($pagina, $registros, $privilegio, $url, $busqueda1, $busqueda2)
+    public function paginador_remision_controlador($pagina, $registros, $url, $busqueda1, $busqueda2)
     {
         $pagina     = mainModel::limpiar_string($pagina);
         $registros  = mainModel::limpiar_string($registros);
-        $privilegio = mainModel::limpiar_string($privilegio);
         $busqueda1  = mainModel::limpiar_string($busqueda1);
         $busqueda2  = mainModel::limpiar_string($busqueda2);
 
@@ -348,8 +347,8 @@ class remisionControlador extends remisionModelo
                     <th>GENERADO POR</th>
                     <th>ESTADO</th>';
 
-        if ($privilegio == 1 || $privilegio == 2) {
-            $tabla .= '<th>ANULAR</th>';
+        if (mainModel::tienePermiso('compra.remision.anular')) {
+            $tabla .=           '<th>ANULAR</th>';
         }
 
         $tabla .= '
@@ -392,7 +391,7 @@ class remisionControlador extends remisionModelo
                 ';
 
                 /* 🔹 ANULAR */
-                if ($privilegio == 1 || $privilegio == 2) {
+                if (mainModel::tienePermiso('compra.remision.anular')) {
                     $tabla .= '
                 <td>
                     <form class="FormularioAjax"

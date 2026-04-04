@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('usuarios.editar')) {
+if (!mainModel::tienePermiso('usuarios.editar')) {
 	echo '<div class="alert alert-danger">Acceso no autorizado</div>';
 	return;
 }
@@ -14,29 +14,57 @@ if (!mainModel::tienePermisoVista('usuarios.editar')) {
 
 	</p>
 </div>
-<?php
-if ($_SESSION['nivel_str'] == 1) { ?>
-	<div class="container-fluid">
-		<ul class="full-box list-unstyled page-nav-tabs">
+<div class="container-fluid">
+	<ul class="full-box list-unstyled page-nav-tabs">
+
+		<?php if (mainModel::tienePermiso('usuarios.crear')) { ?>
 			<li>
-				<a href="<?php echo SERVERURL; ?>usuario-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO USUARIO</a>
+				<a href="<?php echo SERVERURL; ?>usuario-nuevo/">
+					<i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO USUARIO
+				</a>
 			</li>
+		<?php } ?>
+
+		<?php if (mainModel::tienePermiso('usuarios.ver')) { ?>
 			<li>
-				<a href="<?php echo SERVERURL; ?>usuario-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTA DE USUARIOS</a>
-			</li>
-			<li>
-				<a href="<?php echo SERVERURL; ?>usuario-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR USUARIO</a>
-			</li>
-			<li>
-				<a href="<?php echo SERVERURL; ?>usuario-rol/"><i class="fas fa-search fa-fw"></i> &nbsp; ASIGNAR ROL</a>
-			</li>
-			<li>
-				<a href="<?php echo SERVERURL; ?>usuario-sucursal/"><i class="fas fa-store-alt fa-fw"></i> &nbsp; ASIGNAR SUCURSAL</a>
+				<a href="<?php echo SERVERURL; ?>usuario-lista/">
+					<i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTA DE USUARIOS
+				</a>
 			</li>
 
-		</ul>
-	</div>
-<?php } ?>
+			<li>
+				<a href="<?php echo SERVERURL; ?>usuario-buscar/">
+					<i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR USUARIO
+				</a>
+			</li>
+		<?php } ?>
+
+		<?php if (mainModel::tienePermiso('usuarios.asignarrol')) { ?>
+			<li>
+				<a href="<?php echo SERVERURL; ?>usuario-rol/">
+					<i class="fas fa-user-tag fa-fw"></i> &nbsp; ASIGNAR ROL
+				</a>
+			</li>
+		<?php } ?>
+
+		<?php if (mainModel::tienePermiso('usuarios.asignarlocal')) { ?>
+			<li>
+				<a href="<?php echo SERVERURL; ?>usuario-sucursal/">
+					<i class="fas fa-store-alt fa-fw"></i> &nbsp; ASIGNAR SUCURSAL
+				</a>
+			</li>
+		<?php } ?>
+
+		<?php if (mainModel::tienePermiso('usuarios.permisos_por_roles')) { ?>
+			<li>
+				<a href="<?php echo SERVERURL; ?>rol-permisos/">
+					<i class="fas fa-key fa-fw"></i> &nbsp; PERMISOS POR ROL
+				</a>
+			</li>
+		<?php } ?>
+
+	</ul>
+</div>
 <!-- Content -->
 <div class="container-fluid">
 	<?php
@@ -100,7 +128,7 @@ if ($_SESSION['nivel_str'] == 1) { ?>
 						</div>
 						<div class="col-12">
 							<?php
-							if ($_SESSION['nivel_str'] == 1 && $campos['id_usuario'] != 1) { ?>
+							if (mainModel::tienePermiso('usuarios.editar')) { ?>
 								<div class="form-group">
 									<span>Estado de la cuenta &nbsp; <?php if ($campos['usu_estado'] == 1) {
 																			echo '<span class="badge badge-success">Activa</span>';
@@ -142,29 +170,6 @@ if ($_SESSION['nivel_str'] == 1) { ?>
 					</div>
 				</div>
 			</fieldset>
-			<?php
-			if ($_SESSION['nivel_str'] == 1 && $campos['id_usuario'] != 1) { ?>
-				<br><br><br>
-			<fieldset>
-				<legend><i class="fas fa-medal"></i> &nbsp; Nivel de privilegio</legend>
-				<div class="container-fluid">
-					<div class="row">
-						<div class="col-12">
-							<p><span class="badge badge-info">Control total</span> Permisos para registrar, actualizar y eliminar</p>
-							<p><span class="badge badge-success">Edición</span> Permisos para registrar y actualizar</p>
-							<p><span class="badge badge-dark">Registrar</span> Solo permisos para registrar</p>
-							<div class="form-group">
-								<select class="form-control" name="usuario_privilegio_up">
-									<option value="1" <?php if($campos['usu_nivel'] == 1){echo 'selected=""';}?>>Control total <?php if($campos['usu_nivel'] == 1){echo '(Actual)';}?></option>
-									<option value="2" <?php if($campos['usu_nivel'] == 2){echo 'selected=""';}?>>Edición <?php if($campos['usu_nivel'] == 2){echo '(Actual)';}?></option>
-									<option value="3" <?php if($campos['usu_nivel'] == 3){echo 'selected=""';}?>>Registrar <?php if($campos['usu_nivel'] == 3){echo '(Actual)';}?></option>
-								</select>
-							</div>
-						</div>
-					</div>
-				</div>
-			</fieldset>
-			<?php } ?>
 			<br><br><br>
 			<fieldset>
 				<p class="text-center">Para poder guardar los cambios en esta cuenta debe de ingresar su nombre de usuario y contraseña</p>

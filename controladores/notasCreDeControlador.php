@@ -423,11 +423,10 @@ class notasCreDeControlador extends notasCreDeModelo
 
 
     /** Controlador paginar compras */
-    public function paginador_notasCreDe_controlador($pagina, $registros, $privilegio, $url, $busqueda1, $busqueda2, $nro_documento = '', $tipo_nota = '')
+    public function paginador_notasCreDe_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $nro_documento = '', $tipo_nota = '')
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
-        $privilegio = mainModel::limpiar_string($privilegio);
         $busqueda1 = mainModel::limpiar_string($busqueda1);
         $busqueda2 = mainModel::limpiar_string($busqueda2);
         $nro_documento = mainModel::limpiar_string($nro_documento);
@@ -506,7 +505,7 @@ class notasCreDeControlador extends notasCreDeModelo
                                     <th>TIPO DOCUMENTO</th>
                                     <th>CARGADO POR</th>
                                     <th>ESTADO</th>';
-        if ($privilegio == 1 || $privilegio == 2) {
+        if (mainModel::tienePermiso('compra.nota.anular')) {
             $tabla .=           '<th>ANULAR</th>';
         }
         $tabla .= '
@@ -541,7 +540,7 @@ class notasCreDeControlador extends notasCreDeModelo
                                     <td>' . $rows['tipo_nota'] . '</td>
                                     <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
                                     <td>' . $estadoBadge . '</td>';
-                if ($privilegio == 1 || $privilegio == 2) {
+                if (mainModel::tienePermiso('compra.nota.anular')) {
                     $tabla .= '<td>
                                         <form class="FormularioAjax" action="' . SERVERURL . 'ajax/notasCreDeAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
                                         <input type="hidden" name="notaCreDe_id_del" value=' . mainModel::encryption($rows['idnota_compra']) . '>

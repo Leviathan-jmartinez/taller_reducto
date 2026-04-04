@@ -522,11 +522,10 @@ class inventarioControlador extends inventarioModelo
     /* ===============================
         PAGINADOR COMPRA    
     =============================== */
-    public function paginador_inv_controlador($pagina, $registros, $privilegio, $url, $busqueda1, $busqueda2)
+    public function paginador_inv_controlador($pagina, $registros, $url, $busqueda1, $busqueda2)
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
-        $privilegio = mainModel::limpiar_string($privilegio);
         $busqueda1 = mainModel::limpiar_string($busqueda1);
         $busqueda2 = mainModel::limpiar_string($busqueda2);
 
@@ -573,7 +572,7 @@ class inventarioControlador extends inventarioModelo
                                 <th>Observación</th>
                                 <th>Creado Por</th>
                                 <th>Estado</th>';
-        if ($privilegio == 1 || $privilegio == 2) {
+         if (mainModel::tienePermiso('inventario.anular')) {
             $tabla .=           '<th>ANULAR</th>';
         }
         $tabla .= '
@@ -609,7 +608,7 @@ class inventarioControlador extends inventarioModelo
 								<td>' . $rows['descripcion'] . '</td>
                                 <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
                                 <td>' . $estadoBadge . '</td>';
-                if ($privilegio == 1 || $privilegio == 2) {
+                if (mainModel::tienePermiso('inventario.anular')) {
                     $tabla .= '<td>
 									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/inventarioAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
                                     <input type="hidden" name="inv_id_del" value=' . mainModel::encryption($rows['idajuste_inventario']) . '>

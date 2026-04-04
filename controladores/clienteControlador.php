@@ -195,11 +195,10 @@ class clienteControlador extends clienteModelo
     /** fin controlador */
 
     /**Controlador paginar clientes */
-    public function paginador_cliente_controlador($pagina, $registros, $privilegio, $url, $busqueda)
+    public function paginador_cliente_controlador($pagina, $registros, $url, $busqueda)
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
-        $privilegio = mainModel::limpiar_string($privilegio);
         $busqueda = mainModel::limpiar_string($busqueda);
 
         $url = mainModel::limpiar_string($url);
@@ -236,9 +235,11 @@ class clienteControlador extends clienteModelo
 								<th>CLIENTE</th>
 								<th>TELÉFONO</th>
 								<th>DIRECCIÓN</th>';
-        if ($privilegio == 1 || $privilegio == 2) {
-            $tabla .= '<th>ACTUALIZAR</th>
-                                <th>ELIMINAR</th>';
+        if (mainModel::tienePermiso('cliente.editar')) {
+            $tabla .=           '<th>ACTUALIZAR</th>';
+        }
+        if (mainModel::tienePermiso('cliente.eliminar')) {
+            $tabla .= '<th>ELIMINAR</th>';
         }
         $tabla .= '
 						</tr>
@@ -259,12 +260,16 @@ class clienteControlador extends clienteModelo
                                     data-content="' . $rows['direccion_cliente'] . '">
                                          <i class="fas fa-info-circle"></i>
                                 </button></td>';
-                if ($privilegio == 1 || $privilegio == 2) {
+                if (mainModel::tienePermiso('cliente.editar')) {
                     $tabla .= '<td>
 									<a href="' . SERVERURL . 'cliente-actualizar/' . mainModel::encryption($rows['id_cliente']) . '/" class="btn btn-success">
 										<i class="fas fa-sync-alt"></i>
 									</a>
 								</td>
+                                ';
+                }
+                if (mainModel::tienePermiso('cliente.eliminar')) {
+                    $tabla .= '
 								<td>
 									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/clienteAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
                                     <input type="hidden" name="cliente_id_del" value=' . mainModel::encryption($rows['id_cliente']) . '>
@@ -321,14 +326,13 @@ class clienteControlador extends clienteModelo
         }
 
         session_start(['name' => 'STR']);
-        if ($_SESSION['nivel_str'] == 3) {
-            echo json_encode([
+        if (!mainModel::tienePermiso('cliente.eliminar')) {
+            return json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Error",
-                "Texto"  => "No tiene los permisos necesarios para realizar esta operación",
-                "Tipo"   => "error"
+                "Titulo" => "Advertencia!",
+                "Texto" => "No posee los permisos necesarios para realizar esta acción",
+                "Tipo" => "error"
             ]);
-            exit();
         }
 
         $stmt = clienteModelo::eliminar_cliente_modelo($id);
@@ -562,15 +566,13 @@ class clienteControlador extends clienteModelo
             }
         }
         session_start(['name' => 'STR']);
-        if ($_SESSION['nivel_str'] < 1 || $_SESSION['nivel_str'] > 2) {
-            $alerta = [
+        if (!mainModel::tienePermiso('cliente.editar')) {
+            return json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "No posee los permisos necesarios para realizar esta operación",
+                "Titulo" => "Advertencia!",
+                "Texto" => "No posee los permisos necesarios para realizar esta acción",
                 "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
+            ]);
         }
         $datos_cliente_up = [
             "ciudad" => $ciudad,

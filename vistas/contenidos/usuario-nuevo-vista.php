@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('usuarios.crear')) {
+if (!mainModel::tienePermiso('usuarios.crear')) {
 	echo '<div class="alert alert-danger">Acceso no autorizado</div>';
 	return;
 }
@@ -17,21 +17,53 @@ if (!mainModel::tienePermisoVista('usuarios.crear')) {
 
 <div class="container-fluid">
 	<ul class="full-box list-unstyled page-nav-tabs">
-		<li>
-			<a class="active" href="<?php echo SERVERURL; ?>usuario-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO USUARIO</a>
-		</li>
-		<li>
-			<a href="<?php echo SERVERURL; ?>usuario-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTA DE USUARIOS</a>
-		</li>
-		<li>
-			<a href="<?php echo SERVERURL; ?>usuario-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR USUARIO</a>
-		</li>
-		<li>
-			<a href="<?php echo SERVERURL; ?>usuario-rol/"><i class="fas fa-search fa-fw"></i> &nbsp; ASIGNAR ROL</a>
-		</li>
-		<li>
-			<a href="<?php echo SERVERURL; ?>usuario-sucursal/"><i class="fas fa-store-alt fa-fw"></i> &nbsp; ASIGNAR SUCURSAL</a>
-		</li>
+
+		<?php if (mainModel::tienePermiso('usuarios.crear')) { ?>
+			<li>
+				<a href="<?php echo SERVERURL; ?>usuario-nuevo/">
+					<i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO USUARIO
+				</a>
+			</li>
+		<?php } ?>
+
+		<?php if (mainModel::tienePermiso('usuarios.ver')) { ?>
+			<li>
+				<a class="active" href="<?php echo SERVERURL; ?>usuario-lista/">
+					<i  class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTA DE USUARIOS
+				</a>
+			</li>
+
+			<li>
+				<a href="<?php echo SERVERURL; ?>usuario-buscar/">
+					<i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR USUARIO
+				</a>
+			</li>
+		<?php } ?>
+
+		<?php if (mainModel::tienePermiso('usuarios.asignarrol')) { ?>
+			<li>
+				<a href="<?php echo SERVERURL; ?>usuario-rol/">
+					<i class="fas fa-user-tag fa-fw"></i> &nbsp; ASIGNAR ROL
+				</a>
+			</li>
+		<?php } ?>
+
+		<?php if (mainModel::tienePermiso('usuarios.asignarlocal')) { ?>
+			<li>
+				<a href="<?php echo SERVERURL; ?>usuario-sucursal/">
+					<i class="fas fa-store-alt fa-fw"></i> &nbsp; ASIGNAR SUCURSAL
+				</a>
+			</li>
+		<?php } ?>
+
+		<?php if (mainModel::tienePermiso('usuarios.permisos_por_roles')) { ?>
+			<li>
+				<a href="<?php echo SERVERURL; ?>rol-permisos/">
+					<i class="fas fa-key fa-fw"></i> &nbsp; PERMISOS POR ROL
+				</a>
+			</li>
+		<?php } ?>
+
 	</ul>
 </div>
 
@@ -103,26 +135,6 @@ if (!mainModel::tienePermisoVista('usuarios.crear')) {
 			</div>
 		</fieldset>
 		<br><br><br>
-		<fieldset>
-			<legend><i class="fas fa-medal"></i> &nbsp; Nivel de privilegio</legend>
-			<div class="container-fluid">
-				<div class="row">
-					<div class="col-12">
-						 <p><span class="badge badge-info">Control total</span> Permisos para registrar, actualizar y eliminar</p>
-						<p><span class="badge badge-success">Edición</span> Permisos para registrar y actualizar</p>
-						<p><span class="badge badge-dark">Registrar</span> Solo permisos para registrar</p>
-						<div class="form-group">
-							<select class="form-control" name="usuario_privilegio_reg" required>
-								<option value="" selected="" disabled="">Seleccione una opción</option>
-								<option value="1">Control total</option>
-								<option value="2">Edición</option>
-								<option value="3">Registrar</option>
-							</select>
-						</div>
-					</div>
-				</div>
-			</div>
-		</fieldset>
 		<p class="text-center" style="margin-top: 40px;">
 			<button type="reset" class="btn btn-raised btn-secondary btn-sm"><i class="fas fa-paint-roller"></i> &nbsp; LIMPIAR</button>
 			&nbsp; &nbsp;

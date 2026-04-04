@@ -8,11 +8,10 @@ if ($peticionAjax) {
 class articuloControlador extends articuloModelo
 {
     /**Controlador paginar articulos */
-    public function paginador_articulos_controlador($pagina, $registros, $privilegio, $url, $busqueda)
+    public function paginador_articulos_controlador($pagina, $registros, $url, $busqueda)
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
-        $privilegio = mainModel::limpiar_string($privilegio);
         $busqueda = mainModel::limpiar_string($busqueda);
 
         $url = mainModel::limpiar_string($url);
@@ -48,10 +47,10 @@ class articuloControlador extends articuloModelo
 								<th>CÓDIGO</th>
                                 <th>NOMBRE</th>
                                 <th>DETALLE</th>';
-        if (mainModel::tienePermisoVista('articulo.editar')) {
+        if (mainModel::tienePermiso('articulo.editar')) {
             $tabla .=           '<th>ACTUALIZAR</th>';
         }
-        if (mainModel::tienePermisoVista('articulo.eliminar')) {
+        if (mainModel::tienePermiso('articulo.eliminar')) {
             $tabla .= '<th>ELIMINAR</th>';
         }
         $tabla .= '
@@ -72,7 +71,7 @@ class articuloControlador extends articuloModelo
                                     data-content="' . 'Precio Venta: ' . number_format((float)$rows['precio_venta'], 0, ',', '.') . '">
                                          <i class="fas fa-info-circle"></i>
                                 </button></td>';
-                if (mainModel::tienePermisoVista('articulo.editar')) {
+                if (mainModel::tienePermiso('articulo.editar')) {
                     $tabla .= '<td>
 									<a href="' . SERVERURL . 'articulo-actualizar/' . mainModel::encryption($rows['id_articulo']) . '/" class="btn btn-success">
 										<i class="fas fa-sync-alt"></i>
@@ -80,7 +79,7 @@ class articuloControlador extends articuloModelo
 								</td>
 								';
                 }
-                if (mainModel::tienePermisoVista('articulo.eliminar')) {
+                if (mainModel::tienePermiso('articulo.eliminar')) {
                     $tabla .= ' <td>                          
 									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/articuloAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
                                     <input type="hidden" name="articulo_id_del" value=' . mainModel::encryption($rows['id_articulo']) . '>
@@ -351,14 +350,13 @@ class articuloControlador extends articuloModelo
         }
 
         session_start(['name' => 'STR']);
-        if ($_SESSION['nivel_str'] == 3) {
-            echo json_encode([
+        if (!mainModel::tienePermiso('articulo.eliminar')) {
+            return json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Error",
-                "Texto"  => "No tiene los permisos necesarios para realizar esta operación",
-                "Tipo"   => "error"
+                "Titulo" => "Advertencia!",
+                "Texto" => "No posee los permisos necesarios para realizar esta acción",
+                "Tipo" => "error"
             ]);
-            exit();
         }
 
         $stmt = articuloModelo::eliminar_articulo_modelo($id);
@@ -512,15 +510,13 @@ class articuloControlador extends articuloModelo
             exit();
         }
         session_start(['name' => 'STR']);
-        if ($_SESSION['nivel_str'] < 1 || $_SESSION['nivel_str'] > 2) {
-            $alerta = [
+        if (!mainModel::tienePermiso('articulo.editar')) {
+            return json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "No posee los permisos necesarios para realizar esta operación",
+                "Titulo" => "Advertencia!",
+                "Texto" => "No posee los permisos necesarios para realizar esta acción",
                 "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
+            ]);
         }
         $datos_articulo_up = [
             "id_categoria" => $id_categoria,

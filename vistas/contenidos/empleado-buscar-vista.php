@@ -1,6 +1,6 @@
 <?php
 
-if (!mainModel::tienePermisoVista('empleado.ver')) {
+if (!mainModel::tienePermiso('empleado.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
@@ -115,7 +115,6 @@ if (!mainModel::tienePermisoVista('empleado.ver')) {
         echo $ins_empleado->paginador_empleados_controlador(
             $pagina[1],
             15,
-            $_SESSION['nivel_str'],
             $pagina[0],
             $_SESSION['busqueda_empleado']
         );

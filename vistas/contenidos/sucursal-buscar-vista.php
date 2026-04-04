@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('sucursal.ver')) {
+if (!mainModel::tienePermiso('sucursal.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
@@ -109,7 +109,6 @@ if (!mainModel::tienePermisoVista('sucursal.ver')) {
         echo $ins->paginador_sucursales_controlador(
             $pagina[1],
             15,
-            $_SESSION['nivel_str'],
             $pagina[0],
             $_SESSION['busqueda_sucursal']
         );

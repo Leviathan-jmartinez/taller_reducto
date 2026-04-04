@@ -207,14 +207,14 @@
                 <?php } ?>
 
                 <!-- SEGURIDAD -->
-                <?php if (mainModel::puedeVerMenu('seguridad')) { ?>
+                <?php if (mainModel::tienePermiso('usuarios.ver')) { ?>
                     <li>
                         <a href="#" class="nav-btn-submenu">
                             <i class="fas fa-shield-alt fa-fw"></i> &nbsp; Seguridad
                             <i class="fas fa-chevron-down"></i>
                         </a>
                         <ul>
-                            <?php if (mainModel::tienePermiso('seguridad.usuarios.ver')) { ?>
+                            <?php if (mainModel::tienePermiso('usuarios.ver')) { ?>
                                 <li><a href="<?= SERVERURL; ?>usuario-lista/"><i class="fas fa-user fa-fw"></i> &nbsp; Usuarios</a></li>
                             <?php } ?>
 

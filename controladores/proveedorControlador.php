@@ -146,11 +146,10 @@ class proveedorControlador extends proveedorModelo
     }
 
 
-    public function paginador_proveedores_controlador($pagina, $registros, $privilegio, $url, $busqueda)
+    public function paginador_proveedores_controlador($pagina, $registros, $url, $busqueda)
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
-        $privilegio = mainModel::limpiar_string($privilegio);
         $busqueda = mainModel::limpiar_string($busqueda);
 
         $url = mainModel::limpiar_string($url);
@@ -184,10 +183,10 @@ class proveedorControlador extends proveedorModelo
                                 <th>RUC</th> 
                                 <th>CIUDAD</th> 
                                 <th>ESTADO</th>';
-        if (mainModel::tienePermisoVista('proveedor.editar')) {
+        if (mainModel::tienePermiso('proveedor.editar')) {
             $tabla .=           '<th>ACTUALIZAR</th>';
         }
-        if (mainModel::tienePermisoVista('proveedor.eliminar')) {
+        if (mainModel::tienePermiso('proveedor.eliminar')) {
             $tabla .= '<th>ELIMINAR</th>';
         }
         $tabla .= '
@@ -207,7 +206,7 @@ class proveedorControlador extends proveedorModelo
 								<td>
                                     ' . ($rows['estado'] == 1 ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-danger">Inactivo</span>') . '
                                 </td>';
-                if (mainModel::tienePermisoVista('proveedor.editar')) {
+                if (mainModel::tienePermiso('proveedor.editar')) {
                     $tabla .= '<td>
 									<a href="' . SERVERURL . 'proveedor-actualizar/' . mainModel::encryption($rows['idproveedores']) . '/" class="btn btn-success">
 										<i class="fas fa-sync-alt"></i>
@@ -215,7 +214,7 @@ class proveedorControlador extends proveedorModelo
 								</td>
 								';
                 }
-                if (mainModel::tienePermisoVista('proveedor.eliminar')) {
+                if (mainModel::tienePermiso('proveedor.eliminar')) {
                     $tabla .= ' <td>                          
 									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/proveedorAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
                                     <input type="hidden" name="proveedor_id_del" value=' . mainModel::encryption($rows['idproveedores']) . '>
@@ -342,14 +341,13 @@ class proveedorControlador extends proveedorModelo
 
         /* === permisos === */
         session_start(['name' => 'STR']);
-        if ($_SESSION['nivel_str'] < 1 || $_SESSION['nivel_str'] > 2) {
-            echo json_encode([
+        if (!mainModel::tienePermiso('proveedor.editar')) {
+            return json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Error",
-                "Texto" => "No posee permisos para realizar esta operación",
+                "Titulo" => "Advertencia!",
+                "Texto" => "No posee los permisos necesarios para realizar esta acción",
                 "Tipo" => "error"
             ]);
-            exit();
         }
 
         /* === preparar datos === */

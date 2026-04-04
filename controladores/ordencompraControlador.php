@@ -4,11 +4,10 @@ require_once __DIR__ . "/../modelos/ordencompraModelo.php";
 class ordencompraControlador extends ordencompraModelo
 {
     /**Controlador paginar articulos */
-    public function paginador_presupuestos_controlador($pagina, $registros, $privilegio, $url, $busqueda)
+    public function paginador_presupuestos_controlador($pagina, $registros, $url, $busqueda)
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
-        $privilegio = mainModel::limpiar_string($privilegio);
         $busqueda = mainModel::limpiar_string($busqueda);
 
         $url = mainModel::limpiar_string($url);
@@ -358,11 +357,10 @@ class ordencompraControlador extends ordencompraModelo
     }
 
     /**Controlador paginar ordencompra */
-    public function paginador_ordencompra_controlador($pagina, $registros, $privilegio, $url, $busqueda1, $busqueda2)
+    public function paginador_ordencompra_controlador($pagina, $registros, $url, $busqueda1, $busqueda2)
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
-        $privilegio = mainModel::limpiar_string($privilegio);
         $busqueda1 = mainModel::limpiar_string($busqueda1);
         $busqueda2 = mainModel::limpiar_string($busqueda2);
         $url = mainModel::limpiar_string($url);
@@ -414,8 +412,8 @@ class ordencompraControlador extends ordencompraModelo
                                 <th>CREADO POR</th>
                                 <th>ESTADO</th>
                                 <th>PDF</th>';
-        if ($privilegio == 1 || $privilegio == 2) {
-            $tabla .=           '<th>ELIMINAR</th>';
+        if (mainModel::tienePermiso('compra.oc.anular')) {
+            $tabla .=           '<th>ANULAR</th>';
         }
         $tabla .= '
 						</tr>
@@ -455,7 +453,7 @@ class ordencompraControlador extends ordencompraModelo
                                     <i class="fas fa-file-pdf"></i>
                                 </a>
                                 </td>';
-                if ($privilegio == 1 || $privilegio == 2) {
+                 if (mainModel::tienePermiso('compra.oc.anular')) {
                     $tabla .= '<td>
 									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/ordencompraAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
                                     <input type="hidden" name="ordencompra_id_del" value=' . mainModel::encryption($rows['idorden_compra']) . '>
@@ -520,15 +518,13 @@ class ordencompraControlador extends ordencompraModelo
         }
 
 
-        if ($_SESSION['nivel_str'] > 2) {
-            $alerta = [
+        if (!mainModel::tienePermiso('compra.oc.anular')) {
+            return json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "No tiene los permisos necesario para realizar esta operación",
+                "Titulo" => "Advertencia!",
+                "Texto" => "No posee los permisos necesarios para realizar esta acción",
                 "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
+            ]);
         }
         $datos_oc_del = [
             "updatedby" => $_SESSION['id_str'],

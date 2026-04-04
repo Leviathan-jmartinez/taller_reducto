@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('proveedor.ver')) {
+if (!mainModel::tienePermiso('proveedor.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 } ?>
@@ -112,7 +112,6 @@ if (!mainModel::tienePermisoVista('proveedor.ver')) {
         echo $ins_proveedor->paginador_proveedores_controlador(
             $pagina[1],
             15,
-            $_SESSION['nivel_str'],
             $pagina[0],
             $_SESSION['busqueda_proveedor']
         );

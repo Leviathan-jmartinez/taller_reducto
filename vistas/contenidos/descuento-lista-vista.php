@@ -1,6 +1,6 @@
 <?php
 
-if (!mainModel::tienePermisoVista('servicio.descuento.ver')) {
+if (!mainModel::tienePermiso('servicio.descuento.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }

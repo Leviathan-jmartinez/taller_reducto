@@ -1,6 +1,6 @@
 <?php
 
-if (!mainModel::tienePermisoVista('compra.nota.crear')) {
+if (!mainModel::tienePermiso('compra.nota.crear')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }

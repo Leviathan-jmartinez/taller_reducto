@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('servicio.recepcion.crear')) {
+if (!mainModel::tienePermiso('servicio.recepcion.crear')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }

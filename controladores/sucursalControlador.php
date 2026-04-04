@@ -71,7 +71,7 @@ class sucursalControlador extends sucursalModelo
         echo json_encode($alerta);
     }
 
-    public function paginador_sucursales_controlador($pagina, $registros, $privilegio, $url, $busqueda)
+    public function paginador_sucursales_controlador($pagina, $registros, $url, $busqueda)
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
@@ -105,8 +105,11 @@ class sucursalControlador extends sucursalModelo
         <th>ESTABLEC.</th>
         <th>ESTADO</th>';
 
-        if ($privilegio <= 2) {
-            $tabla .= '<th>ACTUALIZAR</th><th>ELIMINAR</th>';
+        if (mainModel::tienePermiso('sucursal.editar')) {
+            $tabla .=           '<th>ACTUALIZAR</th>';
+        }
+        if (mainModel::tienePermiso('sucursal.eliminar')) {
+            $tabla .= '<th>ELIMINAR</th>';
         }
 
         $tabla .= '</tr></thead><tbody>';
@@ -124,13 +127,17 @@ class sucursalControlador extends sucursalModelo
             <td>{$row['nro_establecimiento']}</td>
             <td>$estado</td>";
 
-            if ($privilegio <= 2) {
+            if (mainModel::tienePermiso('sucursal.editar')) {
                 $tabla .= '
             <td>
                 <a href="' . SERVERURL . 'sucursal-actualizar/' . mainModel::encryption($row['id_sucursal']) . '/" class="btn btn-success">
                     <i class="fas fa-sync-alt"></i>
                 </a>
             </td>
+            ';
+            }
+            if (mainModel::tienePermiso('sucursal.eliminar')) {
+                $tabla .= '
             <td>
                 <form class="FormularioAjax" action="' . SERVERURL . 'ajax/sucursalAjax.php" method="POST" data-form="delete">
                     <input type="hidden" name="sucursal_id_del" value="' . mainModel::encryption($row['id_sucursal']) . '">
@@ -216,7 +223,7 @@ class sucursalControlador extends sucursalModelo
 
             // Verificar cómo quedó
             $verificar = mainModel::ejecutar_consulta_simple(
-                "SELECT sucursal_estado 
+                "SELECT estado 
              FROM sucursales 
              WHERE id_sucursal='$id'"
             );

@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('servicio.ot.ver')) {
+if (!mainModel::tienePermiso('servicio.ot.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 } ?>
@@ -34,7 +34,6 @@ if (!mainModel::tienePermisoVista('servicio.ot.ver')) {
     echo $insOT->paginador_ot_controlador(
         $pagina[1],
         15,
-        $_SESSION['nivel_str'],
         $pagina[0],
         "",
         ""

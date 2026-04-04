@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('compra.remision.ver')) {
+if (!mainModel::tienePermiso('compra.remision.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 } ?>
@@ -129,7 +129,6 @@ $fecha_final_dt  = $fecha_final  ? $fecha_final  . ' 23:59:59' : '';
         echo $remision->paginador_remision_controlador(
             $pagina[1],
             15,
-            $_SESSION['nivel_str'],
             $pagina[0],
             $_SESSION['fecha_inicio_remision'],
             $_SESSION['fecha_final_remision']

@@ -1,6 +1,6 @@
 <?php
 
-if (!mainModel::tienePermisoVista('servicio.ot.generar')) {
+if (!mainModel::tienePermiso('servicio.ot.generar')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }

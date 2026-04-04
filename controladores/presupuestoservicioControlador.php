@@ -103,11 +103,11 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
 
 
     /**Controlador paginar presupuestos */
-    public function paginador_presupuestoservi_controlador($pagina, $registros, $privilegio, $url, $busqueda1, $busqueda2)
+    public function paginador_presupuestoservi_controlador($pagina, $registros, $url, $busqueda1, $busqueda2)
     {
+
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
-        $privilegio = mainModel::limpiar_string($privilegio);
         $busqueda1 = mainModel::limpiar_string($busqueda1);
         $busqueda2 = mainModel::limpiar_string($busqueda2);
 
@@ -119,178 +119,168 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
         $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
 
+
         if (!empty($busqueda1) && !empty($busqueda2)) {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS ps.idpresupuesto_servicio AS idpresupuesto_servicio, ps.id_usuario   AS id_usuario, ps.fecha AS fecha, 
-            ps.estado   AS estadoPre, ps.fecha_venc   AS fecha_venc, ps.subtotal AS subtotal, ps.total_descuento AS total_descuento, ps.total_final  AS total_final, 
-            ps.idrecepcion  AS idrecepcion, c.id_cliente AS id_cliente, c.nombre_cliente AS nombre_cliente, c.apellido_cliente AS apellido_cliente, v.placa AS placa, 
-            ma.mod_descri   AS modelo, u.usu_nombre AS usu_nombre, u.usu_apellido  AS usu_apellido, u.usu_estado AS usu_estado, u.usu_nick  AS usu_nick 
-        FROM presupuesto_servicio ps 
-        LEFT JOIN recepcion_servicio r ON r.idrecepcion = ps.idrecepcion 
-        LEFT JOIN clientes c ON c.id_cliente = r.id_cliente 
-        LEFT JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo 
-        LEFT JOIN modelo_auto ma   ON ma.id_modeloauto = v.id_modeloauto 
-        INNER JOIN usuarios u ON u.id_usuario = ps.id_usuario 
-        WHERE DATE(ps.fecha) >= '$busqueda1'   AND DATE(ps.fecha) <= '$busqueda2' 
-        ORDER BY ps.fecha ASC LIMIT $inicio, $registros";
+            $consulta = "SELECT SQL_CALC_FOUND_ROWS     ps.idpresupuesto_servicio,    ps.id_usuario,    ps.fecha,    ps.estado AS estadoPre,    ps.fecha_venc,    
+            ps.subtotal,    ps.total_descuento,    ps.total_final,     c.id_cliente,    c.nombre_cliente,    c.apellido_cliente,    v.placa,    ma.mod_descri AS modelo,    
+            u.usu_nombre,    u.usu_apellido
+            FROM presupuesto_servicio ps
+            LEFT JOIN diagnostico_servicio d     ON d.id_diagnostico = ps.id_diagnostico
+            LEFT JOIN recepcion_servicio r     ON r.idrecepcion = d.idrecepcion
+            LEFT JOIN clientes c     ON c.id_cliente = r.id_cliente 
+            LEFT JOIN vehiculos v     ON v.id_vehiculo = r.id_vehiculo 
+            LEFT JOIN modelo_auto ma     ON ma.id_modeloauto = v.id_modeloauto 
+            INNER JOIN usuarios u     ON u.id_usuario = ps.id_usuario 
+            WHERE DATE(ps.fecha) >= '$busqueda1' AND DATE(ps.fecha) <= '$busqueda2' 
+            ORDER BY ps.fecha ASC LIMIT $inicio, $registros";
         } else {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS ps.idpresupuesto_servicio AS idpresupuesto_servicio, ps.id_usuario   AS id_usuario, ps.fecha AS fecha, 
-            ps.estado   AS estadoPre, ps.fecha_venc   AS fecha_venc, ps.subtotal AS subtotal, ps.total_descuento AS total_descuento, ps.total_final  AS total_final, 
-            ps.idrecepcion  AS idrecepcion, c.id_cliente AS id_cliente, c.nombre_cliente AS nombre_cliente, c.apellido_cliente AS apellido_cliente, v.placa AS placa, 
-            ma.mod_descri   AS modelo, u.usu_nombre AS usu_nombre, u.usu_apellido  AS usu_apellido, u.usu_estado AS usu_estado, u.usu_nick  AS usu_nick 
-        FROM presupuesto_servicio ps
-        LEFT JOIN recepcion_servicio r ON r.idrecepcion = ps.idrecepcion 
-        LEFT JOIN clientes c ON c.id_cliente = r.id_cliente 
-        LEFT JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo 
-        LEFT JOIN modelo_auto ma   ON ma.id_modeloauto = v.id_modeloauto 
-        INNER JOIN usuarios u ON u.id_usuario = ps.id_usuario
-        WHERE ps.estado != 0
+            $consulta = "SELECT SQL_CALC_FOUND_ROWS     ps.idpresupuesto_servicio,    ps.id_usuario,    ps.fecha,    ps.estado AS estadoPre,    ps.fecha_venc,    
+            ps.subtotal,    ps.total_descuento,    ps.total_final,     c.id_cliente,    c.nombre_cliente,    c.apellido_cliente,    v.placa,    ma.mod_descri AS modelo,    
+            u.usu_nombre,    u.usu_apellido
+            FROM presupuesto_servicio ps
+            LEFT JOIN diagnostico_servicio d     ON d.id_diagnostico = ps.id_diagnostico
+            LEFT JOIN recepcion_servicio r     ON r.idrecepcion = d.idrecepcion
+            LEFT JOIN clientes c     ON c.id_cliente = r.id_cliente 
+            LEFT JOIN vehiculos v     ON v.id_vehiculo = r.id_vehiculo 
+            LEFT JOIN modelo_auto ma     ON ma.id_modeloauto = v.id_modeloauto 
+            INNER JOIN usuarios u     ON u.id_usuario = ps.id_usuario
+            WHERE ps.estado != 0
             ORDER BY ps.idpresupuesto_servicio DESC LIMIT $inicio,$registros";
         }
+
         $conexion = mainModel::conectar();
-        $datos = $conexion->query($consulta);
-        $datos = $datos->fetchAll();
+        $datos = $conexion->query($consulta)->fetchAll();
 
-        $total = $conexion->query("SELECT FOUND_ROWS()");
-        $total = (int) $total->fetchColumn();
-
+        $total = (int)$conexion->query("SELECT FOUND_ROWS()")->fetchColumn();
         $Npaginas = ceil($total / $registros);
 
+
+        $puedeAnular    = mainModel::tienePermiso('servicio.presupuesto.anular');
+        $puedeAprobar   = mainModel::tienePermiso('servicio.presupuesto.aprobar');
+        $puedeGenerarOT = mainModel::tienePermiso('servicio.ot.generar');
+
+        $mostrarAcciones = $puedeAnular || $puedeAprobar || $puedeGenerarOT;
+
+
         $tabla .= '<div class="table-responsive">
-					<table class="table table-dark table-sm">
-						<thead>
-							<tr class="text-center roboto-medium">
-								<th>#</th>
-								<th>CLIENTE</th>
-                                <th>PROVEEDOR</th>
-                                <th>FECHA</th>
-                                <th>TOTAL</th>
-                                <th>CREADO POR</th>
-                                <th>ESTADO</th>
-                                <th>PDF</th>';
-        if ($privilegio == 1 || $privilegio == 2) {
-            $tabla .=           '<th>ELIMINAR</th>';
+        <table class="table table-dark table-sm">
+            <thead>
+                <tr class="text-center roboto-medium">
+                    <th>#</th>
+                    <th>CLIENTE</th>
+                    <th>PROVEEDOR</th>
+                    <th>FECHA</th>
+                    <th>TOTAL</th>
+                    <th>CREADO POR</th>
+                    <th>ESTADO</th>
+                    <th>PDF</th>';
+
+        if ($mostrarAcciones) {
+            $tabla .= '<th>ACCIONES</th>';
         }
-        $tabla .= '
-						</tr>
-						</thead>
-						<tbody>';
+
+        $tabla .= '</tr></thead><tbody>';
+
         if ($total >= 1 && $pagina <= $Npaginas) {
+
             $contador = $inicio + 1;
             $reg_inicio = $inicio + 1;
+
             foreach ($datos as $rows) {
-                switch ($rows['estadoPre']) {
-                    case 1:
-                        $estadoBadge = '<span class="badge badge-warning">Pendiente</span>';
-                        break;
-                    case 2:
-                        $estadoBadge = '<span class="badge badge-success">Aprobado</span>';
-                        break;
-                    case 3:
-                        $estadoBadge = '<span class="badge badge-primary">OT generada</span>';
-                        break;
-                    case 4:
-                        $estadoBadge = '<span class="badge badge-info">Facturado</span>';
-                        break;
-                    case 0:
-                        $estadoBadge = '<span class="badge badge-danger">Anulado</span>';
-                        break;
-                    default:
-                        $estadoBadge = '<span class="badge bg-secondary">Desconocido</span>';
-                }
-                $tabla .= '
-                            <tr class="text-center">
-								<td>' . $contador . '</td>
-								<td>' . $rows['nombre_cliente'] . ' ' . $rows['apellido_cliente'] . '</td>
-								<td>' . $rows['modelo'] . ' ' . $rows['placa'] . '</td>
-								<td>' . date("d-m-Y", strtotime($rows['fecha'])) . '</td>
-								<td>' .  number_format($rows['total_final'], 0, ',', '.') . '</td>
-                                <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
-                                <td>' . $estadoBadge . '</td>
-                                <td><a href="' . SERVERURL . 'pdf/presupuesto_servicio.php?id=' . mainModel::encryption($rows['idpresupuesto_servicio']) . '"
-                                target="_blank"
-                                class="btn btn-info"
-                                title="Imprimir Presupuesto de Servicio">
-                                    <i class="fas fa-file-pdf"></i>
-                                </a></td>';
-                if ($privilegio == 1 || $privilegio == 2) {
-                    if ($rows['estadoPre'] == 1 || $rows['estadoPre'] == 2) {
-                        $tabla .= '<td>
-                                <div style="display:flex; gap:6px; justify-content:center;">
 
-                                    <form class="FormularioAjax"
-                                        action="' . SERVERURL . 'ajax/presupuestoServicioAjax.php"
-                                        method="POST"
-                                        data-form="delete"
-                                        autocomplete="off">
-                                        <input type="hidden" name="accion" value="anular">
-                                        <input type="hidden" name="id"
-                                            value=' . mainModel::encryption($rows['idpresupuesto_servicio']) . '>
 
-                                        <button type="submit" class="btn btn-warning btn-sm">
-                                            <i class="far fa-trash-alt"></i>
-                                        </button>
-                                    </form>';
-                        if ($rows['estadoPre'] == 2) {
-                            $tabla .= '
-                                    <form class="FormularioAjax d-inline"
-                                    action="' . SERVERURL . 'ajax/ordenTrabajoAjax.php"
-                                    method="POST"
-                                    data-form="save">
+                $estadoMap = [
+                    1 => ['Pendiente', 'warning'],
+                    2 => ['Aprobado', 'success'],
+                    3 => ['OT generada', 'primary'],
+                    4 => ['Facturado', 'info'],
+                    0 => ['Anulado', 'danger']
+                ];
 
-                                    <input type="hidden" name="accion" value="generar_ot">
-                                    <input type="hidden" name="id"
-                                    value=' . mainModel::encryption($rows['idpresupuesto_servicio']) . '>
+                $estado = $estadoMap[$rows['estadoPre']] ?? ['Desconocido', 'secondary'];
+                $estadoBadge = '<span class="badge badge-' . $estado[1] . '">' . $estado[0] . '</span>';
 
-                                    <button class="btn btn-primary btn-sm">
-                                        <i class="fas fa-tools"></i>
-                                    </button>
-                                    </form>
-                                    ';
-                        }
+                $tabla .= '<tr class="text-center">
+                <td>' . $contador . '</td>
+                <td>' . $rows['nombre_cliente'] . ' ' . $rows['apellido_cliente'] . '</td>
+                <td>' . $rows['modelo'] . ' ' . $rows['placa'] . '</td>
+                <td>' . date("d-m-Y", strtotime($rows['fecha'])) . '</td>
+                <td>' . number_format($rows['total_final'], 0, ',', '.') . '</td>
+                <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
+                <td>' . $estadoBadge . '</td>
+                <td>
+                    <a href="' . SERVERURL . 'pdf/presupuesto_servicio.php?id=' . mainModel::encryption($rows['idpresupuesto_servicio']) . '"
+                    target="_blank"
+                    class="btn btn-info">
+                        <i class="fas fa-file-pdf"></i>
+                    </a>
+                </td>';
+
+
+                if ($mostrarAcciones) {
+                    $tabla .= '<td><div style="display:flex; gap:6px; justify-content:center;">';
+
+                    if ($puedeAprobar && $rows['estadoPre'] == 1) {
+                        $tabla .= '
+                    <form class="FormularioAjax d-inline"
+                        action="' . SERVERURL . 'ajax/presupuestoServicioAjax.php"
+                        method="POST" data-form="update">
+                        <input type="hidden" name="accion" value="aprobar">
+                        <input type="hidden" name="id" value=' . mainModel::encryption($rows['idpresupuesto_servicio']) . '>
+                        <button class="btn btn-success btn-sm">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </form>';
                     }
-                    if ($rows['estadoPre'] == 1) {
-                        $tabla .= '  
-                                    <form class="FormularioAjax d-inline"
-                                        action="' . SERVERURL . 'ajax/presupuestoServicioAjax.php"
-                                        method="POST"
-                                        data-form="update">
 
-                                        <input type="hidden" name="accion" value="aprobar">
-                                        <input type="hidden" name="id"
-                                            value=' . mainModel::encryption($rows['idpresupuesto_servicio']) . '>
-
-                                        <button type="submit"
-                                                class="btn btn-success btn-sm"
-                                                title="Aprobar">
-                                            <i class="fas fa-check"></i>
-                                        </button>
-                                    </form>';
+                    if ($puedeAnular && ($rows['estadoPre'] == 1 || $rows['estadoPre'] == 2)) {
+                        $tabla .= '
+                    <form class="FormularioAjax d-inline"
+                        action="' . SERVERURL . 'ajax/presupuestoServicioAjax.php"
+                        method="POST" data-form="delete">
+                        <input type="hidden" name="accion" value="anular">
+                        <input type="hidden" name="id" value=' . mainModel::encryption($rows['idpresupuesto_servicio']) . '>
+                        <button class="btn btn-warning btn-sm">
+                            <i class="far fa-trash-alt"></i>
+                        </button>
+                    </form>';
                     }
-                    $tabla .= ' </div>
-                            </td>
-                            ';
+
+                    if ($puedeGenerarOT && $rows['estadoPre'] == 2) {
+                        $tabla .= '
+                    <form class="FormularioAjax d-inline"
+                        action="' . SERVERURL . 'ajax/ordenTrabajoAjax.php"
+                        method="POST" data-form="save">
+                        <input type="hidden" name="accion" value="generar_ot">
+                        <input type="hidden" name="id" value=' . mainModel::encryption($rows['idpresupuesto_servicio']) . '>
+                        <button class="btn btn-primary btn-sm">
+                            <i class="fas fa-tools"></i>
+                        </button>
+                    </form>';
+                    }
+
+                    $tabla .= '</div></td>';
                 }
 
                 $tabla .= '</tr>';
                 $contador++;
             }
+
             $reg_final = $contador - 1;
         } else {
-            if ($total >= 1) {
-                $tabla .= '<tr class="text-center"> <td colspan="6"> <a href="' . $url . '" class="btn btn-reaised btn-primary btn-sm"> Haga click aqui para recargar el listado </a> </td> </tr> ';
-            } else {
-                $tabla .= '<tr class="text-center"> <td colspan="6"> No hay regitros en el sistema</td> </tr> ';
-            }
+            $tabla .= '<tr class="text-center">
+            <td colspan="9">No hay registros en el sistema</td>
+        </tr>';
         }
 
-        $tabla .= '       </tbody>
-					</table>
-				</div>';
+        $tabla .= '</tbody></table></div>';
+
         if ($total >= 1 && $pagina <= $Npaginas) {
-            $tabla .= '<p class="text-right"> Mostrando registro ' . $reg_inicio . ' al ' . $reg_final . ' de un total de ' . $total . '</p>';
+            $tabla .= '<p class="text-right">Mostrando ' . $reg_inicio . ' al ' . $reg_final . ' de ' . $total . '</p>';
             $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);
         }
-        echo $tabla;
+
+        return $tabla;
     }
     /**fin controlador */
 

@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('servicio.registro.ver')) {
+if (!mainModel::tienePermiso('servicio.registro.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 } ?>
@@ -107,7 +107,6 @@ $fecha_final  = $_SESSION['fecha_final_registro_servicio'] ?? '';
         echo $reg->paginador_registro_servicio_controlador(
             $pagina[1],
             15,
-            $_SESSION['nivel_str'],
             $pagina[0],
             $_SESSION['fecha_inicio_registro_servicio'],
             $_SESSION['fecha_final_registro_servicio']

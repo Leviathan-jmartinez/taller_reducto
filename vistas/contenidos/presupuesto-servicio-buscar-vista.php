@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('servicio.presupuesto.ver')) {
+if (!mainModel::tienePermiso('servicio.presupuesto.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 } ?>
@@ -100,7 +100,6 @@ $fecha_final  = $_SESSION['fecha_final_presupuesto_servicio'] ?? '';
         echo $presupuesto->paginador_presupuestoservi_controlador(
             $pagina[1],
             15,
-            $_SESSION['nivel_str'],
             $pagina[0],
             $_SESSION['fecha_inicio_presupuesto_servicio'],
             $_SESSION['fecha_final_presupuesto_servicio']

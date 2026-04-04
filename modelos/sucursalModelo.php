@@ -82,11 +82,11 @@ class sucursalModelo extends mainModel
     {
         $pdo = mainModel::conectar();
 
-        // 1) Verificar si la sucursal está siendo usada
+        
         $check = $pdo->prepare("
         SELECT 1 
-        FROM empleados 
-        WHERE id_sucursal = :id 
+        FROM usuarios 
+        WHERE sucursalid = :id 
         LIMIT 1
         ");
         $check->bindParam(":id", $id, PDO::PARAM_INT);

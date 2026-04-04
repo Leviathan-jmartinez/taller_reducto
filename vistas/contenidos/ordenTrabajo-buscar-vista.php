@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('servicio.ot.ver')) {
+if (!mainModel::tienePermiso('servicio.ot.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 } ?>
@@ -110,7 +110,6 @@ $fecha_final  = $_SESSION['fecha_final_orden_trabajo'] ?? '';
         echo $ot->paginador_ot_controlador(
             $pagina[1],
             15,
-            $_SESSION['nivel_str'],
             $pagina[0],
             $_SESSION['fecha_inicio_orden_trabajo'] ?? '',
             $_SESSION['fecha_final_orden_trabajo'] ?? ''

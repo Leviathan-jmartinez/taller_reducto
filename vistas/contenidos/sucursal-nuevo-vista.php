@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('sucursal.crear')) {
+if (!mainModel::tienePermiso('sucursal.crear')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }

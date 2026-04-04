@@ -43,23 +43,22 @@ class vehiculoControlador extends vehiculoModelo
        PAGINADOR VEHICULOS
     ================================================== */
 
-    public function paginador_vehiculos_controlador($pagina, $registros, $privilegio, $url, $busqueda)
-{
-    $pagina = mainModel::limpiar_string($pagina);
-    $registros = mainModel::limpiar_string($registros);
-    $privilegio = mainModel::limpiar_string($privilegio);
-    $busqueda = mainModel::limpiar_string($busqueda);
+    public function paginador_vehiculos_controlador($pagina, $registros, $url, $busqueda)
+    {
+        $pagina = mainModel::limpiar_string($pagina);
+        $registros = mainModel::limpiar_string($registros);
+        $busqueda = mainModel::limpiar_string($busqueda);
 
-    $url = mainModel::limpiar_string($url);
-    $url = SERVERURL . $url . "/";
+        $url = mainModel::limpiar_string($url);
+        $url = SERVERURL . $url . "/";
 
-    $tabla = "";
+        $tabla = "";
 
-    $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
-    $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
+        $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
+        $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
 
-    if (isset($busqueda) && $busqueda != "") {
-        $consulta = "SELECT SQL_CALC_FOUND_ROWS v.*, 
+        if (isset($busqueda) && $busqueda != "") {
+            $consulta = "SELECT SQL_CALC_FOUND_ROWS v.*, 
                         c.nombre_cliente, c.apellido_cliente,
                         m.mod_descri,
                         co.col_descripcion
@@ -72,8 +71,8 @@ class vehiculoControlador extends vehiculoModelo
                         OR c.apellido_cliente LIKE '%$busqueda%')
                     ORDER BY v.id_vehiculo ASC 
                     LIMIT $inicio,$registros";
-    } else {
-        $consulta = "SELECT SQL_CALC_FOUND_ROWS v.*, 
+        } else {
+            $consulta = "SELECT SQL_CALC_FOUND_ROWS v.*, 
                         c.nombre_cliente, c.apellido_cliente,
                         m.mod_descri,
                         co.col_descripcion
@@ -83,18 +82,18 @@ class vehiculoControlador extends vehiculoModelo
                     LEFT JOIN colores co ON co.id_color = v.id_color
                     ORDER BY v.id_vehiculo ASC 
                     LIMIT $inicio,$registros";
-    }
+        }
 
-    $conexion = mainModel::conectar();
-    $datos = $conexion->query($consulta);
-    $datos = $datos->fetchAll();
+        $conexion = mainModel::conectar();
+        $datos = $conexion->query($consulta);
+        $datos = $datos->fetchAll();
 
-    $total = $conexion->query("SELECT FOUND_ROWS()");
-    $total = (int)$total->fetchColumn();
+        $total = $conexion->query("SELECT FOUND_ROWS()");
+        $total = (int)$total->fetchColumn();
 
-    $Npaginas = ceil($total / $registros);
+        $Npaginas = ceil($total / $registros);
 
-    $tabla .= '<div class="table-responsive">
+        $tabla .= '<div class="table-responsive">
     <table class="table table-dark table-sm">
     <thead>
         <tr class="text-center roboto-medium">
@@ -105,45 +104,45 @@ class vehiculoControlador extends vehiculoModelo
             <th>COLOR</th>
             <th>ESTADO</th>';
 
-    if (mainModel::tienePermisoVista('vehiculo.editar')) {
-        $tabla .= '<th>ACTUALIZAR</th>';
-    }
-    if (mainModel::tienePermisoVista('vehiculo.eliminar')) {
-        $tabla .= '<th>ELIMINAR</th>';
-    }
+        if (mainModel::tienePermiso('vehiculo.editar')) {
+            $tabla .= '<th>ACTUALIZAR</th>';
+        }
+        if (mainModel::tienePermiso('vehiculo.eliminar')) {
+            $tabla .= '<th>ELIMINAR</th>';
+        }
 
-    $tabla .= '</tr></thead><tbody>';
+        $tabla .= '</tr></thead><tbody>';
 
-    if ($total >= 1 && $pagina <= $Npaginas) {
+        if ($total >= 1 && $pagina <= $Npaginas) {
 
-        $contador = $inicio + 1;
-        $reg_inicio = $inicio + 1;
+            $contador = $inicio + 1;
+            $reg_inicio = $inicio + 1;
 
-        foreach ($datos as $rows) {
+            foreach ($datos as $rows) {
 
-            $cliente = $rows['nombre_cliente'] . " " . $rows['apellido_cliente'];
+                $cliente = $rows['nombre_cliente'] . " " . $rows['apellido_cliente'];
 
-            $tabla .= '<tr class="text-center">
+                $tabla .= '<tr class="text-center">
                 <td>' . $contador . '</td>
                 <td>' . $rows['placa'] . '</td>
                 <td>' . $cliente . '</td>
                 <td>' . $rows['mod_descri'] . '</td>
                 <td>' . ($rows['col_descripcion'] ?? '-') . '</td>
-                <td>' . ($rows['estado'] == 1 
-                        ? '<span class="badge badge-success">Activo</span>' 
-                        : '<span class="badge badge-danger">Inactivo</span>') . '</td>';
+                <td>' . ($rows['estado'] == 1
+                    ? '<span class="badge badge-success">Activo</span>'
+                    : '<span class="badge badge-danger">Inactivo</span>') . '</td>';
 
-            if (mainModel::tienePermisoVista('vehiculo.editar')) {
-                $tabla .= '<td>
+                if (mainModel::tienePermiso('vehiculo.editar')) {
+                    $tabla .= '<td>
                     <a href="' . SERVERURL . 'vehiculo-actualizar/' . mainModel::encryption($rows['id_vehiculo']) . '/" 
                        class="btn btn-success">
                         <i class="fas fa-sync-alt"></i>
                     </a>
                 </td>';
-            }
+                }
 
-            if (mainModel::tienePermisoVista('vehiculo.eliminar')) {
-                $tabla .= '<td>
+                if (mainModel::tienePermiso('vehiculo.eliminar')) {
+                    $tabla .= '<td>
                     <form class="FormularioAjax" action="' . SERVERURL . 'ajax/vehiculoAjax.php"
                           method="POST" data-form="delete">
                         <input type="hidden" name="vehiculo_id_del"
@@ -153,32 +152,31 @@ class vehiculoControlador extends vehiculoModelo
                         </button>
                     </form>
                 </td>';
+                }
+
+                $tabla .= '</tr>';
+                $contador++;
             }
 
-            $tabla .= '</tr>';
-            $contador++;
-        }
-
-        $reg_final = $contador - 1;
-
-    } else {
-        $tabla .= '<tr class="text-center">
+            $reg_final = $contador - 1;
+        } else {
+            $tabla .= '<tr class="text-center">
         <td colspan="8">No hay registros</td>
         </tr>';
-    }
+        }
 
-    $tabla .= '</tbody></table></div>';
+        $tabla .= '</tbody></table></div>';
 
-    if ($total >= 1 && $pagina <= $Npaginas) {
-        $tabla .= '<p class="text-right">
+        if ($total >= 1 && $pagina <= $Npaginas) {
+            $tabla .= '<p class="text-right">
         Mostrando ' . $reg_inicio . ' al ' . $reg_final . ' de ' . $total . '
         </p>';
 
-        $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);
-    }
+            $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);
+        }
 
-    return $tabla;
-}
+        return $tabla;
+    }
 
     /* ==================================================
        AGREGAR VEHICULO
@@ -279,14 +277,13 @@ class vehiculoControlador extends vehiculoModelo
         }
 
         session_start(['name' => 'STR']);
-        if ($_SESSION['nivel_str'] == 3) {
-            echo json_encode([
+        if (!mainModel::tienePermiso('vehiculo.eliminar')) {
+            return json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Error",
-                "Texto"  => "No tiene los permisos necesarios para realizar esta operación",
-                "Tipo"   => "error"
+                "Titulo" => "Advertencia!",
+                "Texto" => "No posee los permisos necesarios para realizar esta acción",
+                "Tipo" => "error"
             ]);
-            exit();
         }
 
         $stmt = vehiculoModelo::eliminar_vehiculo_modelo($id);

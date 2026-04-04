@@ -192,44 +192,14 @@ class mainModel
         );
     }
 
-    public static function tienePermiso($clave)
-    {
-        if (isset($_SESSION['nivel_str']) && $_SESSION['nivel_str'] == 1) {
-            return true;
-        }
-
-        return isset($_SESSION['permisos']) && in_array($clave, $_SESSION['permisos']);
-    }
-
-    public static function puedeVerMenu($modulo)
-    {
-        // Fallback super admin (opcional pero recomendado)
-        if (isset($_SESSION['nivel_str']) && $_SESSION['nivel_str'] == 1) {
-            return true;
-        }
-
-        if (!isset($_SESSION['permisos']) || empty($_SESSION['permisos'])) {
-            return false;
-        }
-
-        foreach ($_SESSION['permisos'] as $permiso) {
-            if (strpos($permiso, $modulo . '.') === 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static function tienePermisoVista(string $permiso): bool
+    public static function tienePermiso(string $permiso): bool
     {
         if (session_status() === PHP_SESSION_NONE) {
             session_start(['name' => 'STR']);
         }
 
-        if (!isset($_SESSION['permisos']) || !is_array($_SESSION['permisos'])) {
-            return false;
-        }
-
-        return in_array($permiso, $_SESSION['permisos']);
+        return isset($_SESSION['permisos']) &&
+            is_array($_SESSION['permisos']) &&
+            in_array($permiso, $_SESSION['permisos']);
     }
 }

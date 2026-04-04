@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('proveedor.ver')) {
+if (!mainModel::tienePermiso('proveedor.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
@@ -44,6 +44,6 @@ if ($peticionAjax) {
     <?php
     require_once "./controladores/proveedorControlador.php";
     $ins_proveedor = new proveedorControlador();
-    echo $ins_proveedor->paginador_proveedores_controlador($pagina[1], 10, $_SESSION['nivel_str'], $pagina[0], "");
+    echo $ins_proveedor->paginador_proveedores_controlador($pagina[1], 10, $pagina[0], "");
     ?>
 </div>

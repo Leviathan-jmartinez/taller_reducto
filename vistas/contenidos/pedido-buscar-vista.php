@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermisoVista('compra.pedido.ver')) {
+if (!mainModel::tienePermiso('compra.pedido.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 } ?>
@@ -77,7 +77,7 @@ if (!mainModel::tienePermisoVista('compra.pedido.ver')) {
         <?php
         require_once "./controladores/pedidoControlador.php";
         $ins_pedido = new pedidoControlador();
-        echo $ins_pedido->paginador_pedidos_controlador($pagina[1], 15, $_SESSION['nivel_str'], $pagina[0], $_SESSION['fecha_inicio_pedido'], $_SESSION['fecha_final_pedido']);
+        echo $ins_pedido->paginador_pedidos_controlador($pagina[1], 15, $pagina[0], $_SESSION['fecha_inicio_pedido'], $_SESSION['fecha_final_pedido']);
         ?>
     </div>
 

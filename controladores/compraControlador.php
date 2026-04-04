@@ -865,11 +865,10 @@ class compraControlador extends compraModelo
     /**fin controlador */
 
     /** Controlador paginar compras */
-    public function paginador_compra_controlador($pagina, $registros, $privilegio, $url, $busqueda1, $busqueda2, $nro_factura = '', $razon_social = '')
+    public function paginador_compra_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $nro_factura = '', $razon_social = '')
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
-        $privilegio = mainModel::limpiar_string($privilegio);
         $busqueda1 = mainModel::limpiar_string($busqueda1);
         $busqueda2 = mainModel::limpiar_string($busqueda2);
         $nro_factura  = mainModel::limpiar_string($nro_factura);
@@ -959,7 +958,7 @@ class compraControlador extends compraModelo
                                 <th>TOTAL COMPRA</th>
                                 <th>CARGADO POR</th>
                                 <th>ESTADO</th>';
-        if ($privilegio == 1 || $privilegio == 2) {
+        if (mainModel::tienePermiso('compra.anular')) {
             $tabla .=           '<th>ANULAR</th>';
         }
         $tabla .= '
@@ -992,7 +991,7 @@ class compraControlador extends compraModelo
 								<td>' . number_format($rows['total_compra'], 0, ',', '.') . '</td>
                                 <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
                                 <td>' . $estadoBadge . '</td>';
-                if ($privilegio == 1 || $privilegio == 2) {
+                if (mainModel::tienePermiso('compra.anular')) {
                     $tabla .= '<td>
 									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/compraAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
                                     <input type="hidden" name="compra_id_del" value=' . mainModel::encryption($rows['idcompra_cabecera']) . '>
@@ -1062,15 +1061,13 @@ class compraControlador extends compraModelo
             exit();
         }
 
-        if ($_SESSION['nivel_str'] > 2) {
-            $alerta = [
+        if (!mainModel::tienePermiso('compra.anular')) {
+            return json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "No tiene los permisos necesario para realizar esta operación",
+                "Titulo" => "Advertencia!",
+                "Texto" => "No posee los permisos necesarios para realizar esta acción",
                 "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
+            ]);
         }
 
         $usuario = $_SESSION['id_str'];

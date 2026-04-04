@@ -138,7 +138,7 @@ class registroServicioControlador extends registroServicioModelo
         ]);
     }
 
-    public function paginador_registro_servicio_controlador($pagina, $registros, $privilegio, $url, $busqueda1, $busqueda2)
+    public function paginador_registro_servicio_controlador($pagina, $registros, $url, $busqueda1, $busqueda2)
     {
         $pagina    = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
@@ -205,9 +205,9 @@ class registroServicioControlador extends registroServicioModelo
             <td>' . $estado . '</td>
             <td>
                 ';
-
-                if ($row['estado'] == 1) {
-                    $tabla .= '
+                if (mainModel::tienePermiso('servicio.registro.anular')) {
+                    if ($row['estado'] == 1) {
+                        $tabla .= '
                 <form class="FormularioAjax d-inline"
                     action="' . SERVERURL . 'ajax/registroServicioAjax.php"
                     method="POST"
@@ -224,11 +224,12 @@ class registroServicioControlador extends registroServicioModelo
                         <i class="fas fa-ban"></i>
                     </button>
                 </form>';
-                }
+                    }
 
-                $tabla .= '
-            </td>
-        </tr>';
+                    $tabla .= '
+            </td>';
+                }
+                $tabla .= '</tr>';
 
                 $contador++;
             }

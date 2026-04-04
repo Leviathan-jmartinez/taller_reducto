@@ -66,7 +66,6 @@ class loginControlador extends loginModelo
             $_SESSION['id_str'] = $row['id_usuario'];
             $_SESSION['nombre_str'] = $row['usu_nombre'];
             $_SESSION['apellido_str'] = $row['usu_apellido'];
-            $_SESSION['nivel_str'] = $row['usu_nivel'];
             $_SESSION['nick_str'] = $row['usu_nick'];          
             $_SESSION['nick_sucursal'] = $row['sucursalid'];
             $_SESSION['id_rol']        = $row['id_rol'];
