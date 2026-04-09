@@ -23,11 +23,6 @@ if (!mainModel::tienePermiso('proveedor.editar')) {
                 <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTA DE PROVEEDORES
             </a>
         </li>
-        <li>
-            <a href="<?php echo SERVERURL; ?>proveedor-buscar/">
-                <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR PROVEEDOR
-            </a>
-        </li>
     </ul>
 </div>
 
@@ -110,7 +105,7 @@ if (!mainModel::tienePermiso('proveedor.editar')) {
                         <div class="col-12 col-md-4">
                             <div class="form-group">
                                 <label class="bmd-label-floating">Ciudad</label>
-                                <select class="form-control" name="ciudad_up">
+                                <select class="form-control select2" name="ciudad_up">
                                     <option value="" disabled>Seleccione una opción</option>
                                     <?php
                                     foreach ($ciudades as $ciu) {
@@ -165,6 +160,12 @@ if (!mainModel::tienePermiso('proveedor.editar')) {
             <br><br>
 
             <p class="text-center" style="margin-top: 40px;">
+
+                <a href="<?php echo SERVERURL; ?>proveedor-lista/"
+                    class="btn btn-raised btn-secondary btn-sm">
+                    <i class="fas fa-times"></i> &nbsp; CANCELAR
+                </a>
+
                 <button type="submit" class="btn btn-raised btn-success btn-sm">
                     <i class="fas fa-sync-alt"></i> &nbsp; ACTUALIZAR
                 </button>

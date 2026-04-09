@@ -24,11 +24,6 @@ if (!mainModel::tienePermiso('proveedor.crear')) {
                 <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTA DE PROVEEDORES
             </a>
         </li>
-        <li>
-            <a href="<?php echo SERVERURL; ?>proveedor-buscar/">
-                <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR PROVEEDOR
-            </a>
-        </li>
     </ul>
 </div>
 
@@ -102,8 +97,8 @@ if (!mainModel::tienePermiso('proveedor.crear')) {
                     <!-- Ciudad -->
                     <div class="col-12 col-md-4">
                         <div class="form-group">
-                            <label class="bmd-label-floating">Ciudad</label>
-                            <select class="form-control"
+                            <label>Ciudad</label>
+                            <select class="form-control select2"
                                 name="ciudad_reg"
                                 required>
                                 <option value="" selected>Seleccione una opción</option>
@@ -148,9 +143,8 @@ if (!mainModel::tienePermiso('proveedor.crear')) {
         <br><br>
 
         <p class="text-center">
-            <button type="reset"
-                class="btn btn-raised btn-secondary btn-sm">
-                <i class="fas fa-paint-roller"></i> &nbsp; LIMPIAR
+            <button type="button" id="btnCancelar" class="btn btn-raised btn-secondary btn-sm">
+                <i class="fas fa-times"></i> &nbsp; CANCELAR
             </button>
             &nbsp;&nbsp;
             <button type="submit"

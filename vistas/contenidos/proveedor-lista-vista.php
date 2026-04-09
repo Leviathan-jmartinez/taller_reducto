@@ -31,19 +31,16 @@ if ($peticionAjax) {
                 <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTA DE PROVEEDORES
             </a>
         </li>
-        <li>
-            <a href="<?php echo SERVERURL; ?>proveedor-buscar/">
-                <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR PROVEEDOR
-            </a>
-        </li>
     </ul>
 </div>
+
 
 <!-- CONTENT -->
 <div class="container-fluid">
     <?php
     require_once "./controladores/proveedorControlador.php";
     $ins_proveedor = new proveedorControlador();
-    echo $ins_proveedor->paginador_proveedores_controlador($pagina[1], 10, $pagina[0], "");
+    $busqueda = isset($_GET['busqueda']) ? $_GET['busqueda'] : "";
+    echo $ins_proveedor->paginador_proveedores_controlador($pagina[1], 10, $pagina[0], $busqueda);
     ?>
 </div>

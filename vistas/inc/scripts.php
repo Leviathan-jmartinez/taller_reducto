@@ -2,7 +2,7 @@
 	=            Include JavaScript files           =
 	==============================================-->
    <!-- jQuery V3.4.1 -->
-    <!--<script src="<?php echo SERVERURL; ?>vistas/js/jquery-3.4.1.min.js"></script>-->
+   <!--<script src="<?php echo SERVERURL; ?>vistas/js/jquery-3.4.1.min.js"></script>-->
 
    <!-- jQuery V3.6.0 -->
    <script src="<?php echo SERVERURL; ?>vistas/js/jquery-3.6.0.min.js"></script>
@@ -32,3 +32,34 @@
    <script src="<?php echo SERVERURL; ?>vistas/js/main.js"></script>
 
    <script src="<?php echo SERVERURL; ?>vistas/js/alertas.js"></script>
+
+   <script>
+       function activarSelect2() {
+           $('.select2').select2({
+               width: '100%',
+               placeholder: "Seleccione una opción"
+           });
+
+           // AUTOFOCUS en el buscador
+           $(document).on('select2:open', () => {
+               document.querySelector('.select2-container--open .select2-search__field').focus();
+           });
+       }
+
+       $(document).ready(function() {
+           activarSelect2();
+       });
+   </script>
+
+
+   <script>
+       $(document).on('click', '#btnCancelar', function() {
+           let form = $(this).closest('form');
+
+           // Reset del formulario
+           form[0].reset();
+
+           // Reset visual de Select2
+           form.find('.select2').val(null).trigger('change');
+       });
+   </script>

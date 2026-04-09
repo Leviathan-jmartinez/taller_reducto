@@ -173,7 +173,30 @@ class proveedorControlador extends proveedorModelo
         $total = (int) $total->fetchColumn();
 
         $Npaginas = ceil($total / $registros);
+        $tabla .= '
+        <div class="table-responsive">
+            <div class="p-2" style="background-color:#253556;">
+                <form method="GET" action="' . SERVERURL . 'proveedor-lista/">
+                    <div class="input-group">
+                        <input type="text" name="busqueda" 
+                            class="form-control text-white border-secondary"
+                            placeholder="Buscar proveedor..."
+                            value="' . $busqueda . '">
+                        <div class="input-group-append">
+                            <button class="btn btn-sm btn-outline-light" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
 
+                            <!-- BOTÓN LIMPIAR -->
+                            <a href="' . SERVERURL . 'proveedor-lista/" 
+                            class="btn btn-sm btn-outline-light">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        </div>
+                    </div>   
+                </form>
+            </div>
+        ';
         $tabla .= '<div class="table-responsive">
 					<table class="table table-dark table-sm">
 						<thead>
@@ -231,9 +254,9 @@ class proveedorControlador extends proveedorModelo
             $reg_final = $contador - 1;
         } else {
             if ($total >= 1) {
-                $tabla .= '<tr class="text-center"> <td colspan="6"> <a href="' . $url . '" class="btn btn-reaised btn-primary btn-sm"> Haga click aqui para recargar el listado </a> </td> </tr> ';
+                $tabla .= '<tr class="text-center"> <td colspan="7"> <a href="' . SERVERURL . 'proveedor-lista/" class="btn btn-reaised btn-primary btn-sm">Haga click aqui para recargar el listado </a> </td> </tr>';
             } else {
-                $tabla .= '<tr class="text-center"> <td colspan="6"> No hay regitros en el sistema</td> </tr> ';
+                $tabla .= '<tr class="text-center"> <td colspan="7"> No hay regitros en el sistema</td> </tr> ';
             }
         }
 
@@ -242,7 +265,8 @@ class proveedorControlador extends proveedorModelo
 				</div>';
         if ($total >= 1 && $pagina <= $Npaginas) {
             $tabla .= '<p class="text-right"> Mostrando registro ' . $reg_inicio . ' al ' . $reg_final . ' de un total de ' . $total . '</p>';
-            $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);
+            $parametros = ($busqueda != "") ? "?busqueda=" . urlencode($busqueda) : "";
+            $tabla .= mainModel::paginador($pagina, $Npaginas, $url . $parametros, 10);
         }
         echo $tabla;
     }

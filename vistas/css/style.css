@@ -589,4 +589,66 @@ table form {
 
 @media (min-width: 1200px) {}
 
+
+/* SELECT LIMPIO TIPO NATIVO */
+.select2-container--default .select2-selection--single {
+    background-color: transparent;
+    border: none;
+    border-bottom: 1px solid #ccc;
+    border-radius: 0;
+    height: 32px;
+    padding: 0;
+}
+
+/* TEXTO */
+.select2-selection__rendered {
+    padding-left: 0 !important;
+    color: #333 !important;
+    font-size: 14px;
+}
+
+/* FLECHA */
+.select2-selection__arrow {
+    height: 32px !important;
+}
+
+/* FOCUS */
+.select2-container--default.select2-container--focus .select2-selection--single {
+    border-bottom: 2px solid var(--accent-color);
+}
+
+/* DROPDOWN SIMPLE */
+.select2-dropdown {
+    border: 1px solid #ccc;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+/* OPCIONES */
+.select2-results__option {
+    padding: 8px;
+    font-size: 14px;
+}
+
+/* HOVER */
+.select2-results__option--highlighted {
+    background-color: #2d5db3 !important;
+    color: #fff !important;
+}
+
+/* INPUT BUSQUEDA */
+.select2-search__field {
+    border: none !important;
+    border-bottom: 1px solid #ccc !important;
+}
+
+/* CONTENEDOR SELECT2 */
+.select2-container {
+    position: relative;
+    top: 10px; /* BAJA el select */
+}
+
+.form-group .select2-container {
+    width: 100% !important;
+}
 /*----------  Keyframes  ----------*/

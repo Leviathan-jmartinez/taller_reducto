@@ -88,7 +88,6 @@ class proveedorModelo extends mainModel
         return $stmt;
     }
 
-
     /** Actualizar proveedor */
     protected static function actualizar_proveedor_modelo($datos)
     {
