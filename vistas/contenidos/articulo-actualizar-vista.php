@@ -182,7 +182,7 @@ if (!mainModel::tienePermiso('articulo.editar')) {
             </fieldset>
             <br><br><br>
             <p class="text-center" style="margin-top: 40px;">
-                <button type="submit" class="btn btn-raised btn-success btn-sm"><i class="fas fa-sync-alt"></i> &nbsp; ACTUALIZAR</button>
+                <button type="submit" class="btn btn-raised btn-success btn-sm"><i class="fas fa-sync-alt"></i> &nbsp; GUARDAR</button>
             </p>
         </form>
     <?php } else { ?>

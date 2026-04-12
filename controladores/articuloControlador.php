@@ -7,8 +7,8 @@ if ($peticionAjax) {
 
 class articuloControlador extends articuloModelo
 {
-    /**Controlador paginar articulos */
-    public function paginador_articulos_controlador($pagina, $registros, $url, $busqueda)
+    /**Controlador listar articulos */
+    public function listar_articulos_controlador($pagina, $registros, $url, $busqueda)
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
@@ -310,10 +310,11 @@ class articuloControlador extends articuloModelo
         $agregar_articulo = articuloModelo::agregar_articulo_modelo($datos_articulo);
         if ($agregar_articulo->rowCount() == 1) {
             $alerta = [
-                "Alerta" => "limpiar",
-                "Titulo" => "Articulo   ",
+                "Alerta" => "redireccionar_confirmado",
+                "Titulo" => "Articulo  Registrado",
                 "Texto" => "Los datos fueron registrados correctamente",
-                "Tipo" => "success"
+                "Tipo" => "success",
+                "URL" => SERVERURL . "articulo-lista/"
             ];
         } else {
             $alerta = [
@@ -480,7 +481,7 @@ class articuloControlador extends articuloModelo
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "El formato del campo TELEFONO no es valido",
+                "Texto" => "El formato del campo PRECIO VENTA no es valido",
                 "Tipo" => "error"
             ];
             echo json_encode($alerta);
@@ -534,10 +535,11 @@ class articuloControlador extends articuloModelo
         ];
         if (articuloModelo::actualizar_articulo_modelo($datos_articulo_up)) {
             $alerta = [
-                "Alerta" => "recargar",
+                "Alerta" => "redireccionar_confirmado",
                 "Titulo" => "ARTICULO modificado",
                 "Texto" => "Los datos del ARTICULO han sido modificados correctamente",
-                "Tipo" => "success"
+                "Tipo" => "success",
+                "URL" => SERVERURL . "articulo-lista/"
             ];
         } else {
             $alerta = [

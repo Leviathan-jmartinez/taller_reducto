@@ -28,6 +28,6 @@ if (!mainModel::tienePermiso('articulo.ver')) {
     <?php
     require_once "./controladores/articuloControlador.php";
     $ins_articulo = new articuloControlador();
-    echo $ins_articulo->paginador_articulos_controlador($pagina[1], 10, $pagina[0], "");
+    echo $ins_articulo->listar_articulos_controlador($pagina[1], 10, $pagina[0], "");
     ?>
 </div>
