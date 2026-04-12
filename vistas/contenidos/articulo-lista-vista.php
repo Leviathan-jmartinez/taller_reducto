@@ -20,9 +20,6 @@ if (!mainModel::tienePermiso('articulo.ver')) {
         <li>
             <a class="active" href="<?php echo SERVERURL; ?>articulo-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTA DE ARTICULOS</a>
         </li>
-        <li>
-            <a href="<?php echo SERVERURL; ?>articulo-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR ARTICULO</a>
-        </li>
     </ul>
 </div>
 
