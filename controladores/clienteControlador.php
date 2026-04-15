@@ -374,7 +374,6 @@ class clienteControlador extends clienteModelo
 
         echo json_encode($alerta);
     }
-
     /**fin controlador */
 
     /** controlador datos clientes  */

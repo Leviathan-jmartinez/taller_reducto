@@ -20,7 +20,7 @@ if (!mainModel::tienePermiso('usuarios.crear')) {
 
 		<?php if (mainModel::tienePermiso('usuarios.crear')) { ?>
 			<li>
-				<a href="<?php echo SERVERURL; ?>usuario-nuevo/">
+				<a class="active" href="<?php echo SERVERURL; ?>usuario-nuevo/">
 					<i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO USUARIO
 				</a>
 			</li>
@@ -28,7 +28,7 @@ if (!mainModel::tienePermiso('usuarios.crear')) {
 
 		<?php if (mainModel::tienePermiso('usuarios.ver')) { ?>
 			<li>
-				<a class="active" href="<?php echo SERVERURL; ?>usuario-lista/">
+				<a href="<?php echo SERVERURL; ?>usuario-lista/">
 					<i  class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTA DE USUARIOS
 				</a>
 			</li>

@@ -26,7 +26,7 @@ class ordencompraControlador extends ordencompraModelo
             FROM presupuesto_compra pc
             INNER JOIN proveedores p on p.idproveedores = pc.idproveedores
             INNER JOIN usuarios u on u.id_usuario = pc.id_usuario
-            WHERE (pc.idpresupuesto_compra LIKE '%$busqueda%' OR p.razon_social LIKE '%$busqueda%' OR p.ruc LIKE '%$busqueda%') AND pc.estado = 1 AND id_sucursal = " . $_SESSION['nick_sucursal'] . "
+            WHERE (pc.idpresupuesto_compra LIKE '%$busqueda%' OR p.razon_social LIKE '%$busqueda%' OR p.ruc LIKE '%$busqueda%') AND pc.estado != 0 AND id_sucursal = " . $_SESSION['nick_sucursal'] . "
             ORDER BY fecha desc LIMIT $inicio,$registros";
         } else {
             $consulta = "SELECT  SQL_CALC_FOUND_ROWS pc.idpresupuesto_compra as idpresupuesto_compra, pc.id_sucursal as id_sucursal,pc.id_usuario as id_usuario, pc.fecha as fecha, fecha_venc as fecha_venc,pc.estado as estadoPre, 
@@ -73,7 +73,7 @@ class ordencompraControlador extends ordencompraModelo
                         $estadoBadge = '<span class="badge bg-primary">Activo</span>';
                         break;
                     case 2:
-                        $estadoBadge = '<span class="badge bg-success">Procesado</span>';
+                        $estadoBadge = '<span class="badge bg-success">OC generada</span>';
                         break;
                     case 0:
                         $estadoBadge = '<span class="badge bg-danger">Anulado</span>';
