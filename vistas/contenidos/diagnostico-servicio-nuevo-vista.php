@@ -51,7 +51,13 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
                     <input type="datetime-local" name="fecha"
                         class="form-control" required>
                 </div>
-
+                <div class="col-md-4">
+                    <label>Equipo de trabajo</label>
+                    <select name="id_equipo" id="id_equipo" class="form-control" required>
+                        <option value="">Seleccione equipo</option>
+                        <!-- cargar vía PHP o AJAX -->
+                    </select>
+                </div>
                 <div class="col-md-4">
                     <label>Estado</label>
                     <select name="estado" class="form-control">
@@ -72,17 +78,22 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
                 </div>
             </div>
 
+
         </fieldset>
 
         <!-- DETALLES -->
         <fieldset class="border p-3 mb-3">
             <legend class="w-auto px-2">Detalle del Diagnóstico</legend>
 
-            <table class="table table-bordered">
+            <table class="table table-dark table-sm">
                 <thead>
                     <tr>
-                        <th>Descripción</th>
-                        <th>Tipo</th>
+                        <th>Sistema</th>
+                        <th>Problema</th>
+                        <th>Gravedad</th>
+                        <th>Solución</th>
+                        <th>Repuesto</th>
+                        <th>Mano de obra</th>
                         <th width="50">Acción</th>
                     </tr>
                 </thead>

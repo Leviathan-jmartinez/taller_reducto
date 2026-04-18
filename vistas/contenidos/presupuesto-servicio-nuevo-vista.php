@@ -37,7 +37,13 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
         autocomplete="off">
 
         <input type="hidden" name="guardar_presupuesto" value="1">
-        <input type="hidden" name="idrecepcion" id="idrecepcion">
+        <input type="hidden" name="id_diagnostico" id="id_diagnostico">
+
+        <input type="text"
+            id="diagnostico_info"
+            class="form-control"
+            placeholder="Seleccione un diagnóstico"
+            readonly>
         <input type="hidden" name="detalle_json" id="detalle_json">
         <input type="hidden" name="descuentos_json" id="descuentos_json">
         <input type="hidden" name="subtotal_servicios" id="inp_subtotal_servicios">
@@ -45,19 +51,16 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
         <input type="hidden" name="total_final" id="inp_total_final">
 
 
-        <!-- ================= RECEPCIÓN ================= -->
+        <!-- ================= DIAGNÓSTICO ================= -->
         <fieldset class="border p-3 mb-3">
-            <legend class="w-auto px-2">Recepción</legend>
-
-            <input type="hidden" name="id_cliente" id="id_cliente">
-            <input type="hidden" name="id_vehiculo" id="id_vehiculo">
+            <legend class="w-auto px-2">Datos del Diagnóstico</legend>
 
             <div class="row">
                 <div class="col-md-6">
                     <label>Cliente</label>
                     <input type="text" id="cliente"
                         class="form-control" readonly
-                        placeholder="Seleccione una recepción">
+                        placeholder="Seleccione un diagnóstico">
                 </div>
 
                 <div class="col-md-6">
@@ -73,18 +76,12 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
                     <input type="text" id="kilometraje"
                         class="form-control" readonly>
                 </div>
-
-                <div class="col-md-8">
-                    <label>Observación</label>
-                    <input type="text" id="observacion"
-                        class="form-control" readonly>
-                </div>
             </div>
 
             <div class="mt-3 text-right">
                 <button type="button" class="btn btn-info"
-                    onclick="abrirModalRecepcion()">
-                    <i class="fas fa-search"></i> Buscar recepción
+                    onclick="abrirModalDiagnostico()">
+                    <i class="fas fa-search"></i> Buscar diagnóstico
                 </button>
 
                 <button type="button" class="btn btn-warning"
@@ -170,7 +167,7 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
 
             <div id="descuentos_cliente">
                 <span class="text-muted">
-                    Seleccione una recepción para ver descuentos
+                    Seleccione un diagnóstico para ver descuentos
                 </span>
             </div>
         </fieldset>
@@ -208,23 +205,24 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
     </form>
 </div>
 
-<!-- ================= MODAL RECEPCIÓN ================= -->
-<div class="modal fade" id="modalRecepcion">
+<!-- ================= MODAL DIAGNÓSTICO ================= -->
+<div class="modal fade" id="modalDiagnostico">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
 
             <div class="modal-header">
-                <h5 class="modal-title">Seleccionar recepción</h5>
+                <h5 class="modal-title">Seleccionar diagnostico</h5>
                 <button type="button" class="close"
                     data-dismiss="modal">&times;</button>
             </div>
 
             <div class="modal-body">
-                <input type="text" class="form-control mb-3"
+                <input type="text" id="buscar_diagnostico"
+                    class="form-control mb-3"
                     placeholder="Buscar por cliente o vehículo"
-                    onkeyup="buscarRecepcion(this.value)">
+                    onkeyup="buscarDiagnostico()">
 
-                <div id="resultado_recepcion"></div>
+                <div id="tabla_diagnostico"></div>
             </div>
 
         </div>

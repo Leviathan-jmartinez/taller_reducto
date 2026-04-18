@@ -122,7 +122,7 @@
 
         let data = new FormData();
         data.append('accion', 'anular_ot');
-        data.append('id_ot', idOT);
+        data.append('id', idOT);
 
         fetch(SERVERURL + 'ajax/ordenTrabajoAjax.php', {
                 method: 'POST',

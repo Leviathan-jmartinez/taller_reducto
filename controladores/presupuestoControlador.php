@@ -55,45 +55,53 @@ class presupuestoControlador extends presupuestoModelo
     {
         $id  = mainModel::limpiar_string($_POST['id_agregar_proveedorPre']);
 
-        $check_proveedor = mainModel::ejecutar_consulta_simple("select * from proveedores where idproveedores = '$id' ");
+        $check_proveedor = mainModel::ejecutar_consulta_simple("SELECT * FROM proveedores WHERE idproveedores = '$id'");
+
         if ($check_proveedor->rowCount() <= 0) {
-            $alerta = [
+            echo json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "No hemos podido encontrar el proveedor en el sistema",
+                "Titulo" => "Error!",
+                "Texto" => "Proveedor no encontrado",
                 "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
+            ]);
             exit();
-        } else {
-            $campos = $check_proveedor->fetch();
         }
-        /**iniciar sesion para utilizar variables de sesion */
+
+        $campos = $check_proveedor->fetch();
+
         session_start(['name' => 'STR']);
-        unset($_SESSION['Sdatos_proveedorPre']);
-        if (!isset($_SESSION['Sdatos_proveedorPre'])) {
+
+        // 🔥 CLAVE: detectar tipo
+        $tipo = $_SESSION['tipo_presupuesto'] ?? 'sin_pedido';
+
+        if ($tipo === 'con_pedido') {
+
+            unset($_SESSION['Cdatos_proveedorPre']);
+
+            $_SESSION['Cdatos_proveedorPre'] = [
+                "ID" => $campos['idproveedores'],
+                "RUC" => $campos['ruc'],
+                "RAZON" => $campos['razon_social'],
+                "TELEFONO" => $campos['telefono']
+            ];
+        } else {
+
+            unset($_SESSION['Sdatos_proveedorPre']);
+
             $_SESSION['Sdatos_proveedorPre'] = [
                 "ID" => $campos['idproveedores'],
                 "RUC" => $campos['ruc'],
                 "RAZON" => $campos['razon_social'],
                 "TELEFONO" => $campos['telefono']
             ];
-            $alerta = [
-                "Alerta" => "recargar",
-                "Titulo" => "Proveedor Agregado!",
-                "Texto" => "Proveedor agregado correctamente al pedido",
-                "Tipo" => "success"
-            ];
-            echo json_encode($alerta);
-        } else {
-            $alerta = [
-                "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "No hemos podido agregar el proveedor al pedido",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
         }
+
+        echo json_encode([
+            "Alerta" => "recargar",
+            "Titulo" => "Proveedor agregado!",
+            "Texto" => "Proveedor agregado correctamente",
+            "Tipo" => "success"
+        ]);
     }
     /**fin controlador */
 
@@ -101,7 +109,13 @@ class presupuestoControlador extends presupuestoModelo
     public function eliminar_proveedor_controlador()
     {
         session_start(['name' => 'STR']);
-        unset($_SESSION['datos_proveedorPre']);
+        $tipo = $_SESSION['tipo_presupuesto'] ?? 'sin_pedido';
+
+        if ($tipo === 'con_pedido') {
+            unset($_SESSION['Cdatos_proveedorPre']);
+        } else {
+            unset($_SESSION['Sdatos_proveedorPre']);
+        }
         if (empty($_SESSION['datos_proveedorPre'])) {
             $alerta = [
                 "Alerta" => "recargar",
@@ -135,7 +149,7 @@ class presupuestoControlador extends presupuestoModelo
                 exit();
             }
             $id_proveedor = $_SESSION['Sdatos_proveedorPre']['ID'];
-            $datos_articuloPre = mainModel::ejecutar_consulta_simple("SELECT * FROM articulos WHERE (codigo like '%$articulo%' OR desc_articulo like '%$articulo%') AND estado=1 AND idproveedores='$id_proveedor' ORDER BY desc_articulo DESC");
+            $datos_articuloPre = mainModel::ejecutar_consulta_simple("SELECT * FROM articulos WHERE (codigo like '%$articulo%' OR desc_articulo like '%$articulo%') AND estado=1 ORDER BY desc_articulo DESC");
 
             if ($datos_articuloPre->rowCount() >= 1) {
                 $tabla = '<div class="table-responsive"><table class="table table-hover table-bordered table-sm"><tbody>';
@@ -426,11 +440,10 @@ class presupuestoControlador extends presupuestoModelo
             exit();
         }
         /**seleccionar proveedor */
-        $datosPedido = mainModel::ejecutar_consulta_simple("select pc.idpedido_cabecera as idpedido_cabecera, pc.id_sucursal as id_sucursal,pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPe, pc.id_proveedor as id_proveedor, pc.updated as updated, pc.updatedby as updatedby, 
-        p.idproveedores as idproveedores, p.id_ciudad as id_ciudad, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, p.estado as estadoPro
+        $datosPedido = mainModel::ejecutar_consulta_simple("select pc.idpedido_cabecera as idpedido_cabecera, pc.id_sucursal as id_sucursal,pc.id_usuario as id_usuario, 
+        pc.fecha as fecha, pc.estado as estadoPe, pc.id_proveedor as id_proveedor, pc.updated as updated, pc.updatedby as updatedby
         from pedido_cabecera pc 
-        inner join proveedores p on p.idproveedores = pc.id_proveedor 
-        where (idpedido_cabecera like '%$pedidoCompra%' or razon_social like '%$pedidoCompra%' or ruc like '%$pedidoCompra%') and pc.estado = '1'
+        where (idpedido_cabecera like '%$pedidoCompra%') and pc.estado = '1'
         and pc.id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
         order by idpedido_cabecera desc");
 
@@ -439,14 +452,14 @@ class presupuestoControlador extends presupuestoModelo
             $tabla = '<div class="table-responsive"><table class="table table-hover table-bordered table-sm"><tbody>
                         <tr class="text-center">
                             <th>Número de Pedido</th>
-                            <th>Proveedor</th>
+                            <th>Fecha</th>
                             <th></th>
                         </tr>';
             foreach ($datosPedido as $rows) {
                 $tabla .= '
                         <tr class="text-center">
                             <td>' . $rows['idpedido_cabecera'] . '</td>
-                            <td>' . $rows['razon_social'] . '</td>
+                            <td>' . date("d-m-Y", strtotime($rows['fecha'])) . '</td>
                             <td>
                                 <button type="button" class="btn btn-primary" onclick="agregar_pedidoPre(' . $rows['idpedido_cabecera'] . ')"><i class="fas fa-user-plus"></i></button>
                             </td>
@@ -479,22 +492,8 @@ class presupuestoControlador extends presupuestoModelo
             exit();
         }
         $_SESSION['id_pedido_seleccionado'] = $idPedido;
-        // 1️⃣ Cabecera del pedido (proveedor)
-        $sqlCabecera = mainModel::ejecutar_consulta_simple("
-        SELECT pc.id_proveedor, p.razon_social, p.ruc
-        FROM pedido_cabecera pc
-        INNER JOIN proveedores p ON p.idproveedores = pc.id_proveedor
-        WHERE pc.idpedido_cabecera = '$idPedido'");
-        $cabecera = $sqlCabecera->fetch();
-        if ($cabecera) {
-            $_SESSION['Cdatos_proveedorPre'] = [
-                "ID" => $cabecera['id_proveedor'],
-                "RAZON" => $cabecera['razon_social'],
-                "RUC" => $cabecera['ruc']
-            ];
-        }
 
-        // 2️⃣ Detalle del pedido (artículos)
+        // Detalle del pedido (artículos)
         $sqlDetalle = mainModel::ejecutar_consulta_simple("
         SELECT pd.id_articulo, pd.cantidad, a.desc_articulo, a.codigo
         FROM pedido_detalle pd
@@ -517,7 +516,7 @@ class presupuestoControlador extends presupuestoModelo
         }
 
 
-        // 3️⃣ Redirigir a la página para que se recargue
+        // Redirigir a la página para que se recargue
         header("Location: " . SERVERURL . "presupuesto-nuevo/");
         exit();
     }

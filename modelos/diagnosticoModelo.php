@@ -20,7 +20,7 @@ class diagnosticoModelo extends mainModel
         FROM recepcion_servicio rs
         INNER JOIN clientes c ON c.id_cliente = rs.id_cliente
         INNER JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
-        WHERE rs.estado = 1 AND tipo_servicio ='diagnostico'
+        WHERE rs.estado = 1 
           AND (
                 c.nombre_cliente LIKE :b
              OR c.apellido_cliente LIKE :b OR c.doc_number LIKE :b
@@ -98,14 +98,15 @@ class diagnosticoModelo extends mainModel
             /* ================= CABECERA ================= */
 
             $sql = $pdo->prepare("
-            INSERT INTO diagnostico_servicio
-            (idrecepcion, id_usuario, fecha, observacion, estado)
-            VALUES
-            (:recepcion, :usuario, :fecha, :obs, :estado)
-        ");
+                INSERT INTO diagnostico_servicio
+                (idrecepcion, id_usuario, id_equipo, fecha_diagnostico, observaciones, estado)
+                VALUES
+                (:recepcion, :usuario, :equipo, :fecha, :obs, :estado)
+            ");
 
             $sql->bindParam(":recepcion", $d['idrecepcion'], PDO::PARAM_INT);
             $sql->bindParam(":usuario",   $d['id_usuario'], PDO::PARAM_INT);
+            $sql->bindParam(":equipo",    $d['id_equipo'], PDO::PARAM_INT);
             $sql->bindParam(":fecha",     $d['fecha']);
             $sql->bindParam(":obs",       $d['observacion']);
             $sql->bindParam(":estado",    $d['estado'], PDO::PARAM_INT);
@@ -134,24 +135,27 @@ class diagnosticoModelo extends mainModel
             if (!empty($d['detalles'])) {
 
                 $sql_det = $pdo->prepare("
-                INSERT INTO diagnostico_detalle
-                (id_diagnostico, item, descripcion, tipo)
-                VALUES
-                (:diag, :item, :desc, :tipo)
-            ");
+                    INSERT INTO diagnostico_detalle
+                    (id_diagnostico, sistema, problema, gravedad, solucion_propuesta, requiere_repuesto, requiere_mano_obra)
+                    VALUES
+                    (:diag, :sistema, :problema, :gravedad, :solucion, :rep, :mano)
+                ");
 
                 foreach ($d['detalles'] as $i => $det) {
 
-                    if (empty(trim($det['descripcion']))) continue;
+                    if (empty(trim($det['problema']))) continue;
 
                     $item = $i + 1;
 
-                    $sql_det->bindParam(":diag", $id_diagnostico, PDO::PARAM_INT);
-                    $sql_det->bindParam(":item", $item, PDO::PARAM_INT);
-                    $sql_det->bindParam(":desc", $det['descripcion']);
-                    $sql_det->bindParam(":tipo", $det['tipo']);
-
-                    if (!$sql_det->execute()) {
+                    if (!$sql_det->execute([
+                        ':diag'      => $id_diagnostico,
+                        ':sistema'   => $det['sistema'] ?? null,
+                        ':problema'  => $det['problema'],
+                        ':gravedad'  => $det['gravedad'] ?? 'media',
+                        ':solucion'  => $det['solucion_propuesta'] ?? null,
+                        ':rep'       => $det['requiere_repuesto'] ?? 0,
+                        ':mano'      => $det['requiere_mano_obra'] ?? 1
+                    ])) {
                         $error = $sql_det->errorInfo();
                         $pdo->rollBack();
                         return [

@@ -21,6 +21,24 @@ class diagnosticoControlador extends diagnosticoModelo
         return diagnosticoModelo::buscar_recepcion_modelo($busqueda);
     }
 
+    public function listar_equipos_controlador()
+    {
+        session_start(['name' => 'STR']);
+
+        $sql = mainModel::conectar()->prepare("
+        SELECT id_equipo, nombre
+        FROM equipo_trabajo
+        WHERE estado = 1
+        AND id_sucursal = :sucursal
+        ORDER BY nombre
+        ");
+
+        $sql->bindParam(':sucursal', $_SESSION['nick_sucursal'], PDO::PARAM_INT);
+        $sql->execute();
+
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function guardar_diagnostico_controlador()
     {
         session_start(['name' => 'STR']);
@@ -34,32 +52,27 @@ class diagnosticoControlador extends diagnosticoModelo
             ]);
         }
 
-        /* ================= FIX FECHA ================= */
+        if (empty($_POST['id_equipo'])) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Debe seleccionar un equipo de trabajo",
+                "Tipo" => "warning"
+            ]);
+        }
+        
         $fecha = str_replace("T", " ", $_POST['fecha']);
 
         /* ================= DETALLES ================= */
 
-        $detalles = [];
-
-        if (isset($_POST['descripcion'])) {
-            foreach ($_POST['descripcion'] as $i => $desc) {
-
-                if (trim($desc) == "") continue;
-
-                $detalles[] = [
-                    "descripcion" => $desc,
-                    "tipo" => $_POST['tipo'][$i]
-                ];
-            }
-        }
-
         $datos = [
-            "idrecepcion" => intval($_POST['idrecepcion']),
-            "id_usuario"  => $_SESSION['id_str'] ?? 0,
-            "fecha"       => $fecha,
-            "observacion" => $_POST['observacion'] ?? null,
-            "estado"      => intval($_POST['estado']),
-            "detalles"    => $detalles
+            "idrecepcion" => $_POST['idrecepcion'],
+            "id_usuario"  => $_SESSION['id_str'],
+            "id_equipo"   => $_POST['id_equipo'],
+            "fecha" => $fecha,
+            "observacion" => $_POST['observacion'],
+            "estado"      => $_POST['estado'],
+            "detalles"    => $_POST['detalles'] ?? []
         ];
 
         if ($datos['id_usuario'] == 0) {
@@ -122,7 +135,7 @@ class diagnosticoControlador extends diagnosticoModelo
             $consulta = "
         SELECT SQL_CALC_FOUND_ROWS
             d.id_diagnostico,
-            d.fecha,
+            d.fecha_diagnostico,
             d.estado,
             rs.idrecepcion,
 
@@ -137,12 +150,12 @@ class diagnosticoControlador extends diagnosticoModelo
         INNER JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
         INNER JOIN usuarios u ON u.id_usuario = d.id_usuario
 
-        WHERE date(d.fecha) >= '$busqueda1'
-        AND date(d.fecha) <= '$busqueda2'
+        WHERE date(d.fecha_diagnostico) >= '$busqueda1'
+        AND date(d.fecha_diagnostico) <= '$busqueda2'
         AND rs.id_sucursal = '{$_SESSION['nick_sucursal']}'
         $filtros
 
-        ORDER BY d.fecha DESC
+        ORDER BY d.fecha_diagnostico DESC
         LIMIT $inicio,$registros
         ";
         } else {
@@ -150,7 +163,7 @@ class diagnosticoControlador extends diagnosticoModelo
             $consulta = "
         SELECT SQL_CALC_FOUND_ROWS
             d.id_diagnostico,
-            d.fecha,
+            d.fecha_diagnostico,
             d.estado,
             rs.idrecepcion,
 
@@ -182,19 +195,19 @@ class diagnosticoControlador extends diagnosticoModelo
         /* ================= TABLA ================= */
 
         $tabla .= '<div class="table-responsive">
-    <table class="table table-dark table-sm">
-    <thead>
-        <tr class="text-center">
-            <th>#</th>
-            <th>Fecha</th>
-            <th>Cliente</th>
-            <th>Vehículo</th>
-            <th>Usuario</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>';
+        <table class="table table-dark table-sm">
+        <thead>
+            <tr class="text-center">
+                <th>#</th>
+                <th>Fecha</th>
+                <th>Cliente</th>
+                <th>Vehículo</th>
+                <th>Usuario</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>';
 
         if ($total >= 1 && $pagina <= $Npaginas) {
 
@@ -216,7 +229,7 @@ class diagnosticoControlador extends diagnosticoModelo
                 $tabla .= '
             <tr class="text-center">
                 <td>' . $contador . '</td>
-                <td>' . date("d/m/Y H:i", strtotime($rows['fecha'])) . '</td>
+                <td>' . date("d/m/Y H:i", strtotime($rows['fecha_diagnostico'])) . '</td>
                 <td>' . $rows['cliente'] . '</td>
                 <td>' . $rows['placa'] . '</td>
                 <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>

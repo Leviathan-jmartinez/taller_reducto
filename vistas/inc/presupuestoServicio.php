@@ -16,61 +16,63 @@
         }, 2000); // 300–500 ms es ideal
     }
 
-    function abrirModalRecepcion() {
-        document.getElementById('resultado_recepcion').innerHTML = '';
-        $('#modalRecepcion').modal('show');
+    function abrirModalDiagnostico() {
+        $("#modalDiagnostico").modal("show");
     }
 
+    function buscarDiagnostico() {
 
-    function buscarRecepcion(texto) {
-
-        texto = texto.trim();
-
-        if (texto.length < 2) {
-            document.getElementById('resultado_recepcion').innerHTML = '';
-            return;
-        }
-
-        let datos = new FormData();
-        datos.append('buscar_recepcion', texto);
+        let texto = document.getElementById("buscar_diagnostico").value;
 
         fetch(SERVERURL + 'ajax/presupuestoServicioAjax.php', {
                 method: 'POST',
-                body: datos
+                body: new URLSearchParams({
+                    buscar_diagnostico: texto
+                })
             })
-            .then(respuesta => respuesta.text())
+            .then(r => r.text())
             .then(html => {
-                document.getElementById('resultado_recepcion').innerHTML = html;
-            })
-            .catch(error => {
-                console.error('Error buscando recepción:', error);
+                document.getElementById('tabla_diagnostico').innerHTML = html;
             });
     }
 
-    function seleccionarRecepcion(datos) {
+    function seleccionarDiagnostico(id, desc) {
 
-        document.getElementById('idrecepcion').value = datos.idrecepcion;
-        document.getElementById('id_cliente').value = datos.id_cliente;
-        document.getElementById('id_vehiculo').value = datos.id_vehiculo;
+        document.getElementById('id_diagnostico').value = id;
+        document.getElementById('diagnostico_info').value = desc;
 
-        document.getElementById('cliente').value = datos.cliente;
-        document.getElementById('vehiculo').value = datos.vehiculo;
-        document.getElementById('kilometraje').value = datos.kilometraje;
-        document.getElementById('observacion').value = datos.observacion;
+        $("#modalDiagnostico").modal("hide");
 
-        $('#modalRecepcion').modal('hide');
-        cargarDescuentosCliente(datos.id_cliente);
-        guardarEstadoPresupuesto();
+        cargarDatosDiagnostico(id);
     }
 
+    function cargarDatosDiagnostico(id) {
+
+        fetch(SERVERURL + 'ajax/presupuestoServicioAjax.php', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    accion: 'datos_diagnostico',
+                    id_diagnostico: id
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+
+                document.getElementById('cliente').value = data.cliente;
+                document.getElementById('vehiculo').value = data.vehiculo;
+                document.getElementById('kilometraje').value = data.kilometraje;
+                document.getElementById('observacion').value = data.observacion;
+
+                // cargar descuentos automáticamente
+                cargarDescuentosCliente(data.id_cliente);
+            });
+    }
 
     function guardarEstadoPresupuesto() {
 
         let estado = {
-            recepcion: {
-                idrecepcion: document.getElementById('idrecepcion')?.value || '',
-                id_cliente: document.getElementById('id_cliente')?.value || '',
-                id_vehiculo: document.getElementById('id_vehiculo')?.value || '',
+            diagnostico: {
+                iid_diagnostico: document.getElementById('id_diagnostico')?.value || '',
                 cliente: document.getElementById('cliente')?.value || '',
                 vehiculo: document.getElementById('vehiculo')?.value || '',
                 kilometraje: document.getElementById('kilometraje')?.value || '',
@@ -95,16 +97,15 @@
 
         let estado = JSON.parse(data);
 
-        // 🔹 Recepción
-        if (estado.recepcion) {
-            document.getElementById('idrecepcion').value = estado.recepcion.idrecepcion || '';
+        // 🔹 
+        if (estado.diagnostico) {
+            document.getElementById('id_diagnostico').value = estado.diagnostico.id_diagnostico || '';
             document.getElementById('id_cliente').value = estado.recepcion.id_cliente || '';
             document.getElementById('id_vehiculo').value = estado.recepcion.id_vehiculo || '';
 
             document.getElementById('cliente').value = estado.recepcion.cliente || '';
             document.getElementById('vehiculo').value = estado.recepcion.vehiculo || '';
             document.getElementById('kilometraje').value = estado.recepcion.kilometraje || '';
-            document.getElementById('observacion').value = estado.recepcion.observacion || '';
         }
 
         // 🔹 Detalle
@@ -139,9 +140,8 @@
         document.getElementById('inp_total_final').value = 0;
 
         // limpiar recepción
-        document.getElementById('idrecepcion').value = '';
-        document.getElementById('id_cliente').value = '';
-        document.getElementById('id_vehiculo').value = '';
+        document.getElementById('id_diagnostico').value = '';
+        document.getElementById('diagnostico_info').value = '';
         document.getElementById('cliente').value = '';
         document.getElementById('vehiculo').value = '';
         document.getElementById('kilometraje').value = '';
@@ -287,9 +287,6 @@
     }
 
 
-
-
-
     function renderDetalle() {
 
         let tbody = document.querySelector('#tabla_detalle tbody');
@@ -318,7 +315,7 @@
             </td>          
             <td class="text-center">
             ${item.promocion? `<small class="text-success">Promo: ${item.promocion.nombre}</small>`: ''}
-            </t d>
+            </td>
             <td class="text-center">
                 <button class="btn btn-danger btn-sm"
                         onclick="quitarServicio(${index})">

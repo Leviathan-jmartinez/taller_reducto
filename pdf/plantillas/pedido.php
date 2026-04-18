@@ -49,12 +49,6 @@
     </table>
 
 
-    <strong>Proveedor</strong><br>
-    <?= $cabecera['razon_social'] ?><br>
-    RUC: <?= $cabecera['ruc'] ?><br>
-    Tel: <?= $cabecera['telefono'] ?><br>
-    Dir: <?= $cabecera['direccion'] ?><br><br>
-
     <strong>Creado por:</strong>
     <?= $cabecera['usu_nombre'] . ' ' . $cabecera['usu_apellido'] ?>
 

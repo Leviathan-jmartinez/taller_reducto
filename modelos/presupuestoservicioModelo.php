@@ -187,10 +187,10 @@ class presupuestoservicioModelo extends mainModel
             $sql = $pdo->prepare("
             INSERT INTO presupuesto_servicio
             (id_usuario, fecha, estado, fecha_venc,
-             subtotal, total_descuento, total_final, idrecepcion)
+             subtotal, total_descuento, total_final, id_diagnostico)
             VALUES
             (:usuario, CURDATE(), 1, :fecha_venc,
-             :subtotal, :total_desc, :total_final, :idrecepcion)
+             :subtotal, :total_desc, :total_final, :id_diagnostico)
         ");
 
             $sql->execute([
@@ -199,22 +199,24 @@ class presupuestoservicioModelo extends mainModel
                 ':subtotal'    => $d['subtotal'],
                 ':total_desc'  => $d['total_descuento'],
                 ':total_final' => $d['total_final'],
-                ':idrecepcion' => $d['idrecepcion']
+                ':id_diagnostico' => $d['id_diagnostico']
             ]);
 
             $idPresupuesto = $pdo->lastInsertId();
 
             /* ================= ACTUALIZAR ESTADO RECEPCIÓN ================= */
-            if (!empty($d['idrecepcion'])) {
+            if (!empty($d['id_diagnostico'])) {
 
                 $sqlUpd = $pdo->prepare("
-                UPDATE recepcion_servicio
-                SET estado = 2,
-                    fecha_actualizacion = NOW()
-                WHERE idrecepcion = :id ");
+                UPDATE recepcion_servicio r
+                INNER JOIN diagnostico_servicio d 
+                    ON d.idrecepcion = r.idrecepcion
+                SET r.estado = 2
+                WHERE d.id_diagnostico = :id
+                ");
 
                 $sqlUpd->execute([
-                    ':id' => $d['idrecepcion']
+                    ':id' => $d['id_diagnostico']
                 ]);
             }
 
@@ -411,7 +413,8 @@ class presupuestoservicioModelo extends mainModel
                 u.usu_nombre,
                 u.usu_apellido
             FROM presupuesto_servicio ps
-            INNER JOIN recepcion_servicio r ON r.idrecepcion = ps.idrecepcion
+            INNER JOIN diagnostico_servicio d ON d.id_diagnostico = ps.id_diagnostico
+            INNER JOIN recepcion_servicio r ON r.idrecepcion = d.idrecepcion
             INNER JOIN clientes c ON c.id_cliente = r.id_cliente
             INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
             INNER JOIN modelo_auto ma ON ma.id_modeloauto = v.id_modeloauto

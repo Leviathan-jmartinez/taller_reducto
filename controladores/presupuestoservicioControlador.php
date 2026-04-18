@@ -14,15 +14,52 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
         return presupuestoservicioModelo::datos_recepcion_modelo($id);
     }
 
-    public function buscar_recepciones_controlador()
+    public function buscar_diagnostico_controlador()
     {
-        session_start(['name' => 'STR']);
-        $txt = trim($_POST['buscar_recepcion']);
+        $texto = $_POST['buscar_diagnostico'] ?? '';
 
-        return presupuestoservicioModelo::buscar_recepciones_modelo(
-            $txt,
-            $_SESSION['nick_sucursal']
-        );
+        $sql = mainModel::conectar()->prepare("
+        SELECT 
+            d.id_diagnostico,
+            c.nombre_cliente,
+            v.placa
+        FROM diagnostico_servicio d
+        INNER JOIN recepcion_servicio r ON r.idrecepcion = d.idrecepcion
+        INNER JOIN clientes c ON c.id_cliente = r.id_cliente
+        INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
+        WHERE d.estado = 2
+        AND (
+            c.nombre_cliente LIKE :b OR v.placa LIKE :b
+        )
+        ORDER BY d.id_diagnostico DESC
+    ");
+
+        $sql->bindValue(":b", "%$texto%");
+        $sql->execute();
+
+        $html = '<table class="table"><tbody>';
+
+        foreach ($sql->fetchAll() as $row) {
+
+            $html .= "
+        <tr>
+            <td>{$row['nombre_cliente']}</td>
+            <td>{$row['placa']}</td>
+            <td>
+                <button class='btn btn-success btn-sm'
+                    onclick=\"seleccionarDiagnostico(
+                        {$row['id_diagnostico']},
+                        '{$row['nombre_cliente']} - {$row['placa']}'
+                    )\">
+                    Seleccionar
+                </button>
+            </td>
+        </tr>";
+        }
+
+        $html .= '</tbody></table>';
+
+        return $html;
     }
 
 
@@ -57,7 +94,7 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
 
         $datos = [
             'usuario'         => $_SESSION['id_str'],
-            'idrecepcion'     => $_POST['idrecepcion'],
+            'id_diagnostico'     => $_POST['id_diagnostico'],
             'fecha_venc'      => $_POST['fecha_venc'],
 
             // 👇 estos vienen de los inputs hidden correctos
@@ -69,10 +106,12 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
             'descuentos'      => json_decode($_POST['descuentos_json'], true)
         ];
         $sucursalRecepcion = mainModel::ejecutar_consulta_simple("
-            SELECT id_sucursal
-            FROM recepcion_servicio
-            WHERE idrecepcion = '{$datos['idrecepcion']}'
-            ")->fetchColumn();
+            SELECT r.id_sucursal
+            FROM diagnostico_servicio d
+            INNER JOIN recepcion_servicio r 
+                ON r.idrecepcion = d.idrecepcion
+            WHERE d.id_diagnostico = '{$datos['id_diagnostico']}'
+        ")->fetchColumn();
 
         if ($sucursalRecepcion != $_SESSION['nick_sucursal']) {
             return json_encode([

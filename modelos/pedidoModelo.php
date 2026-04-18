@@ -7,10 +7,9 @@ class pedidoModelo extends mainModel
     protected static function agregar_pedidoC_modelo($datos)
     {
         $conexion = mainModel::conectar();
-        $sql = $conexion->prepare("INSERT INTO pedido_cabecera (id_usuario, fecha, id_proveedor, estado, id_sucursal)
-                               VALUES(:usuario, NOW(), :proveedor, 1, :sucursal)");
+        $sql = $conexion->prepare("INSERT INTO pedido_cabecera (id_usuario, fecha, estado, id_sucursal)
+                               VALUES(:usuario, NOW(), 1, :sucursal)");
         $sql->bindParam(":usuario", $datos['usuario']);
-        $sql->bindParam(":proveedor", $datos['proveedor']);
         $sql->bindParam(":sucursal", $datos['sucursal']);
         $sql->execute();
 
@@ -71,17 +70,9 @@ class pedidoModelo extends mainModel
                 pc.idpedido_cabecera,
                 pc.fecha,
                 pc.estado,
-
-                p.razon_social,
-                p.ruc,
-                p.telefono,
-                p.direccion,
-                p.correo,
-
                 u.usu_nombre,
                 u.usu_apellido
             FROM pedido_cabecera pc
-            INNER JOIN proveedores p ON p.idproveedores = pc.id_proveedor
             INNER JOIN usuarios u ON u.id_usuario = pc.id_usuario
             WHERE pc.idpedido_cabecera = :id
             LIMIT 1

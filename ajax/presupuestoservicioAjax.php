@@ -5,9 +5,8 @@ require_once "../controladores/presupuestoservicioControlador.php";
 
 $insPresupuesto = new presupuestoservicioControlador();
 
-if (isset($_POST['buscar_recepcion'])) {
-    echo $insPresupuesto->buscar_recepciones_controlador();
-    exit;
+if (isset($_POST['buscar_diagnostico'])) {
+    echo $insPresupuesto->buscar_diagnostico_controlador();
 }
 
 if (isset($_POST['buscar_servicio'])) {
@@ -34,4 +33,3 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'aprobar') {
 if (isset($_POST['accion']) && $_POST['accion'] === 'anular') {
     echo $insPresupuesto->anular_presupuesto_controlador();
 }
-

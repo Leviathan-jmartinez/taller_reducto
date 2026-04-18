@@ -65,14 +65,13 @@ class ordenTrabajoModelo extends mainModel
             /* CABECERA OT */
             $sqlOT = $pdo->prepare("
                 INSERT INTO orden_trabajo
-                (idpresupuesto_servicio, idrecepcion, id_usuario, observacion)
+                (idpresupuesto_servicio, id_usuario, observacion)
                 VALUES
-                (:presupuesto, :recepcion, :usuario, :obs)
+                (:presupuesto, :usuario, :obs)
             ");
 
             $sqlOT->execute([
                 ':presupuesto' => $d['idpresupuesto'],
-                ':recepcion'   => $d['idrecepcion'],
                 ':usuario'     => $d['usuario'],
                 ':obs'         => $d['observacion']
             ]);
@@ -106,15 +105,6 @@ class ordenTrabajoModelo extends mainModel
                 ':id' => $d['idpresupuesto']
             ]);
 
-            /* ACTUALIZAR RECEPCIÓN → EN PROCESO */
-            $pdo->prepare("
-                UPDATE recepcion_servicio
-                SET estado = 2
-                WHERE idrecepcion = :id
-            ")->execute([
-                ':id' => $d['idrecepcion']
-            ]);
-
             $pdo->commit();
             return true;
         } catch (Exception $e) {
@@ -127,7 +117,7 @@ class ordenTrabajoModelo extends mainModel
     {
         if (!empty($busqueda1) && !empty($busqueda2)) {
             $consulta = "
-        SELECT SQL_CALC_FOUND_ROWS
+                SELECT SQL_CALC_FOUND_ROWS
             ot.idorden_trabajo,
             ot.fecha_inicio,
             ot.estado,
@@ -138,13 +128,29 @@ class ordenTrabajoModelo extends mainModel
             ma.mod_descri AS modelo,
             u.usu_nombre,
             u.usu_apellido
+
         FROM orden_trabajo ot
-        INNER JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-        INNER JOIN recepcion_servicio r ON r.idrecepcion = ot.idrecepcion
-        INNER JOIN clientes c ON c.id_cliente = r.id_cliente
-        INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
-        INNER JOIN modelo_auto ma ON ma.id_modeloauto = v.id_modeloauto
-        INNER JOIN usuarios u ON u.id_usuario = ot.id_usuario
+
+        INNER JOIN presupuesto_servicio ps 
+            ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+
+        INNER JOIN diagnostico_servicio ds 
+            ON ds.id_diagnostico = ps.id_diagnostico
+
+        INNER JOIN recepcion_servicio r 
+            ON r.idrecepcion = ds.idrecepcion
+
+        INNER JOIN clientes c 
+            ON c.id_cliente = r.id_cliente
+
+        INNER JOIN vehiculos v 
+            ON v.id_vehiculo = r.id_vehiculo
+
+        INNER JOIN modelo_auto ma 
+            ON ma.id_modeloauto = v.id_modeloauto
+
+        INNER JOIN usuarios u 
+         ON u.id_usuario = ot.id_usuario
         WHERE r.id_sucursal = '{$_SESSION['nick_sucursal']}'AND DATE(ot.fecha_inicio) BETWEEN '$busqueda1' AND '$busqueda2'
         ORDER BY ot.idorden_trabajo DESC
         LIMIT $inicio,$registros";
@@ -161,13 +167,29 @@ class ordenTrabajoModelo extends mainModel
             ma.mod_descri AS modelo,
             u.usu_nombre,
             u.usu_apellido
+
         FROM orden_trabajo ot
-        INNER JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-        INNER JOIN recepcion_servicio r ON r.idrecepcion = ot.idrecepcion
-        INNER JOIN clientes c ON c.id_cliente = r.id_cliente
-        INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
-        INNER JOIN modelo_auto ma ON ma.id_modeloauto = v.id_modeloauto
-        INNER JOIN usuarios u ON u.id_usuario = ot.id_usuario
+
+        INNER JOIN presupuesto_servicio ps 
+            ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+
+        INNER JOIN diagnostico_servicio ds 
+            ON ds.id_diagnostico = ps.id_diagnostico
+
+        INNER JOIN recepcion_servicio r 
+            ON r.idrecepcion = ds.idrecepcion
+
+        INNER JOIN clientes c 
+            ON c.id_cliente = r.id_cliente
+
+        INNER JOIN vehiculos v 
+            ON v.id_vehiculo = r.id_vehiculo
+
+        INNER JOIN modelo_auto ma 
+            ON ma.id_modeloauto = v.id_modeloauto
+
+        INNER JOIN usuarios u 
+         ON u.id_usuario = ot.id_usuario
         WHERE r.id_sucursal = '{$_SESSION['nick_sucursal']}'
         ORDER BY ot.idorden_trabajo DESC
         LIMIT $inicio,$registros";
@@ -189,7 +211,8 @@ class ordenTrabajoModelo extends mainModel
             GROUP_CONCAT(CONCAT(e.nombre,' ',e.apellido) SEPARATOR ', ') AS miembros
         FROM orden_trabajo ot
         INNER JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-        INNER JOIN recepcion_servicio r ON r.idrecepcion = ot.idrecepcion
+        INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
+        INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
         INNER JOIN clientes c ON c.id_cliente = r.id_cliente
         INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
         INNER JOIN modelo_auto ma ON ma.id_modeloauto = v.id_modeloauto
@@ -292,8 +315,11 @@ class ordenTrabajoModelo extends mainModel
         INNER JOIN presupuesto_servicio ps 
             ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
 
+        INNER JOIN diagnostico_servicio ds 
+            ON ds.id_diagnostico = ps.id_diagnostico
+
         INNER JOIN recepcion_servicio r 
-            ON r.idrecepcion = ot.idrecepcion
+            ON r.idrecepcion = ds.idrecepcion
 
         INNER JOIN clientes c 
             ON c.id_cliente = r.id_cliente
@@ -368,9 +394,11 @@ class ordenTrabajoModelo extends mainModel
 
             /* OBTENER RECEPCION DESDE PRESUPUESTO (SEGURIDAD) */
             $qRec = $pdo->prepare("
-                SELECT idrecepcion
-                FROM presupuesto_servicio
-                WHERE idpresupuesto_servicio = ?
+                SSELECT ds.idrecepcion
+                FROM presupuesto_servicio ps
+                INNER JOIN diagnostico_servicio ds 
+                    ON ds.id_diagnostico = ps.id_diagnostico
+                WHERE ps.idpresupuesto_servicio = ?
             ");
             $qRec->execute([$datos['idpresupuesto']]);
             $rec = $qRec->fetch(PDO::FETCH_ASSOC);
@@ -382,12 +410,11 @@ class ordenTrabajoModelo extends mainModel
             /* CABECERA OT */
             $cab = $pdo->prepare("
                     INSERT INTO orden_trabajo
-                    (idpresupuesto_servicio, idrecepcion, id_usuario, idtrabajos, tecnico_responsable, observacion, estado)
-                    VALUES (?, ?, ?, ?, ?, ?, 2)
+                    (idpresupuesto_servicio, id_usuario, idtrabajos, tecnico_responsable, observacion, estado)
+                    VALUES (?, ?, ?, ?, ?, 2)
                 ");
             $cab->execute([
                 $datos['idpresupuesto'],
-                $rec['idrecepcion'],
                 $datos['idusuario'],
                 $datos['idtrabajos'],
                 $datos['tecnico_responsable'],

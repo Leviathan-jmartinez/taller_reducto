@@ -19,9 +19,6 @@ if (!mainModel::tienePermiso('compra.pedido.crear')) {
         <li>
             <a href="<?php echo SERVERURL; ?>pedido-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTADOS DE PEDIDOS</a>
         </li>
-        <li>
-            <a href="<?php echo SERVERURL; ?>pedido-buscar/"><i class="fas fa-search-dollar fa-fw"></i> &nbsp; BUSCAR POR FECHA</a>
-        </li>
     </ul>
 </div>
 
@@ -29,23 +26,8 @@ if (!mainModel::tienePermiso('compra.pedido.crear')) {
     <div class="container-fluid form-neon">
         <div class="container-fluid">
             <p class="text-center">
-                <?php if (empty($_SESSION['datos_proveedor'])) { ?>
-                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#Modalproveedor"><i class="fas fa-user-plus"></i> &nbsp; Agregar Proveedor</button>
-                <?php } ?>
                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalArticulo"><i class="fas fa-box-open"></i> &nbsp; Agregar articulo</button>
             </p>
-            <div>
-                <span class="roboto-medium">PROVEEDOR:</span>
-                <?php if (empty($_SESSION['datos_proveedor'])) { ?>
-                    <span class="text-danger">&nbsp; <i class="fas fa-exclamation-triangle"></i> Seleccione un Proveedor</span>
-                <?php } else { ?>
-                    <form class="FormularioAjax" action="<?php echo SERVERURL ?>ajax/pedidoAjax.php" method="POST" data-form="loans" style="display: inline-block !important;">
-                        <input type="hidden" name="id_eliminar_proveedor" value="<?php echo $_SESSION['datos_proveedor']['ID']; ?>">
-                        <?php echo $_SESSION['datos_proveedor']['RAZON'] . " (" . $_SESSION['datos_proveedor']['RUC'] . ")"; ?>
-                        <button type="submit" class="btn btn-danger"><i class="fas fa-user-times"></i></button>
-                    </form>
-                <?php } ?>
-            </div>
             <div class="table-responsive">
                 <table class="table table-dark table-sm">
                     <thead>
@@ -125,38 +107,6 @@ if (!mainModel::tienePermiso('compra.pedido.crear')) {
     </div>
 </div>
 
-
-<!-- MODAL proveedor -->
-<div class="modal fade" id="Modalproveedor" tabindex="-1" role="dialog" aria-labelledby="Modalproveedor" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="Modalproveedor">Agregar Proovedor</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <div class="form-group">
-                        <label for="input_proveedor" class="bmd-label-floating">RUC, RAZON SOCIAL</label>
-                        <input type="text" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" class="form-control" name="input_proveedor" id="input_proveedor" maxlength="30">
-                    </div>
-                </div>
-                <br>
-                <div class="container-fluid" id="tabla_proveedor">
-
-                </div>
-
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" onclick="buscar_proveedor()"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar</button>
-                &nbsp; &nbsp;
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 
 <!-- MODAL ITEM -->

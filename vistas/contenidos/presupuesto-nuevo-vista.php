@@ -26,7 +26,7 @@ if (isset($_POST['tipo_presupuesto'])) {
 <!-- Page header -->
 <div class="full-box page-header">
     <h3 class="text-left">
-        <i class="fas fa-plus fa-fw"></i> &nbsp; CARGAR PRESUPUESTO
+        <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO PRESUPUESTO
         <?php if ($tipo == 'con_pedido') echo "(a partir de pedido)"; ?>
         <?php if ($tipo == 'sin_pedido') echo "(manual)"; ?>
     </h3>
@@ -36,13 +36,10 @@ if (isset($_POST['tipo_presupuesto'])) {
 <div class="container-fluid">
     <ul class="full-box list-unstyled page-nav-tabs">
         <li>
-            <a class="active" href="<?php echo SERVERURL; ?>presupuesto-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; CARGAR PRESUPUESTO</a>
+            <a class="active" href="<?php echo SERVERURL; ?>presupuesto-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO PRESUPUESTO</a>
         </li>
         <li>
             <a href="<?php echo SERVERURL; ?>presupuesto-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTADOS DE PRESUPUESTOS</a>
-        </li>
-        <li>
-            <a href="<?php echo SERVERURL; ?>presupuesto-buscar/"><i class="fas fa-search-dollar fa-fw"></i> &nbsp; BUSCAR POR FECHA</a>
         </li>
     </ul>
 </div>
@@ -168,9 +165,9 @@ if (isset($_POST['tipo_presupuesto'])) {
         <div class="col-12 col-md-6">
             <span class="roboto-medium">PROVEEDOR:</span>
             <?php if (empty($_SESSION['Cdatos_proveedorPre'])) { ?>
-                <span class="text-danger">&nbsp;
-                    <i class="fas fa-exclamation-triangle"></i> Seleccione un Proveedor
-                </span>
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalproveedorPre">
+                    <i class="fas fa-user-plus"></i> &nbsp; Agregar Proveedor
+                </button>
             <?php } else { ?>
                 <form class="FormularioAjax d-inline-block" action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php" method="POST" data-form="loans">
                     <input type="hidden" name="id_eliminar_proveedorPre" value="<?php echo $_SESSION['Cdatos_proveedorPre']['ID']; ?>">

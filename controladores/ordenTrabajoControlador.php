@@ -60,7 +60,6 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
 
         $datos = [
             'idpresupuesto' => $idPresupuesto,
-            'idrecepcion'   => $presupuesto['idrecepcion'],
             'usuario'       => $_SESSION['id_str'],
             'observacion'   => 'OT generada desde presupuesto',
             'detalle'       => $detalle
@@ -68,7 +67,8 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
         $sucursalPresupuesto = mainModel::ejecutar_consulta_simple("
             SELECT r.id_sucursal
             FROM presupuesto_servicio ps
-            INNER JOIN recepcion_servicio r ON r.idrecepcion = ps.idrecepcion
+            INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
+            INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
             WHERE ps.idpresupuesto_servicio = '$idPresupuesto'
         ")->fetchColumn();
 
@@ -274,8 +274,10 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
         $sucursalOT = mainModel::ejecutar_consulta_simple("
         SELECT r.id_sucursal
         FROM orden_trabajo ot
-        INNER JOIN recepcion_servicio r ON r.idrecepcion = ot.idrecepcion
-        WHERE ot.idorden_trabajo = '$ot'
+        INNER JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+        INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
+        INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
+        WHERE ot.idorden_trabajo ='$ot'
         ")->fetchColumn();
 
         if ($sucursalOT != $_SESSION['nick_sucursal']) {
@@ -343,14 +345,13 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
         $texto = trim($_POST['buscar_presupuesto'] ?? '');
         session_start(['name' => 'STR']);
         $consulta = "
-            SELECT ps.idpresupuesto_servicio, ps.idrecepcion,
-                   c.nombre_cliente, v.placa
+            SELECT ps.idpresupuesto_servicio, ds.idrecepcion,c.nombre_cliente, v.placa
             FROM presupuesto_servicio ps
-            INNER JOIN recepcion_servicio r ON r.idrecepcion = ps.idrecepcion
+            INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
+            INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
             INNER JOIN clientes c ON c.id_cliente = r.id_cliente
             INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
-            LEFT JOIN orden_trabajo ot
-                ON ot.idpresupuesto_servicio = ps.idpresupuesto_servicio
+            LEFT JOIN orden_trabajo ot ON ot.idpresupuesto_servicio = ps.idpresupuesto_servicio
             WHERE ps.estado = '2'
                 AND ot.idorden_trabajo IS NULL
                 AND r.id_sucursal = :sucursal
@@ -501,7 +502,9 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
         $sucursalOT = mainModel::ejecutar_consulta_simple("
         SELECT r.id_sucursal
         FROM orden_trabajo ot
-        INNER JOIN recepcion_servicio r ON r.idrecepcion = ot.idrecepcion
+        INNER JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+        INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
+        INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
         WHERE ot.idorden_trabajo = '$idOT'
         ")->fetchColumn();
 

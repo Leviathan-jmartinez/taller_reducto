@@ -46,10 +46,18 @@ if (
         $idArticulo = (int)$_POST['id_actualizar_precio'];
         $precio     = (float)$_POST['precio'];
 
-        if (isset($_SESSION['Cdatos_articuloPre'][$idArticulo])) {
-            $_SESSION['Cdatos_articuloPre'][$idArticulo]['precio'] = $precio;
-            $_SESSION['Cdatos_articuloPre'][$idArticulo]['subtotal'] =
-                $_SESSION['Cdatos_articuloPre'][$idArticulo]['cantidad'] * $precio;
+        $tipo = $_SESSION['tipo_presupuesto'] ?? 'sin_pedido';
+
+        if ($tipo === 'con_pedido') {
+            $key = 'Cdatos_articuloPre';
+        } else {
+            $key = 'Sdatos_articuloPre';
+        }
+
+        if (isset($_SESSION[$key][$idArticulo])) {
+            $_SESSION[$key][$idArticulo]['precio'] = $precio;
+            $_SESSION[$key][$idArticulo]['subtotal'] =
+                $_SESSION[$key][$idArticulo]['cantidad'] * $precio;
         }
 
         // recalcular total
