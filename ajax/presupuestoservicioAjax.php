@@ -33,3 +33,8 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'aprobar') {
 if (isset($_POST['accion']) && $_POST['accion'] === 'anular') {
     echo $insPresupuesto->anular_presupuesto_controlador();
 }
+
+if (isset($_POST['accion']) && $_POST['accion'] === "datos_diagnostico") {
+    echo $insPresupuesto->datos_diagnostico_controlador();
+    exit();
+}

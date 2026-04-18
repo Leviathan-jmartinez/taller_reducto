@@ -3,34 +3,45 @@ require_once "mainModel.php";
 
 class presupuestoservicioModelo extends mainModel
 {
-    protected static function datos_recepcion_modelo($idrecepcion)
+    protected static function datos_diagnostico_modelo($id)
     {
-        $sql = mainModel::conectar()->prepare("
-            SELECT
-                r.idrecepcion,
-                r.id_cliente,
-                r.id_vehiculo,
-                r.fecha_ingreso,
-                r.kilometraje,
-                r.observacion,
+        $pdo = mainModel::conectar();
 
-                CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) AS cliente,
-
-                CONCAT(ma.descripcion, ' - ', v.placa) AS vehiculo
-
-            FROM recepcion_servicio r
-            INNER JOIN clientes c ON c.id_cliente = r.id_cliente
-            INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
-            INNER JOIN modelo_auto ma ON ma.id_modeloauto = v.id_modeloauto
-
-            WHERE r.idrecepcion = :id
-            LIMIT 1
+        /* CABECERA */
+        $sql = $pdo->prepare("
+        SELECT 
+            c.id_cliente,
+            CONCAT(c.nombre_cliente,' ',c.apellido_cliente) AS cliente,
+            v.id_vehiculo,
+            v.placa AS vehiculo,
+            r.kilometraje,
+            d.observaciones
+        FROM diagnostico_servicio d
+        INNER JOIN recepcion_servicio r ON r.idrecepcion = d.idrecepcion
+        INNER JOIN clientes c ON c.id_cliente = r.id_cliente
+        INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
+        WHERE d.id_diagnostico = ?
+        LIMIT 1
         ");
+        $sql->execute([$id]);
 
-        $sql->bindParam(":id", $idrecepcion, PDO::PARAM_INT);
-        $sql->execute();
+        $cabecera = $sql->fetch(PDO::FETCH_ASSOC);
 
-        return $sql->fetch(PDO::FETCH_ASSOC);
+        if (!$cabecera) return [];
+
+        /* DETALLE */
+        $sqlDet = $pdo->prepare("
+                SELECT 
+            problema,
+            requiere_repuesto,
+            requiere_mano_obra
+        FROM diagnostico_detalle
+        WHERE id_diagnostico = ?");
+        $sqlDet->execute([$id]);
+
+        $cabecera['detalle'] = $sqlDet->fetchAll(PDO::FETCH_ASSOC);
+
+        return $cabecera;
     }
 
     protected static function buscar_recepciones_modelo($txt, $idSucursal)

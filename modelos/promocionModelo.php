@@ -10,13 +10,13 @@ class promocionModelo extends mainModel
 
         try {
             $pdo->beginTransaction();
-
+            
             /* Insertar promoción */
             $sql = $pdo->prepare("
                 INSERT INTO promociones
-                (nombre, descripcion, tipo, valor, fecha_inicio, fecha_fin, id_usuario_crea)
+                (nombre, descripcion, tipo, valor, fecha_inicio, fecha_fin, id_usuario_crea, estado,fecha_creacion)
                 VALUES
-                (:nombre, :descripcion, :tipo, :valor, :inicio, :fin, :usuario)
+                (:nombre, :descripcion, :tipo, :valor, :inicio, :fin, :usuario, 1,now())
             ");
 
             $sql->execute([

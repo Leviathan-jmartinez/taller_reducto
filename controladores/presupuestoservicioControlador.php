@@ -3,15 +3,14 @@ require_once __DIR__ . "/../modelos/presupuestoServicioModelo.php";
 
 class presupuestoservicioControlador extends presupuestoservicioModelo
 {
-    public function datos_recepcion_controlador($id_encriptado)
+
+    public function datos_diagnostico_controlador()
     {
-        $id = mainModel::decryption($id_encriptado);
+        $id = $_POST['id_diagnostico'];
 
-        if ($id <= 0) {
-            return false;
-        }
+        $data = presupuestoServicioModelo::datos_diagnostico_modelo($id);
 
-        return presupuestoservicioModelo::datos_recepcion_modelo($id);
+        return json_encode($data);
     }
 
     public function buscar_diagnostico_controlador()
@@ -27,12 +26,12 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
         INNER JOIN recepcion_servicio r ON r.idrecepcion = d.idrecepcion
         INNER JOIN clientes c ON c.id_cliente = r.id_cliente
         INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
-        WHERE d.estado = 2
+        WHERE d.estado = 1
         AND (
             c.nombre_cliente LIKE :b OR v.placa LIKE :b
         )
         ORDER BY d.id_diagnostico DESC
-    ");
+        ");
 
         $sql->bindValue(":b", "%$texto%");
         $sql->execute();
@@ -344,9 +343,10 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
 
         $id = mainModel::decryption($_POST['id']);
         $sucursalPresupuesto = mainModel::ejecutar_consulta_simple("
-            SELECT r.id_sucursal
-            FROM presupuesto_servicio ps
-            INNER JOIN recepcion_servicio r ON r.idrecepcion = ps.idrecepcion
+            SELECT rs.id_sucursal 
+            FROM presupuesto_servicio ps          
+            INNER JOIN diagnostico_servicio d on d.id_diagnostico = ps.id_diagnostico 
+            INNER JOIN recepcion_servicio rs on rs.idrecepcion = d.idrecepcion 
             WHERE ps.idpresupuesto_servicio = '$id'
         ")->fetchColumn();
 
@@ -377,6 +377,7 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
             'Tipo' => 'error'
         ]);
     }
+
     public function anular_presupuesto_controlador()
     {
         session_start(['name' => 'STR']);

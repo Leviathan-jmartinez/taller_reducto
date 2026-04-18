@@ -38,12 +38,9 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
 
         <input type="hidden" name="guardar_presupuesto" value="1">
         <input type="hidden" name="id_diagnostico" id="id_diagnostico">
-
-        <input type="text"
-            id="diagnostico_info"
-            class="form-control"
-            placeholder="Seleccione un diagnóstico"
-            readonly>
+        <input type="hidden" id="id_cliente" name="id_cliente">
+        <input type="hidden" id="id_vehiculo" name="id_vehiculo">
+        <input type="hidden" id="diagnostico_info" name="diagnostico_info">           >
         <input type="hidden" name="detalle_json" id="detalle_json">
         <input type="hidden" name="descuentos_json" id="descuentos_json">
         <input type="hidden" name="subtotal_servicios" id="inp_subtotal_servicios">
@@ -76,8 +73,25 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
                     <input type="text" id="kilometraje"
                         class="form-control" readonly>
                 </div>
+                <div class="col-md-6">
+                    <label>Observación</label>
+                    <input type="text" id="observacion"
+                        class="form-control" readonly>
+                </div>
             </div>
 
+            <div class="table-responsive mt-2">
+                <table class="table table-sm table-bordered">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Problema</th>
+                            <th>Repuesto</th>
+                            <th>Mano de obra</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista_diagnostico"></tbody>
+                </table>
+            </div>
             <div class="mt-3 text-right">
                 <button type="button" class="btn btn-info"
                     onclick="abrirModalDiagnostico()">

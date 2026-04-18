@@ -37,7 +37,7 @@
     }
 
     function seleccionarDiagnostico(id, desc) {
-
+        console.log("Seleccionado:", id, desc);
         document.getElementById('id_diagnostico').value = id;
         document.getElementById('diagnostico_info').value = desc;
 
@@ -58,13 +58,42 @@
             .then(r => r.json())
             .then(data => {
 
+                console.log("DATA:", data);
+
                 document.getElementById('cliente').value = data.cliente;
                 document.getElementById('vehiculo').value = data.vehiculo;
                 document.getElementById('kilometraje').value = data.kilometraje;
-                document.getElementById('observacion').value = data.observacion;
+                document.getElementById('observacion').value = data.observaciones;
 
-                // cargar descuentos automáticamente
+                document.getElementById('id_cliente').value = data.id_cliente;
+                document.getElementById('id_vehiculo').value = data.id_vehiculo;
+
+                // DETALLE DESDE DIAGNÓSTICO
+                if (data.detalle) {
+
+                    let html = '';
+
+                    data.detalle.forEach(d => {
+
+                        html += `
+                        <tr>
+                            <td>${d.problema}</td>
+                            <td class="text-center">
+                                ${d.requiere_repuesto == 1 ? '✔️' : '❌'}
+                            </td>
+                            <td class="text-center">
+                                ${d.requiere_mano_obra == 1 ? '✔️' : '❌'}
+                            </td>
+                        </tr>`;
+                    });
+
+                    document.getElementById('lista_diagnostico').innerHTML = html;
+                }
+
                 cargarDescuentosCliente(data.id_cliente);
+            })
+            .catch(err => {
+                console.error("ERROR FETCH:", err);
             });
     }
 
@@ -72,7 +101,7 @@
 
         let estado = {
             diagnostico: {
-                iid_diagnostico: document.getElementById('id_diagnostico')?.value || '',
+                id_diagnostico: document.getElementById('id_diagnostico')?.value || '',
                 cliente: document.getElementById('cliente')?.value || '',
                 vehiculo: document.getElementById('vehiculo')?.value || '',
                 kilometraje: document.getElementById('kilometraje')?.value || '',
@@ -100,12 +129,9 @@
         // 🔹 
         if (estado.diagnostico) {
             document.getElementById('id_diagnostico').value = estado.diagnostico.id_diagnostico || '';
-            document.getElementById('id_cliente').value = estado.recepcion.id_cliente || '';
-            document.getElementById('id_vehiculo').value = estado.recepcion.id_vehiculo || '';
-
-            document.getElementById('cliente').value = estado.recepcion.cliente || '';
-            document.getElementById('vehiculo').value = estado.recepcion.vehiculo || '';
-            document.getElementById('kilometraje').value = estado.recepcion.kilometraje || '';
+            document.getElementById('cliente').value = estado.diagnostico.cliente || '';
+            document.getElementById('vehiculo').value = estado.diagnostico.vehiculo || '';
+            document.getElementById('kilometraje').value = estado.diagnostico.kilometraje || '';
         }
 
         // 🔹 Detalle
