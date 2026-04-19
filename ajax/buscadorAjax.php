@@ -72,57 +72,68 @@ $modulos_con_fecha = [
 if (in_array($modulo, $modulos_con_fecha)) {
 
     if ($modulo == "diagnostico") {
+        if (isset($_POST['eliminar_busqueda'])) {
 
-    $fecha_ini = $_POST['fecha_inicio'] ?? '';
-    $fecha_fin = $_POST['fecha_final'] ?? '';
-    $cliente   = $_POST['cliente'] ?? '';
-    $placa     = $_POST['placa'] ?? '';
+            unset($_SESSION['fecha_inicio_diag']);
+            unset($_SESSION['fecha_final_diag']);
+            unset($_SESSION['cliente_diag']);
+            unset($_SESSION['placa_diag']);
 
-    if (
-        $fecha_ini == '' &&
-        $fecha_fin == '' &&
-        $cliente == '' &&
-        $placa == ''
-    ) {
-        echo json_encode([
-            "Alerta" => "simple",
-            "Titulo" => "Búsqueda inválida",
-            "Texto" => "Debe ingresar al menos un criterio",
-            "Tipo" => "error"
-        ]);
-        exit();
-    }
+            echo json_encode([
+                "Alerta" => "redireccionar",
+                "URL" => SERVERURL . $data_url[$modulo] . "/"
+            ]);
+            exit();
+        }
+        $fecha_ini = $_POST['fecha_inicio'] ?? '';
+        $fecha_fin = $_POST['fecha_final'] ?? '';
+        $cliente   = $_POST['cliente'] ?? '';
+        $placa     = $_POST['placa'] ?? '';
 
-    $_SESSION['cliente_diag'] = $cliente;
-    $_SESSION['placa_diag']   = $placa;
-
-    if ($fecha_ini != '' && $fecha_fin != '') {
-
-        if ($fecha_ini > $fecha_fin) {
+        if (
+            $fecha_ini == '' &&
+            $fecha_fin == '' &&
+            $cliente == '' &&
+            $placa == ''
+        ) {
             echo json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Error en fechas",
-                "Texto" => "La fecha inicial no puede ser mayor",
+                "Titulo" => "Búsqueda inválida",
+                "Texto" => "Debe ingresar al menos un criterio",
                 "Tipo" => "error"
             ]);
             exit();
         }
 
-        $_SESSION['fecha_inicio_diag'] = $fecha_ini;
-        $_SESSION['fecha_final_diag']  = $fecha_fin;
+        $_SESSION['cliente_diag'] = $cliente;
+        $_SESSION['placa_diag']   = $placa;
 
-    } else {
-        unset($_SESSION['fecha_inicio_diag']);
-        unset($_SESSION['fecha_final_diag']);
+        if ($fecha_ini != '' && $fecha_fin != '') {
+
+            if ($fecha_ini > $fecha_fin) {
+                echo json_encode([
+                    "Alerta" => "simple",
+                    "Titulo" => "Error en fechas",
+                    "Texto" => "La fecha inicial no puede ser mayor",
+                    "Tipo" => "error"
+                ]);
+                exit();
+            }
+
+            $_SESSION['fecha_inicio_diag'] = $fecha_ini;
+            $_SESSION['fecha_final_diag']  = $fecha_fin;
+        } else {
+            unset($_SESSION['fecha_inicio_diag']);
+            unset($_SESSION['fecha_final_diag']);
+        }
+
+        // 🔥 ESTE ES EL FIX CLAVE
+        echo json_encode([
+            "Alerta" => "redireccionar",
+            "URL" => SERVERURL . $data_url[$modulo] . "/"
+        ]);
+        exit();
     }
-
-    // 🔥 ESTE ES EL FIX CLAVE
-    echo json_encode([
-        "Alerta" => "redireccionar",
-        "URL" => SERVERURL . $data_url[$modulo] . "/"
-    ]);
-    exit();
-}
 
     $fecha_inicio_key = "fecha_inicio_" . $modulo;
     $fecha_final_key  = "fecha_final_" . $modulo;

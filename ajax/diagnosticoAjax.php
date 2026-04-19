@@ -21,4 +21,9 @@ if (isset($_POST['accion'])) {
         echo $inst_diag->guardar_diagnostico_controlador();
         exit();
     }
+
+    if (isset($_POST['accion']) && $_POST['accion'] == "anular_diagnostico") {
+        echo $inst_diag->anular_diagnostico_controlador();
+        exit();
+    }
 }

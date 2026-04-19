@@ -14,11 +14,55 @@ class diagnosticoControlador extends diagnosticoModelo
 
         if ($busqueda === '') {
             return '<div class="alert alert-warning text-center">
-                    Ingrese un criterio de búsqueda
-                </div>';
+                Ingrese un criterio de búsqueda
+            </div>';
         }
 
-        return diagnosticoModelo::buscar_recepcion_modelo($busqueda);
+        $datos = diagnosticoModelo::buscar_recepcion_modelo($busqueda);
+
+        if (!$datos) {
+            return '<div class="alert alert-warning text-center">
+                No se encontraron recepciones
+            </div>';
+        }
+
+        $tabla = '<table class="table table-bordered table-hover table-sm">
+        <thead class="thead-light">
+            <tr>
+                <th>Fecha</th>
+                <th>Cliente</th>
+                <th>Vehículo</th>
+                <th>KM</th>
+                <th>Acción</th>
+            </tr>
+        </thead><tbody>';
+
+        foreach ($datos as $r) {
+
+            $desc = $r['cliente'] . ' - ' . $r['placa'];
+
+            $tabla .= '
+        <tr>
+            <td>' . date("d/m/Y H:i", strtotime($r['fecha_ingreso'])) . '</td>
+            <td>' . $r['cliente'] . '</td>
+            <td>' . $r['placa'] . ' (' . $r['anho'] . ')</td>
+            <td>' . $r['kilometraje'] . '</td>
+            <td class="text-center">
+                <button class="btn btn-success btn-sm"
+                    onclick="seleccionarRecepcion(
+                        ' . $r['idrecepcion'] . ',
+                        \'' . addslashes($desc) . '\',
+                        ' . $r['id_sucursal'] . '
+                    )">
+                    Seleccionar
+                </button>
+            </td>
+        </tr>';
+        }
+
+        $tabla .= '</tbody></table>';
+
+        return $tabla;
     }
 
     public function listar_equipos_controlador()
@@ -60,7 +104,24 @@ class diagnosticoControlador extends diagnosticoModelo
                 "Tipo" => "warning"
             ]);
         }
-        
+
+        if (empty($_POST['id_sucursal'])) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "No se pudo obtener la sucursal",
+                "Tipo" => "error"
+            ]);
+        }
+
+        if (empty($_POST['detalles'])) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Debe agregar al menos un detalle al diagnóstico",
+                "Tipo" => "warning"
+            ]);
+        }
         $fecha = str_replace("T", " ", $_POST['fecha']);
 
         /* ================= DETALLES ================= */
@@ -69,9 +130,10 @@ class diagnosticoControlador extends diagnosticoModelo
             "idrecepcion" => $_POST['idrecepcion'],
             "id_usuario"  => $_SESSION['id_str'],
             "id_equipo"   => $_POST['id_equipo'],
+            "id_sucursal" => $_POST['id_sucursal'],
             "fecha" => $fecha,
             "observacion" => $_POST['observacion'],
-            "estado"      => $_POST['estado'],
+            "estado"      => 2,
             "detalles"    => $_POST['detalles'] ?? []
         ];
 
@@ -105,155 +167,186 @@ class diagnosticoControlador extends diagnosticoModelo
         ]);
     }
 
-    public function paginador_diagnostico_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $cliente = '', $placa = '')
-    {
-        $pagina = mainModel::limpiar_string($pagina);
-        $registros = mainModel::limpiar_string($registros);
-        $busqueda1 = mainModel::limpiar_string($busqueda1);
-        $busqueda2 = mainModel::limpiar_string($busqueda2);
-        $cliente = mainModel::limpiar_string($cliente);
-        $placa = mainModel::limpiar_string($placa);
+    public function paginador_diagnostico_controlador(
+        $pagina,
+        $registros,
+        $url,
+        $busqueda1,
+        $busqueda2,
+        $cliente = '',
+        $placa = ''
+    ) {
+
+        $pagina    = (int) mainModel::limpiar_string($pagina);
+        $registros = (int) mainModel::limpiar_string($registros);
+        $cliente   = mainModel::limpiar_string($cliente);
+        $placa     = mainModel::limpiar_string($placa);
 
         $url = SERVERURL . $url . "/";
         $tabla = "";
 
-        $pagina = ($pagina > 0) ? (int)$pagina : 1;
-        $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
+        $pagina = ($pagina > 0) ? $pagina : 1;
+        $inicio = ($pagina - 1) * $registros;
 
-        $filtros = "";
+        /* ================= FILTROS ================= */
 
-        if ($cliente != "") {
-            $filtros .= " AND CONCAT(c.nombre_cliente,' ',c.apellido_cliente) LIKE '%$cliente%'";
-        }
+        $filtros = [
+            [
+                "campo" => "CONCAT(c.nombre_cliente,' ',c.apellido_cliente)",
+                "tipo"  => "LIKE",
+                "valor" => $cliente
+            ],
+            [
+                "campo" => "v.placa",
+                "tipo"  => "LIKE",
+                "valor" => $placa
+            ],
+            [
+                "campo" => "d.fecha_diagnostico",
+                "tipo"  => "DATE_RANGE",
+                "desde" => $busqueda1,
+                "hasta" => $busqueda2
+            ]
+        ];
 
-        if ($placa != "") {
-            $filtros .= " AND v.placa LIKE '%$placa%'";
-        }
+        $filtrosSQL = mainModel::construirFiltros($filtros);
 
-        if (!empty($busqueda1) && !empty($busqueda2)) {
+        /* ================= DATOS ================= */
 
-            $consulta = "
-        SELECT SQL_CALC_FOUND_ROWS
-            d.id_diagnostico,
-            d.fecha_diagnostico,
-            d.estado,
-            rs.idrecepcion,
+        $res = diagnosticoModelo::listar_diagnosticos_modelo($inicio, $registros, $filtrosSQL);
 
-            CONCAT(c.nombre_cliente,' ',c.apellido_cliente) AS cliente,
-            v.placa,
-            u.usu_nombre,
-            u.usu_apellido
-
-        FROM diagnostico_servicio d
-        INNER JOIN recepcion_servicio rs ON rs.idrecepcion = d.idrecepcion
-        INNER JOIN clientes c ON c.id_cliente = rs.id_cliente
-        INNER JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
-        INNER JOIN usuarios u ON u.id_usuario = d.id_usuario
-
-        WHERE date(d.fecha_diagnostico) >= '$busqueda1'
-        AND date(d.fecha_diagnostico) <= '$busqueda2'
-        AND rs.id_sucursal = '{$_SESSION['nick_sucursal']}'
-        $filtros
-
-        ORDER BY d.fecha_diagnostico DESC
-        LIMIT $inicio,$registros
-        ";
-        } else {
-
-            $consulta = "
-        SELECT SQL_CALC_FOUND_ROWS
-            d.id_diagnostico,
-            d.fecha_diagnostico,
-            d.estado,
-            rs.idrecepcion,
-
-            CONCAT(c.nombre_cliente,' ',c.apellido_cliente) AS cliente,
-            v.placa,
-            u.usu_nombre,
-            u.usu_apellido
-
-        FROM diagnostico_servicio d
-        INNER JOIN recepcion_servicio rs ON rs.idrecepcion = d.idrecepcion
-        INNER JOIN clientes c ON c.id_cliente = rs.id_cliente
-        INNER JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
-        INNER JOIN usuarios u ON u.id_usuario = d.id_usuario
-
-        WHERE rs.id_sucursal = '{$_SESSION['nick_sucursal']}'
-        $filtros
-
-        ORDER BY d.id_diagnostico DESC
-        LIMIT $inicio,$registros
-        ";
-        }
-
-        $conexion = mainModel::conectar();
-        $datos = $conexion->query($consulta)->fetchAll();
-
-        $total = (int)$conexion->query("SELECT FOUND_ROWS()")->fetchColumn();
+        $datos = $res['datos'];
+        $total = $res['total'];
         $Npaginas = ceil($total / $registros);
+
+        $contador   = $inicio + 1;
+        $reg_inicio = $inicio + 1;
+
+        $puedeAnular = mainModel::tienePermiso('servicio.diagnostico.anular');
 
         /* ================= TABLA ================= */
 
         $tabla .= '<div class="table-responsive">
         <table class="table table-dark table-sm">
         <thead>
-            <tr class="text-center">
-                <th>#</th>
-                <th>Fecha</th>
-                <th>Cliente</th>
-                <th>Vehículo</th>
-                <th>Usuario</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>';
+        <tr class="text-center">
+            <th>#</th>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Vehículo</th>
+            <th>Usuario</th>
+            <th>Estado</th>';
+
+        if ($puedeAnular) {
+            $tabla .= '<th>Acciones</th>';
+        }
+
+        $tabla .= '</tr></thead><tbody>';
 
         if ($total >= 1 && $pagina <= $Npaginas) {
 
-            $contador = $inicio + 1;
-
             foreach ($datos as $rows) {
 
-                switch ($rows['estado']) {
-                    case 1:
-                        $estado = '<span class="badge bg-info">En proceso</span>';
-                        break;
-                    case 2:
-                        $estado = '<span class="badge bg-success">Finalizado</span>';
-                        break;
-                    default:
-                        $estado = '<span class="badge bg-secondary">Pendiente</span>';
-                }
+                $estadoMap = [
+                    1 => ['En proceso', 'info'],
+                    2 => ['Finalizado', 'success'],
+                    3 => ['Presupuestado', 'primary'],
+                    0 => ['Anulado', 'warning']
+                ];
 
-                $tabla .= '
-            <tr class="text-center">
+                $estado = $estadoMap[$rows['estado']] ?? ['Pendiente', 'secondary'];
+
+                $tabla .= '<tr class="text-center">
                 <td>' . $contador . '</td>
                 <td>' . date("d/m/Y H:i", strtotime($rows['fecha_diagnostico'])) . '</td>
                 <td>' . $rows['cliente'] . '</td>
                 <td>' . $rows['placa'] . '</td>
                 <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
-                <td>' . $estado . '</td>
-                <td>
-                    <a href="' . SERVERURL . 'presupuestoServicio-nuevo/' . $rows['idrecepcion'] . '/" class="btn btn-success btn-sm">
-                        Presupuesto
-                    </a>
-                </td>
-            </tr>';
+                <td><span class="badge bg-' . $estado[1] . '">' . $estado[0] . '</span></td>';
 
+                if ($puedeAnular) {
+
+                    $tabla .= '<td>';
+
+                    if ($rows['estado'] == 0) {
+                        $tabla .= '
+                    <button class="btn btn-secondary btn-sm" disabled>
+                        <i class="fas fa-ban"></i>
+                    </button>';
+                    } else {
+                        $tabla .= '
+                    <form class="FormularioAjax d-inline"
+                        action="' . SERVERURL . 'ajax/diagnosticoAjax.php"
+                        method="POST"
+                        data-form="delete">
+
+                        <input type="hidden" name="accion" value="anular_diagnostico">
+                        <input type="hidden" name="id_diagnostico" value="' . $rows['id_diagnostico'] . '">
+
+                        <button class="btn btn-danger btn-sm">
+                            <i class="fas fa-ban"></i>
+                        </button>
+                    </form>';
+                    }
+
+                    $tabla .= '</td>';
+                }
+
+                $tabla .= '</tr>';
                 $contador++;
             }
+
+            $reg_final = $contador - 1;
         } else {
-            $tabla .= '<tr><td colspan="7">No hay registros</td></tr>';
+            $tabla .= '<tr class="text-center">
+            <td colspan="7">No hay registros en el sistema</td>
+        </tr>';
         }
 
         $tabla .= '</tbody></table></div>';
 
-        if ($total >= 1) {
-            $tabla .= '<p class="text-right">Total: ' . $total . '</p>';
+        /* ================= PAGINADOR ================= */
+
+        if ($total >= 1 && $pagina <= $Npaginas) {
+            $tabla .= '<p class="text-right">
+            Mostrando ' . $reg_inicio . ' al ' . $reg_final . ' de ' . $total . '
+        </p>';
+
             $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);
         }
 
-        echo $tabla;
+        return $tabla;
+    }
+
+    public function anular_diagnostico_controlador()
+    {
+        if (empty($_POST['id_diagnostico'])) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "ID inválido",
+                "Tipo" => "error"
+            ]);
+        }
+
+        $id = $_POST['id_diagnostico'];
+
+        $resp = diagnosticoModelo::anular_diagnostico_modelo($id);
+
+        if (isset($resp['error'])) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => $resp['msg'],
+                "Tipo" => "error"
+            ]);
+        }
+
+        return json_encode([
+            "Alerta" => "recargar",
+            "Titulo" => "Anulado",
+            "Texto" => "Diagnóstico anulado correctamente",
+            "Tipo" => "success"
+        ]);
     }
 }

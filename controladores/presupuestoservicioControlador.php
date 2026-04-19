@@ -159,107 +159,97 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
     {
         session_start(['name' => 'STR']);
 
+        $detalle = json_decode($_POST['detalle_json'], true);
+        $descuentos = json_decode($_POST['descuentos_json'], true);
+
+        if (empty($detalle)) {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Error',
+                'Texto' => 'Debe agregar al menos un servicio',
+                'Tipo' => 'error'
+            ]);
+        }
+
         $datos = [
             'usuario'         => $_SESSION['id_str'],
-            'id_diagnostico'     => $_POST['id_diagnostico'],
+            'id_diagnostico'  => $_POST['id_diagnostico'],
             'fecha_venc'      => $_POST['fecha_venc'],
-
-            // 👇 estos vienen de los inputs hidden correctos
             'subtotal'        => $_POST['subtotal_servicios'],
             'total_descuento' => $_POST['total_descuento'],
             'total_final'     => $_POST['total_final'],
-
-            'detalle'         => json_decode($_POST['detalle_json'], true),
-            'descuentos'      => json_decode($_POST['descuentos_json'], true)
+            'detalle'         => $detalle,
+            'descuentos'      => $descuentos
         ];
-        $sucursalRecepcion = mainModel::ejecutar_consulta_simple("
-            SELECT r.id_sucursal
-            FROM diagnostico_servicio d
-            INNER JOIN recepcion_servicio r 
-                ON r.idrecepcion = d.idrecepcion
-            WHERE d.id_diagnostico = '{$datos['id_diagnostico']}'
-        ")->fetchColumn();
 
-        if ($sucursalRecepcion != $_SESSION['nick_sucursal']) {
-            return json_encode([
-                'Alerta' => 'simple',
-                'Titulo' => 'Acceso denegado',
-                'Texto'  => 'La recepción no pertenece a su sucursal',
-                'Tipo'   => 'error'
-            ]);
-        }
         $res = presupuestoServicioModelo::guardar_presupuesto_modelo($datos);
 
-        if ($res === true) {
+        if (is_array($res) && isset($res['error'])) {
             return json_encode([
-                'Alerta' => 'limpiar',
-                'Titulo' => 'Presupuesto registrado',
-                'Texto'  => 'El presupuesto se guardó correctamente',
-                'Tipo'   => 'success'
+                'Alerta' => 'simple',
+                'Titulo' => 'Error',
+                'Texto' => $res['msg'],
+                'Tipo' => 'error'
             ]);
         }
 
         return json_encode([
-            'Alerta' => 'simple',
-            'Titulo' => 'Error',
-            'Texto'  => $res['msg'] ?? 'No se pudo guardar',
-            'Tipo'   => 'error'
+            'Alerta' => 'limpiar',
+            'Titulo' => 'Presupuesto registrado',
+            'Texto' => 'El presupuesto se guardó correctamente',
+            'Tipo' => 'success'
         ]);
     }
 
 
     /**Controlador paginar presupuestos */
-    public function paginador_presupuestoservi_controlador($pagina, $registros, $url, $busqueda1, $busqueda2)
-    {
+    public function paginador_presupuestoservi_controlador(
+        $pagina,
+        $registros,
+        $url,
+        $busqueda1,
+        $busqueda2
+    ) {
 
-        $pagina = mainModel::limpiar_string($pagina);
-        $registros = mainModel::limpiar_string($registros);
-        $busqueda1 = mainModel::limpiar_string($busqueda1);
-        $busqueda2 = mainModel::limpiar_string($busqueda2);
+        $pagina    = (int) mainModel::limpiar_string($pagina);
+        $registros = (int) mainModel::limpiar_string($registros);
 
-        $url = mainModel::limpiar_string($url);
         $url = SERVERURL . $url . "/";
-
         $tabla = "";
 
-        $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
-        $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
+        $pagina = ($pagina > 0) ? $pagina : 1;
+        $inicio = ($pagina - 1) * $registros;
 
+        /* ================= FILTROS ================= */
 
-        if (!empty($busqueda1) && !empty($busqueda2)) {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS     ps.idpresupuesto_servicio,    ps.id_usuario,    ps.fecha,    ps.estado AS estadoPre,    ps.fecha_venc,    
-            ps.subtotal,    ps.total_descuento,    ps.total_final,     c.id_cliente,    c.nombre_cliente,    c.apellido_cliente,    v.placa,    ma.mod_descri AS modelo,    
-            u.usu_nombre,    u.usu_apellido
-            FROM presupuesto_servicio ps
-            LEFT JOIN diagnostico_servicio d     ON d.id_diagnostico = ps.id_diagnostico
-            LEFT JOIN recepcion_servicio r     ON r.idrecepcion = d.idrecepcion
-            LEFT JOIN clientes c     ON c.id_cliente = r.id_cliente 
-            LEFT JOIN vehiculos v     ON v.id_vehiculo = r.id_vehiculo 
-            LEFT JOIN modelo_auto ma     ON ma.id_modeloauto = v.id_modeloauto 
-            INNER JOIN usuarios u     ON u.id_usuario = ps.id_usuario 
-            WHERE DATE(ps.fecha) >= '$busqueda1' AND DATE(ps.fecha) <= '$busqueda2' 
-            ORDER BY ps.fecha ASC LIMIT $inicio, $registros";
-        } else {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS     ps.idpresupuesto_servicio,    ps.id_usuario,    ps.fecha,    ps.estado AS estadoPre,    ps.fecha_venc,    
-            ps.subtotal,    ps.total_descuento,    ps.total_final,     c.id_cliente,    c.nombre_cliente,    c.apellido_cliente,    v.placa,    ma.mod_descri AS modelo,    
-            u.usu_nombre,    u.usu_apellido
-            FROM presupuesto_servicio ps
-            LEFT JOIN diagnostico_servicio d     ON d.id_diagnostico = ps.id_diagnostico
-            LEFT JOIN recepcion_servicio r     ON r.idrecepcion = d.idrecepcion
-            LEFT JOIN clientes c     ON c.id_cliente = r.id_cliente 
-            LEFT JOIN vehiculos v     ON v.id_vehiculo = r.id_vehiculo 
-            LEFT JOIN modelo_auto ma     ON ma.id_modeloauto = v.id_modeloauto 
-            INNER JOIN usuarios u     ON u.id_usuario = ps.id_usuario
-            WHERE ps.estado != 0
-            ORDER BY ps.idpresupuesto_servicio DESC LIMIT $inicio,$registros";
-        }
+        $filtros = [
+            [
+                "campo" => "ps.fecha",
+                "tipo"  => "DATE_RANGE",
+                "desde" => $busqueda1,
+                "hasta" => $busqueda2
+            ],
+            [
+                "campo" => "ps.estado",
+                "tipo"  => "!=",
+                "valor" => 0 // opcional si querés excluir anulados
+            ]
+        ];
 
-        $conexion = mainModel::conectar();
-        $datos = $conexion->query($consulta)->fetchAll();
+        $filtrosSQL = mainModel::construirFiltros($filtros);
 
-        $total = (int)$conexion->query("SELECT FOUND_ROWS()")->fetchColumn();
+        /* ================= DATOS ================= */
+
+        $res = presupuestoServicioModelo::listar_presupuestos_modelo($inicio, $registros, $filtrosSQL);
+
+        $datos = $res['datos'];
+        $total = $res['total'];
         $Npaginas = ceil($total / $registros);
 
+        $contador   = $inicio + 1;
+        $reg_inicio = $inicio + 1;
+
+        /* ================= PERMISOS ================= */
 
         $puedeAnular    = mainModel::tienePermiso('servicio.presupuesto.anular');
         $puedeAprobar   = mainModel::tienePermiso('servicio.presupuesto.aprobar');
@@ -267,33 +257,30 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
 
         $mostrarAcciones = $puedeAnular || $puedeAprobar || $puedeGenerarOT;
 
+        /* ================= TABLA ================= */
 
         $tabla .= '<div class="table-responsive">
-        <table class="table table-dark table-sm">
-            <thead>
-                <tr class="text-center roboto-medium">
-                    <th>#</th>
-                    <th>CLIENTE</th>
-                    <th>PROVEEDOR</th>
-                    <th>FECHA</th>
-                    <th>TOTAL</th>
-                    <th>CREADO POR</th>
-                    <th>ESTADO</th>
-                    <th>PDF</th>';
+    <table class="table table-dark table-sm">
+    <thead>
+        <tr class="text-center">
+            <th>#</th>
+            <th>Cliente</th>
+            <th>Vehículo</th>
+            <th>Fecha</th>
+            <th>Total</th>
+            <th>Creado por</th>
+            <th>Estado</th>
+            <th>PDF</th>';
 
         if ($mostrarAcciones) {
-            $tabla .= '<th>ACCIONES</th>';
+            $tabla .= '<th>Acciones</th>';
         }
 
         $tabla .= '</tr></thead><tbody>';
 
         if ($total >= 1 && $pagina <= $Npaginas) {
 
-            $contador = $inicio + 1;
-            $reg_inicio = $inicio + 1;
-
             foreach ($datos as $rows) {
-
 
                 $estadoMap = [
                     1 => ['Pendiente', 'warning'],
@@ -304,7 +291,6 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
                 ];
 
                 $estado = $estadoMap[$rows['estadoPre']] ?? ['Desconocido', 'secondary'];
-                $estadoBadge = '<span class="badge badge-' . $estado[1] . '">' . $estado[0] . '</span>';
 
                 $tabla .= '<tr class="text-center">
                 <td>' . $contador . '</td>
@@ -313,17 +299,17 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
                 <td>' . date("d-m-Y", strtotime($rows['fecha'])) . '</td>
                 <td>' . number_format($rows['total_final'], 0, ',', '.') . '</td>
                 <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
-                <td>' . $estadoBadge . '</td>
+                <td><span class="badge bg-' . $estado[1] . '">' . $estado[0] . '</span></td>
                 <td>
                     <a href="' . SERVERURL . 'pdf/presupuesto_servicio.php?id=' . mainModel::encryption($rows['idpresupuesto_servicio']) . '"
-                    target="_blank"
-                    class="btn btn-info">
+                        target="_blank"
+                        class="btn btn-info btn-sm">
                         <i class="fas fa-file-pdf"></i>
                     </a>
                 </td>';
 
-
                 if ($mostrarAcciones) {
+
                     $tabla .= '<td><div style="display:flex; gap:6px; justify-content:center;">';
 
                     if ($puedeAprobar && $rows['estadoPre'] == 1) {
@@ -332,7 +318,7 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
                         action="' . SERVERURL . 'ajax/presupuestoServicioAjax.php"
                         method="POST" data-form="update">
                         <input type="hidden" name="accion" value="aprobar">
-                        <input type="hidden" name="id" value=' . mainModel::encryption($rows['idpresupuesto_servicio']) . '>
+                        <input type="hidden" name="id" value="' . mainModel::encryption($rows['idpresupuesto_servicio']) . '">
                         <button class="btn btn-success btn-sm">
                             <i class="fas fa-check"></i>
                         </button>
@@ -345,7 +331,7 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
                         action="' . SERVERURL . 'ajax/presupuestoServicioAjax.php"
                         method="POST" data-form="delete">
                         <input type="hidden" name="accion" value="anular">
-                        <input type="hidden" name="id" value=' . mainModel::encryption($rows['idpresupuesto_servicio']) . '>
+                        <input type="hidden" name="id" value="' . mainModel::encryption($rows['idpresupuesto_servicio']) . '">
                         <button class="btn btn-warning btn-sm">
                             <i class="far fa-trash-alt"></i>
                         </button>
@@ -358,7 +344,7 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
                         action="' . SERVERURL . 'ajax/ordenTrabajoAjax.php"
                         method="POST" data-form="save">
                         <input type="hidden" name="accion" value="generar_ot">
-                        <input type="hidden" name="id" value=' . mainModel::encryption($rows['idpresupuesto_servicio']) . '>
+                        <input type="hidden" name="id" value="' . mainModel::encryption($rows['idpresupuesto_servicio']) . '">
                         <button class="btn btn-primary btn-sm">
                             <i class="fas fa-tools"></i>
                         </button>
@@ -374,15 +360,18 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
 
             $reg_final = $contador - 1;
         } else {
-            $tabla .= '<tr class="text-center">
-            <td colspan="9">No hay registros en el sistema</td>
-        </tr>';
+            $tabla .= '<tr><td colspan="9">No hay registros en el sistema</td></tr>';
         }
 
         $tabla .= '</tbody></table></div>';
 
+        /* ================= PAGINADOR ================= */
+
         if ($total >= 1 && $pagina <= $Npaginas) {
-            $tabla .= '<p class="text-right">Mostrando ' . $reg_inicio . ' al ' . $reg_final . ' de ' . $total . '</p>';
+            $tabla .= '<p class="text-right">
+            Mostrando ' . $reg_inicio . ' al ' . $reg_final . ' de ' . $total . '
+        </p>';
+
             $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);
         }
 
@@ -450,57 +439,34 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
     {
         session_start(['name' => 'STR']);
 
-        if (!isset($_POST['id'])) {
+        $id = mainModel::decryption($_POST['id']);
+
+        $res = presupuestoServicioModelo::anular_presupuesto_full_modelo($id);
+
+        if (isset($res['error'])) {
             return json_encode([
                 'Alerta' => 'simple',
                 'Titulo' => 'Error',
-                'Texto' => 'ID inválido',
+                'Texto' => $res['msg'],
                 'Tipo' => 'error'
             ]);
         }
 
-        $id = mainModel::decryption($_POST['id']);
-
-
-        $sucursalPresupuesto = mainModel::ejecutar_consulta_simple("
-            SELECT r.id_sucursal
-            FROM presupuesto_servicio ps
-            INNER JOIN recepcion_servicio r ON r.idrecepcion = ps.idrecepcion
-            WHERE ps.idpresupuesto_servicio = '$id'
-            ")->fetchColumn();
-
-        $idrecepcion = mainModel::ejecutar_consulta_simple("
-            SELECT r.idrecepcion
-            FROM presupuesto_servicio ps
-            INNER JOIN recepcion_servicio r ON r.idrecepcion = ps.idrecepcion
-            WHERE ps.idpresupuesto_servicio = '$id'
-            ")->fetchColumn();
-
-        if ($sucursalPresupuesto != $_SESSION['nick_sucursal']) {
+        // 🔥 validación de sucursal AQUÍ
+        if ($res['data']['id_sucursal'] != $_SESSION['nick_sucursal']) {
             return json_encode([
                 'Alerta' => 'simple',
                 'Titulo' => 'Acceso denegado',
-                'Texto'  => 'No puede operar presupuestos de otra sucursal',
-                'Tipo'   => 'error'
-            ]);
-        }
-
-        $res = presupuestoServicioModelo::revertir_estado_recepcion_modelo($idrecepcion);
-        $pre = presupuestoServicioModelo::anular_presupuesto_servicio_modelo($id);
-        if ($pre) {
-            return json_encode([
-                'Alerta' => 'recargar',
-                'Titulo' => 'Presupuesto anulado',
-                'Texto' => 'El presupuesto fue anulado correctamente',
-                'Tipo' => 'success'
+                'Texto' => 'Otra sucursal',
+                'Tipo' => 'error'
             ]);
         }
 
         return json_encode([
-            'Alerta' => 'simple',
-            'Titulo' => 'Error',
-            'Texto' => 'No se pudo anular',
-            'Tipo' => 'error'
+            'Alerta' => 'recargar',
+            'Titulo' => 'Presupuesto anulado',
+            'Texto' => 'Correcto',
+            'Tipo' => 'success'
         ]);
     }
 

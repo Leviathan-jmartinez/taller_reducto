@@ -64,7 +64,7 @@
                 document.getElementById('vehiculo').value = data.vehiculo;
                 document.getElementById('kilometraje').value = data.kilometraje;
                 document.getElementById('observacion').value = data.observaciones;
-
+                document.getElementById('id_sucursal').value = data.id_sucursal;
                 document.getElementById('id_cliente').value = data.id_cliente;
                 document.getElementById('id_vehiculo').value = data.id_vehiculo;
 

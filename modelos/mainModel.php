@@ -202,4 +202,70 @@ class mainModel
             is_array($_SESSION['permisos']) &&
             in_array($permiso, $_SESSION['permisos']);
     }
+    public static function ejecutarPaginador($conexion, $baseSQL, $selectSQL, $orderSQL, $inicio, $registros)
+    {
+        // 🔹 DATOS
+        $datos = $conexion->query("
+        $selectSQL
+        $baseSQL
+        $orderSQL
+        LIMIT $inicio, $registros
+    ")->fetchAll();
+
+        // 🔹 TOTAL
+        $total = (int)$conexion->query("
+        SELECT COUNT(*) 
+        $baseSQL
+    ")->fetchColumn();
+
+        return [
+            "datos" => $datos,
+            "total" => $total
+        ];
+    }
+
+    public static function construirFiltros($filtros = [])
+    {
+        $sql = "";
+
+        foreach ($filtros as $f) {
+
+            if (!isset($f['campo'], $f['tipo'], $f['valor'])) continue;
+
+            $campo = $f['campo'];
+            $tipo  = strtoupper($f['tipo']);
+            $valor = self::limpiar_string($f['valor']);
+
+            if ($valor === "" || $valor === null) continue;
+
+            switch ($tipo) {
+
+                case 'LIKE':
+                    $sql .= " AND $campo LIKE '%$valor%'";
+                    break;
+
+                case '=':
+                    $sql .= " AND $campo = '$valor'";
+                    break;
+
+                case '>=':
+                case '<=':
+                case '>':
+                case '<':
+                    $sql .= " AND $campo $tipo '$valor'";
+                    break;
+
+                case 'DATE_RANGE':
+                    if (!empty($f['desde']) && !empty($f['hasta'])) {
+                        $desde = self::limpiar_string($f['desde']);
+                        $hasta = self::limpiar_string($f['hasta']);
+
+                        $sql .= " AND DATE($campo) >= '$desde' AND DATE($campo) <= '$hasta'";
+                    }
+                    break;
+            }
+        }
+
+        return $sql;
+    }
 }

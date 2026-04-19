@@ -38,6 +38,7 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
 
         <input type="hidden" name="guardar_presupuesto" value="1">
         <input type="hidden" name="id_diagnostico" id="id_diagnostico">
+        <input type="hidden" id="id_sucursal" name="id_sucursal">
         <input type="hidden" id="id_cliente" name="id_cliente">
         <input type="hidden" id="id_vehiculo" name="id_vehiculo">
         <input type="hidden" id="diagnostico_info" name="diagnostico_info">           >

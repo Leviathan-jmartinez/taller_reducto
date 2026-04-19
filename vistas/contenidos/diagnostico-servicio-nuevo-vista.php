@@ -6,10 +6,26 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
 ?>
 
 <div class="container-fluid">
-
-    <h3 class="text-left">
-        <i class="fas fa-stethoscope fa-fw"></i> &nbsp; NUEVO DIAGNÓSTICO
+    <h3>
+        <i class="fas fa-tools"></i> &nbsp; DIAGNÓSTICO DE SERVICIO
     </h3>
+
+    <ul class="full-box list-unstyled page-nav-tabs">
+        <li>
+            <a class="active" href="<?php echo SERVERURL; ?>/diagnostico-servicio-nuevo/">
+                <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO DIAGNÓSTICO
+            </a>
+        </li>
+        <li>
+            <a href="<?php echo SERVERURL; ?>/diagnostico-servicio-buscar/">
+                <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR DIAGNÓSTICOS
+            </a>
+        </li>
+    </ul>
+</div>
+
+<div class="container-fluid">
+
 
     <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/diagnosticoAjax.php"
@@ -18,7 +34,7 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
         autocomplete="off">
 
         <input type="hidden" name="accion" value="guardar_diagnostico">
-
+        <input type="hidden" name="id_sucursal" id="id_sucursal">
         <!-- RECEPCIÓN -->
         <fieldset class="border p-3 mb-3">
             <legend class="w-auto px-2">Recepción</legend>
@@ -111,7 +127,7 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
         <!-- BOTONES -->
         <div class="text-center">
             <button type="submit" class="btn btn-info btn-raised">
-                <i class="fas fa-save"></i> Guardar Diagnóstico
+                <i class="fas fa-save"></i> Guardar
             </button>
 
             <button type="button"

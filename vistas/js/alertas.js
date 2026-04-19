@@ -28,7 +28,14 @@ function enviar_formulario_ajax(e) {
     } else if (tipo === "update") {
         text_alerta = "Los datos del sistema serán actualizados";
     } else if (tipo === "search") {
-        text_alerta = "Se eliminará el término de busqueda";
+        
+        fetch(action, config)
+            .then(respuesta => respuesta.json())
+            .then(respuesta => {
+                return alertasAjax(respuesta, this);
+            });
+
+        return;
     } else if (tipo === "loans") {
         text_alerta = "Desea remover los datos seleccionados";
     } else {
