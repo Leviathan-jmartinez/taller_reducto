@@ -77,9 +77,10 @@ class registroServicioModelo extends mainModel
             ]);
             /* ================= OBTENER SUCURSAL DESDE OT ================= */
             $qSuc = $pdo->prepare("
-                SELECT r.id_sucursal
+                SELECT ps.id_sucursal
                 FROM orden_trabajo ot
-                INNER JOIN recepcion_servicio r ON r.idrecepcion = ot.idrecepcion
+                INNER JOIN presupuesto_servicio ps 
+                    ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
                 WHERE ot.idorden_trabajo = ?
             ");
             $qSuc->execute([$datos['idorden_trabajo']]);

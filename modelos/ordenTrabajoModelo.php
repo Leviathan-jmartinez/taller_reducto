@@ -14,13 +14,11 @@ class ordenTrabajoModelo extends mainModel
         WHERE ee.id_equipo = ?
           AND ee.estado = 1
           AND e.estado = 1
-    ");
+        ");
         $qTec->execute([$idEquipo]);
 
         return $qTec->fetchAll(PDO::FETCH_ASSOC);
     }
-
-
 
     /* ================= OBTENER PRESUPUESTO ================= */
     protected static function obtener_presupuesto_modelo($id)
@@ -394,7 +392,7 @@ class ordenTrabajoModelo extends mainModel
 
             /* OBTENER RECEPCION DESDE PRESUPUESTO (SEGURIDAD) */
             $qRec = $pdo->prepare("
-                SSELECT ds.idrecepcion
+                SELECT ds.idrecepcion
                 FROM presupuesto_servicio ps
                 INNER JOIN diagnostico_servicio ds 
                     ON ds.id_diagnostico = ps.id_diagnostico

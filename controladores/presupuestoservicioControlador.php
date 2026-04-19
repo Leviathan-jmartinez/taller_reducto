@@ -64,13 +64,81 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
 
     public function buscar_servicios_controlador()
     {
+        session_start(['name' => 'STR']);
+
         $txt = trim($_POST['buscar_servicio'] ?? '');
 
         if ($txt === '') {
             return '';
         }
 
-        return presupuestoServicioModelo::buscar_servicios_modelo($txt);
+        $datos = presupuestoServicioModelo::buscar_servicios_modelo(
+            $txt,
+            $_SESSION['nick_sucursal']
+        );
+
+        if (!$datos) {
+            return '<div class="alert alert-warning text-center">
+                No se encontraron servicios
+            </div>';
+        }
+
+        $html = '<ul class="list-group">';
+
+        foreach ($datos as $d) {
+
+            $desc = addslashes($d['desc_articulo']);
+            $precio = (int)$d['precio_venta'];
+            $tipo = $d['tipo'];
+            $stock = (float)$d['stock'];
+
+            // 🔥 stock visual
+            $stockHtml = '';
+
+            if ($tipo === 'producto') {
+                if ($stock <= 0) {
+                    $stockHtml = "<span class='text-danger'>Sin stock</span>";
+                } else {
+                    $stockHtml = "<span class='text-success'>Stock: {$stock}</span>";
+                }
+            } else {
+                $stockHtml = "<span class='badge bg-info'>Servicio</span>";
+            }
+
+            // 🔥 deshabilitar botón si no hay stock
+            $disabled = ($tipo === 'producto' && $stock <= 0) ? 'disabled' : '';
+
+            $html .= "
+        <li class='list-group-item d-flex justify-content-between align-items-center'>
+            
+            <div>
+                <strong>{$d['codigo']}</strong> - {$d['desc_articulo']}
+                <br>
+                <small class='text-muted'>
+                    Precio: Gs. " . number_format($precio, 0, ',', '.') . "
+                </small>
+                <br>
+                {$stockHtml}
+            </div>
+
+            <button type='button'
+                    class='btn btn-success btn-sm'
+                    {$disabled}
+                    onclick=\"agregarServicio(
+                        {$d['id_articulo']},
+                        '{$desc}',
+                        {$precio},
+                        '{$tipo}',
+                        {$stock}
+                    )\">
+                <i class='fas fa-plus'></i>
+            </button>
+        </li>";
+        }
+
+        $html .= '</ul>';
+
+        return $html;
     }
 
     public function promo_articulo_controlador()

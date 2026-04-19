@@ -87,58 +87,33 @@ class presupuestoservicioModelo extends mainModel
         return $html;
     }
 
-    protected static function buscar_servicios_modelo($txt)
+    protected static function buscar_servicios_modelo($txt, $sucursal)
     {
         $txt = "%$txt%";
 
         $sql = mainModel::conectar()->prepare("
         SELECT
-            id_articulo,
-            desc_articulo,
-            codigo,
-            precio_venta
-        FROM articulos
-        WHERE estado = 1
-          AND (desc_articulo LIKE :b OR codigo LIKE :b)
-        ORDER BY desc_articulo
+            a.id_articulo,
+            a.desc_articulo,
+            a.codigo,
+            a.precio_venta,
+            a.tipo,
+            IFNULL(s.stockDisponible, 0) AS stock
+        FROM articulos a
+        LEFT JOIN stock s 
+            ON s.id_articulo = a.id_articulo 
+            AND s.id_sucursal = :sucursal
+        WHERE a.estado = 1
+          AND (a.desc_articulo LIKE :b OR a.codigo LIKE :b)
+        ORDER BY a.desc_articulo
         LIMIT 20
         ");
 
         $sql->bindParam(':b', $txt);
+        $sql->bindParam(':sucursal', $sucursal, PDO::PARAM_INT);
         $sql->execute();
 
-        $datos = $sql->fetchAll(PDO::FETCH_ASSOC);
-
-        if (!$datos) {
-            return '<div class="alert alert-warning text-center">
-                    No se encontraron servicios
-                </div>';
-        }
-
-        $html = '<ul class="list-group">';
-        foreach ($datos as $d) {
-
-            $desc = addslashes($d['desc_articulo']);
-            $precio = (int)$d['precio_venta'];
-
-            $html .= "
-        <li class='list-group-item d-flex justify-content-between align-items-center'>
-            <div>
-                <strong>{$d['codigo']}</strong> - {$d['desc_articulo']}
-                <br>
-                <small class='text-muted'>Precio: Gs. " . number_format($precio, 0, ',', '.') . "</small>
-            </div>
-
-            <button type='button'
-                    class='btn btn-success btn-sm'
-                    onclick=\"agregarServicio({$d['id_articulo']}, '{$desc}', {$precio})\">
-                <i class='fas fa-plus'></i>
-            </button>
-        </li>";
-        }
-        $html .= '</ul>';
-
-        return $html;
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 
     protected static function promo_articulo_modelo($id)
@@ -193,7 +168,44 @@ class presupuestoservicioModelo extends mainModel
 
         try {
             $pdo->beginTransaction();
+            /* ================= VALIDAR STOCK ================= */
+            foreach ($d['detalle'] as $it) {
 
+                // solo validar si es artículo (tiene id_articulo real)
+                if (isset($it['tipo']) &&  $it['tipo'] === 'ARTICULO' && !empty($it['id_articulo'])) {
+
+                    $sqlStock = $pdo->prepare("
+                    SELECT stockDisponible
+                    FROM stock
+                    WHERE id_articulo = :articulo
+                    AND id_sucursal = :sucursal
+                    FOR UPDATE
+                    ");
+
+                    $sqlStock->execute([
+                        ':articulo' => $it['id_articulo'],
+                        ':sucursal' => $_SESSION['nick_sucursal']
+                    ]);
+
+                    $stockActual = $sqlStock->fetchColumn();
+
+                    if ($stockActual === false) {
+                        $pdo->rollBack();
+                        return [
+                            'error' => true,
+                            'msg' => "No existe stock para el artículo {$it['descripcion']}"
+                        ];
+                    }
+
+                    if ((float)$it['cantidad'] > (float)$stockActual) {
+                        $pdo->rollBack();
+                        return [
+                            'error' => true,
+                            'msg' => "Stock insuficiente para {$it['descripcion']} (Disponible: {$stockActual})"
+                        ];
+                    }
+                }
+            }
             /* ================= CABECERA ================= */
             $sql = $pdo->prepare("
             INSERT INTO presupuesto_servicio
@@ -251,7 +263,6 @@ class presupuestoservicioModelo extends mainModel
                 ]);
             }
 
-            /* ================= PROMOCIONES ================= */
             /* ================= PROMOCIONES ================= */
             $sqlPromo = $pdo->prepare("
             INSERT INTO presupuesto_promocion

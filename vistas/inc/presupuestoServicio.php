@@ -146,8 +146,8 @@
         if (Array.isArray(estado.descuentos)) {
             descuentosAplicados = estado.descuentos;
         }
-        if (estado.recepcion && estado.recepcion.id_cliente) {
-            cargarDescuentosCliente(estado.recepcion.id_cliente);
+        if (estado.diagnostico && estado.diagnostico.id_cliente) {
+            cargarDescuentosCliente(estado.diagnostico.id_cliente);
         }
 
     });
@@ -212,11 +212,15 @@
     }
 
 
-    function agregarServicio(id, descripcion, precio) {
+    function agregarServicio(id, descripcion, precio, tipo, stock) {
 
         let existe = detalleServicios.find(i => i.id_articulo == id);
         if (existe) {
             alert('El servicio ya fue agregado');
+            return;
+        }
+        if (tipo === 'producto' && stock <= 0) {
+            alert('Sin stock disponible');
             return;
         }
 
@@ -227,6 +231,8 @@
             precio_base: precio,
             precio_final: precio,
             subtotal: precio,
+            tipo: tipo,
+            stock: stock,
             promocion: null
         };
 
@@ -359,10 +365,18 @@
 
     function cambiarCantidad(input, index) {
 
+        let item = detalleServicios[index];
+
         let cantidad = parseInt(input.value);
         if (isNaN(cantidad) || cantidad <= 0) cantidad = 1;
 
-        let item = detalleServicios[index];
+
+        if (item.tipo === 'ARTICULO' && cantidad > item.stock) {
+            alert('Stock insuficiente');
+            input.value = item.stock;
+            cantidad = item.stock;
+        }
+
         item.cantidad = cantidad;
 
         recalcularPromocion(index);

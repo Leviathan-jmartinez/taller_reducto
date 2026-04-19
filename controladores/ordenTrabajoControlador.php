@@ -226,7 +226,6 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
         return $tabla;
     }
 
-
     public function detalle_ot_controlador($idEnc)
     {
         $id = mainModel::decryption($idEnc);
