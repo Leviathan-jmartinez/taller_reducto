@@ -177,6 +177,8 @@ class diagnosticoModelo extends mainModel
             $inicio,
             $registros
         );
+        echo $filtrosSQL;
+        exit();
     }
 
     protected static function anular_diagnostico_modelo($id)

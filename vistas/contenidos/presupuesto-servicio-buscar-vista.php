@@ -2,109 +2,151 @@
 if (!mainModel::tienePermiso('servicio.presupuesto.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
-} ?>
+}
+
+$fecha_inicio = $_SESSION['fecha_inicio_presupuesto_servicio'] ?? '';
+$fecha_final  = $_SESSION['fecha_final_presupuesto_servicio'] ?? '';
+?>
 
 <div class="container-fluid">
     <h3 class="text-left">
         <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR PRESUPUESTO DE SERVICIO
     </h3>
 </div>
+
 <div class="container-fluid">
     <ul class="full-box list-unstyled page-nav-tabs">
         <li>
-            <a href="<?php echo SERVERURL; ?>presupuesto-servicio-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; CARGAR PRESUPUESTO</a>
+            <a href="<?php echo SERVERURL; ?>presupuesto-servicio-nuevo/">
+                <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO PRESUPUESTO
+            </a>
         </li>
         <li>
-            <a href="<?php echo SERVERURL; ?>presupuesto-servicio-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTADOS DE PRESUPUESTOS</a>
-        </li>
-        <li>
-            <a class="active" href="<?php echo SERVERURL; ?>presupuesto-servicio-buscar/"><i class="fas fa-search-dollar fa-fw"></i> &nbsp; BUSCAR POR FECHA</a>
+            <a class="active" href="<?php echo SERVERURL; ?>presupuesto-servicio-buscar/">
+                <i class="fas fa-search-dollar fa-fw"></i> &nbsp; BUSCAR POR FECHA
+            </a>
         </li>
     </ul>
 </div>
 
-<?php
-$fecha_inicio = $_SESSION['fecha_inicio_presupuesto_servicio'] ?? '';
-$fecha_final  = $_SESSION['fecha_final_presupuesto_servicio'] ?? '';
-?>
+<!-- ================= FILTRO ================= -->
 
-<?php if (!$fecha_inicio && !$fecha_final) { ?>
+<div class="container-fluid">
+    <form class="form-neon FormularioAjax"
+        action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
+        method="POST"
+        data-form="search"
+        autocomplete="off">
 
-    <div class="container-fluid">
-        <form class="form-neon FormularioAjax"
-            action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
-            method="POST"
-            data-form="default"
-            autocomplete="off">
+        <input type="hidden" name="modulo" value="presupuesto_servicio">
 
-            <input type="hidden" name="modulo" value="presupuesto_servicio">
+        <div class="row justify-content-md-center">
 
-            <div class="row justify-content-md-center">
-                <div class="col-12 col-md-4">
-                    <div class="form-group">
-                        <label>Fecha inicial</label>
-                        <input type="date" class="form-control" name="fecha_inicio">
-                    </div>
-                </div>
-
-                <div class="col-12 col-md-4">
-                    <div class="form-group">
-                        <label>Fecha final</label>
-                        <input type="date" class="form-control" name="fecha_final">
-                    </div>
-                </div>
-
-                <div class="col-12 text-center" style="margin-top: 40px;">
-                    <button type="submit" class="btn btn-raised btn-info">
-                        <i class="fas fa-search"></i> &nbsp; BUSCAR
-                    </button>
+            <div class="col-12 col-md-4">
+                <div class="form-group">
+                    <label>Fecha inicial</label>
+                    <input type="date"
+                        class="form-control"
+                        name="fecha_inicio"
+                        value="<?php echo $fecha_inicio; ?>">
                 </div>
             </div>
-        </form>
-    </div>
 
-<?php } else { ?>
-
-    <div class="container-fluid">
-        <form class="FormularioAjax"
-            action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
-            method="POST"
-            data-form="search"
-            autocomplete="off">
-
-            <input type="hidden" name="modulo" value="presupuesto_servicio">
-            <input type="hidden" name="eliminar_busqueda" value="eliminar">
-
-            <div class="row justify-content-md-center">
-                <div class="col-12 col-md-6">
-                    <p class="text-center" style="font-size: 20px;">
-                        Fecha de búsqueda:
-                        <strong><?php echo $fecha_inicio ?> &nbsp; a &nbsp; <?php echo $fecha_final ?></strong>
-                    </p>
-                </div>
-
-                <div class="col-12 text-center" style="margin-top: 20px;">
-                    <button type="submit" class="btn btn-raised btn-danger">
-                        <i class="far fa-trash-alt"></i> &nbsp; ELIMINAR BÚSQUEDA
-                    </button>
+            <div class="col-12 col-md-4">
+                <div class="form-group">
+                    <label>Fecha final</label>
+                    <input type="date"
+                        class="form-control"
+                        name="fecha_final"
+                        value="<?php echo $fecha_final; ?>">
                 </div>
             </div>
-        </form>
-    </div>
+            <?php $estado = $_SESSION['estado_presupuesto'] ?? ''; ?>
 
-    <div class="container-fluid">
-        <?php
-        require_once "./controladores/presupuestoServicioControlador.php";
-        $presupuesto = new presupuestoServicioControlador();
+            <select name="estado_presupuesto" class="form-control">
+                <option value="">Todos</option>
+                <option value="1" <?php if ($estado == "1") echo "selected"; ?>>Pendiente</option>
+                <option value="2" <?php if ($estado == "2") echo "selected"; ?>>Aprobado</option>
+                <option value="3" <?php if ($estado == "3") echo "selected"; ?>>OT generada</option>
+                <option value="4" <?php if ($estado == "4") echo "selected"; ?>>Facturado</option>
+                <option value="0" <?php if ($estado === "0") echo "selected"; ?>>Anulado</option>
+            </select>
+            <div class="col-12 text-center mt-4">
 
-        echo $presupuesto->paginador_presupuestoservi_controlador(
-            $pagina[1],
-            15,
-            $pagina[0],
-            $_SESSION['fecha_inicio_presupuesto_servicio'],
-            $_SESSION['fecha_final_presupuesto_servicio']
-        );
-        ?>
+                <button type="submit" class="btn btn-raised btn-info">
+                    <i class="fas fa-search"></i> &nbsp; BUSCAR
+                </button>
+
+                <button type="button"
+                    class="btn btn-raised btn-danger btn-limpiar-busqueda">
+                    <i class="far fa-trash-alt"></i> &nbsp; LIMPIAR
+                </button>
+
+            </div>
+
+        </div>
+    </form>
+</div>
+
+<!-- ================= INFO FILTRO ================= -->
+
+<?php if ($fecha_inicio || $fecha_final) { ?>
+
+    <div class="container-fluid mt-3">
+        <p class="text-center" style="font-size: 18px;">
+            Mostrando resultados
+            <?php if ($fecha_inicio) { ?>
+                desde <strong><?php echo $fecha_inicio; ?></strong>
+            <?php } ?>
+            <?php if ($fecha_final) { ?>
+                hasta <strong><?php echo $fecha_final; ?></strong>
+            <?php } ?>
+        </p>
     </div>
 
 <?php } ?>
+
+<!-- ================= RESULTADOS ================= -->
+
+<div class="container-fluid mt-3">
+    <?php
+    require_once "./controladores/presupuestoServicioControlador.php";
+    $presupuesto = new presupuestoServicioControlador();
+
+    echo $presupuesto->paginador_presupuestoservi_controlador(
+        $pagina[1],
+        15,
+        $pagina[0],
+        $fecha_inicio,
+        $fecha_final
+    );
+    ?>
+</div>
+
+<!-- ================= JS LIMPIAR ================= -->
+
+<script>
+    document.addEventListener('click', function(e) {
+
+        const btn = e.target.closest('.btn-limpiar-busqueda');
+        if (!btn) return;
+
+        fetch("<?php echo SERVERURL; ?>ajax/buscadorAjax.php", {
+                method: "POST",
+                body: new URLSearchParams({
+                    modulo: "presupuesto_servicio",
+                    eliminar_busqueda: 1
+                })
+            })
+            .then(r => r.json())
+            .then(res => {
+
+                if (res.Alerta === "redireccionar") {
+                    window.location.href = res.URL;
+                } else {
+                    alert(res.Texto);
+                }
+
+            });
+    });
+</script>

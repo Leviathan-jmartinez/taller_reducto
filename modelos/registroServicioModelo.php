@@ -3,7 +3,6 @@ require_once "mainModel.php";
 
 class registroServicioModelo extends mainModel
 {
-    /* ================= Registrar servicio ================= */
     protected static function registrar_servicio_modelo($datos)
     {
         $pdo = self::conectar();
@@ -13,10 +12,10 @@ class registroServicioModelo extends mainModel
 
             /* ================= VALIDAR OT ================= */
             $q = $pdo->prepare("
-                SELECT estado, idtrabajos, tecnico_responsable
-                FROM orden_trabajo
-                WHERE idorden_trabajo = ?
-            ");
+            SELECT estado, id_sucursal
+            FROM orden_trabajo
+            WHERE idorden_trabajo = ?
+        ");
             $q->execute([$datos['idorden_trabajo']]);
             $ot = $q->fetch(PDO::FETCH_ASSOC);
 
@@ -28,16 +27,21 @@ class registroServicioModelo extends mainModel
                 return ['msg' => 'La orden de trabajo está anulada'];
             }
 
-            if ($ot['estado'] == 3 || $ot['estado'] == 4) {
+            if (in_array($ot['estado'], [3, 4])) {
                 return ['msg' => 'La orden de trabajo ya fue finalizada'];
+            }
+
+            /* ================= VALIDAR SUCURSAL ================= */
+            if ($ot['id_sucursal'] != $_SESSION['nick_sucursal']) {
+                return ['msg' => 'No puede registrar servicios de otra sucursal'];
             }
 
             /* ================= VALIDAR REGISTRO PREVIO ================= */
             $v = $pdo->prepare("
-                SELECT idregistro_servicio
-                FROM registro_servicio
-                WHERE idorden_trabajo = ? and estado = 1
-            ");
+            SELECT idregistro_servicio
+            FROM registro_servicio
+            WHERE idorden_trabajo = ? AND estado = 1
+        ");
             $v->execute([$datos['idorden_trabajo']]);
 
             if ($v->rowCount() > 0) {
@@ -46,68 +50,49 @@ class registroServicioModelo extends mainModel
 
             /* ================= CREAR CABECERA ================= */
             $ins = $pdo->prepare("
-                INSERT INTO registro_servicio
-                (idorden_trabajo, fecha_ejecucion, tecnico_responsable,
-                 usuario_registra, observacion, ip_registro, user_agent)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            ");
+            INSERT INTO registro_servicio
+            (idorden_trabajo, id_sucursal, usuario_registra, fecha_ejecucion, estado, observacion)
+            VALUES (?, ?, ?, NOW(), 1, ?)
+        ");
             $ins->execute([
                 $datos['idorden_trabajo'],
-                $datos['fecha_ejecucion'],
-                $ot['tecnico_responsable'],
+                $ot['id_sucursal'], // 🔥 ya viene de OT
                 $datos['usuario'],
-                $datos['observacion'],
-                $datos['ip'],
-                $datos['user_agent']
+                $datos['observacion']
             ]);
 
             $idRegistro = $pdo->lastInsertId();
 
             /* ================= COPIAR DETALLE OT ================= */
             $det = $pdo->prepare("
-                INSERT INTO registro_servicio_detalle
-                (idregistro_servicio, id_articulo, cantidad, precio_unitario, subtotal)
-                SELECT ?, id_articulo, cantidad, precio_unitario, subtotal
-                FROM orden_trabajo_detalle
-                WHERE idorden_trabajo = ?
-            ");
+            INSERT INTO registro_servicio_detalle
+            (idregistro_servicio, id_articulo, cantidad, precio_unitario, subtotal, origen)
+            SELECT ?, id_articulo, cantidad, precio_unitario, subtotal, 'OT'
+            FROM orden_trabajo_detalle
+            WHERE idorden_trabajo = ?
+        ");
             $det->execute([
                 $idRegistro,
                 $datos['idorden_trabajo']
             ]);
-            /* ================= OBTENER SUCURSAL DESDE OT ================= */
-            $qSuc = $pdo->prepare("
-                SELECT ps.id_sucursal
-                FROM orden_trabajo ot
-                INNER JOIN presupuesto_servicio ps 
-                    ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-                WHERE ot.idorden_trabajo = ?
-            ");
-            $qSuc->execute([$datos['idorden_trabajo']]);
-            $idSucursalReal = $qSuc->fetchColumn();
 
-            if (!$idSucursalReal) {
-                throw new Exception('No se pudo determinar la sucursal del servicio');
-            }
-            if ($idSucursalReal != $_SESSION['nick_sucursal']) {
-                throw new Exception('No puede registrar servicios de otra sucursal');
-            }
-
+            /* ================= APLICAR STOCK ================= */
             self::aplicar_stock_registro_servicio(
                 $pdo,
                 $idRegistro,
-                $idSucursalReal,
+                $ot['id_sucursal'],
                 $datos['usuario']
             );
+
             /* ================= CERRAR OT ================= */
             $upd = $pdo->prepare("
-                UPDATE orden_trabajo
-                SET estado = 3,
-                    updated=NOW(),
-                    updatedby=?,
-                    fecha_fin = NOW()
-                WHERE idorden_trabajo = ?
-            ");
+            UPDATE orden_trabajo
+            SET estado = 2,
+                updated_at = NOW(),
+                updated_by = ?,
+                fecha_fin = NOW()
+            WHERE idorden_trabajo = ?
+        ");
             $upd->execute([
                 $datos['updatedby'],
                 $datos['idorden_trabajo']
@@ -115,20 +100,23 @@ class registroServicioModelo extends mainModel
 
             /* ================= CERRAR RECEPCIÓN ================= */
             $updRec = $pdo->prepare("
-                UPDATE recepcion_servicio
-                SET estado = 3,
-                    fecha_salida = NOW(),
-                    fecha_actualizacion = NOW()
-                WHERE idrecepcion = (
-                    SELECT idrecepcion
-                    FROM orden_trabajo
-                    WHERE idorden_trabajo = ?
-                )
-            ");
+            UPDATE recepcion_servicio
+            SET estado = 3,
+                fecha_salida = NOW(),
+                fecha_actualizacion = NOW()
+            WHERE idrecepcion = (
+                SELECT ds.idrecepcion
+                FROM orden_trabajo ot
+                INNER JOIN presupuesto_servicio ps 
+                    ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+                INNER JOIN diagnostico_servicio ds 
+                    ON ds.id_diagnostico = ps.id_diagnostico
+                WHERE ot.idorden_trabajo = ?
+            )
+        ");
             $updRec->execute([
                 $datos['idorden_trabajo']
             ]);
-
 
             $pdo->commit();
             return true;
@@ -138,29 +126,37 @@ class registroServicioModelo extends mainModel
         }
     }
 
-    /* ================= BUSCAR OT PARA REGISTRO ================= */
     protected static function buscar_ot_para_registro_modelo($texto)
     {
         session_start(['name' => 'STR']);
         $sql = self::conectar()->prepare("
-        SELECT ot.idorden_trabajo,
-               c.nombre_cliente,
-               c.apellido_cliente,
-               m.mod_descri,
-               v.placa
+                SELECT 
+            ot.idorden_trabajo,
+            c.nombre_cliente,
+            c.apellido_cliente,
+            m.mod_descri,
+            v.placa
         FROM orden_trabajo ot
-        INNER JOIN recepcion_servicio r ON r.idrecepcion = ot.idrecepcion
+        INNER JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+        INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
+        INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
         INNER JOIN clientes c ON c.id_cliente = r.id_cliente
         INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
         INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
-        LEFT JOIN registro_servicio rs ON rs.idorden_trabajo = ot.idorden_trabajo
-        WHERE ot.estado = 2 AND r.id_sucursal = :sucursal 
-          AND (
+
+        LEFT JOIN registro_servicio rs 
+            ON rs.idorden_trabajo = ot.idorden_trabajo
+            AND rs.estado = 1   
+
+        WHERE ot.estado = 1 
+        AND r.id_sucursal = :sucursal 
+        AND rs.idorden_trabajo IS NULL 
+        AND (
                 c.nombre_cliente LIKE :b
-             OR c.apellido_cliente LIKE :b
-             OR v.placa LIKE :b
-             OR ot.idorden_trabajo LIKE :b
-          )
+            OR c.apellido_cliente LIKE :b
+            OR v.placa LIKE :b
+            OR ot.idorden_trabajo LIKE :b
+        )
         ORDER BY ot.idorden_trabajo DESC
         LIMIT 20");
 
@@ -171,7 +167,6 @@ class registroServicioModelo extends mainModel
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /* ================= OBTENER OT + DETALLE ================= */
     protected static function obtener_ot_para_registro_modelo($idOT)
     {
         $sql = self::conectar()->prepare("
@@ -182,7 +177,9 @@ class registroServicioModelo extends mainModel
                m.mod_descri,
                v.placa
         FROM orden_trabajo ot
-        INNER JOIN recepcion_servicio r ON r.idrecepcion = ot.idrecepcion
+        INNER JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+        INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
+        INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
         INNER JOIN clientes c ON c.id_cliente = r.id_cliente
         INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
         INNER JOIN modelo_auto m ON v.id_modeloauto = v.id_modeloauto
@@ -334,29 +331,40 @@ class registroServicioModelo extends mainModel
     }
 
 
-    protected static function paginador_registro_servicio_modelo($inicio, $registros, $busqueda1, $busqueda2)
+    protected static function listar_registro_servicio_modelo($inicio, $registros, $filtrosSQL)
     {
-        return "
-        SELECT SQL_CALC_FOUND_ROWS
-               rs.idregistro_servicio,
-               rs.estado,
-               rs.fecha_ejecucion,
-               ot.idorden_trabajo,
-               c.nombre_cliente,
-               c.apellido_cliente,
-               m.mod_descri,
-               v.placa,
-               CONCAT(u.usu_nombre, ' ', u.usu_apellido) AS usuario_registra
+        $pdo = self::conectar();
+
+        $sql = "
+        SELECT 
+            rs.*,
+            ot.idorden_trabajo
         FROM registro_servicio rs
         INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rs.idorden_trabajo
-        INNER JOIN recepcion_servicio r ON r.idrecepcion = ot.idrecepcion
-        INNER JOIN clientes c ON c.id_cliente = r.id_cliente
-        INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
-        INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
-        INNER JOIN usuarios u ON u.id_usuario = rs.usuario_registra
-        WHERE r.id_sucursal = '{$_SESSION['nick_sucursal']}'
+        INNER JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+        INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
+        INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
+        WHERE 1=1 $filtrosSQL
         ORDER BY rs.idregistro_servicio DESC
-        LIMIT $inicio, $registros";
+        LIMIT $inicio, $registros
+        ";
+
+        $datos = $pdo->query($sql)->fetchAll();
+
+        $total = $pdo->query("
+        SELECT COUNT(*)
+        FROM registro_servicio rs
+        INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rs.idorden_trabajo
+        INNER JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+        INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
+        INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
+        WHERE 1=1 $filtrosSQL
+        ")->fetchColumn();
+
+        return [
+            "datos" => $datos,
+            "total" => $total
+        ];
     }
 
     protected static function anular_registro_servicio_modelo($datos)
@@ -388,7 +396,9 @@ class registroServicioModelo extends mainModel
                 SELECT r.id_sucursal
                 FROM registro_servicio rs
                 INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rs.idorden_trabajo
-                INNER JOIN recepcion_servicio r ON r.idrecepcion = ot.idrecepcion
+                INNER JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+                INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
+                INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
                 WHERE rs.idregistro_servicio = ?
             ");
             $qSuc->execute([$datos['idregistro_servicio']]);
@@ -418,7 +428,7 @@ class registroServicioModelo extends mainModel
             /* ================= REABRIR OT ================= */
             $updOT = $pdo->prepare("
             UPDATE orden_trabajo
-            SET estado = 2,
+            SET estado = 1,
                 fecha_fin = NULL
             WHERE idorden_trabajo = ?
         ");

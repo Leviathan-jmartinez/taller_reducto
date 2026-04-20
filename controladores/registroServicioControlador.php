@@ -57,8 +57,6 @@ class registroServicioControlador extends registroServicioModelo
             'observacion'     => $_POST['observacion'] ?? '',
             'usuario'         => $idUsuario,
             'updatedby'       => $idUsuario,
-            'ip'              => $_SERVER['REMOTE_ADDR'] ?? null,
-            'user_agent'      => $_SERVER['HTTP_USER_AGENT'] ?? null
         ];
 
         /* ================= EJECUTAR ================= */
@@ -138,25 +136,39 @@ class registroServicioControlador extends registroServicioModelo
         ]);
     }
 
-    public function paginador_registro_servicio_controlador($pagina, $registros, $url, $busqueda1, $busqueda2)
+    public function listar_registro_servicio_controlador($pagina, $registros, $url, $busqueda1, $busqueda2)
     {
-        $pagina    = mainModel::limpiar_string($pagina);
-        $registros = mainModel::limpiar_string($registros);
+        $pagina    = (int) mainModel::limpiar_string($pagina);
+        $registros = (int) mainModel::limpiar_string($registros);
         $url       = SERVERURL . mainModel::limpiar_string($url) . "/";
 
-        $pagina = ($pagina > 0) ? (int)$pagina : 1;
-        $inicio = ($pagina * $registros) - $registros;
+        $pagina = ($pagina > 0) ? $pagina : 1;
+        $inicio = ($pagina - 1) * $registros;
 
-        $consulta = registroServicioModelo::paginador_registro_servicio_modelo(
+        $filtros = [
+            [
+                "campo" => "rs.id_sucursal",
+                "tipo"  => "=",
+                "valor" => $_SESSION['nick_sucursal']
+            ],
+            [
+                "campo" => "rs.fecha_ejecucion",
+                "tipo"  => "DATE_RANGE",
+                "desde" => $busqueda1,
+                "hasta" => $busqueda2
+            ]
+        ];
+
+        $filtrosSQL = mainModel::construirFiltros($filtros);
+
+        $res = registroServicioModelo::listar_registro_servicio_modelo(
             $inicio,
             $registros,
-            $busqueda1,
-            $busqueda2
+            $filtrosSQL
         );
 
-        $conexion = mainModel::conectar();
-        $datos = $conexion->query($consulta)->fetchAll();
-        $total = (int)$conexion->query("SELECT FOUND_ROWS()")->fetchColumn();
+        $datos = $res['datos'];
+        $total = $res['total'];
         $Npaginas = ceil($total / $registros);
 
         $tabla = '<div class="table-responsive">

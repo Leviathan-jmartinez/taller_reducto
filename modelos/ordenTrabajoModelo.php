@@ -20,7 +20,7 @@ class ordenTrabajoModelo extends mainModel
         return $qTec->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /* ================= OBTENER PRESUPUESTO ================= */
+   
     protected static function obtener_presupuesto_modelo($id)
     {
         $sql = mainModel::conectar()->prepare("
@@ -35,8 +35,7 @@ class ordenTrabajoModelo extends mainModel
         return $sql->fetch(PDO::FETCH_ASSOC);
     }
 
-    /* ================= DETALLE PRESUPUESTO ================= */
-    protected static function obtener_detalle_presupuesto_modelo($id)
+       protected static function obtener_detalle_presupuesto_modelo($id)
     {
         $sql = mainModel::conectar()->prepare("
             SELECT
@@ -50,150 +49,6 @@ class ordenTrabajoModelo extends mainModel
         $sql->bindParam(':id', $id, PDO::PARAM_INT);
         $sql->execute();
         return $sql->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    /* ================= CREAR OT ================= */
-    protected static function crear_ot_modelo($d)
-    {
-        $pdo = mainModel::conectar();
-
-        try {
-            $pdo->beginTransaction();
-
-            /* CABECERA OT */
-            $sqlOT = $pdo->prepare("
-                INSERT INTO orden_trabajo
-                (idpresupuesto_servicio, id_usuario, observacion)
-                VALUES
-                (:presupuesto, :usuario, :obs)
-            ");
-
-            $sqlOT->execute([
-                ':presupuesto' => $d['idpresupuesto'],
-                ':usuario'     => $d['usuario'],
-                ':obs'         => $d['observacion']
-            ]);
-
-            $idOT = $pdo->lastInsertId();
-
-            /* DETALLE OT */
-            $sqlDet = $pdo->prepare("
-                INSERT INTO orden_trabajo_detalle
-                (idorden_trabajo, id_articulo, cantidad, precio_unitario, subtotal)
-                VALUES
-                (:ot, :articulo, :cantidad, :precio, :subtotal)
-            ");
-
-            foreach ($d['detalle'] as $it) {
-                $sqlDet->execute([
-                    ':ot'        => $idOT,
-                    ':articulo'  => $it['id_articulo'],
-                    ':cantidad'  => $it['cantidad'],
-                    ':precio'    => $it['precio_unitario'],
-                    ':subtotal'  => $it['subtotal']
-                ]);
-            }
-
-            /* ACTUALIZAR PRESUPUESTO → OT GENERADA */
-            $pdo->prepare("
-                UPDATE presupuesto_servicio
-                SET estado = 3
-                WHERE idpresupuesto_servicio = :id
-            ")->execute([
-                ':id' => $d['idpresupuesto']
-            ]);
-
-            $pdo->commit();
-            return true;
-        } catch (Exception $e) {
-            $pdo->rollBack();
-            return ['msg' => $e->getMessage()];
-        }
-    }
-
-    protected static function paginador_ot_modelo($inicio, $registros, $busqueda1, $busqueda2)
-    {
-        if (!empty($busqueda1) && !empty($busqueda2)) {
-            $consulta = "
-                SELECT SQL_CALC_FOUND_ROWS
-            ot.idorden_trabajo,
-            ot.fecha_inicio,
-            ot.estado,
-            ps.idpresupuesto_servicio,
-            c.nombre_cliente,
-            c.apellido_cliente,
-            v.placa,
-            ma.mod_descri AS modelo,
-            u.usu_nombre,
-            u.usu_apellido
-
-        FROM orden_trabajo ot
-
-        INNER JOIN presupuesto_servicio ps 
-            ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-
-        INNER JOIN diagnostico_servicio ds 
-            ON ds.id_diagnostico = ps.id_diagnostico
-
-        INNER JOIN recepcion_servicio r 
-            ON r.idrecepcion = ds.idrecepcion
-
-        INNER JOIN clientes c 
-            ON c.id_cliente = r.id_cliente
-
-        INNER JOIN vehiculos v 
-            ON v.id_vehiculo = r.id_vehiculo
-
-        INNER JOIN modelo_auto ma 
-            ON ma.id_modeloauto = v.id_modeloauto
-
-        INNER JOIN usuarios u 
-         ON u.id_usuario = ot.id_usuario
-        WHERE r.id_sucursal = '{$_SESSION['nick_sucursal']}'AND DATE(ot.fecha_inicio) BETWEEN '$busqueda1' AND '$busqueda2'
-        ORDER BY ot.idorden_trabajo DESC
-        LIMIT $inicio,$registros";
-        } else {
-            $consulta = "
-        SELECT SQL_CALC_FOUND_ROWS
-            ot.idorden_trabajo,
-            ot.fecha_inicio,
-            ot.estado,
-            ps.idpresupuesto_servicio,
-            c.nombre_cliente,
-            c.apellido_cliente,
-            v.placa,
-            ma.mod_descri AS modelo,
-            u.usu_nombre,
-            u.usu_apellido
-
-        FROM orden_trabajo ot
-
-        INNER JOIN presupuesto_servicio ps 
-            ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-
-        INNER JOIN diagnostico_servicio ds 
-            ON ds.id_diagnostico = ps.id_diagnostico
-
-        INNER JOIN recepcion_servicio r 
-            ON r.idrecepcion = ds.idrecepcion
-
-        INNER JOIN clientes c 
-            ON c.id_cliente = r.id_cliente
-
-        INNER JOIN vehiculos v 
-            ON v.id_vehiculo = r.id_vehiculo
-
-        INNER JOIN modelo_auto ma 
-            ON ma.id_modeloauto = v.id_modeloauto
-
-        INNER JOIN usuarios u 
-         ON u.id_usuario = ot.id_usuario
-        WHERE r.id_sucursal = '{$_SESSION['nick_sucursal']}'
-        ORDER BY ot.idorden_trabajo DESC
-        LIMIT $inicio,$registros";
-        }
-
-        return $consulta;
     }
 
     protected static function obtener_ot_modelo($id)
@@ -274,8 +129,6 @@ class ordenTrabajoModelo extends mainModel
             ':ot'      => $ot
         ]);
     }
-
-
 
     protected static function obtener_ot_completa($idOT)
     {
@@ -390,30 +243,30 @@ class ordenTrabajoModelo extends mainModel
                 return ['msg' => 'Este presupuesto ya tiene una OT'];
             }
 
-            /* OBTENER RECEPCION DESDE PRESUPUESTO (SEGURIDAD) */
-            $qRec = $pdo->prepare("
-                SELECT ds.idrecepcion
-                FROM presupuesto_servicio ps
-                INNER JOIN diagnostico_servicio ds 
-                    ON ds.id_diagnostico = ps.id_diagnostico
-                WHERE ps.idpresupuesto_servicio = ?
-            ");
-            $qRec->execute([$datos['idpresupuesto']]);
-            $rec = $qRec->fetch(PDO::FETCH_ASSOC);
+            $qSuc = $pdo->prepare("
+            SELECT r.id_sucursal
+            FROM presupuesto_servicio ps
+            INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
+            INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
+            WHERE ps.idpresupuesto_servicio = ?
+        ");
+            $qSuc->execute([$datos['idpresupuesto']]);
+            $idSucursal = $qSuc->fetchColumn();
 
-            if (!$rec) {
-                return ['msg' => 'Presupuesto no válido'];
+            if (!$idSucursal) {
+                return ['msg' => 'No se pudo obtener sucursal'];
             }
 
             /* CABECERA OT */
             $cab = $pdo->prepare("
                     INSERT INTO orden_trabajo
-                    (idpresupuesto_servicio, id_usuario, idtrabajos, tecnico_responsable, observacion, estado)
-                    VALUES (?, ?, ?, ?, ?, 2)
+                    (idpresupuesto_servicio, id_usuario, id_sucursal, idtrabajos, tecnico_responsable, observacion, estado)
+                    VALUES (?, ?, ?, ?, ?, ?, 1)
                 ");
             $cab->execute([
                 $datos['idpresupuesto'],
                 $datos['idusuario'],
+                $idSucursal,
                 $datos['idtrabajos'],
                 $datos['tecnico_responsable'],
                 $datos['observacion']
@@ -447,6 +300,55 @@ class ordenTrabajoModelo extends mainModel
         }
     }
 
+    protected static function listar_ot_modelo($inicio, $registros, $filtrosSQL)
+    {
+        $conexion = mainModel::conectar();
+
+        $baseSQL = "
+        FROM orden_trabajo ot
+        INNER JOIN presupuesto_servicio ps 
+            ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+        INNER JOIN diagnostico_servicio ds 
+            ON ds.id_diagnostico = ps.id_diagnostico
+        INNER JOIN recepcion_servicio r 
+            ON r.idrecepcion = ds.idrecepcion
+        INNER JOIN clientes c 
+            ON c.id_cliente = r.id_cliente
+        INNER JOIN vehiculos v 
+            ON v.id_vehiculo = r.id_vehiculo
+        INNER JOIN modelo_auto ma 
+            ON ma.id_modeloauto = v.id_modeloauto
+        INNER JOIN usuarios u 
+            ON u.id_usuario = ot.id_usuario
+        WHERE 1=1
+        $filtrosSQL
+        ";
+
+        $selectSQL = "
+        SELECT 
+            ot.idorden_trabajo,
+            ot.fecha_inicio,
+            ot.estado,
+            ps.idpresupuesto_servicio,
+            c.nombre_cliente,
+            c.apellido_cliente,
+            v.placa,
+            ma.mod_descri AS modelo,
+            u.usu_nombre,
+            u.usu_apellido
+        ";
+
+        $orderSQL = "ORDER BY ot.idorden_trabajo DESC";
+
+        return mainModel::ejecutarPaginador(
+            $conexion,
+            $baseSQL,
+            $selectSQL,
+            $orderSQL,
+            $inicio,
+            $registros
+        );
+    }
     protected static function anular_ot_modelo($idOT, $usuario)
     {
         $pdo = self::conectar();
@@ -474,8 +376,8 @@ class ordenTrabajoModelo extends mainModel
             $upd = $pdo->prepare("
                 UPDATE orden_trabajo
                 SET estado = 0,
-                    updated = NOW(),
-                    updatedby = ?
+                    updated_at = NOW(),
+                    updated_by = ?
                 WHERE idorden_trabajo = ?
             ");
             $upd->execute([$usuario, $idOT]);

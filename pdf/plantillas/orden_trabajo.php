@@ -196,7 +196,17 @@
         </tr>
     </table>
 
-
+    <?php
+    function estadoOT($estado)
+    {
+        return match ((int)$estado) {
+            1 => 'En proceso',
+            2 => 'Finalizada',
+            0 => 'Anulada',
+            default => 'Desconocido',
+        };
+    }
+    ?>
 
     <!-- INFO -->
     <div class="grid">
@@ -217,7 +227,7 @@
             <h3>Orden</h3>
 
             <strong>Estado:</strong>
-            <?= ['', 'Abierta', 'En proceso', 'Terminada', 'Facturada'][$cabecera['estado']] ?><br>
+            <?= estadoOT($cabecera['estado']) ?><br>
 
             <strong>Equipo:</strong>
             <?= $cabecera['nombre_equipo'] ?? 'No asignado' ?><br>

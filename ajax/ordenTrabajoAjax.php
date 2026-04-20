@@ -6,21 +6,10 @@ require_once "../controladores/ordenTrabajoControlador.php";
 $insOT = new ordenTrabajoControlador();
 
 /* ================= GENERAR OT ================= */
-if (isset($_POST['accion']) && $_POST['accion'] === 'generar_ot') {
-    echo $insOT->generar_ot_controlador();
-    exit();
-}
-
 if (isset($_POST['accion']) && $_POST['accion'] === 'listar_equipos') {
     echo json_encode($insOT->listar_equipos_controlador());
     exit();
 }
-
-if (isset($_POST['accion']) && $_POST['accion'] === 'asignar_equipo') {
-    echo $insOT->asignar_equipo_controlador();
-    exit();
-}
-
 
 
 /* ================= BUSCAR PRESUPUESTO ================= */

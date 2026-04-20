@@ -3,117 +3,49 @@ require_once __DIR__ . "/../modelos/ordenTrabajoModelo.php";
 
 class ordenTrabajoControlador extends ordenTrabajoModelo
 {
-    public function cargar_tecnicos_equipo_controlador()
+
+
+
+    public function listar_ot_controlador($pagina, $registros, $url, $busqueda1, $busqueda2)
     {
-        $idEquipo = mainModel::limpiar_string($_POST['cargar_tecnicos_equipo']);
-        $tecnicos = ordenTrabajoModelo::obtener_tecnicos_equipo_modelo($idEquipo);
+        $pagina    = (int) mainModel::limpiar_string($pagina);
+        $registros = (int) mainModel::limpiar_string($registros);
+        $url       = SERVERURL . mainModel::limpiar_string($url) . "/";
 
-        $html = '<option value="">Seleccione un técnico</option>';
+        $estadoFiltro = $_SESSION['estado_ot'] ?? '';
 
-        if (empty($tecnicos)) {
-            return $html . '<option value="">Sin técnicos</option>';
+        $pagina = ($pagina > 0) ? $pagina : 1;
+        $inicio = ($pagina - 1) * $registros;
+
+        /* ================= FILTROS ================= */
+
+        $filtros = [];
+
+        if (!empty($busqueda1) && !empty($busqueda2)) {
+            $filtros[] = [
+                "campo" => "ot.fecha_inicio",
+                "tipo"  => "DATE_RANGE",
+                "desde" => $busqueda1,
+                "hasta" => $busqueda2
+            ];
         }
 
-        foreach ($tecnicos as $t) {
-            $html .= '<option value="' . $t['idempleados'] . '">' . $t['nombre'] . '</option>';
+        if ($estadoFiltro !== '') {
+            $filtros[] = [
+                "campo" => "ot.estado",
+                "tipo"  => "=",
+                "valor" => $estadoFiltro
+            ];
         }
 
-        return $html;
-    }
+        $filtrosSQL = mainModel::construirFiltros($filtros);
 
-    public function generar_ot_controlador()
-    {
-        session_start(['name' => 'STR']);
+        /* ================= DATOS ================= */
 
-        if (!isset($_POST['id'])) {
-            return json_encode([
-                'Alerta' => 'simple',
-                'Titulo' => 'Error',
-                'Texto' => 'ID inválido',
-                'Tipo' => 'error'
-            ]);
-        }
+        $res = ordenTrabajoModelo::listar_ot_modelo($inicio, $registros, $filtrosSQL);
 
-        $idPresupuesto = mainModel::decryption($_POST['id']);
-
-        /* PRESUPUESTO */
-        $presupuesto = ordenTrabajoModelo::obtener_presupuesto_modelo($idPresupuesto);
-        if (!$presupuesto) {
-            return json_encode([
-                'Alerta' => 'simple',
-                'Titulo' => 'Error',
-                'Texto' => 'Presupuesto no aprobado o inexistente',
-                'Tipo' => 'error'
-            ]);
-        }
-
-        /* DETALLE */
-        $detalle = ordenTrabajoModelo::obtener_detalle_presupuesto_modelo($idPresupuesto);
-        if (!$detalle) {
-            return json_encode([
-                'Alerta' => 'simple',
-                'Titulo' => 'Error',
-                'Texto' => 'El presupuesto no tiene detalle',
-                'Tipo' => 'error'
-            ]);
-        }
-
-        $datos = [
-            'idpresupuesto' => $idPresupuesto,
-            'usuario'       => $_SESSION['id_str'],
-            'observacion'   => 'OT generada desde presupuesto',
-            'detalle'       => $detalle
-        ];
-        $sucursalPresupuesto = mainModel::ejecutar_consulta_simple("
-            SELECT r.id_sucursal
-            FROM presupuesto_servicio ps
-            INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
-            INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
-            WHERE ps.idpresupuesto_servicio = '$idPresupuesto'
-        ")->fetchColumn();
-
-        if ($sucursalPresupuesto != $_SESSION['nick_sucursal']) {
-            return json_encode([
-                'Alerta' => 'simple',
-                'Titulo' => 'Acceso denegado',
-                'Texto'  => 'El presupuesto no pertenece a su sucursal',
-                'Tipo'   => 'error'
-            ]);
-        }
-
-        $res = ordenTrabajoModelo::crear_ot_modelo($datos);
-
-        if ($res === true) {
-            return json_encode([
-                'Alerta' => 'recargar',
-                'Titulo' => 'OT generada',
-                'Texto' => 'La orden de trabajo fue creada correctamente',
-                'Tipo' => 'success'
-            ]);
-        }
-
-        return json_encode([
-            'Alerta' => 'simple',
-            'Titulo' => 'Error',
-            'Texto' => $res['msg'] ?? 'No se pudo generar OT',
-            'Tipo' => 'error'
-        ]);
-    }
-
-    public function paginador_ot_controlador($pagina, $registros, $url, $busqueda1, $busqueda2)
-    {
-        $pagina = mainModel::limpiar_string($pagina);
-        $registros = mainModel::limpiar_string($registros);
-        $url = SERVERURL . mainModel::limpiar_string($url) . "/";
-
-        $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
-        $inicio = ($pagina * $registros) - $registros;
-
-        $consulta = ordenTrabajoModelo::paginador_ot_modelo($inicio, $registros, $busqueda1, $busqueda2);
-
-        $conexion = mainModel::conectar();
-        $datos = $conexion->query($consulta)->fetchAll();
-        $total = (int)$conexion->query("SELECT FOUND_ROWS()")->fetchColumn();
+        $datos = $res['datos'];
+        $total = $res['total'];
         $Npaginas = ceil($total / $registros);
 
         $tabla = '<div class="table-responsive">
@@ -132,42 +64,45 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
         </thead>
         <tbody>';
 
-        if ($total >= 1) {
-            $contador = $inicio + 1;
+        if ($total >= 1 && $pagina <= $Npaginas) {
+
+            $contador   = $inicio + 1;
+            $reg_inicio = $inicio + 1;
+
             foreach ($datos as $rows) {
+
+                /* ================= ESTADO ================= */
 
                 switch ($rows['estado']) {
                     case 1:
-                        $estado = '<span class="badge badge-warning">Abierta</span>';
+                        $estado = '<span class="badge badge-warning">En proceso</span>';
                         break;
                     case 2:
-                        $estado = '<span class="badge badge-primary">En proceso</span>';
-                        break;
-                    case 3:
-                        $estado = '<span class="badge badge-success">Finalizado</span>';
-                        break;
-                    case 4:
-                        $estado = '<span class="badge badge-info">Facturada</span>';
+                        $estado = '<span class="badge badge-primary">Finalizado</span>';
                         break;
                     case 0:
-                        $estado = '<span class="badge badge-default">Anulada</span>';
+                        $estado = '<span class="badge badge-danger">Anulada</span>';
                         break;
                     default:
                         $estado = '<span class="badge badge-secondary">?</span>';
                 }
 
-                $tabla .= '
-        <tr class="text-center">
-            <td>' . $contador . '</td>
-            <td>' . $rows['nombre_cliente'] . ' ' . $rows['apellido_cliente'] . '</td>
-            <td>' . $rows['modelo'] . ' ' . $rows['placa'] . '</td>
-            <td>' . date("d-m-Y", strtotime($rows['fecha_inicio'])) . '</td>
-            <td>#' . $rows['idpresupuesto_servicio'] . '</td>
-            <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
-            <td>' . $estado . '</td>
-            <td>';
+                /* ================= FILA ================= */
 
-                /* asignar técnico */
+                $tabla .= '
+            <tr class="text-center">
+                <td>' . $contador . '</td>
+                <td>' . $rows['nombre_cliente'] . ' ' . $rows['apellido_cliente'] . '</td>
+                <td>' . $rows['modelo'] . ' ' . $rows['placa'] . '</td>
+                <td>' . date("d-m-Y", strtotime($rows['fecha_inicio'])) . '</td>
+                <td>#' . $rows['idpresupuesto_servicio'] . '</td>
+                <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
+                <td>' . $estado . '</td>
+                <td>';
+
+                /* ================= ACCIONES ================= */
+
+                // ✔ asignar técnico
                 if ($rows['estado'] == 1 && $url !== SERVERURL . 'ordenTrabajo-buscar/') {
                     $tabla .= '
                 <button class="btn btn-primary btn-sm"
@@ -177,7 +112,7 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
                 </button>';
                 }
 
-                /* imprimir */
+                // ✔ imprimir
                 $tabla .= '
             <a href="' . SERVERURL . 'pdf/ordenTrabajo.php?id=' . mainModel::encryption($rows['idorden_trabajo']) . '"
                 target="_blank"
@@ -186,66 +121,71 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
                 <i class="fas fa-print"></i>
             </a>';
 
-                /* anular OT → FormularioAjax */
+                // ✔ anular
                 if (in_array($rows['estado'], [1, 2])) {
                     $tabla .= '
-            <form class="FormularioAjax d-inline"
-                action="' . SERVERURL . 'ajax/ordenTrabajoAjax.php"
-                method="POST"
-                data-form="delete"
-                autocomplete="off">
+                <form class="FormularioAjax d-inline"
+                    action="' . SERVERURL . 'ajax/ordenTrabajoAjax.php"
+                    method="POST"
+                    data-form="delete"
+                    autocomplete="off">
 
-                <input type="hidden" name="accion" value="anular">
-                <input type="hidden" name="id"
-                    value="' . mainModel::encryption($rows['idorden_trabajo']) . '">
+                    <input type="hidden" name="accion" value="anular">
+                    <input type="hidden" name="id"
+                        value="' . mainModel::encryption($rows['idorden_trabajo']) . '">
 
-                <button type="submit"
-                        class="btn btn-danger btn-sm"
-                        title="Anular OT">
-                    <i class="fas fa-ban"></i>
-                </button>
-            </form>';
+                    <button type="submit"
+                            class="btn btn-danger btn-sm"
+                            title="Anular OT">
+                        <i class="fas fa-ban"></i>
+                    </button>
+                </form>';
                 }
 
                 $tabla .= '
-            </td>
-        </tr>';
+                </td>
+            </tr>';
 
                 $contador++;
             }
+
+            $reg_final = $contador - 1;
         } else {
             $tabla .= '<tr><td colspan="8" class="text-center">Sin registros</td></tr>';
         }
 
         $tabla .= '</tbody></table></div>';
 
-        if ($total >= 1) {
+        /* ================= PAGINADOR ================= */
+
+        if ($total >= 1 && $pagina <= $Npaginas) {
+
+            $tabla .= '<p class="text-right">
+            Mostrando ' . $reg_inicio . ' al ' . $reg_final . ' de ' . $total . '
+        </p>';
+
             $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);
         }
 
         return $tabla;
     }
 
-    public function detalle_ot_controlador($idEnc)
+    public function cargar_tecnicos_equipo_controlador()
     {
-        $id = mainModel::decryption($idEnc);
-        $ot = ordenTrabajoModelo::obtener_ot_modelo($id);
-        $detalle = ordenTrabajoModelo::obtener_detalle_ot_modelo($id);
+        $idEquipo = mainModel::limpiar_string($_POST['cargar_tecnicos_equipo']);
+        $tecnicos = ordenTrabajoModelo::obtener_tecnicos_equipo_modelo($idEquipo);
 
-        return [
-            'ot' => $ot,
-            'detalle' => $detalle
-        ];
-    }
+        $html = '<option value="">Seleccione un técnico</option>';
 
-    public function asignar_tecnico_controlador()
-    {
-        return $this->asignar_equipo_controlador();
-    }
+        if (empty($tecnicos)) {
+            return $html . '<option value="">Sin técnicos</option>';
+        }
 
-    public function listar_tecnicos_controlador()
-    {
-        return $this->listar_equipos_controlador();
+        foreach ($tecnicos as $t) {
+            $html .= '<option value="' . $t['idempleados'] . '">' . $t['nombre'] . '</option>';
+        }
+
+        return $html;
     }
 
     public function asignar_equipo_controlador()
@@ -265,19 +205,12 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
         $equipo   = intval($_POST['idtrabajos']);
         $tecnico  = intval($_POST['tecnico_responsable']);
 
-
-        $ot     = mainModel::decryption($_POST['id_ot']);
-        $equipo = mainModel::limpiar_string($_POST['idtrabajos']);
-
-        // Validar sucursal (tu lógica ya existente)
+        // Validar sucursal 
         $sucursalOT = mainModel::ejecutar_consulta_simple("
-        SELECT r.id_sucursal
-        FROM orden_trabajo ot
-        INNER JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-        INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
-        INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
-        WHERE ot.idorden_trabajo ='$ot'
-        ")->fetchColumn();
+        SELECT id_sucursal 
+        FROM orden_trabajo
+        WHERE idorden_trabajo = '$ot'
+            ")->fetchColumn();
 
         if ($sucursalOT != $_SESSION['nick_sucursal']) {
             return json_encode([
@@ -350,10 +283,12 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
             INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
             INNER JOIN clientes c ON c.id_cliente = r.id_cliente
             INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
-            LEFT JOIN orden_trabajo ot ON ot.idpresupuesto_servicio = ps.idpresupuesto_servicio
+            LEFT JOIN orden_trabajo ot 
+                ON ot.idpresupuesto_servicio = ps.idpresupuesto_servicio
+                AND ot.estado != 0
             WHERE ps.estado = '2'
-                AND ot.idorden_trabajo IS NULL
-                AND r.id_sucursal = :sucursal
+            AND ot.idorden_trabajo IS NULL
+                            AND r.id_sucursal = :sucursal
                 AND (
                         c.nombre_cliente LIKE :busqueda
                     OR v.placa LIKE :busqueda

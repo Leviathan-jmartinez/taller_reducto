@@ -80,11 +80,9 @@
             function estadoOT($estado)
             {
                 return match ((int)$estado) {
-                    1 => 'Abierta',
-                    2 => 'En proceso',
-                    3 => 'Finalizado',
-                    4 => 'Facturado',
-                    0 => 'Anulado',
+                    1 => 'En proceso',
+                    2 => 'Finalizada',
+                    0 => 'Anulada',
                     default => 'Desconocido',
                 };
             }

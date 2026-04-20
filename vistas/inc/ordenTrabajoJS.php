@@ -227,4 +227,29 @@
         </tr>
     `;
     }
+
+    document.addEventListener('click', function(e) {
+
+        const btn = e.target.closest('.btn-limpiar-busqueda');
+        if (!btn) return;
+
+        fetch("<?php echo SERVERURL; ?>ajax/buscadorAjax.php", {
+                method: "POST",
+                body: new URLSearchParams({
+                    modulo: "orden_trabajo",
+                    eliminar_busqueda: 1
+                })
+            })
+            .then(r => r.json())
+            .then(res => {
+
+                if (res.Alerta === "redireccionar") {
+                    window.location.href = res.URL;
+                } else {
+                    alert(res.Texto);
+                }
+
+            });
+
+    });
 </script>

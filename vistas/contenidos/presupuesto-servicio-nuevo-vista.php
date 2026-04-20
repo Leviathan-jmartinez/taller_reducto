@@ -21,9 +21,6 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
                 <a class="active" href="<?php echo SERVERURL; ?>presupuesto-servicio-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO PRESUPUESTO</a>
             </li>
             <li>
-                <a href="<?php echo SERVERURL; ?>presupuesto-servicio-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTADOS DE PRESUPUESTOS</a>
-            </li>
-            <li>
                 <a href="<?php echo SERVERURL; ?>presupuesto-servicio-buscar/"><i class="fas fa-search-dollar fa-fw"></i> &nbsp; BUSCAR POR FECHA</a>
             </li>
         </ul>
@@ -41,7 +38,7 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
         <input type="hidden" id="id_sucursal" name="id_sucursal">
         <input type="hidden" id="id_cliente" name="id_cliente">
         <input type="hidden" id="id_vehiculo" name="id_vehiculo">
-        <input type="hidden" id="diagnostico_info" name="diagnostico_info">           >
+        <input type="hidden" id="diagnostico_info" name="diagnostico_info">           
         <input type="hidden" name="detalle_json" id="detalle_json">
         <input type="hidden" name="descuentos_json" id="descuentos_json">
         <input type="hidden" name="subtotal_servicios" id="inp_subtotal_servicios">

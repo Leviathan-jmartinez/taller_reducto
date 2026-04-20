@@ -1,12 +1,12 @@
 <?php
 require_once __DIR__ . "/../modelos/presupuestoServicioModelo.php";
 
-class presupuestoservicioControlador extends presupuestoservicioModelo
+class presupuestoServicioControlador  extends presupuestoServicioModelo
 {
 
     public function datos_diagnostico_controlador()
     {
-        $id = $_POST['id_diagnostico'];
+        $id = $_POST['id_diagnostico'] ?? null;
 
         $data = presupuestoServicioModelo::datos_diagnostico_modelo($id);
 
@@ -61,10 +61,11 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
         return $html;
     }
 
-
     public function buscar_servicios_controlador()
     {
-        session_start(['name' => 'STR']);
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start(['name' => 'STR']);
+        }
 
         $txt = trim($_POST['buscar_servicio'] ?? '');
 
@@ -157,7 +158,9 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
 
     public function guardar_presupuesto_controlador()
     {
-        session_start(['name' => 'STR']);
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start(['name' => 'STR']);
+        }
 
         $detalle = json_decode($_POST['detalle_json'], true);
         $descuentos = json_decode($_POST['descuentos_json'], true);
@@ -201,19 +204,12 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
         ]);
     }
 
-
-    /**Controlador paginar presupuestos */
-    public function paginador_presupuestoservi_controlador(
-        $pagina,
-        $registros,
-        $url,
-        $busqueda1,
-        $busqueda2
-    ) {
+    public function paginador_presupuestoservi_controlador($pagina, $registros, $url, $busqueda1, $busqueda2)
+    {
 
         $pagina    = (int) mainModel::limpiar_string($pagina);
         $registros = (int) mainModel::limpiar_string($registros);
-
+        $estado = $_SESSION['estado_presupuesto'] ?? '';
         $url = SERVERURL . $url . "/";
         $tabla = "";
 
@@ -228,13 +224,17 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
                 "tipo"  => "DATE_RANGE",
                 "desde" => $busqueda1,
                 "hasta" => $busqueda2
-            ],
-            [
-                "campo" => "ps.estado",
-                "tipo"  => "!=",
-                "valor" => 0 // opcional si querés excluir anulados
             ]
         ];
+
+        if ($estado !== '') {
+            $filtros[] = [
+                "campo" => "ps.estado",
+                "tipo"  => "=",
+                "valor" => $estado
+            ];
+        }
+
 
         $filtrosSQL = mainModel::construirFiltros($filtros);
 
@@ -260,17 +260,17 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
         /* ================= TABLA ================= */
 
         $tabla .= '<div class="table-responsive">
-    <table class="table table-dark table-sm">
-    <thead>
-        <tr class="text-center">
-            <th>#</th>
-            <th>Cliente</th>
-            <th>Vehículo</th>
-            <th>Fecha</th>
-            <th>Total</th>
-            <th>Creado por</th>
-            <th>Estado</th>
-            <th>PDF</th>';
+            <table class="table table-dark table-sm">
+            <thead>
+                <tr class="text-center">
+                    <th>#</th>
+                    <th>Cliente</th>
+                    <th>Vehículo</th>
+                    <th>Fecha</th>
+                    <th>Total</th>
+                    <th>Creado por</th>
+                    <th>Estado</th>
+                    <th>PDF</th>';
 
         if ($mostrarAcciones) {
             $tabla .= '<th>Acciones</th>';
@@ -360,6 +360,7 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
 
             $reg_final = $contador - 1;
         } else {
+            $colspan = $mostrarAcciones ? 9 : 8;
             $tabla .= '<tr><td colspan="9">No hay registros en el sistema</td></tr>';
         }
 
@@ -377,17 +378,12 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
 
         return $tabla;
     }
-    /**fin controlador */
 
-    public function listar_presupuestos_controlador()
-    {
-        return presupuestoServicioModelo::listar_presupuestos_modelo();
-    }
-
-    /* ================= APROBAR ================= */
     public function aprobar_presupuesto_controlador()
     {
-        session_start(['name' => 'STR']);
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start(['name' => 'STR']);
+        }
 
         if (!isset($_POST['id'])) {
             return json_encode([
@@ -437,11 +433,13 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
 
     public function anular_presupuesto_controlador()
     {
-        session_start(['name' => 'STR']);
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start(['name' => 'STR']);
+        }
 
         $id = mainModel::decryption($_POST['id']);
 
-        $res = presupuestoServicioModelo::anular_presupuesto_full_modelo($id);
+        $res = presupuestoServicioModelo::anular_presupuesto_modelo($id);
 
         if (isset($res['error'])) {
             return json_encode([
@@ -468,11 +466,6 @@ class presupuestoservicioControlador extends presupuestoservicioModelo
             'Texto' => 'Correcto',
             'Tipo' => 'success'
         ]);
-    }
-
-    public function decrypt($valor)
-    {
-        return mainModel::decryption($valor);
     }
 
     public function datos_presupuesto_controlador($id)

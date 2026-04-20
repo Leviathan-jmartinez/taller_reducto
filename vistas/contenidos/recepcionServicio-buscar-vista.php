@@ -65,7 +65,12 @@ if (!mainModel::tienePermiso('servicio.recepcion.ver')) {
 		<?php
 		require_once "./controladores/recepcionservicioControlador.php";
 		$ins_recepcion = new recepcionservicioControlador();
-		echo $ins_recepcion->paginador_recepcion_servicio_controlador($pagina[1], 15, $pagina[0], $_SESSION['busqueda_recepcion']);
+		echo $ins_recepcion->listar_recepcion_controlador(
+			$pagina[1],
+			15,
+			$pagina[0],
+			$_SESSION['busqueda_recepcion'] ?? ''
+		);
 		?>
 	</div>
 <?php

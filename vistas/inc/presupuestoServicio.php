@@ -154,18 +154,13 @@
 
     function limpiarFormularioPresupuesto() {
 
-        // limpiar arrays
         detalleServicios = [];
         descuentosAplicados = [];
 
-        // limpiar inputs hidden
         document.getElementById('detalle_json').value = '';
         document.getElementById('descuentos_json').value = '';
-        document.getElementById('inp_subtotal_servicios').value = 0;
-        document.getElementById('inp_total_descuento').value = 0;
-        document.getElementById('inp_total_final').value = 0;
 
-        // limpiar recepción
+        // DIAGNOSTICO
         document.getElementById('id_diagnostico').value = '';
         document.getElementById('diagnostico_info').value = '';
         document.getElementById('cliente').value = '';
@@ -173,21 +168,33 @@
         document.getElementById('kilometraje').value = '';
         document.getElementById('observacion').value = '';
 
-        // limpiar tablas y vistas
+        // LIMPIAR DETALLE DIAGNOSTICO
+        document.getElementById('lista_diagnostico').innerHTML = `
+    <tr>
+        <td colspan="3" class="text-center text-muted">
+            Seleccione un diagnóstico para ver los problemas...
+        </td>
+    </tr>`;
+
+        // LIMPIAR BUSCADOR
+        document.getElementById('buscar_servicio').value = '';
+        document.getElementById('resultado_servicios').innerHTML = '';
+
+        // TABLA SERVICIOS
         renderDetalle();
+
+        // DESCUENTOS
         document.getElementById('descuentos_cliente').innerHTML =
             '<span class="text-muted">Seleccione una recepción para ver descuentos</span>';
 
+        // TOTALES
         document.getElementById('txt_subtotal_servicios').innerText = 'Gs. 0';
-        document.getElementById('total_subtotal').innerText = 'Gs. 0';
         document.getElementById('txt_total_descuento').innerText = 'Gs. 0';
         document.getElementById('txt_total_final').innerText = 'Gs. 0';
 
-        // 🔥 limpiar localStorage
+        // LOCALSTORAGE
         localStorage.removeItem('presupuesto_servicio_tmp');
     }
-
-
 
     function buscarServicio() {
         let txt = document.getElementById('buscar_servicio').value.trim();
@@ -210,7 +217,6 @@
             })
             .catch(err => console.error(err));
     }
-
 
     function agregarServicio(id, descripcion, precio, tipo, stock) {
 
@@ -318,7 +324,6 @@
         if (inpFinal) inpFinal.value = totalFinal;
     }
 
-
     function renderDetalle() {
 
         let tbody = document.querySelector('#tabla_detalle tbody');
@@ -388,8 +393,6 @@
         recalcularTotales();
         guardarEstadoConDelay();
     }
-
-
 
     function quitarServicio(index) {
         detalleServicios.splice(index, 1);
@@ -491,8 +494,6 @@
             .catch(err => console.error('Error cargando descuentos:', err));
     }
 
-
-
     function toggleDescuento(checkbox, id, nombre, tipo, valor) {
 
         if (checkbox.checked) {
@@ -543,5 +544,38 @@
         if (!e.detail || e.detail.modulo !== 'presupuesto') return;
 
         limpiarFormularioPresupuesto();
+    });
+
+    document.addEventListener('submit', function(e) {
+
+        const form = e.target.closest('.FormularioAjax');
+        if (!form) return;
+
+        // Esperar respuesta AJAX (tu sistema ya lo maneja internamente)
+        setTimeout(() => {
+
+            try {
+
+                // buscar última respuesta guardada por tu sistema
+                let res = window.lastAjaxResponse || null;
+
+                if (!res) return;
+
+                // SI EL CONTROLADOR DEVUELVE LIMPIAR
+                if (res.Alerta === "limpiar") {
+
+                    console.log("🧹 Limpiando formulario presupuesto...");
+
+                    if (typeof limpiarFormularioPresupuesto === "function") {
+                        limpiarFormularioPresupuesto();
+                    }
+                }
+
+            } catch (err) {
+                console.error("Error limpieza:", err);
+            }
+
+        }, 800); // pequeño delay para esperar respuesta
+
     });
 </script>

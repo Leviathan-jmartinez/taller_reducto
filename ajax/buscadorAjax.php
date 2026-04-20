@@ -71,13 +71,43 @@ $modulos_con_fecha = [
 
 if (in_array($modulo, $modulos_con_fecha)) {
 
-    if ($modulo == "diagnostico") {
-        if (isset($_POST['eliminar_busqueda'])) {
+    if ($modulo == "diagnostico" || $modulo == "presupuesto_servicio" || $modulo == "orden_trabajo") {
+        /* ===== MAPEO DE SESIONES ===== */
+        $config = [
+            "diagnostico" => [
+                "fecha_inicio" => "fecha_inicio_diag",
+                "fecha_final"  => "fecha_final_diag",
+                "extra" => [
+                    "cliente" => "cliente_diag",
+                    "placa"   => "placa_diag"
+                ]
+            ],
+            "presupuesto_servicio" => [
+                "fecha_inicio" => "fecha_inicio_presupuesto_servicio",
+                "fecha_final"  => "fecha_final_presupuesto_servicio",
+                "extra" => []
+            ],
+            "orden_trabajo" => [
+                "fecha_inicio" => "fecha_inicio_orden_trabajo", 
+                "fecha_final"  => "fecha_final_orden_trabajo",
+                "extra" => [
+                    "estado_ot" => "estado_ot"
+                ]
+            ]
+        ];
 
-            unset($_SESSION['fecha_inicio_diag']);
-            unset($_SESSION['fecha_final_diag']);
-            unset($_SESSION['cliente_diag']);
-            unset($_SESSION['placa_diag']);
+        $cfg = $config[$modulo];
+
+        /* ===== ELIMINAR ===== */
+        if (isset($_POST['eliminar_busqueda'])) {
+            unset($_SESSION['estado_presupuesto']);
+            unset($_SESSION['estado_ot']);
+            unset($_SESSION[$cfg['fecha_inicio']]);
+            unset($_SESSION[$cfg['fecha_final']]);
+
+            foreach ($cfg['extra'] as $key => $sessionKey) {
+                unset($_SESSION[$sessionKey]);
+            }
 
             echo json_encode([
                 "Alerta" => "redireccionar",
@@ -85,32 +115,14 @@ if (in_array($modulo, $modulos_con_fecha)) {
             ]);
             exit();
         }
+
         $fecha_ini = $_POST['fecha_inicio'] ?? '';
         $fecha_fin = $_POST['fecha_final'] ?? '';
-        $cliente   = $_POST['cliente'] ?? '';
-        $placa     = $_POST['placa'] ?? '';
 
-        if (
-            $fecha_ini == '' &&
-            $fecha_fin == '' &&
-            $cliente == '' &&
-            $placa == ''
-        ) {
-            echo json_encode([
-                "Alerta" => "simple",
-                "Titulo" => "Búsqueda inválida",
-                "Texto" => "Debe ingresar al menos un criterio",
-                "Tipo" => "error"
-            ]);
-            exit();
-        }
+        /* ===== VALIDACIÓN FLEXIBLE ===== */
+        if ($fecha_ini != '' && $fecha_fin != ''){
 
-        $_SESSION['cliente_diag'] = $cliente;
-        $_SESSION['placa_diag']   = $placa;
-
-        if ($fecha_ini != '' && $fecha_fin != '') {
-
-            if ($fecha_ini > $fecha_fin) {
+            if ($fecha_ini != '' && $fecha_fin != '' && $fecha_ini > $fecha_fin) {
                 echo json_encode([
                     "Alerta" => "simple",
                     "Titulo" => "Error en fechas",
@@ -120,14 +132,18 @@ if (in_array($modulo, $modulos_con_fecha)) {
                 exit();
             }
 
-            $_SESSION['fecha_inicio_diag'] = $fecha_ini;
-            $_SESSION['fecha_final_diag']  = $fecha_fin;
+            $_SESSION[$cfg['fecha_inicio']] = $fecha_ini;
+            $_SESSION[$cfg['fecha_final']]  = $fecha_fin;
         } else {
-            unset($_SESSION['fecha_inicio_diag']);
-            unset($_SESSION['fecha_final_diag']);
+            unset($_SESSION[$cfg['fecha_inicio']]);
+            unset($_SESSION[$cfg['fecha_final']]);
         }
 
-        // 🔥 ESTE ES EL FIX CLAVE
+        /* ===== CAMPOS EXTRA (solo diagnóstico) ===== */
+        foreach ($cfg['extra'] as $postKey => $sessionKey) {
+            $_SESSION[$sessionKey] = $_POST[$postKey] ?? '';
+        }
+
         echo json_encode([
             "Alerta" => "redireccionar",
             "URL" => SERVERURL . $data_url[$modulo] . "/"

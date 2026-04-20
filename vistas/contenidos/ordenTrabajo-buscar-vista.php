@@ -16,11 +16,6 @@ if (!mainModel::tienePermiso('servicio.ot.ver')) {
             </a>
         </li>
         <li>
-            <a href="<?php echo SERVERURL; ?>/ordenTrabajo-lista/">
-                <i class="fas fa-search fa-fw"></i> &nbsp; HISTORIAL DE ORDENES DE TRABAJO
-            </a>
-        </li>
-        <li>
             <a class="active" href="<?php echo SERVERURL; ?>/ordenTrabajo-buscar/">
                 <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR ORDENES DE TRABAJO POR FECHA
             </a>
@@ -35,86 +30,72 @@ $fecha_final  = $_SESSION['fecha_final_orden_trabajo'] ?? '';
 ?>
 
 
-<?php if (!$fecha_inicio && !$fecha_final) { ?>
+<?php $estado = $_SESSION['estado_ot'] ?? ''; ?>
 
-    <div class="container-fluid">
-        <form class="form-neon FormularioAjax"
-            action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
-            method="POST"
-            data-form="default"
-            autocomplete="off">
+<!-- SIEMPRE MOSTRAR FORMULARIO -->
+<div class="container-fluid">
+    <form class="form-neon FormularioAjax"
+        action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
+        method="POST"
+        data-form="search"
+        autocomplete="off">
 
-            <input type="hidden" name="modulo" value="orden_trabajo">
+        <input type="hidden" name="modulo" value="orden_trabajo">
 
-            <div class="row justify-content-md-center">
-                <div class="col-12 col-md-4">
-                    <div class="form-group">
-                        <label>Fecha inicial</label>
-                        <input type="date" class="form-control" name="fecha_inicio">
-                    </div>
-                </div>
+        <div class="row justify-content-md-center">
+            <div class="col-12 col-md-4">
+                <label>Fecha inicial</label>
+                <input type="date" class="form-control" name="fecha_inicio" value="<?php echo $fecha_inicio; ?>">
+            </div>
 
-                <div class="col-12 col-md-4">
-                    <div class="form-group">
-                        <label>Fecha final</label>
-                        <input type="date" class="form-control" name="fecha_final">
-                    </div>
-                </div>
+            <div class="col-12 col-md-4">
+                <label>Fecha final</label>
+                <input type="date" class="form-control" name="fecha_final" value="<?php echo $fecha_final; ?>">
+            </div>
 
-                <div class="col-12 text-center" style="margin-top: 40px;">
-                    <button type="submit" class="btn btn-raised btn-info">
-                        <i class="fas fa-search"></i> &nbsp; BUSCAR
-                    </button>
+            <div class="col-12 col-md-4">
+                <div class="form-group">
+                    <label>Estado</label>
+                    <select name="estado_ot" class="form-control">
+                        <option value="">Todos</option>
+                        <option value="1" <?php if ($estado == "1") echo "selected"; ?>>En proceso</option>
+                        <option value="2" <?php if ($estado == "2") echo "selected"; ?>>Finalizado</option>
+                        <option value="0" <?php if ($estado === "0") echo "selected"; ?>>Anulada</option>
+                    </select>
                 </div>
             </div>
-        </form>
-    </div>
 
-<?php } else { ?>
+            <div class="col-12 text-center mt-4">
 
+                <button type="submit" class="btn btn-raised btn-info">
+                    <i class="fas fa-search"></i> &nbsp; BUSCAR
+                </button>
 
-    <div class="container-fluid">
-        <form class="FormularioAjax"
-            action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
-            method="POST"
-            data-form="search"
-            autocomplete="off">
+                <button type="button"
+                    class="btn btn-raised btn-danger btn-limpiar-busqueda">
+                    <i class="far fa-trash-alt"></i> &nbsp; LIMPIAR
+                </button>
 
-            <input type="hidden" name="modulo" value="orden_trabajo">
-            <input type="hidden" name="eliminar_busqueda" value="eliminar">
-
-            <div class="row justify-content-md-center">
-                <div class="col-12 col-md-6">
-                    <p class="text-center" style="font-size: 20px;">
-                        Fecha de búsqueda:
-                        <strong><?php echo $fecha_inicio ?> &nbsp; a &nbsp; <?php echo $fecha_final ?></strong>
-                    </p>
-                </div>
-
-                <div class="col-12 text-center" style="margin-top: 20px;">
-                    <button type="submit" class="btn btn-raised btn-danger">
-                        <i class="far fa-trash-alt"></i> &nbsp; ELIMINAR BÚSQUEDA
-                    </button>
-                </div>
             </div>
-        </form>
-    </div>
+        </div>
+    </form>
+</div>
 
 
-    <div class="container-fluid">
-        <?php
-        require_once "./controladores/ordenTrabajoControlador.php";
+<div class="container-fluid">
+    <?php
+    require_once "./controladores/ordenTrabajoControlador.php";
 
-        $ot = new ordenTrabajoControlador();
+    $ot = new ordenTrabajoControlador();
 
-        echo $ot->paginador_ot_controlador(
-            $pagina[1],
-            15,
-            $pagina[0],
-            $_SESSION['fecha_inicio_orden_trabajo'] ?? '',
-            $_SESSION['fecha_final_orden_trabajo'] ?? ''
-        );
-        ?>
-    </div>
+    echo $ot->listar_ot_controlador(
+        $pagina[1],
+        15,
+        $pagina[0],
+        $_SESSION['fecha_inicio_orden_trabajo'] ?? '',
+        $_SESSION['fecha_final_orden_trabajo'] ?? ''
+    );
+    ?>
+</div>
 
-<?php } ?>
+<?php include_once "./vistas/inc/ordenTrabajoJS.php"; ?>

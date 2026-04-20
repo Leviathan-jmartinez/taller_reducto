@@ -210,13 +210,13 @@ class mainModel
         $baseSQL
         $orderSQL
         LIMIT $inicio, $registros
-    ")->fetchAll();
+        ")->fetchAll();
 
         // 🔹 TOTAL
         $total = (int)$conexion->query("
         SELECT COUNT(*) 
         $baseSQL
-    ")->fetchColumn();
+        ")->fetchColumn();
 
         return [
             "datos" => $datos,
@@ -230,38 +230,59 @@ class mainModel
 
         foreach ($filtros as $f) {
 
-            if (!isset($f['campo'], $f['tipo'], $f['valor'])) continue;
+            if (!isset($f['campo'], $f['tipo'])) continue;
 
             $campo = $f['campo'];
             $tipo  = strtoupper($f['tipo']);
-            $valor = self::limpiar_string($f['valor']);
-
-            if ($valor === "" || $valor === null) continue;
 
             switch ($tipo) {
-
+                case 'IN':
+                    if (is_array($f['valor']) && count($f['valor']) > 0) {
+                        $valores = implode(",", $f['valor']);
+                        $sql .= " AND $campo IN ($valores)";
+                    }
+                    break;
                 case 'LIKE':
-                    $sql .= " AND $campo LIKE '%$valor%'";
+                    if (!empty($f['valor'])) {
+                        $valor = self::limpiar_string($f['valor']);
+                        $sql .= " AND $campo LIKE '%$valor%'";
+                    }
                     break;
 
                 case '=':
-                    $sql .= " AND $campo = '$valor'";
+                    if (isset($f['valor'])) {
+                        $valor = self::limpiar_string($f['valor']);
+                        $sql .= " AND $campo = '$valor'";
+                    }
                     break;
 
-                case '>=':
-                case '<=':
-                case '>':
-                case '<':
-                    $sql .= " AND $campo $tipo '$valor'";
+                case '!=':
+                    if (isset($f['valor'])) {
+                        $valor = self::limpiar_string($f['valor']);
+                        $sql .= " AND $campo != '$valor'";
+                    }
                     break;
 
                 case 'DATE_RANGE':
+
                     if (!empty($f['desde']) && !empty($f['hasta'])) {
+
                         $desde = self::limpiar_string($f['desde']);
                         $hasta = self::limpiar_string($f['hasta']);
 
-                        $sql .= " AND DATE($campo) >= '$desde' AND DATE($campo) <= '$hasta'";
+                        $sql .= " AND DATE($campo) BETWEEN '$desde' AND '$hasta'";
+                    } elseif (!empty($f['desde'])) {
+
+                        $desde = self::limpiar_string($f['desde']);
+
+                        $sql .= " AND DATE($campo) >= '$desde'";
+                    } elseif (!empty($f['hasta'])) {
+
+                        $hasta = self::limpiar_string($f['hasta']);
+
+                        $sql .= " AND DATE($campo) <= '$hasta'";
                     }
+
                     break;
             }
         }

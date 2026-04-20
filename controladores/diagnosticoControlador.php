@@ -249,8 +249,8 @@ class diagnosticoControlador extends diagnosticoModelo
 
                 $estadoMap = [
                     1 => ['En proceso', 'info'],
-                    2 => ['Finalizado', 'success'],
-                    3 => ['Presupuestado', 'primary'],
+                    2 => ['Presupuestado', 'success'],
+                    3 => ['Finalizado', 'primary'],
                     0 => ['Anulado', 'warning']
                 ];
 

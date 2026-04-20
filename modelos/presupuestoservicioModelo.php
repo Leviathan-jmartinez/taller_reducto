@@ -45,49 +45,6 @@ class presupuestoservicioModelo extends mainModel
         return $cabecera;
     }
 
-    protected static function buscar_recepciones_modelo($txt, $idSucursal)
-    {
-        $txt = "%$txt%";
-
-        $sql = mainModel::conectar()->prepare("
-        SELECT r.idrecepcion, r.id_cliente, r.id_vehiculo,
-               r.kilometraje, r.observacion,
-               CONCAT(c.nombre_cliente,' ',c.apellido_cliente) AS cliente,
-               CONCAT(ma.mod_descri,' - ',v.placa) AS vehiculo
-        FROM recepcion_servicio r
-        INNER JOIN clientes c ON c.id_cliente = r.id_cliente
-        INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
-        INNER JOIN modelo_auto ma ON ma.id_modeloauto = v.id_modeloauto
-        WHERE r.id_sucursal = :sucursal AND r.estado = 1
-          AND (c.nombre_cliente LIKE :b OR v.placa LIKE :b)
-        ORDER BY r.fecha_ingreso DESC
-        LIMIT 20    ");
-
-        $sql->execute([
-            ':sucursal' => $idSucursal,
-            ':b' => $txt
-        ]);
-
-        $html = '<table class="table table-sm">';
-        foreach ($sql->fetchAll(PDO::FETCH_ASSOC) as $r) {
-            $json = htmlspecialchars(json_encode($r), ENT_QUOTES);
-            $html .= "
-        <tr>
-            <td>{$r['cliente']}</td>
-            <td>{$r['vehiculo']}</td>
-            <td>
-                <button class='btn btn-success btn-sm'
-                        onclick='seleccionarRecepcion($json)'>
-                    Seleccionar
-                </button>
-            </td>
-        </tr>";
-        }
-        $html .= '</table>';
-
-        return $html;
-    }
-
     protected static function buscar_servicios_modelo($txt, $sucursal)
     {
         $txt = "%$txt%";
@@ -282,7 +239,7 @@ class presupuestoservicioModelo extends mainModel
             /* ================= ACTUALIZAR DIAGNÓSTICO ================= */
             $sqlUpd = $pdo->prepare("
             UPDATE diagnostico_servicio
-            SET estado = 3
+            SET estado = 2
             WHERE id_diagnostico = :id
             ");
             $sqlUpd->execute([
@@ -300,18 +257,6 @@ class presupuestoservicioModelo extends mainModel
                 'msg'   => $e->getMessage()
             ];
         }
-    }
-
-    protected static function actualizar_estado_recepcion_modelo($idrecepcion)
-    {
-        $sql = mainModel::conectar()->prepare("
-        UPDATE recepcion_servicio
-        SET estado = 2,
-            fecha_actualizacion = NOW()
-        WHERE idrecepcion = :id");
-
-        $sql->bindParam(':id', $idrecepcion, PDO::PARAM_INT);
-        return $sql->execute();
     }
 
     protected static function listar_presupuestos_modelo($inicio, $registros, $filtrosSQL)
@@ -355,7 +300,8 @@ class presupuestoservicioModelo extends mainModel
             $registros
         );
     }
-    protected static function anular_presupuesto_full_modelo($id)
+    
+    protected static function anular_presupuesto_modelo($id)
     {
         $pdo = mainModel::conectar();
 
@@ -380,7 +326,7 @@ class presupuestoservicioModelo extends mainModel
             $sql = $pdo->prepare("
             SELECT COUNT(*) 
             FROM orden_trabajo
-            WHERE id_presupuesto = :id
+            WHERE idpresupuesto_servicio = :id
             ");
             $sql->execute([':id' => $id]);
 
@@ -399,7 +345,7 @@ class presupuestoservicioModelo extends mainModel
             // 🔹 actualizar diagnóstico
             $sql = $pdo->prepare("
             UPDATE diagnostico_servicio
-            SET estado = 2
+            SET estado = 1
             WHERE id_diagnostico = :id_diag
             ");
             $sql->execute([
@@ -422,19 +368,6 @@ class presupuestoservicioModelo extends mainModel
             ];
         }
     }
-
-    protected static function revertir_estado_recepcion_modelo($idrecepcion)
-    {
-        $sql = mainModel::conectar()->prepare("
-        UPDATE recepcion_servicio
-        SET estado = 1,
-            fecha_actualizacion = NOW()
-        WHERE idrecepcion = :id");
-
-        $sql->bindParam(':id', $idrecepcion, PDO::PARAM_INT);
-        return $sql->execute();
-    }
-
 
     protected static function aprobar_presupuesto_modelo($id)
     {

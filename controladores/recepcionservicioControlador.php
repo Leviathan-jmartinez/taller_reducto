@@ -128,84 +128,58 @@ class recepcionservicioControlador extends recepcionservicioModelo
         }
     }
 
-    /**Controlador paginar clientes */
-    public function paginador_recepcion_servicio_controlador($pagina, $registros, $url, $busqueda)
+    public function listar_recepcion_controlador($pagina, $registros, $url, $busqueda)
     {
-        $pagina     = mainModel::limpiar_string($pagina);
-        $registros  = mainModel::limpiar_string($registros);
-        $busqueda   = mainModel::limpiar_string($busqueda);
+        $pagina    = (int) mainModel::limpiar_string($pagina);
+        $registros = (int) mainModel::limpiar_string($registros);
+        $url       = SERVERURL . mainModel::limpiar_string($url) . "/";
 
-        $url = mainModel::limpiar_string($url);
-        $url = SERVERURL . $url . "/";
+        $pagina = ($pagina > 0) ? $pagina : 1;
+        $inicio = ($pagina - 1) * $registros;
 
-        $tabla = "";
+        $busqueda = mainModel::limpiar_string($busqueda);
 
-        $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
-        $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
+        /* ================= FILTROS ================= */
 
-        /* ================= CONSULTA ================= */
+        $filtros = [
+            [
+                "campo" => "rs.id_sucursal",
+                "tipo"  => "=",
+                "valor" => $_SESSION['nick_sucursal']
+            ]
+        ];
 
         if ($busqueda != "") {
-            $consulta = "
-            SELECT SQL_CALC_FOUND_ROWS
-                rs.idrecepcion,
-                rs.fecha_ingreso,
-                rs.kilometraje,
-                rs.estado,
-                rs.id_sucursal,
-                c.doc_number,
-                CONCAT(c.nombre_cliente,' ',c.apellido_cliente) AS cliente,
-
-                v.placa,
-                v.anho,
-
-                CONCAT(u.usu_nombre,' ',u.usu_apellido) AS usuario
-            FROM recepcion_servicio rs
-            INNER JOIN clientes c   ON c.id_cliente = rs.id_cliente
-            INNER JOIN vehiculos v  ON v.id_vehiculo = rs.id_vehiculo
-            INNER JOIN usuarios u   ON u.id_usuario = rs.id_usuario
-            WHERE (
-                   c.nombre_cliente LIKE '%$busqueda%'
-                OR c.apellido_cliente LIKE '%$busqueda%'
-                OR c.doc_number LIKE '%$busqueda%'
-                OR v.placa LIKE '%$busqueda%'
-            ) AND rs.id_sucursal = " . $_SESSION['nick_sucursal'] . "
-            ORDER BY rs.fecha_ingreso DESC
-            LIMIT $inicio,$registros
-        ";
-        } else {
-            $consulta = "
-            SELECT SQL_CALC_FOUND_ROWS
-                rs.idrecepcion,
-                rs.fecha_ingreso,
-                rs.kilometraje,
-                rs.estado,
-                rs.id_sucursal, 
-                c.doc_number,
-                CONCAT(c.nombre_cliente,' ',c.apellido_cliente) AS cliente,
-                v.placa,
-                v.anho,
-                CONCAT(u.usu_nombre,' ',u.usu_apellido) AS usuario
-            FROM recepcion_servicio rs
-            INNER JOIN clientes c   ON c.id_cliente = rs.id_cliente
-            INNER JOIN vehiculos v  ON v.id_vehiculo = rs.id_vehiculo
-            INNER JOIN usuarios u   ON u.id_usuario = rs.id_usuario
-            WHERE rs.id_sucursal = " . $_SESSION['nick_sucursal'] . "
-            ORDER BY rs.fecha_ingreso DESC
-            LIMIT $inicio,$registros
-        ";
+            $filtros[] = [
+                "campo" => "CONCAT(c.nombre_cliente,' ',c.apellido_cliente, ' ', c.doc_number, ' ', v.placa)",
+                "tipo"  => "LIKE",
+                "valor" => $busqueda
+            ];
+        }
+        if (!empty($_SESSION['estado_recepcion'])) {
+            $filtros[] = [
+                "campo" => "rs.estado",
+                "tipo"  => "=",
+                "valor" => $_SESSION['estado_recepcion']
+            ];
         }
 
-        $conexion = mainModel::conectar();
-        $datos = $conexion->query($consulta)->fetchAll();
+        $filtrosSQL = mainModel::construirFiltros($filtros);
 
-        $total = (int)$conexion->query("SELECT FOUND_ROWS()")->fetchColumn();
+        /* ================= MODELO ================= */
+
+        $res = recepcionservicioModelo::listar_recepcion_modelo($inicio, $registros, $filtrosSQL);
+
+        $datos = $res['datos'];
+        $total = $res['total'];
         $Npaginas = ceil($total / $registros);
+
+        $tabla = '';
 
         /* ================= TABLA ================= */
 
         $tabla .= '
-    <div class="table-responsive">
+        <div class="table-responsive">
         <table class="table table-dark table-sm">
             <thead>
                 <tr class="text-center roboto-medium">
@@ -301,7 +275,7 @@ class recepcionservicioControlador extends recepcionservicioModelo
         $tabla .= '
             </tbody>
         </table>
-    </div>';
+        </div>';
 
         /* ================= PAGINADOR ================= */
 

@@ -26,13 +26,8 @@ $id_usuario     = $_SESSION['id_str'];
                 </a>
             </li>
             <li>
-                <a href="<?php echo SERVERURL; ?>/ordenTrabajo-lista/">
-                    <i class="fas fa-search fa-fw"></i> &nbsp; HISTORIAL DE ORDENES DE TRABAJO
-                </a>
-            </li>
-            <li>
                 <a href="<?php echo SERVERURL; ?>/ordenTrabajo-buscar/">
-                    <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR ORDENES DE TRABAJO POR FECHA
+                    <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR ORDENES DE TRABAJO
                 </a>
             </li>
         </ul>

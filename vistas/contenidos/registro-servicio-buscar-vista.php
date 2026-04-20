@@ -104,12 +104,12 @@ $fecha_final  = $_SESSION['fecha_final_registro_servicio'] ?? '';
 
         $reg = new registroServicioControlador();
 
-        echo $reg->paginador_registro_servicio_controlador(
+        echo $reg->listar_registro_servicio_controlador(
             $pagina[1],
             15,
             $pagina[0],
-            $_SESSION['fecha_inicio_registro_servicio'],
-            $_SESSION['fecha_final_registro_servicio']
+            $_SESSION['fecha_inicio_registro_servicio'] ?? '',
+            $_SESSION['fecha_final_registro_servicio'] ?? ''
         );
         ?>
     </div>
