@@ -46,13 +46,8 @@ if (!mainModel::tienePermiso('servicio.registro.crear')) {
                 </a>
             </li>
             <li>
-                <a href="<?php echo SERVERURL; ?>/registro-servicio-lista/">
-                    <i class="fas fa-search fa-fw"></i> &nbsp; HISTORIAL DE SERVICIOS
-                </a>
-            </li>
-            <li>
                 <a href="<?php echo SERVERURL; ?>registro-servicio-buscar/">
-                    <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR
+                    <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR REGISTRO DE SERVICIO
                 </a>
             </li>
         </ul>

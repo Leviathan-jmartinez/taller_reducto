@@ -338,12 +338,19 @@ class registroServicioModelo extends mainModel
         $sql = "
         SELECT 
             rs.*,
-            ot.idorden_trabajo
+            ot.idorden_trabajo,
+            c.nombre_cliente,
+            c.apellido_cliente,
+            m.mod_descri,
+            v.placa
         FROM registro_servicio rs
         INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rs.idorden_trabajo
         INNER JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
         INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
         INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
+        INNER JOIN clientes c ON c.id_cliente = r.id_cliente
+        INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
+        INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
         WHERE 1=1 $filtrosSQL
         ORDER BY rs.idregistro_servicio DESC
         LIMIT $inicio, $registros
@@ -352,12 +359,15 @@ class registroServicioModelo extends mainModel
         $datos = $pdo->query($sql)->fetchAll();
 
         $total = $pdo->query("
-        SELECT COUNT(*)
+                SELECT COUNT(*)
         FROM registro_servicio rs
         INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rs.idorden_trabajo
         INNER JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
         INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
         INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
+        INNER JOIN clientes c ON c.id_cliente = r.id_cliente
+        INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
+        INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
         WHERE 1=1 $filtrosSQL
         ")->fetchColumn();
 
