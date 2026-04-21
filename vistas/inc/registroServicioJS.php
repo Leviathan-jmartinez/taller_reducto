@@ -1,5 +1,7 @@
 <script>
     const SERVERURL = "<?php echo SERVERURL; ?>";
+    let insumos = [];
+    let detalleInsumos = [];
 
     function buscarOT(texto) {
 
@@ -76,4 +78,142 @@
                 }
             });
     }
+
+    document.addEventListener('click', function(e) {
+
+        const btn = e.target.closest('.btn-limpiar-busqueda');
+        if (!btn) return;
+
+        fetch("<?php echo SERVERURL; ?>ajax/buscadorAjax.php", {
+                method: "POST",
+                body: new URLSearchParams({
+                    modulo: "registro_servicio",
+                    eliminar_busqueda: 1
+                })
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.Alerta === "redireccionar") {
+                    window.location.href = res.URL;
+                } else {
+                    alert(res.Texto);
+                }
+            });
+
+    });
+
+    function buscarInsumo() {
+
+        let texto = document.getElementById('buscar_insumo').value;
+
+        fetch(SERVERURL + 'ajax/registroServicioAjax.php', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    accion: 'buscar_insumo',
+                    texto: texto
+                })
+            })
+            .then(r => r.text())
+            .then(html => {
+                document.getElementById('resultado_insumos').innerHTML = html;
+            });
+    }
+
+    function agregarInsumo(id, descripcion, stock) {
+
+        let existe = detalleInsumos.find(i => i.id_articulo == id);
+
+        if (existe) {
+            alert('El insumo ya fue agregado');
+            return;
+        }
+
+        if (stock <= 0) {
+            alert('Sin stock disponible');
+            return;
+        }
+
+        let item = {
+            id_articulo: id,
+            descripcion: descripcion,
+            cantidad: 1,
+            stock: stock
+        };
+
+        detalleInsumos.push(item);
+
+        renderInsumos();
+    }
+
+    function renderInsumos() {
+
+        let tbody = document.getElementById('detalle_insumos');
+        tbody.innerHTML = '';
+
+        detalleInsumos.forEach((item, index) => {
+
+            let tr = document.createElement('tr');
+
+            tr.innerHTML = `
+            <td>${item.descripcion}</td>
+
+            <td>
+                <input type="number" min="1"
+                    class="form-control form-control-sm"
+                    value="${item.cantidad}"
+                    oninput="cambiarCantidadInsumo(this, ${index})">
+            </td>
+
+            <td class="text-center">
+                <button class="btn btn-danger btn-sm"
+                    onclick="quitarInsumo(${index})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    function cambiarCantidadInsumo(input, index) {
+
+        let item = detalleInsumos[index];
+
+        let cantidad = parseInt(input.value);
+
+        if (isNaN(cantidad) || cantidad <= 0) cantidad = 1;
+
+        if (cantidad > item.stock) {
+            alert('Stock insuficiente');
+            cantidad = item.stock;
+            input.value = cantidad;
+        }
+
+        item.cantidad = cantidad;
+    }
+
+    function quitarInsumo(index) {
+        detalleInsumos.splice(index, 1);
+        renderInsumos();
+    }
+
+    document.querySelector('.FormularioAjax')
+        .addEventListener('submit', function() {
+
+            let input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'insumos_json';
+            input.value = JSON.stringify(detalleInsumos);
+
+            this.appendChild(input);
+        });
+
+    document.querySelector('.FormularioAjax')
+        .addEventListener('submit', function() {
+
+            document.getElementById('insumos_json').value =
+                JSON.stringify(detalleInsumos);
+
+        });
 </script>

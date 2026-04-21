@@ -26,8 +26,10 @@ if (!mainModel::tienePermiso('servicio.registro.ver')) {
 </div>
 
 <?php
+
 $fecha_inicio = $_SESSION['fecha_inicio_registro_servicio'] ?? '';
 $fecha_final  = $_SESSION['fecha_final_registro_servicio'] ?? '';
+$estado = $_SESSION['estado_regSer'] ?? '';
 ?>
 
 <!-- 🔎 FORMULARIO SIEMPRE VISIBLE -->
@@ -39,7 +41,6 @@ $fecha_final  = $_SESSION['fecha_final_registro_servicio'] ?? '';
         autocomplete="off">
 
         <input type="hidden" name="modulo" value="registro_servicio">
-
         <div class="row justify-content-md-center">
 
             <div class="col-12 col-md-4">
@@ -58,12 +59,16 @@ $fecha_final  = $_SESSION['fecha_final_registro_servicio'] ?? '';
                     value="<?php echo $fecha_final; ?>">
             </div>
             <div class="col-12 col-md-4">
-                <select name="estado_registro" class="form-control">
-                    <option value="">Todos</option>
-                    <option value="1">Registrado</option>
-                    <option value="2">Facturado</option>
-                    <option value="0">Anulado</option>
-                </select>
+                <div class="form-group">
+                    <label>Estado</label>
+                    <select name="estado_regSer" class="form-control">
+                        <option value="">Todos</option>
+                        <option value="1" <?php if ($estado == "1") echo "selected"; ?>>Activo</option>
+                        <option value="2" <?php if ($estado == "2") echo "selected"; ?>>Facturado</option>
+                        <option value="3" <?php if ($estado == "3") echo "selected"; ?>>Con Reclamo</option>
+                        <option value="0" <?php if ($estado === "0") echo "selected"; ?>>Anulada</option>
+                    </select>
+                </div>
             </div>
             <div class="col-12 text-center mt-4">
 
@@ -81,7 +86,7 @@ $fecha_final  = $_SESSION['fecha_final_registro_servicio'] ?? '';
     </form>
 </div>
 
-<!-- 📊 RESULTADOS SIEMPRE -->
+
 <div class="container-fluid mt-3">
     <?php
     require_once "./controladores/registroServicioControlador.php";
@@ -98,28 +103,5 @@ $fecha_final  = $_SESSION['fecha_final_registro_servicio'] ?? '';
     ?>
 </div>
 
-<!-- 🧹 JS LIMPIAR -->
-<script>
-    document.addEventListener('click', function(e) {
 
-        const btn = e.target.closest('.btn-limpiar-busqueda');
-        if (!btn) return;
-
-        fetch("<?php echo SERVERURL; ?>ajax/buscadorAjax.php", {
-                method: "POST",
-                body: new URLSearchParams({
-                    modulo: "registro_servicio",
-                    eliminar_busqueda: 1
-                })
-            })
-            .then(r => r.json())
-            .then(res => {
-                if (res.Alerta === "redireccionar") {
-                    window.location.href = res.URL;
-                } else {
-                    alert(res.Texto);
-                }
-            });
-
-    });
-</script>
+<?php include_once "./vistas/inc/registroServicioJS.php"; ?>

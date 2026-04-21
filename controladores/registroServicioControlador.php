@@ -57,6 +57,7 @@ class registroServicioControlador extends registroServicioModelo
             'observacion'     => $_POST['observacion'] ?? '',
             'usuario'         => $idUsuario,
             'updatedby'       => $idUsuario,
+            'insumos_json' => $_POST['insumos_json'] ?? '[]',
         ];
 
         /* ================= EJECUTAR ================= */
@@ -136,28 +137,66 @@ class registroServicioControlador extends registroServicioModelo
         ]);
     }
 
+
+    public function buscar_insumo_controlador()
+    {
+        $texto = $_POST['texto'] ?? '';
+
+        $datos = registroServicioModelo::buscar_insumo_modelo($texto);
+
+        if (empty($datos)) {
+            return '<tr><td colspan="2">Sin resultados</td></tr>';
+        }
+
+        $html = '';
+
+        foreach ($datos as $row) {
+            $html .= '
+        <tr>
+            <td>' . $row['desc_articulo'] . '</td>
+            <td class="text-center">
+                <button class="btn btn-success btn-sm"
+                    onclick="agregarInsumo(
+                            ' . $row['id_articulo'] . ',
+                            \'' . $row['desc_articulo'] . '\',
+                            ' . $row['stockDisponible'] . '
+                        )">
+                    Agregar
+                </button>
+            </td>
+        </tr>';
+        }
+
+        return $html;
+    }
+
     public function listar_registro_servicio_controlador($pagina, $registros, $url, $busqueda1, $busqueda2)
     {
         $pagina    = (int) mainModel::limpiar_string($pagina);
         $registros = (int) mainModel::limpiar_string($registros);
         $url       = SERVERURL . mainModel::limpiar_string($url) . "/";
-
+        $estadoFiltro = $_SESSION['estado_regSer'] ?? '';
         $pagina = ($pagina > 0) ? $pagina : 1;
         $inicio = ($pagina - 1) * $registros;
 
-        $filtros = [
-            [
-                "campo" => "rs.id_sucursal",
-                "tipo"  => "=",
-                "valor" => $_SESSION['nick_sucursal']
-            ],
-            [
+        $filtros = [];
+
+        if (!empty($busqueda1) && !empty($busqueda2)) {
+            $filtros[] = [
                 "campo" => "rs.fecha_ejecucion",
                 "tipo"  => "DATE_RANGE",
                 "desde" => $busqueda1,
                 "hasta" => $busqueda2
-            ]
-        ];
+            ];
+        }
+
+        if ($estadoFiltro !== '') {
+            $filtros[] = [
+                "campo" => "rs.estado",
+                "tipo"  => "=",
+                "valor" => $estadoFiltro
+            ];
+        }
 
         $filtrosSQL = mainModel::construirFiltros($filtros);
 
@@ -201,6 +240,9 @@ class registroServicioControlador extends registroServicioModelo
                         break;
                     case 0:
                         $estado = '<span class="badge badge-danger">Anulado</span>';
+                        break;
+                    case 3:
+                        $estado = '<span class="badge badge-warning">Con Reclamo</span>';
                         break;
                     default:
                         $estado = '<span class="badge badge-secondary">?</span>';

@@ -70,11 +70,31 @@ class registroServicioModelo extends mainModel
             SELECT ?, id_articulo, cantidad, precio_unitario, subtotal, 'OT'
             FROM orden_trabajo_detalle
             WHERE idorden_trabajo = ?
-        ");
+            ");
             $det->execute([
                 $idRegistro,
                 $datos['idorden_trabajo']
             ]);
+            /* ================= INSERTAR INSUMOS ================= */
+            $insumos = json_decode($datos['insumos_json'] ?? '[]', true);
+
+            if (!empty($insumos)) {
+
+                $ins = $pdo->prepare("
+                INSERT INTO registro_servicio_detalle
+                (idregistro_servicio, id_articulo, cantidad, precio_unitario, subtotal, origen)
+                VALUES (?, ?, ?, 0, 0, 'INSUMO')
+            ");
+
+                foreach ($insumos as $i) {
+                    $ins->execute([
+                        $idRegistro,
+                        $i['id_articulo'],
+                        $i['cantidad']
+                    ]);
+                }
+            }
+
 
             /* ================= APLICAR STOCK ================= */
             self::aplicar_stock_registro_servicio(
@@ -126,6 +146,23 @@ class registroServicioModelo extends mainModel
         }
     }
 
+    protected static function buscar_insumo_modelo($texto)
+    {
+        $sql = self::conectar()->prepare("
+        SELECT a.id_articulo, a.desc_articulo, s.stockDisponible
+        FROM articulos a
+        INNER JOIN stock s ON s.id_articulo = a.id_articulo
+        WHERE a.tipo = 'insumo'
+        AND a.estado = 1
+        AND a.desc_articulo LIKE :b
+        LIMIT 20
+    ");
+
+        $sql->bindValue(':b', "%$texto%");
+        $sql->execute();
+
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
     protected static function buscar_ot_para_registro_modelo($texto)
     {
         session_start(['name' => 'STR']);
@@ -212,7 +249,7 @@ class registroServicioModelo extends mainModel
         FROM registro_servicio_detalle d
         INNER JOIN articulos a ON a.id_articulo = d.id_articulo
         WHERE d.idregistro_servicio = ?
-          AND a.tipo = 'producto'");
+          AND a.tipo IN ('producto','insumo') ");
         $sql->execute([$idRegistro]);
 
         $items = $sql->fetchAll(PDO::FETCH_ASSOC);
@@ -282,7 +319,7 @@ class registroServicioModelo extends mainModel
             FROM registro_servicio_detalle d
             INNER JOIN articulos a ON a.id_articulo = d.id_articulo
             WHERE d.idregistro_servicio = ?
-            AND a.tipo = 'producto'");
+            AND a.tipo IN ('producto','insumo') ");
         $sql->execute([$idRegistro]);
 
         foreach ($sql->fetchAll(PDO::FETCH_ASSOC) as $item) {

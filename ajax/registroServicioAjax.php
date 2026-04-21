@@ -26,6 +26,10 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'anular') {
     exit();
 }
 
+if (isset($_POST['accion']) && $_POST['accion'] === 'buscar_insumo') {
+    echo $insRS->buscar_insumo_controlador();
+    exit();
+}
 
 
 /* BLINDAJE */

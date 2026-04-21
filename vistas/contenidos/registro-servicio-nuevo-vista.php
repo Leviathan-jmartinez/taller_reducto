@@ -91,7 +91,7 @@ if (!mainModel::tienePermiso('servicio.registro.crear')) {
 
     <!-- ================= DETALLE ================= -->
     <fieldset class="border p-3 mb-3">
-        <legend class="w-auto px-2">Detalle aprobado</legend>
+        <legend class="w-auto px-2">Detalle OT</legend>
 
         <div class="table-responsive">
             <table class="table table-sm table-bordered">
@@ -114,6 +114,32 @@ if (!mainModel::tienePermiso('servicio.registro.crear')) {
         </div>
     </fieldset>
 
+    <fieldset class="border p-3 mb-3">
+        <legend class="w-auto px-2">Insumos utilizados</legend>
+
+        <div class="row mb-2">
+            <div class="col-md-6">
+                <input type="text"
+                    id="buscar_insumo"
+                    class="form-control"
+                    onkeyup="buscarInsumo()">
+            </div>
+        </div>
+
+        <div id="resultado_insumos"></div>
+
+        <table class="table table-sm table-bordered mt-2">
+            <thead class="text-center">
+                <tr>
+                    <th>Insumo</th>
+                    <th>Cant.</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="detalle_insumos"></tbody>
+        </table>
+    </fieldset>
+
     <!-- ================= CONFIRMACIÓN ================= -->
     <form class="FormularioAjax"
         action="<?= SERVERURL ?>ajax/registroServicioAjax.php"
@@ -122,7 +148,7 @@ if (!mainModel::tienePermiso('servicio.registro.crear')) {
 
         <input type="hidden" name="accion" value="registrar_servicio">
         <input type="hidden" name="idorden_trabajo" id="idorden_trabajo">
-
+        <input type="hidden" name="insumos_json" id="insumos_json">
         <fieldset class="border p-3 mb-3">
             <legend class="w-auto px-2">Confirmación</legend>
 
