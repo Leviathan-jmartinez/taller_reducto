@@ -21,12 +21,29 @@
             });
     }
 
-    function seleccionarRegistro(id, nro, cliente, vehiculo) {
+    function seleccionarRegistro(idEnc, numero, cliente, vehiculo, trabajos) {
 
-        document.getElementById('idregistro_servicio').value = id;
-        document.getElementById('registro_numero').value = nro;
+        document.getElementById('idregistro_servicio').value = idEnc;
+        document.getElementById('registro_numero').value = numero;
         document.getElementById('cliente').value = cliente;
         document.getElementById('vehiculo').value = vehiculo;
+
+        let html = '';
+
+        if (trabajos) {
+
+            let items = trabajos.split('|');
+
+            html += '<ul style="margin:0;padding-left:15px;">';
+
+            items.forEach(t => {
+                html += '<li>' + t + '</li>';
+            });
+
+            html += '</ul>';
+        }
+
+        document.getElementById('trabajos_realizados').innerHTML = html;
 
         $('#modalRegistro').modal('hide');
     }

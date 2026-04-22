@@ -18,3 +18,12 @@ if ($_POST['accion'] === 'anular_reclamo') {
     echo $ins->anular_reclamo_controlador();
     exit();
 }
+if ($_POST['accion'] == "obtener_reclamo") {
+    echo json_encode(
+        $ins->obtener_reclamo_para_recepcion_controlador()
+    );
+    exit();
+}
+if ($_POST['accion'] == "buscar_reclamo_recepcion") {
+    echo $ins->buscar_reclamo_recepcion_controlador();
+}

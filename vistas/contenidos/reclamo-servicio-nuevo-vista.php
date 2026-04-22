@@ -82,6 +82,13 @@ if (!mainModel::tienePermiso('servicio.reclamo.crear')) {
                     <input type="text" id="vehiculo"
                         class="form-control" readonly>
                 </div>
+                <div class="col-md-12 mt-2">
+                    <label>Trabajos realizados</label>
+                    <div id="trabajos_realizados"
+                        class="form-control"
+                        style="height:auto; min-height:60px; background:#f8f9fa;">
+                    </div>
+                </div>
             </div>
 
             <div class="text-right mt-2">
@@ -103,6 +110,44 @@ if (!mainModel::tienePermiso('servicio.reclamo.crear')) {
                     class="form-control"
                     rows="4"
                     required></textarea>
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-3">
+                    <label>Tipo</label>
+                    <select name="tipo_reclamo" class="form-control">
+                        <option value="SERVICIO">Servicio</option>
+                        <option value="REPUESTO">Repuesto</option>
+                        <option value="ATENCION">Atención</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label>Origen</label>
+                    <select name="origen" class="form-control">
+                        <option value="CLIENTE">Cliente</option>
+                        <option value="INTERNO">Interno</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label>Prioridad</label>
+                    <select name="prioridad" class="form-control">
+                        <option value="1">Baja</option>
+                        <option value="2" selected>Media</option>
+                        <option value="3">Alta</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label>Garantía</label>
+                    <select name="requiere_garantia" class="form-control">
+                        <option value="0">No</option>
+                        <option value="1">Sí</option>
+                    </select>
+                </div>
+
             </div>
         </fieldset>
 

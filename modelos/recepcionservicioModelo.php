@@ -150,9 +150,11 @@ class recepcionservicioModelo extends mainModel
             $pdo->beginTransaction();
 
             $sql = $pdo->prepare("
-            INSERT INTO recepcion_servicio(id_usuario,id_cliente,id_sucursal,id_vehiculo,fecha_ingreso,kilometraje,nivel_combustible,estado_exterior,objetos_vehiculo,tipo_servicio,area_problema,prioridad,accesorios,observacion,estado)
+            INSERT INTO recepcion_servicio(id_usuario,id_cliente,id_sucursal,id_vehiculo,fecha_ingreso, kilometraje,nivel_combustible,estado_exterior,objetos_vehiculo, tipo_servicio,area_problema,prioridad,accesorios,observacion,estado, origen,idreclamo_servicio)
             VALUES
-            (:usuario,:cliente,:sucursal,:vehiculo,now(),:km,:combustible,:estado_exterior,:objetos,:tipo_servicio,:area_problema,:prioridad,:accesorios,:obs,:estado)");
+            (:usuario,:cliente,:sucursal,:vehiculo,now(), :km,:combustible,:estado_exterior,:objetos, :tipo_servicio,:area_problema,:prioridad,:accesorios,:obs,:estado, :origen,:idreclamo)");
+            $origen = $d['origen'] ?? 'NORMAL';
+            $idreclamo = $d['idreclamo_servicio'] ?? null;
 
             $sql->bindParam(":usuario",  $d['id_usuario'],   PDO::PARAM_INT);
             $sql->bindParam(":cliente",  $d['id_cliente'],   PDO::PARAM_INT);
@@ -169,6 +171,8 @@ class recepcionservicioModelo extends mainModel
             $sql->bindParam(":area_problema", $d['area_problema']);
             $sql->bindParam(":prioridad", $d['prioridad']);
 
+            $sql->bindParam(":origen", $origen);
+            $sql->bindParam(":idreclamo", $idreclamo);
             $sql->bindParam(":accesorios", $d['accesorios']);
 
             if (!$sql->execute()) {
@@ -210,6 +214,7 @@ class recepcionservicioModelo extends mainModel
             rs.fecha_ingreso,
             rs.kilometraje,
             rs.estado,
+            rs.origen,
             c.doc_number,
             CONCAT(c.nombre_cliente,' ',c.apellido_cliente) AS cliente,
             v.placa,
@@ -241,7 +246,7 @@ class recepcionservicioModelo extends mainModel
             "total" => $total
         ];
     }
-    
+
     protected static function anular_recepcion_modelo($id, $sucursal)
     {
         $sql = mainModel::conectar()->prepare("

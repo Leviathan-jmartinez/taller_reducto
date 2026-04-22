@@ -239,13 +239,13 @@ class registroServicioControlador extends registroServicioModelo
                         $estado = '<span class="badge badge-primary">Facturado</span>';
                         break;
                     case 0:
-                        $estado = '<span class="badge badge-danger">Anulado</span>';
+                        $estado = '<span class="badge badge-secondary">Anulado</span>';
                         break;
                     case 3:
                         $estado = '<span class="badge badge-warning">Con Reclamo</span>';
                         break;
                     default:
-                        $estado = '<span class="badge badge-secondary">?</span>';
+                        $estado = '<span class="badge badge-default">?</span>';
                 }
 
                 $tabla .= '

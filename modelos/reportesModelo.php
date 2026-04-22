@@ -1010,12 +1010,12 @@ class reportesModelo extends mainModel
         $params = [];
 
         if (!empty($desde)) {
-            $sql .= " AND DATE(rs.fecha_ingreso) >= :desde";
+            $sql .= " AND rs.fecha_ingreso >= :desde";
             $params[':desde'] = $desde;
         }
 
         if (!empty($hasta)) {
-            $sql .= " AND DATE(rs.fecha_ingreso) <= :hasta";
+            $sql .= " AND rs.fecha_ingreso <= :hasta";
             $params[':hasta'] = $hasta;
         }
 
@@ -1071,8 +1071,11 @@ class reportesModelo extends mainModel
         INNER JOIN usuarios u
             ON u.id_usuario = ps.id_usuario
 
-        LEFT JOIN recepcion_servicio rs
-            ON rs.idrecepcion = ps.idrecepcion
+        INNER JOIN diagnostico_servicio ds
+            ON ds.id_diagnostico = ps.id_diagnostico
+
+        INNER JOIN recepcion_servicio rs
+            ON rs.idrecepcion = ds.idrecepcion
 
         LEFT JOIN sucursales s
             ON s.id_sucursal = rs.id_sucursal
@@ -1163,11 +1166,14 @@ class reportesModelo extends mainModel
         INNER JOIN presupuesto_servicio ps
             ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
 
-        INNER JOIN recepcion_servicio rs
-            ON rs.idrecepcion = ot.idrecepcion
+        INNER JOIN diagnostico_servicio ds
+            ON ds.id_diagnostico = ps.id_diagnostico
 
-        INNER JOIN sucursales s
-            ON s.id_sucursal = rs.id_sucursal
+        INNER JOIN recepcion_servicio rs
+            ON rs.idrecepcion = ds.idrecepcion
+
+            INNER JOIN sucursales s
+        ON s.id_sucursal = rs.id_sucursal
 
         INNER JOIN usuarios u
             ON u.id_usuario = ot.id_usuario
@@ -1263,8 +1269,14 @@ class reportesModelo extends mainModel
         INNER JOIN orden_trabajo ot
             ON ot.idorden_trabajo = rs.idorden_trabajo
 
+        INNER JOIN presupuesto_servicio ps
+            ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+
+        INNER JOIN diagnostico_servicio ds
+            ON ds.id_diagnostico = ps.id_diagnostico
+
         INNER JOIN recepcion_servicio r
-            ON r.idrecepcion = ot.idrecepcion
+            ON r.idrecepcion = ds.idrecepcion
 
         INNER JOIN sucursales s
             ON s.id_sucursal = r.id_sucursal
@@ -1284,15 +1296,14 @@ class reportesModelo extends mainModel
         INNER JOIN usuarios ur
             ON ur.id_usuario = rs.usuario_registra
 
-        INNER JOIN empleados em
-            ON em.idempleados = rs.tecnico_responsable
-
         LEFT JOIN equipo_trabajo et
             ON et.id_equipo = ot.idtrabajos
 
         LEFT JOIN registro_servicio_detalle rsd
             ON rsd.idregistro_servicio = rs.idregistro_servicio
 
+        LEFT JOIN empleados em
+            ON em.idempleados = ot.tecnico_responsable
         WHERE 1 = 1
         ";
 
@@ -1314,12 +1325,12 @@ class reportesModelo extends mainModel
         }
 
         if ($empleado !== null) {
-            $sql .= " AND rs.tecnico_responsable = :tecnico_responsable";
+            $sql .= " AND ot.tecnico_responsable = :tecnico_responsable";
             $params[':tecnico_responsable'] = $empleado;
         }
 
         if ($sucursal !== null) {
-            $sql .= " AND r.id_sucursal = :sucursal";
+            $sql .= " AND rs.id_sucursal = :sucursal";
             $params[':sucursal'] = (int)$sucursal;
         }
 

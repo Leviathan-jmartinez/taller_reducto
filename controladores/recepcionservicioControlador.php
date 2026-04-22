@@ -53,6 +53,14 @@ class recepcionservicioControlador extends recepcionservicioModelo
                 "Tipo"   => "warning"
             ]);
         }
+        if ($_POST['origen'] == 'RECLAMO' && empty($_POST['idreclamo_servicio'])) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto"  => "Debe seleccionar un reclamo",
+                "Tipo"   => "error"
+            ]);
+        }
 
         $accesorios = "";
         if (isset($_POST['accesorios'])) {
@@ -75,6 +83,9 @@ class recepcionservicioControlador extends recepcionservicioModelo
             "prioridad"     => $_POST['prioridad'] ?? null,
 
             "accesorios"   => $accesorios,
+
+            "origen" => $_POST['origen'] ?? 'NORMAL',
+            "idreclamo_servicio" => $_POST['idreclamo_servicio'] ?? null,
 
             "observacion"  => trim($_POST['observacion']),
             "estado"       => 1
@@ -220,6 +231,9 @@ class recepcionservicioControlador extends recepcionservicioModelo
                     case 3:
                         $estado = '<span class="badge badge-success">Finalizado</span>';
                         break;
+                        if ($rows['origen'] == 'RECLAMO') {
+                            $estado .= '<br><span class="badge badge-danger">Reclamo</span>';
+                        }
                     default:
                         $estado = '<span class="badge badge-secondary">Anulado</span>';
                         break;

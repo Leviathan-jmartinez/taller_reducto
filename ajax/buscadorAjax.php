@@ -66,12 +66,13 @@ $modulos_con_fecha = [
     "presupuesto_servicio",
     "orden_trabajo",
     "registro_servicio",
-    "diagnostico"
+    "diagnostico",
+    "reclamo_servicio"
 ];
 
 if (in_array($modulo, $modulos_con_fecha)) {
 
-    if ($modulo == "diagnostico" || $modulo == "presupuesto_servicio" || $modulo == "orden_trabajo" || $modulo == "registro_servicio") {
+    if ($modulo == "diagnostico" || $modulo == "presupuesto_servicio" || $modulo == "orden_trabajo" || $modulo == "registro_servicio" || $modulo == "reclamo_servicio") {
         /* ===== MAPEO DE SESIONES ===== */
         $config = [
             "diagnostico" => [
@@ -100,8 +101,14 @@ if (in_array($modulo, $modulos_con_fecha)) {
                 "extra" => [
                     "estado_regSer" => "estado_regSer"
                 ]
+            ],
+            "reclamo_servicio" => [
+                "fecha_inicio" => "fecha_inicio_reclamo_servicio",
+                "fecha_final"  => "fecha_final_reclamo_servicio",
+                "extra" => [
+                    "estado_reclamo_servicio" => "estado_reclamo_servicio"
+                ]
             ]
-                
         ];
 
         $cfg = $config[$modulo];
@@ -111,6 +118,7 @@ if (in_array($modulo, $modulos_con_fecha)) {
             unset($_SESSION['estado_presupuesto']);
             unset($_SESSION['estado_ot']);
             unset($_SESSION['estado_regSer']);
+            unset($_SESSION['estado_reclamo_servicio']);
             unset($_SESSION[$cfg['fecha_inicio']]);
             unset($_SESSION[$cfg['fecha_final']]);
 

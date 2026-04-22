@@ -24,7 +24,10 @@ if (session_status() == PHP_SESSION_NONE) {
             </li>
         </ul>
     </div>
-
+    <div id="alerta_reclamo" class="alert alert-warning" style="display:none;">
+        <i class="fas fa-exclamation-triangle"></i>
+        Recepción generada desde un reclamo
+    </div>
     <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/recepcionservicioAjax.php"
         method="POST"
@@ -34,13 +37,22 @@ if (session_status() == PHP_SESSION_NONE) {
 
         <!-- ACCIÓN -->
         <input type="hidden" name="accion" value="guardar_recepcion">
-
+        <div class="text-right mb-3">
+            <button type="button"
+                class="btn btn-warning"
+                data-toggle="modal"
+                data-target="#modalReclamo">
+                <i class="fas fa-exclamation-circle"></i> Buscar reclamo
+            </button>
+        </div>
         <!-- CLIENTE -->
         <fieldset class="border p-3 mb-3">
             <legend class="w-auto px-2">Cliente</legend>
 
             <div class="row">
                 <div class="col-md-10">
+                    <input type="hidden" name="origen" id="origen" value="NORMAL">
+                    <input type="hidden" name="idreclamo_servicio" id="idreclamo_servicio">
                     <input type="hidden" name="id_cliente" id="id_cliente">
                     <input type="text" class="form-control" id="cliente_nombre"
                         placeholder="Seleccione un cliente" readonly>
@@ -48,6 +60,7 @@ if (session_status() == PHP_SESSION_NONE) {
 
                 <div class="col-md-2">
                     <button type="button"
+                        id="btnBuscarCliente"
                         class="btn btn-info btn-block"
                         data-toggle="modal"
                         data-target="#modalCliente">
@@ -55,6 +68,7 @@ if (session_status() == PHP_SESSION_NONE) {
                     </button>
                 </div>
             </div>
+
         </fieldset>
 
         <!-- VEHÍCULO -->
@@ -70,6 +84,7 @@ if (session_status() == PHP_SESSION_NONE) {
 
                 <div class="col-md-2">
                     <button type="button"
+                        id="btnBuscarVehiculo"
                         class="btn btn-info btn-block"
                         onclick="validarClienteVehiculo()">
                         <i class="fas fa-search"></i>
@@ -78,7 +93,7 @@ if (session_status() == PHP_SESSION_NONE) {
             </div>
         </fieldset>
 
-       <!-- ESTADO DEL VEHÍCULO -->
+        <!-- ESTADO DEL VEHÍCULO -->
         <fieldset class="border p-3 mb-3">
             <legend class="w-auto px-2">Estado del Vehículo al Ingreso</legend>
 
@@ -196,7 +211,7 @@ if (session_status() == PHP_SESSION_NONE) {
             </div>
         </fieldset>
 
-         <fieldset class="border p-3 mb-4">
+        <fieldset class="border p-3 mb-4">
             <legend class="w-auto px-2">Adjuntar imagen del Vehiculo</legend>
             <input type="file" name="fotos_vehiculo[]" multiple class="form-control">
         </fieldset>
@@ -283,6 +298,30 @@ if (session_status() == PHP_SESSION_NONE) {
                 <div id="tabla_vehiculos">
                     <!-- AJAX -->
                 </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalReclamo">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title">Buscar reclamo</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="text"
+                    class="form-control mb-2"
+                    placeholder="Buscar por cliente o vehículo"
+                    onkeyup="buscarReclamoAjax(this.value)">
+
+                <div id="tabla_reclamos"></div>
 
             </div>
 

@@ -23,11 +23,24 @@ class reclamoServicioControlador extends reclamoServicioModelo
             ]);
         }
 
+        $idRegistro = mainModel::decryption($_POST['idregistro_servicio']);
+
+        /* 🔥 OBTENER SUCURSAL */
+        $idSucursal = mainModel::ejecutar_consulta_simple("
+        SELECT id_sucursal 
+        FROM registro_servicio
+        WHERE idregistro_servicio = '$idRegistro'
+        ")->fetchColumn();
+
         $datos = [
-            'idregistro_servicio' =>
-            mainModel::decryption($_POST['idregistro_servicio']),
+            'idregistro_servicio' => $idRegistro,
+            'id_sucursal' => $idSucursal,
             'descripcion' => $_POST['descripcion'],
-            'usuario'     => $_SESSION['id_str']
+            'tipo_reclamo' => $_POST['tipo_reclamo'],
+            'origen' => $_POST['origen'],
+            'prioridad' => $_POST['prioridad'],
+            'requiere_garantia' => $_POST['requiere_garantia'] ?? 0,
+            'usuario' => $_SESSION['id_str']
         ];
 
         $res = self::registrar_reclamo_modelo($datos);
@@ -36,7 +49,7 @@ class reclamoServicioControlador extends reclamoServicioModelo
             return json_encode([
                 'Alerta' => 'recargar',
                 'Titulo' => 'Reclamo registrado',
-                'Texto'  => 'El reclamo fue registrado correctamente',
+                'Texto'  => 'Se generó correctamente',
                 'Tipo'   => 'success'
             ]);
         }
@@ -44,7 +57,7 @@ class reclamoServicioControlador extends reclamoServicioModelo
         return json_encode([
             'Alerta' => 'simple',
             'Titulo' => 'Error',
-            'Texto'  => $res['msg'] ?? 'No se pudo registrar el reclamo',
+            'Texto'  => $res['msg'] ?? 'Error',
             'Tipo'   => 'error'
         ]);
     }
@@ -57,35 +70,53 @@ class reclamoServicioControlador extends reclamoServicioModelo
 
         if (!$datos) {
             return '<div class="alert alert-warning">
-                No se encontraron servicios
-            </div>';
+            No se encontraron servicios
+        </div>';
         }
 
         $html = '<table class="table table-hover table-sm">
-            <thead>
-                <tr>
-                    <th>Servicio</th>
-                    <th>Cliente</th>
-                    <th>Vehículo</th>
-                    <th></th>
-                </tr>
-            </thead><tbody>';
+        <thead>
+            <tr>
+                <th>Servicio</th>
+                <th>Cliente</th>
+                <th>Vehículo</th>
+                <th>Trabajos</th>
+                <th></th>
+            </tr>
+        </thead><tbody>';
 
         foreach ($datos as $r) {
+
+            // 🔥 GENERAR TRABAJOS POR FILA
+            $trabajos = '';
+
+            if (!empty($r['trabajos'])) {
+
+                $items = explode('|', $r['trabajos']);
+
+                $trabajos .= '<ul style="margin:0;padding-left:15px;">';
+
+                foreach ($items as $t) {
+                    $trabajos .= '<li>' . $t . '</li>';
+                }
+
+                $trabajos .= '</ul>';
+            }
+
             $html .= '
             <tr>
                 <td>#' . $r['idregistro_servicio'] . '</td>
-                <td>' . $r['nombre_cliente'] . ' ' .
-                $r['apellido_cliente'] . '</td>
+                <td>' . $r['nombre_cliente'] . ' ' . $r['apellido_cliente'] . '</td>
                 <td>' . $r['mod_descri'] . ' ' . $r['placa'] . '</td>
+                <td>' . $trabajos . '</td>
                 <td class="text-center">
                     <button class="btn btn-success btn-sm"
                         onclick="seleccionarRegistro(
                             \'' . mainModel::encryption($r['idregistro_servicio']) . '\',
                             \'' . $r['idregistro_servicio'] . '\',
-                            \'' . $r['nombre_cliente'] . ' ' .
-                $r['apellido_cliente'] . '\',
-                            \'' . $r['mod_descri'] . ' ' . $r['placa'] . '\'
+                            \'' . $r['nombre_cliente'] . ' ' . $r['apellido_cliente'] . '\',
+                            \'' . $r['mod_descri'] . ' ' . $r['placa'] . '\',
+                            \'' . addslashes($r['trabajos']) . '\'
                         )">
                         Seleccionar
                     </button>
@@ -98,78 +129,93 @@ class reclamoServicioControlador extends reclamoServicioModelo
 
     public function paginador_reclamo_controlador($pagina, $registros, $url, $busqueda = "")
     {
-        $pagina   = mainModel::limpiar_string($pagina);
-        $registros = mainModel::limpiar_string($registros);
-        $busqueda = mainModel::limpiar_string($busqueda);
+        $pagina    = (int) mainModel::limpiar_string($pagina);
+        $registros = (int) mainModel::limpiar_string($registros);
+        $url       = SERVERURL . mainModel::limpiar_string($url) . "/";
 
-        $url = mainModel::limpiar_string($url);
-        $url = SERVERURL . $url . "/";
+        $pagina = ($pagina > 0) ? $pagina : 1;
+        $inicio = ($pagina - 1) * $registros;
 
-        $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
-        $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
+        /* ================= FILTROS ================= */
+        $filtros = [];
 
-        $filtro = "";
-        if ($busqueda != "") {
-            $filtro = "WHERE (
-            c.nombre_cliente LIKE '%$busqueda%'
-            OR c.apellido_cliente LIKE '%$busqueda%'
-            OR v.placa LIKE '%$busqueda%'
-        )";
+        // 🔒 sucursal SIEMPRE
+        $filtros[] = [
+            "campo" => "rs.id_sucursal",
+            "tipo"  => "=",
+            "valor" => $_SESSION['nick_sucursal']
+        ];
+
+        // 🔍 búsqueda
+        if (!empty($busqueda)) {
+            $filtros[] = [
+                "campo" => "(c.nombre_cliente LIKE '%$busqueda%' 
+                     OR c.apellido_cliente LIKE '%$busqueda%' 
+                     OR v.placa LIKE '%$busqueda%')",
+                "tipo"  => "RAW"
+            ];
         }
 
-        $consulta = "
-        SELECT SQL_CALC_FOUND_ROWS
-            rs.idreclamo_servicio,
-            rs.fecha_reclamo,
-            rs.descripcion,
-            rs.estado,
-            c.nombre_cliente,
-            c.apellido_cliente,
-            v.placa
-        FROM reclamo_servicio rs
-        INNER JOIN registro_servicio rgs ON rgs.idregistro_servicio = rs.idregistro_servicio
-        INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rgs.idorden_trabajo
-        INNER JOIN recepcion_servicio r ON r.idrecepcion = ot.idrecepcion
-        INNER JOIN clientes c ON c.id_cliente = r.id_cliente
-        INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
-        $filtro
-        ORDER BY rs.idreclamo_servicio DESC
-        LIMIT $inicio,$registros
-     ";
+        $estadoFiltro = $_SESSION['estado_reclamo_servicio'] ?? '';
 
-        $conexion = mainModel::conectar();
-        $datos = $conexion->query($consulta)->fetchAll();
+        if ($estadoFiltro !== '') {
+            $filtros[] = [
+                "campo" => "rs.estado",
+                "tipo"  => "=",
+                "valor" => $estadoFiltro
+            ];
+        }
 
-        $total = $conexion->query("SELECT FOUND_ROWS()")->fetchColumn();
+        $filtrosSQL = mainModel::construirFiltros($filtros);
+
+        /* ================= CONSULTA ================= */
+        $res = reclamoServicioModelo::listar_reclamos_modelo(
+            $inicio,
+            $registros,
+            $filtrosSQL
+        );
+
+        $datos = $res['datos'];
+        $total = $res['total'];
         $Npaginas = ceil($total / $registros);
 
+        /* ================= TABLA ================= */
         $tabla = '<div class="table-responsive">
         <table class="table table-sm table-dark">
-            <thead class="text-center">
-                <tr>
-                    <th>#</th>
-                    <th>Cliente</th>
-                    <th>Vehículo</th>
-                    <th>Fecha</th>
-                    <th>Descripción</th>
-                    <th>Estado</th>';
+        <thead class="text-center">
+            <tr>
+                <th>#</th>
+                <th>Cliente</th>
+                <th>Vehículo</th>
+                <th>Fecha</th>
+                <th>Descripción</th>
+                <th>Estado</th>';
 
         if (mainModel::tienePermiso('servicio.reclamo.anular')) {
-            $tabla .=           '<th>ANULAR</th>';
+            $tabla .= '<th>ANULAR</th>';
         }
 
         $tabla .= '</tr></thead><tbody>';
 
-        if ($total >= 1 && $pagina <= $Npaginas) {
+        if ($total >= 1) {
+
             $contador = $inicio + 1;
-            $reg_inicio = $contador;
 
             foreach ($datos as $r) {
-                $estado = ($r['estado'] == 1)
-                    ? '<span class="badge bg-primary">Activo</span>'
-                    : '<span class="badge bg-secondary">Cerrado</span>';
 
-                $tabla .= '<tr class="text-center">
+                switch ($r['estado']) {
+                    case 1:
+                        $estado = '<span class="badge badge-primary">Activo</span>';
+                        break;
+                    case 0:
+                        $estado = '<span class="badge badge-secondary">Anulado</span>';
+                        break;
+                    default:
+                        $estado = '<span class="badge badge-default">?</span>';
+                }
+
+                $tabla .= '
+            <tr class="text-center">
                 <td>' . $contador . '</td>
                 <td>' . $r['nombre_cliente'] . ' ' . $r['apellido_cliente'] . '</td>
                 <td>' . $r['placa'] . '</td>
@@ -178,42 +224,49 @@ class reclamoServicioControlador extends reclamoServicioModelo
                 <td>' . $estado . '</td>';
 
                 if (mainModel::tienePermiso('servicio.reclamo.anular')) {
-                    $tabla .= '<td>
-                    <form class="FormularioAjax" action="' . SERVERURL . 'ajax/reclamoServicioAjax.php" method="POST" data-form="delete">
-                        <input type="hidden" name="accion" value="anular_reclamo">
-                        <input type="hidden" name="id" value="' . mainModel::encryption($r['idreclamo_servicio']) . '">
-                        <button type="submit" class="btn btn-warning btn-sm">
-                            <i class="far fa-trash-alt"></i>
-                        </button>
-                    </form>
-                </td>';
+
+                    if ($r['estado'] == 1) {
+                        $tabla .= '
+                    <td>
+                        <form class="FormularioAjax"
+                            action="' . SERVERURL . 'ajax/reclamoServicioAjax.php"
+                            method="POST"
+                            data-form="delete">
+
+                            <input type="hidden" name="accion" value="anular_reclamo">
+                            <input type="hidden" name="id"
+                                value="' . mainModel::encryption($r['idreclamo_servicio']) . '">
+
+                            <button type="submit"
+                                class="btn btn-danger btn-sm">
+                                <i class="fas fa-ban"></i>
+                            </button>
+                        </form>
+                    </td>';
+                    } else {
+                        $tabla .= '<td>-</td>';
+                    }
                 }
 
                 $tabla .= '</tr>';
                 $contador++;
             }
-
-            $reg_final = $contador - 1;
         } else {
-            $tabla .= '<tr class="text-center">
-            <td colspan="7">No hay registros</td>
-            </tr>';
-            $reg_inicio = 0;
-            $reg_final = 0;
+
+            $tabla .= '
+        <tr>
+            <td colspan="7" class="text-center">Sin registros</td>
+        </tr>';
         }
 
         $tabla .= '</tbody></table></div>';
 
-        if ($total >= 1 && $pagina <= $Npaginas) {
-            $tabla .= '<p class="text-right">
-            Mostrando registro ' . $reg_inicio . ' al ' . $reg_final . ' de un total de ' . $total . '
-            </p>';
+        if ($total >= 1) {
             $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);
         }
 
         return $tabla;
     }
-
 
     public function anular_reclamo_controlador()
     {
@@ -281,5 +334,114 @@ class reclamoServicioControlador extends reclamoServicioModelo
             "Texto" => "No se pudo anular el reclamo",
             "Tipo" => "error"
         ]);
+    }
+
+    public function obtener_reclamo_para_recepcion_controlador()
+    {
+        $id = mainModel::decryption($_POST['id']);
+
+        $sql = mainModel::conectar()->prepare("
+        SELECT 
+            rs.idreclamo_servicio,
+            c.id_cliente,
+            CONCAT(c.nombre_cliente,' ',c.apellido_cliente) AS cliente,
+            v.id_vehiculo,
+            CONCAT(m.mar_descri,' ',mo.mod_descri,' ',v.placa) AS vehiculo
+        FROM reclamo_servicio rs
+        INNER JOIN registro_servicio rgs ON rgs.idregistro_servicio = rs.idregistro_servicio
+        INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rgs.idorden_trabajo
+        INNER JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+        INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico 
+        INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
+        INNER JOIN clientes c ON c.id_cliente = r.id_cliente
+        INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
+        INNER JOIN modelo_auto mo ON mo.id_modeloauto = v.id_modeloauto
+        INNER JOIN marcas m ON m.id_marcas = mo.id_marcas
+        WHERE rs.idreclamo_servicio = ?
+        LIMIT 1
+        ");
+
+        $sql->execute([$id]);
+        return $sql->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function buscar_reclamo_recepcion_controlador()
+    {
+        $texto = trim($_POST['buscar'] ?? '');
+
+        $sql = mainModel::conectar()->prepare("
+            SELECT 
+                rs.idreclamo_servicio,
+                c.nombre_cliente,
+                c.apellido_cliente,
+                v.placa,
+                m.mod_descri
+            FROM reclamo_servicio rs
+            INNER JOIN registro_servicio rgs 
+                ON rgs.idregistro_servicio = rs.idregistro_servicio
+            INNER JOIN orden_trabajo ot 
+                ON ot.idorden_trabajo = rgs.idorden_trabajo
+            INNER JOIN presupuesto_servicio ps 
+                ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+            INNER JOIN diagnostico_servicio ds 
+                ON ds.id_diagnostico = ps.id_diagnostico
+            INNER JOIN recepcion_servicio r 
+                ON r.idrecepcion = ds.idrecepcion
+
+            INNER JOIN clientes c 
+                ON c.id_cliente = r.id_cliente
+            INNER JOIN vehiculos v 
+                ON v.id_vehiculo = r.id_vehiculo
+            INNER JOIN modelo_auto m 
+                ON m.id_modeloauto = v.id_modeloauto
+
+            WHERE rs.estado = 1
+            AND (
+                c.nombre_cliente LIKE :b
+                OR c.apellido_cliente LIKE :b
+                OR v.placa LIKE :b
+            )
+            ORDER BY rs.idreclamo_servicio DESC
+            LIMIT 20
+            ");
+
+        $sql->bindValue(':b', "%$texto%");
+        $sql->execute();
+
+        $datos = $sql->fetchAll(PDO::FETCH_ASSOC);
+
+        if (!$datos) {
+            return '<div class="alert alert-warning">Sin reclamos</div>';
+        }
+
+        $html = '<table class="table table-sm table-hover">
+        <thead>
+            <tr>
+                <th>Reclamo</th>
+                <th>Cliente</th>
+                <th>Vehículo</th>
+                <th></th>
+            </tr>
+        </thead><tbody>';
+
+        foreach ($datos as $r) {
+
+            $html .= '
+        <tr>
+            <td>#' . $r['idreclamo_servicio'] . '</td>
+            <td>' . $r['nombre_cliente'] . ' ' . $r['apellido_cliente'] . '</td>
+            <td>' . $r['mod_descri'] . ' ' . $r['placa'] . '</td>
+            <td>
+                <button class="btn btn-success btn-sm"
+                    onclick="seleccionarReclamo(
+                        \'' . mainModel::encryption($r['idreclamo_servicio']) . '\'
+                    )">
+                    Seleccionar
+                </button>
+            </td>
+        </tr>';
+        }
+
+        return $html . '</tbody></table>';
     }
 }
