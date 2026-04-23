@@ -300,9 +300,14 @@
                     showCancelButton: true,
                     confirmButtonText: "Sí, generar OT"
                 }).then((result) => {
-                    if (result.isConfirmed) {
+
+                    console.log("RESULT:", result);
+
+                    if (result.value) {
+                        console.log("CONFIRMADO");
                         crearOTReclamo(id, idReclamo);
                     }
+
                 });
 
             } else {
@@ -326,9 +331,10 @@
 
     function crearOTReclamo(idDiagnostico, idReclamo) {
 
+        console.log("ENTRÓ");
+
         let datos = new URLSearchParams();
         datos.append("accion", "crear_ot_reclamo");
-        datos.append("id_diagnostico", idDiagnostico);
         datos.append("idreclamo_servicio", idReclamo);
 
         fetch(SERVERURL + "ajax/ordenTrabajoAjax.php", {
@@ -338,13 +344,27 @@
                 },
                 body: datos
             })
-            .then(r => r.json())
-            .then(r => {
-                if (r.Alerta === "recargar") {
+            .then(async r => {
+
+                let txt = await r.text();
+                console.log("RAW:", txt);
+
+                if (!txt) throw "VACÍO";
+
+                return JSON.parse(txt);
+            })
+            .then(data => {
+                console.log("DATA:", data);
+
+                if (data.Alerta === "recargar") {
                     location.reload();
                 } else {
-                    Swal.fire(r.Titulo, r.Texto, r.Tipo);
+                    Swal.fire(data.Titulo, data.Texto, data.Tipo);
                 }
+            })
+            .catch(err => {
+                console.error("ERROR:", err);
+                alert("Error en respuesta");
             });
     }
 </script>

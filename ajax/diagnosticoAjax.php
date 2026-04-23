@@ -30,4 +30,5 @@ if (isset($_POST['accion'])) {
         echo $inst_diag->obtener_reclamo_detalle_controlador();
         exit();
     }
+    
 }

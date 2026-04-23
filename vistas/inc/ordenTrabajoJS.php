@@ -252,4 +252,299 @@
             });
 
     });
+
+    let trabajos = [];
+    let repuestos = [];
+
+    /* ================= TRABAJOS ================= */
+
+    function agregarTrabajo() {
+
+        let desc = document.getElementById("trabajo_input").value;
+
+        if (!desc) return;
+
+        trabajos.push(desc);
+
+        document.getElementById("trabajo_input").value = "";
+
+        renderTrabajos();
+    }
+
+    function eliminarTrabajo(index) {
+        trabajos.splice(index, 1);
+        renderTrabajos();
+    }
+
+    function renderTrabajos() {
+
+        let html = "";
+
+        trabajos.forEach((t, i) => {
+            html += `
+            <tr>
+                <td>${t}</td>
+                <td>
+                    <button class="btn btn-danger btn-sm" onclick="eliminarTrabajo(${i})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+        });
+
+        document.getElementById("lista_trabajos").innerHTML = html;
+    }
+
+
+
+    document.addEventListener("click", function(e) {
+        if (!e.target.closest("#buscar_servicio")) {
+            document.getElementById("resultado_servicios").innerHTML = "";
+        }
+    });
+
+    function eliminarRepuesto(index) {
+        repuestos.splice(index, 1);
+        renderRepuestos();
+    }
+
+    function renderRepuestos() {
+
+        let html = "";
+
+        repuestos.forEach((r, i) => {
+
+            html += `
+            <tr>
+                <td>${r.nombre}</td>
+                <td>${r.cantidad}</td>
+                <td>
+                    <button class="btn btn-danger btn-sm" onclick="eliminarRepuesto(${i})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+        });
+
+        document.getElementById("lista_repuestos").innerHTML = html;
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+
+        const form = document.querySelector(".FormularioAjax");
+
+        if (!form) return;
+
+        form.addEventListener("submit", function() {
+
+            let inputTrabajos = document.createElement("input");
+            inputTrabajos.type = "hidden";
+            inputTrabajos.name = "trabajos";
+            inputTrabajos.value = JSON.stringify(trabajos);
+
+            let inputRepuestos = document.createElement("input");
+            inputRepuestos.type = "hidden";
+            inputRepuestos.name = "repuestos";
+            inputRepuestos.value = JSON.stringify(repuestos);
+
+            form.appendChild(inputTrabajos);
+            form.appendChild(inputRepuestos);
+
+        });
+
+    });
+
+    const inputArticulo = document.getElementById("buscar_articulo");
+
+    if (inputArticulo) {
+        inputArticulo.addEventListener("keyup", function() {
+
+            let texto = this.value;
+
+            if (texto.length < 2) {
+                document.getElementById("resultado_articulos").innerHTML = "";
+                return;
+            }
+
+            let data = new URLSearchParams();
+            data.append("accion", "buscar_articulos");
+            data.append("texto", texto);
+
+            fetch(SERVERURL + "ajax/ordenTrabajoAjax.php", {
+                    method: "POST",
+                    body: data
+                })
+                .then(r => r.json())
+                .then(data => {
+
+                    let html = "";
+
+                    data.forEach(a => {
+
+                        let color = a.stock > 0 ? "success" : "danger";
+                        let textoStock = a.stock > 0 ?
+                            `Stock: ${a.stock}` :
+                            "SIN STOCK";
+
+                        html += `
+                <button type="button" 
+                    class="list-group-item list-group-item-action d-flex justify-content-between"
+                    onclick='seleccionarArticulo(${JSON.stringify(a)})'>
+
+                    <span>${a.desc_articulo}</span>
+                    <span class="badge bg-${color}">${textoStock}</span>
+                </button>
+            `;
+                    });
+
+                    document.getElementById("resultado_articulos").innerHTML = html;
+                });
+        });
+    }
+
+
+
+    let articuloSeleccionado = null;
+
+    function seleccionarArticulo(a) {
+
+        articuloSeleccionado = a;
+
+        document.getElementById("buscar_articulo").value = a.desc_articulo;
+        document.getElementById("resultado_articulos").innerHTML = "";
+
+    }
+
+    function agregarRepuesto() {
+
+        let cantidad = parseFloat(document.getElementById("rep_cantidad").value);
+
+        if (!articuloSeleccionado) {
+            alert("Seleccione un artículo");
+            return;
+        }
+
+        if (!cantidad || cantidad <= 0) {
+            alert("Cantidad inválida");
+            return;
+        }
+
+        if (cantidad > articuloSeleccionado.stock) {
+            alert("Stock insuficiente");
+            return;
+        }
+
+        repuestos.push({
+            id_articulo: articuloSeleccionado.id_articulo,
+            nombre: articuloSeleccionado.desc_articulo,
+            cantidad: cantidad
+        });
+
+        document.getElementById("buscar_articulo").value = "";
+        document.getElementById("rep_cantidad").value = "";
+
+        articuloSeleccionado = null;
+
+        renderRepuestos();
+    }
+
+    const inputServicio = document.getElementById("buscar_servicio");
+
+    if (inputServicio) {
+        inputServicio.addEventListener("keyup", function() {
+            document.getElementById("buscar_servicio").addEventListener("keyup", function() {
+
+                let texto = this.value;
+
+                if (texto.length < 2) {
+                    document.getElementById("resultado_servicios").innerHTML = "";
+                    return;
+                }
+
+                let data = new URLSearchParams();
+                data.append("accion", "buscar_servicios");
+                data.append("texto", texto);
+
+                fetch(SERVERURL + "ajax/ordenTrabajoAjax.php", {
+                        method: "POST",
+                        body: data
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+
+                        let html = "";
+
+                        data.forEach(s => {
+
+                            html += `
+                <button type="button" 
+                    class="list-group-item list-group-item-action"
+                    onclick='seleccionarServicio(${JSON.stringify(s)})'>
+
+                    ${s.desc_articulo} 
+                </button>
+            `;
+                        });
+
+                        document.getElementById("resultado_servicios").innerHTML = html;
+                    });
+            });
+        });
+    }
+
+
+
+
+    let servicioSeleccionado = null;
+
+    function seleccionarServicio(s) {
+
+        servicioSeleccionado = s;
+
+        document.getElementById("buscar_servicio").value = s.desc_articulo;
+        document.getElementById("resultado_servicios").innerHTML = "";
+
+    }
+
+
+
+    function agregarServicio() {
+
+        if (!servicioSeleccionado) {
+            alert("Seleccione un servicio");
+            return;
+        }
+
+        trabajos.push({
+            id_articulo: servicioSeleccionado.id_articulo,
+            nombre: servicioSeleccionado.desc_articulo
+        });
+
+        document.getElementById("buscar_servicio").value = "";
+        servicioSeleccionado = null;
+
+        renderTrabajos();
+    }
+
+    function renderTrabajos() {
+
+        let html = "";
+
+        trabajos.forEach((t, i) => {
+
+            html += `
+        <tr>
+            <td>${t.nombre}</td>
+            <td class="text-right">
+                <button class="btn btn-danger btn-sm" onclick="eliminarTrabajo(${i})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>`;
+        });
+
+        document.getElementById("lista_trabajos").innerHTML = html;
+    }
 </script>

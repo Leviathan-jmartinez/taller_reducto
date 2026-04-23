@@ -38,8 +38,22 @@ if (isset($_POST['cargar_tecnicos_equipo'])) {
     exit();
 }
 
-if ($_POST['accion'] == "crear_ot_reclamo") {
+if (isset($_POST['accion']) && $_POST['accion'] == "crear_ot_reclamo") {
     echo $insOT->crear_ot_reclamo_controlador();
+    exit();
+}
+
+if (isset($_POST['accion']) && $_POST['accion'] == "completar_ot") {
+    echo $insOT->completar_ot_controlador();
+    exit();
+}
+
+if (isset($_POST['accion']) && $_POST['accion'] === 'buscar_articulos') {
+    echo json_encode($insOT->buscar_articulos_controlador());
+    exit();
+}
+if (isset($_POST['accion']) && $_POST['accion'] === 'buscar_servicios') {
+    echo json_encode($insOT->buscar_servicios_controlador());
     exit();
 }
 

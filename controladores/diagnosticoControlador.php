@@ -224,17 +224,17 @@ class diagnosticoControlador extends diagnosticoModelo
         /* ================= TABLA ================= */
 
         $tabla .= '<div class="table-responsive">
-    <table class="table table-dark table-sm">
-    <thead>
-    <tr class="text-center">
-        <th>#</th>
-        <th>Fecha</th>
-        <th>Cliente</th>
-        <th>Vehículo</th>
-        <th>Usuario</th>
-        <th>Estado</th>
-        <th>Acciones</th>
-    </tr></thead><tbody>';
+        <table class="table table-dark table-sm">
+        <thead>
+        <tr class="text-center">
+            <th>#</th>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Vehículo</th>
+            <th>Usuario</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr></thead><tbody>';
 
         if ($total >= 1 && $pagina <= $Npaginas) {
 
@@ -373,7 +373,7 @@ class diagnosticoControlador extends diagnosticoModelo
         FROM reclamo_servicio 
         WHERE idreclamo_servicio = :id 
         LIMIT 1
-    ");
+        ");
 
         $sql->bindParam(":id", $id);
         $sql->execute();

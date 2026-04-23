@@ -31,7 +31,7 @@ if (!mainModel::tienePermiso('servicio.ot.ver')) {
     <?php
     require_once "./controladores/ordenTrabajoControlador.php";
     $insOT = new ordenTrabajoControlador();
-    echo $insOT->paginador_ot_controlador(
+    echo $insOT->listar_ot_controlador(
         $pagina[1],
         15,
         $pagina[0],

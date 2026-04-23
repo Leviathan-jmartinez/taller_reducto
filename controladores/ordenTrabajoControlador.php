@@ -103,13 +103,13 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
                 /* ================= ACCIONES ================= */
 
                 // ✔ asignar técnico
-                if ($rows['estado'] == 1 && $url !== SERVERURL . 'ordenTrabajo-buscar/') {
+                if ($rows['estado'] == 1) {
                     $tabla .= '
-                <button class="btn btn-primary btn-sm"
-                    onclick="abrirModalEquipo(\'' . mainModel::encryption($rows['idorden_trabajo']) . '\')"
-                    title="Asignar técnico">
-                    <i class="fas fa-user-cog"></i>
-                </button>';
+                    <a href="' . SERVERURL . 'ordenTrabajo-asignar/' . mainModel::encryption($rows['idorden_trabajo']) . '/"
+                        class="btn btn-primary btn-sm"
+                        title="Completar OT">
+                        <i class="fas fa-tools"></i>
+                    </a>';
                 }
 
                 // ✔ imprimir
@@ -477,48 +477,169 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
     {
         session_start(['name' => 'STR']);
 
-        if (!mainModel::tienePermiso('servicio.ot.crear')) {
-            return json_encode([
-                "Alerta" => "simple",
-                "Titulo" => "Sin permisos",
-                "Texto"  => "No puede crear OT",
-                "Tipo"   => "error"
-            ]);
-        }
-
-        if (empty($_POST['id_diagnostico'])) {
+        if (empty($_POST['idreclamo_servicio'])) {
             return json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Error",
-                "Texto"  => "Diagnóstico requerido",
-                "Tipo"   => "error"
+                "Texto" => "Reclamo no válido",
+                "Tipo" => "error"
             ]);
         }
 
-        $datos = [
-            "id_diagnostico" => intval($_POST['id_diagnostico']),
-            "idreclamo_servicio" => $_POST['idreclamo_servicio'] ?? null,
-            "usuario" => $_SESSION['id_str'],
-            "id_sucursal" => $_SESSION['nick_sucursal'],
-            "detalle" => $_POST['detalle'] ?? []
-        ];
+        $idReclamo = mainModel::limpiar_string($_POST['idreclamo_servicio']);
 
-        $res = self::crear_ot_desde_diagnostico_modelo($datos);
+        $ok = ordenTrabajoModelo::crear_ot_reclamo_modelo(
+            $idReclamo,
+            $_SESSION['id_str'],
+            $_SESSION['nick_sucursal']
+        );
 
-        if (isset($res['success'])) {
+        if ($ok === true) {
             return json_encode([
                 "Alerta" => "recargar",
                 "Titulo" => "OT creada",
-                "Texto"  => "Orden de trabajo generada desde reclamo",
-                "Tipo"   => "success"
+                "Texto" => "Orden de trabajo generada correctamente",
+                "Tipo" => "success"
             ]);
         }
 
         return json_encode([
             "Alerta" => "simple",
-            "Titulo" => "Error",
-            "Texto"  => $res['msg'] ?? 'Error al crear OT',
-            "Tipo"   => "error"
+            "Titulo" => "ERROR SQL",
+            "Texto" => $ok,
+            "Tipo" => "error"
         ]);
+    }
+
+    public function completar_ot_controlador()
+    {
+        session_start(['name' => 'STR']);
+
+        if (
+            empty($_POST['idorden_trabajo']) ||
+            empty($_POST['tecnico_responsable']) ||
+            empty($_POST['idtrabajos'])
+        ) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Datos incompletos",
+                "Tipo" => "error"
+            ]);
+        }
+
+        $datos = [
+            "idorden_trabajo" => mainModel::limpiar_string($_POST['idorden_trabajo']),
+            "tecnico" => mainModel::limpiar_string($_POST['tecnico_responsable']),
+            "equipo" => mainModel::limpiar_string($_POST['idtrabajos']),
+            "obs" => mainModel::limpiar_string($_POST['observacion'] ?? ''),
+
+            // 🔥 NUEVO
+            "trabajos" => isset($_POST['trabajos'])
+                ? json_decode($_POST['trabajos'], true)
+                : [],
+
+            "repuestos" => isset($_POST['repuestos'])
+                ? json_decode($_POST['repuestos'], true)
+                : []
+        ];
+
+        return ordenTrabajoModelo::completar_ot_modelo($datos);
+    }
+    public function obtener_ot_controlador($id)
+    {
+        $id = mainModel::decryption($id);
+        $id = mainModel::limpiar_string($id);
+        return ordenTrabajoModelo::obtener_ot_modelo($id);
+    }
+
+    public function listar_tecnicos_select()
+    {
+        $pdo = mainModel::conectar();
+
+        $sql = $pdo->query("
+        SELECT idempleados, CONCAT(nombre,' ',apellido) AS nombre
+        FROM empleados
+        WHERE estado = 1
+        ORDER BY nombre
+        ");
+
+        $html = '<option value="">Seleccione técnico</option>';
+
+        foreach ($sql->fetchAll(PDO::FETCH_ASSOC) as $t) {
+            $html .= '<option value="' . $t['idempleados'] . '">' . $t['nombre'] . '</option>';
+        }
+
+        return $html;
+    }
+
+    public function listar_equipos_select()
+    {
+        session_start(['name' => 'STR']);
+
+        $equipos = ordenTrabajoModelo::listar_equipos_modelo(
+            $_SESSION['nick_sucursal']
+        );
+
+        $html = '<option value="">Seleccione equipo</option>';
+
+        foreach ($equipos as $eq) {
+            $html .= '<option value="' . $eq['id_equipo'] . '">' . $eq['nombre'] . '</option>';
+        }
+
+        return $html;
+    }
+    public function buscar_articulos_controlador()
+    {
+        session_start(['name' => 'STR']);
+
+        $texto = mainModel::limpiar_string($_POST['texto'] ?? '');
+
+        $pdo = mainModel::conectar();
+
+        $sql = $pdo->prepare("
+        SELECT 
+            a.id_articulo,
+            a.desc_articulo,
+            a.precio_venta,
+            COALESCE(s.stockDisponible,0) AS stock
+        FROM articulos a
+        LEFT JOIN stock s 
+            ON s.id_articulo = a.id_articulo 
+            AND s.id_sucursal = ?
+        WHERE a.estado = 1 AND a.tipo='producto' 
+        AND a.desc_articulo LIKE ?
+        LIMIT 10
+    ");
+
+        $sql->execute([
+            $_SESSION['nick_sucursal'],
+            "%$texto%"
+        ]);
+
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function buscar_servicios_controlador()
+    {
+        $texto = mainModel::limpiar_string($_POST['texto'] ?? '');
+
+        $pdo = mainModel::conectar();
+
+        $sql = $pdo->prepare("
+        SELECT 
+            id_articulo,
+            desc_articulo,
+            precio_venta
+        FROM articulos
+        WHERE estado = 1
+        AND tipo = 'SERVICIO'
+        AND desc_articulo LIKE ?
+        LIMIT 10
+    ");
+
+        $sql->execute(["%$texto%"]);
+
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 }

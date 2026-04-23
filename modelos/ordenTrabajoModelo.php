@@ -56,26 +56,79 @@ class ordenTrabajoModelo extends mainModel
         $sql = mainModel::conectar()->prepare("
         SELECT
             ot.*,
-            ps.idpresupuesto_servicio,
-            c.nombre_cliente,
-            c.apellido_cliente,
-            v.placa,
+
+            /* ================= CLIENTE ================= */
+            COALESCE(c.nombre_cliente, cR.nombre_cliente) AS nombre_cliente,
+            COALESCE(c.apellido_cliente, cR.apellido_cliente) AS apellido_cliente,
+
+            /* ================= VEHICULO ================= */
+            COALESCE(v.placa, vR.placa) AS placa,
             ma.mod_descri AS modelo,
+
+            /* ================= KM ================= */
+            COALESCE(r.kilometraje, rR.kilometraje) AS kilometraje,
+
+            /* ================= RECLAMO ================= */
+            rs.tipo_reclamo,
+            rs.prioridad,
+            rs.fecha_reclamo,
+            rs.descripcion,
+
+            /* ================= EQUIPO ================= */
             GROUP_CONCAT(CONCAT(e.nombre,' ',e.apellido) SEPARATOR ', ') AS miembros
+
         FROM orden_trabajo ot
-        INNER JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-        INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
-        INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
-        INNER JOIN clientes c ON c.id_cliente = r.id_cliente
-        INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
-        INNER JOIN modelo_auto ma ON ma.id_modeloauto = v.id_modeloauto
-        LEFT JOIN equipo_trabajo et ON et.id_equipo = ot.idtrabajos
-        LEFT JOIN equipo_empleado ee ON ee.id_equipo = et.id_equipo
-        LEFT JOIN empleados e ON e.idempleados = ee.idempleados
+
+        /* ===== FLUJO NORMAL ===== */
+        LEFT JOIN presupuesto_servicio ps 
+            ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+
+        LEFT JOIN diagnostico_servicio ds 
+            ON ds.id_diagnostico = ps.id_diagnostico
+
+        LEFT JOIN recepcion_servicio r 
+            ON r.idrecepcion = ds.idrecepcion
+
+        LEFT JOIN clientes c 
+            ON c.id_cliente = r.id_cliente
+
+        LEFT JOIN vehiculos v 
+            ON v.id_vehiculo = r.id_vehiculo
+
+        LEFT JOIN modelo_auto ma 
+            ON ma.id_modeloauto = v.id_modeloauto
+
+        /* ===== FLUJO RECLAMO (CORRECTO) ===== */
+        LEFT JOIN reclamo_servicio rs 
+            ON rs.idreclamo_servicio = ot.idreclamo_servicio
+
+        LEFT JOIN recepcion_servicio rR 
+            ON rR.idreclamo_servicio = rs.idreclamo_servicio
+
+        LEFT JOIN clientes cR 
+            ON cR.id_cliente = rR.id_cliente
+
+        LEFT JOIN vehiculos vR 
+            ON vR.id_vehiculo = rR.id_vehiculo
+
+        /* ===== EQUIPO ===== */
+        LEFT JOIN equipo_trabajo et 
+            ON et.id_equipo = ot.idtrabajos
+
+        LEFT JOIN equipo_empleado ee 
+            ON ee.id_equipo = et.id_equipo
+
+        LEFT JOIN empleados e 
+            ON e.idempleados = ee.idempleados
+
         WHERE ot.idorden_trabajo = :id
-        LIMIT 1");
+        GROUP BY ot.idorden_trabajo
+        LIMIT 1
+        ");
+
         $sql->bindParam(":id", $id);
         $sql->execute();
+
         return $sql->fetch(PDO::FETCH_ASSOC);
     }
 
@@ -202,7 +255,6 @@ class ordenTrabajoModelo extends mainModel
         return $sql->fetch(PDO::FETCH_ASSOC);
     }
 
-
     protected static function obtener_detalle_ot($idOT)
     {
         $sql = mainModel::conectar()->prepare("
@@ -306,20 +358,26 @@ class ordenTrabajoModelo extends mainModel
 
         $baseSQL = "
         FROM orden_trabajo ot
-        INNER JOIN presupuesto_servicio ps 
-            ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-        INNER JOIN diagnostico_servicio ds 
-            ON ds.id_diagnostico = ps.id_diagnostico
-        INNER JOIN recepcion_servicio r 
-            ON r.idrecepcion = ds.idrecepcion
-        INNER JOIN clientes c 
-            ON c.id_cliente = r.id_cliente
-        INNER JOIN vehiculos v 
-            ON v.id_vehiculo = r.id_vehiculo
-        INNER JOIN modelo_auto ma 
-            ON ma.id_modeloauto = v.id_modeloauto
-        INNER JOIN usuarios u 
-            ON u.id_usuario = ot.id_usuario
+            LEFT JOIN presupuesto_servicio ps 
+                ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+
+            LEFT JOIN diagnostico_servicio ds 
+                ON ds.id_diagnostico = ps.id_diagnostico
+
+            LEFT JOIN recepcion_servicio r 
+                ON r.idrecepcion = ds.idrecepcion
+
+            LEFT JOIN clientes c 
+                ON c.id_cliente = r.id_cliente
+
+            LEFT JOIN vehiculos v 
+                ON v.id_vehiculo = r.id_vehiculo
+
+            LEFT JOIN modelo_auto ma 
+                ON ma.id_modeloauto = v.id_modeloauto
+
+            INNER JOIN usuarios u 
+                    ON u.id_usuario = ot.id_usuario
         WHERE 1=1
         $filtrosSQL
         ";
@@ -349,6 +407,7 @@ class ordenTrabajoModelo extends mainModel
             $registros
         );
     }
+
     protected static function anular_ot_modelo($idOT, $usuario)
     {
         $pdo = self::conectar();
@@ -398,101 +457,166 @@ class ordenTrabajoModelo extends mainModel
         }
     }
 
-
-    protected static function crear_ot_desde_diagnostico_modelo($datos)
+    protected static function crear_ot_reclamo_modelo($idReclamo, $usuario, $sucursal)
     {
-        $pdo = self::conectar();
+        $pdo = mainModel::conectar();
 
         try {
             $pdo->beginTransaction();
 
-            /* ================= VALIDAR QUE EXISTA DIAGNOSTICO ================= */
+            /* 🔒 VALIDAR QUE NO EXISTA OT */
             $check = $pdo->prepare("
-            SELECT id_diagnostico, idrecepcion
-            FROM diagnostico_servicio
-            WHERE id_diagnostico = ?
+            SELECT idorden_trabajo 
+            FROM orden_trabajo
+            WHERE idreclamo_servicio = ?
+            AND estado != 0
         ");
-            $check->execute([$datos['id_diagnostico']]);
+            $check->execute([$idReclamo]);
 
-            if ($check->rowCount() == 0) {
-                return ["error" => true, "msg" => "Diagnóstico no existe"];
+            if ($check->rowCount() > 0) {
+                return false; // ya existe
             }
 
-            $diag = $check->fetch();
-
-            /* ================= INSERT OT ================= */
+            /* 🔥 CREAR OT */
             $sql = $pdo->prepare("
             INSERT INTO orden_trabajo
             (
-                id_diagnostico,
+                idtrabajos,
+                tecnico_responsable,
                 idpresupuesto_servicio,
-                idrecepcion,
                 id_usuario,
+                id_sucursal,
                 fecha_inicio,
                 estado,
-                id_sucursal,
                 origen,
                 idreclamo_servicio
             )
-            VALUES
-            (?, NULL, ?, ?, NOW(), 1, ?, 'RECLAMO', ?)
+            VALUES (?, ?, NULL, ?, ?, NOW(), 1, 'RECLAMO', ?)
         ");
 
             $sql->execute([
-                $datos['id_diagnostico'],
-                $diag['idrecepcion'],
-                $datos['usuario'],
-                $datos['id_sucursal'],
-                $datos['idreclamo_servicio']
+                null,
+                null,
+                $usuario,
+                $sucursal,
+                $idReclamo
             ]);
 
-            $idOT = $pdo->lastInsertId();
+            /* 🔥 ACTUALIZAR RECLAMO */
+            $pdo->prepare("
+            UPDATE reclamo_servicio
+            SET estado = 2
+            WHERE idreclamo_servicio = ?
+        ")->execute([$idReclamo]);
 
-            /* ================= (OPCIONAL) DETALLE DESDE DIAGNOSTICO ================= */
-            if (!empty($datos['detalle'])) {
+            $pdo->commit();
+            return true;
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            return $e->getMessage();
+        }
+    }
 
-                $ins = $pdo->prepare("
+    protected static function completar_ot_modelo($d)
+    {
+        $pdo = mainModel::conectar();
+
+        try {
+
+            $pdo->beginTransaction();
+
+            /* 🔥 BORRAR DETALLE */
+            $pdo->prepare("
+            DELETE FROM orden_trabajo_detalle 
+            WHERE idorden_trabajo = ?
+        ")->execute([$d['idorden_trabajo']]);
+
+            /* ================= REPUESTOS ================= */
+            if (!empty($d['repuestos'])) {
+
+                $sql = $pdo->prepare("
                 INSERT INTO orden_trabajo_detalle
-                (idorden_trabajo, id_articulo, cantidad, precio, subtotal)
-                VALUES (?, ?, ?, ?, ?)
+                (idorden_trabajo, id_articulo, cantidad, precio_unitario, subtotal)
+                VALUES (?, ?, ?, 0, 0)
             ");
 
-                foreach ($datos['detalle'] as $item) {
+                $qStock = $pdo->prepare("
+                SELECT stockDisponible 
+                FROM stock 
+                WHERE id_articulo = ? AND id_sucursal = ?
+            ");
 
-                    $subtotal = $item['cantidad'] * $item['precio'];
+                foreach ($d['repuestos'] as $r) {
 
-                    $ins->execute([
-                        $idOT,
-                        $item['id_articulo'],
-                        $item['cantidad'],
-                        $item['precio'],
-                        $subtotal
+                    // validar stock
+                    $qStock->execute([$r['id_articulo'], $_SESSION['nick_sucursal']]);
+                    $stock = $qStock->fetchColumn();
+
+                    if ($stock < $r['cantidad']) {
+                        throw new Exception("Stock insuficiente para artículo ID " . $r['id_articulo']);
+                    }
+
+                    $sql->execute([
+                        $d['idorden_trabajo'],
+                        $r['id_articulo'],
+                        $r['cantidad']
                     ]);
                 }
             }
 
-            /* ================= CAMBIAR ESTADO DIAGNOSTICO ================= */
-            $upd = $pdo->prepare("
-            UPDATE diagnostico_servicio
-            SET estado = 3
-            WHERE id_diagnostico = ?
+            /* ================= TRABAJOS ================= */
+            if (!empty($d['trabajos'])) {
+
+                $sql = $pdo->prepare("
+                INSERT INTO orden_trabajo_detalle
+                (idorden_trabajo, id_articulo, cantidad, precio_unitario, subtotal)
+                VALUES (?, ?, 1, 0, 0)
+            ");
+
+                foreach ($d['trabajos'] as $t) {
+                    $sql->execute([
+                        $d['idorden_trabajo'],
+                        $t['id_articulo']
+                    ]);
+                }
+            }
+
+            /* ================= CABECERA ================= */
+            $sql = $pdo->prepare("
+            UPDATE orden_trabajo
+            SET 
+                tecnico_responsable = :tecnico,
+                idtrabajos = :equipo,
+                observacion = :obs,
+                estado = 2
+            WHERE idorden_trabajo = :id
         ");
-            $upd->execute([$datos['id_diagnostico']]);
+
+            $sql->execute([
+                ":tecnico" => $d['tecnico'],
+                ":equipo" => $d['equipo'],
+                ":obs" => $d['obs'],
+                ":id" => $d['idorden_trabajo']
+            ]);
 
             $pdo->commit();
 
-            return [
-                "success" => true,
-                "idorden" => $idOT
-            ];
+            return json_encode([
+                "Alerta" => "recargar",
+                "Titulo" => "OT completada",
+                "Texto" => "Orden lista para ejecución",
+                "Tipo" => "success"
+            ]);
         } catch (Exception $e) {
 
             $pdo->rollBack();
 
-            return [
-                "error" => true,
-                "msg" => $e->getMessage()
-            ];
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => $e->getMessage(),
+                "Tipo" => "error"
+            ]);
         }
     }
 }
