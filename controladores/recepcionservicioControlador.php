@@ -85,7 +85,9 @@ class recepcionservicioControlador extends recepcionservicioModelo
             "accesorios"   => $accesorios,
 
             "origen" => $_POST['origen'] ?? 'NORMAL',
-            "idreclamo_servicio" => $_POST['idreclamo_servicio'] ?? null,
+            "idreclamo_servicio" => !empty($_POST['idreclamo_servicio'])
+                ? intval($_POST['idreclamo_servicio'])
+                : null,
 
             "observacion"  => trim($_POST['observacion']),
             "estado"       => 1
@@ -100,7 +102,6 @@ class recepcionservicioControlador extends recepcionservicioModelo
             $id_recepcion = $guardar['id_recepcion'];
 
             /* ================= GUARDAR FOTOS ================= */
-
             if (!empty($_FILES['fotos_vehiculo']['name'][0])) {
 
                 $total = count($_FILES['fotos_vehiculo']['name']);
@@ -137,6 +138,14 @@ class recepcionservicioControlador extends recepcionservicioModelo
                 "Tipo"   => "success"
             ]);
         }
+
+        /* 🔥 ESTE FALTABA */
+        return json_encode([
+            "Alerta" => "simple",
+            "Titulo" => "Error",
+            "Texto"  => $guardar['msg'] ?? 'No se pudo guardar la recepción',
+            "Tipo"   => "error"
+        ]);
     }
 
     public function listar_recepcion_controlador($pagina, $registros, $url, $busqueda)

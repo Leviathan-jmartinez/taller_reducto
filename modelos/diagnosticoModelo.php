@@ -16,10 +16,13 @@ class diagnosticoModelo extends mainModel
             rs.id_sucursal,
             CONCAT(c.nombre_cliente,' ',c.apellido_cliente) AS cliente,
             v.placa,
-            v.anho
+            v.anho,
+            rs.origen,
+            rs.idreclamo_servicio
         FROM recepcion_servicio rs
         INNER JOIN clientes c ON c.id_cliente = rs.id_cliente
         INNER JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
+        LEFT JOIN reclamo_servicio rc ON rc.idregistro_servicio = rs.idrecepcion
         WHERE rs.estado = 1 
           AND (
                 c.nombre_cliente LIKE :b
@@ -57,9 +60,9 @@ class diagnosticoModelo extends mainModel
 
             $sql = $pdo->prepare("
                 INSERT INTO diagnostico_servicio
-                (idrecepcion, id_usuario, id_equipo, id_sucursal, fecha_diagnostico, observaciones, estado)
+                (idrecepcion,id_usuario,id_equipo,id_sucursal,fecha_diagnostico,observaciones,estado,es_garantia,es_reclamo_valido,requiere_cobro)
                 VALUES
-                (:recepcion, :usuario, :equipo, :sucursal, :fecha, :obs, :estado)
+                (:recepcion, :usuario, :equipo, :sucursal, :fecha, :obs, :estado, :garantia, :reclamo, :cobro)
             ");
 
             $sql->bindParam(":recepcion", $d['idrecepcion'], PDO::PARAM_INT);
@@ -69,6 +72,9 @@ class diagnosticoModelo extends mainModel
             $sql->bindParam(":fecha",     $d['fecha']);
             $sql->bindParam(":obs",       $d['observacion']);
             $sql->bindParam(":estado",    $d['estado'], PDO::PARAM_INT);
+            $sql->bindParam(":garantia",  $d['es_garantia'], PDO::PARAM_INT);
+            $sql->bindParam(":reclamo",   $d['es_reclamo_valido'], PDO::PARAM_INT);
+            $sql->bindParam(":cobro",     $d['requiere_cobro'], PDO::PARAM_INT);
 
             if (!$sql->execute()) {
                 $error = $sql->errorInfo();
@@ -161,6 +167,14 @@ class diagnosticoModelo extends mainModel
             d.id_diagnostico,
             d.fecha_diagnostico,
             d.estado,
+
+            d.es_reclamo_valido,
+            d.es_garantia,
+            d.requiere_cobro,
+
+            rs.origen,
+            rs.idreclamo_servicio,
+
             CONCAT(c.nombre_cliente,' ',c.apellido_cliente) AS cliente,
             v.placa,
             u.usu_nombre,
@@ -177,8 +191,6 @@ class diagnosticoModelo extends mainModel
             $inicio,
             $registros
         );
-        echo $filtrosSQL;
-        exit();
     }
 
     protected static function anular_diagnostico_modelo($id)

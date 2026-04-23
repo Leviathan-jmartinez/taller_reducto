@@ -24,7 +24,48 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
     </ul>
 </div>
 
+<div id="alerta_reclamo" class="alert alert-warning" style="display:none;">
+    <i class="fas fa-exclamation-triangle"></i>
+    Recepción generada desde reclamo
+</div>
+
+<div id="card_reclamo" style="display:none;">
+    <div class="card border-warning mb-3">
+        <div class="card-header bg-warning text-dark">
+            <i class="fas fa-exclamation-circle"></i> Detalle del Reclamo
+        </div>
+
+        <div class="card-body">
+
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Descripción:</strong><br>
+                    <span id="rec_desc"></span>
+                </div>
+
+                <div class="col-md-2">
+                    <strong>Tipo:</strong><br>
+                    <span id="rec_tipo"></span>
+                </div>
+
+                <div class="col-md-2">
+                    <strong>Prioridad:</strong><br>
+                    <span id="rec_prioridad"></span>
+                </div>
+
+                <div class="col-md-2">
+                    <strong>Fecha:</strong><br>
+                    <span id="rec_fecha"></span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
 <div class="container-fluid">
+
+
 
 
     <form class="form-neon FormularioAjax"
@@ -53,6 +94,38 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
                         <i class="fas fa-search"></i>
                     </button>
                 </div>
+            </div>
+        </fieldset>
+
+        <fieldset id="bloque_reclamo_resultado" class="border p-3 mb-3" style="display:none;">
+            <legend>Resultado del Reclamo</legend>
+
+            <div class="row">
+
+                <div class="col-md-4">
+                    <label>¿Es reclamo válido?</label>
+                    <select name="es_reclamo_valido" class="form-control">
+                        <option value="1">Sí</option>
+                        <option value="0">No</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label>¿Es garantía?</label>
+                    <select name="es_garantia" class="form-control">
+                        <option value="1">Sí</option>
+                        <option value="0">No</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label>¿Requiere cobro?</label>
+                    <select name="requiere_cobro" class="form-control">
+                        <option value="0">No</option>
+                        <option value="1">Sí</option>
+                    </select>
+                </div>
+
             </div>
         </fieldset>
 

@@ -52,7 +52,9 @@ class diagnosticoControlador extends diagnosticoModelo
                     onclick="seleccionarRecepcion(
                         ' . $r['idrecepcion'] . ',
                         \'' . addslashes($desc) . '\',
-                        ' . $r['id_sucursal'] . '
+                        ' . $r['id_sucursal'] . ',
+                        \'' . $r['origen'] . '\',
+                        ' . ($r['idreclamo_servicio'] ?? 'null') . '
                     )">
                     Seleccionar
                 </button>
@@ -133,7 +135,10 @@ class diagnosticoControlador extends diagnosticoModelo
             "id_sucursal" => $_POST['id_sucursal'],
             "fecha" => $fecha,
             "observacion" => $_POST['observacion'],
-            "estado"      => 2,
+            "estado"      => 1, // En proceso
+            "es_garantia" => $_POST['es_garantia'] ?? 0,
+            "es_reclamo_valido" => $_POST['es_reclamo_valido'] ?? 1,
+            "requiere_cobro" => $_POST['requiere_cobro'] ?? 0,
             "detalles"    => $_POST['detalles'] ?? []
         ];
 
@@ -167,16 +172,8 @@ class diagnosticoControlador extends diagnosticoModelo
         ]);
     }
 
-    public function paginador_diagnostico_controlador(
-        $pagina,
-        $registros,
-        $url,
-        $busqueda1,
-        $busqueda2,
-        $cliente = '',
-        $placa = ''
-    ) {
-
+    public function paginador_diagnostico_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $cliente = '', $placa = '')
+    {
         $pagina    = (int) mainModel::limpiar_string($pagina);
         $registros = (int) mainModel::limpiar_string($registros);
         $cliente   = mainModel::limpiar_string($cliente);
@@ -227,21 +224,17 @@ class diagnosticoControlador extends diagnosticoModelo
         /* ================= TABLA ================= */
 
         $tabla .= '<div class="table-responsive">
-        <table class="table table-dark table-sm">
-        <thead>
-        <tr class="text-center">
-            <th>#</th>
-            <th>Fecha</th>
-            <th>Cliente</th>
-            <th>Vehículo</th>
-            <th>Usuario</th>
-            <th>Estado</th>';
-
-        if ($puedeAnular) {
-            $tabla .= '<th>Acciones</th>';
-        }
-
-        $tabla .= '</tr></thead><tbody>';
+    <table class="table table-dark table-sm">
+    <thead>
+    <tr class="text-center">
+        <th>#</th>
+        <th>Fecha</th>
+        <th>Cliente</th>
+        <th>Vehículo</th>
+        <th>Usuario</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+    </tr></thead><tbody>';
 
         if ($total >= 1 && $pagina <= $Npaginas) {
 
@@ -257,16 +250,31 @@ class diagnosticoControlador extends diagnosticoModelo
                 $estado = $estadoMap[$rows['estado']] ?? ['Pendiente', 'secondary'];
 
                 $tabla .= '<tr class="text-center">
-                <td>' . $contador . '</td>
-                <td>' . date("d/m/Y H:i", strtotime($rows['fecha_diagnostico'])) . '</td>
-                <td>' . $rows['cliente'] . '</td>
-                <td>' . $rows['placa'] . '</td>
-                <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
-                <td><span class="badge bg-' . $estado[1] . '">' . $estado[0] . '</span></td>';
+            <td>' . $contador . '</td>
+            <td>' . date("d/m/Y H:i", strtotime($rows['fecha_diagnostico'])) . '</td>
+            <td>' . $rows['cliente'] . '</td>
+            <td>' . $rows['placa'] . '</td>
+            <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
+            <td><span class="badge bg-' . $estado[1] . '">' . $estado[0] . '</span></td>
+            <td>';
+
+                /* ================= BOTÓN INTELIGENTE ================= */
+
+                $tabla .= '
+                    <button class="btn btn-info btn-sm mr-1"
+                    onclick="evaluarDiagnostico(
+                        ' . $rows['id_diagnostico'] . ',
+                        ' . ($rows['origen'] == 'RECLAMO' ? 1 : 0) . ',
+                        ' . ($rows['es_garantia'] ?? 0) . ',
+                        ' . ($rows['requiere_cobro'] ?? 0) . ',
+                        ' . ($rows['idreclamo_servicio'] !== null ? $rows['idreclamo_servicio'] : 'null') . '
+                    )">
+                        <i class="fas fa-cogs"></i>
+                    </button>';
+
+                /* ================= BOTÓN ANULAR ================= */
 
                 if ($puedeAnular) {
-
-                    $tabla .= '<td>';
 
                     if ($rows['estado'] == 0) {
                         $tabla .= '
@@ -288,18 +296,16 @@ class diagnosticoControlador extends diagnosticoModelo
                         </button>
                     </form>';
                     }
-
-                    $tabla .= '</td>';
                 }
 
-                $tabla .= '</tr>';
+                $tabla .= '</td></tr>';
                 $contador++;
             }
 
             $reg_final = $contador - 1;
         } else {
             $tabla .= '<tr class="text-center">
-            <td colspan="7">No hay registros en el sistema</td>
+        <td colspan="7">No hay registros en el sistema</td>
         </tr>';
         }
 
@@ -309,7 +315,7 @@ class diagnosticoControlador extends diagnosticoModelo
 
         if ($total >= 1 && $pagina <= $Npaginas) {
             $tabla .= '<p class="text-right">
-            Mostrando ' . $reg_inicio . ' al ' . $reg_final . ' de ' . $total . '
+        Mostrando ' . $reg_inicio . ' al ' . $reg_final . ' de ' . $total . '
         </p>';
 
             $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);
@@ -348,5 +354,32 @@ class diagnosticoControlador extends diagnosticoModelo
             "Texto" => "Diagnóstico anulado correctamente",
             "Tipo" => "success"
         ]);
+    }
+
+    public function obtener_reclamo_detalle_controlador()
+    {
+        if (empty($_POST['idreclamo'])) {
+            return json_encode([]);
+        }
+
+        $id = mainModel::limpiar_string($_POST['idreclamo']);
+
+        $sql = mainModel::conectar()->prepare("
+        SELECT 
+            descripcion,
+            tipo_reclamo,
+            prioridad,
+            fecha_reclamo
+        FROM reclamo_servicio 
+        WHERE idreclamo_servicio = :id 
+        LIMIT 1
+    ");
+
+        $sql->bindParam(":id", $id);
+        $sql->execute();
+
+        $data = $sql->fetch(PDO::FETCH_ASSOC);
+
+        return json_encode($data ?: []);
     }
 }

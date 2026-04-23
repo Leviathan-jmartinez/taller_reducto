@@ -38,7 +38,10 @@ if (isset($_POST['cargar_tecnicos_equipo'])) {
     exit();
 }
 
-
+if ($_POST['accion'] == "crear_ot_reclamo") {
+    echo $insOT->crear_ot_reclamo_controlador();
+    exit();
+}
 
 echo json_encode([
     'Alerta' => 'simple',

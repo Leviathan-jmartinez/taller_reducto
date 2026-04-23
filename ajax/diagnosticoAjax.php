@@ -26,4 +26,8 @@ if (isset($_POST['accion'])) {
         echo $inst_diag->anular_diagnostico_controlador();
         exit();
     }
+    if ($_POST['accion'] == "obtener_reclamo_detalle") {
+        echo $inst_diag->obtener_reclamo_detalle_controlador();
+        exit();
+    }
 }

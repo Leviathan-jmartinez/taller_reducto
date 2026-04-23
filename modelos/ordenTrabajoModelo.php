@@ -20,7 +20,7 @@ class ordenTrabajoModelo extends mainModel
         return $qTec->fetchAll(PDO::FETCH_ASSOC);
     }
 
-   
+
     protected static function obtener_presupuesto_modelo($id)
     {
         $sql = mainModel::conectar()->prepare("
@@ -35,7 +35,7 @@ class ordenTrabajoModelo extends mainModel
         return $sql->fetch(PDO::FETCH_ASSOC);
     }
 
-       protected static function obtener_detalle_presupuesto_modelo($id)
+    protected static function obtener_detalle_presupuesto_modelo($id)
     {
         $sql = mainModel::conectar()->prepare("
             SELECT
@@ -395,6 +395,104 @@ class ordenTrabajoModelo extends mainModel
         } catch (Exception $e) {
             $pdo->rollBack();
             return ['msg' => $e->getMessage()];
+        }
+    }
+
+
+    protected static function crear_ot_desde_diagnostico_modelo($datos)
+    {
+        $pdo = self::conectar();
+
+        try {
+            $pdo->beginTransaction();
+
+            /* ================= VALIDAR QUE EXISTA DIAGNOSTICO ================= */
+            $check = $pdo->prepare("
+            SELECT id_diagnostico, idrecepcion
+            FROM diagnostico_servicio
+            WHERE id_diagnostico = ?
+        ");
+            $check->execute([$datos['id_diagnostico']]);
+
+            if ($check->rowCount() == 0) {
+                return ["error" => true, "msg" => "Diagnóstico no existe"];
+            }
+
+            $diag = $check->fetch();
+
+            /* ================= INSERT OT ================= */
+            $sql = $pdo->prepare("
+            INSERT INTO orden_trabajo
+            (
+                id_diagnostico,
+                idpresupuesto_servicio,
+                idrecepcion,
+                id_usuario,
+                fecha_inicio,
+                estado,
+                id_sucursal,
+                origen,
+                idreclamo_servicio
+            )
+            VALUES
+            (?, NULL, ?, ?, NOW(), 1, ?, 'RECLAMO', ?)
+        ");
+
+            $sql->execute([
+                $datos['id_diagnostico'],
+                $diag['idrecepcion'],
+                $datos['usuario'],
+                $datos['id_sucursal'],
+                $datos['idreclamo_servicio']
+            ]);
+
+            $idOT = $pdo->lastInsertId();
+
+            /* ================= (OPCIONAL) DETALLE DESDE DIAGNOSTICO ================= */
+            if (!empty($datos['detalle'])) {
+
+                $ins = $pdo->prepare("
+                INSERT INTO orden_trabajo_detalle
+                (idorden_trabajo, id_articulo, cantidad, precio, subtotal)
+                VALUES (?, ?, ?, ?, ?)
+            ");
+
+                foreach ($datos['detalle'] as $item) {
+
+                    $subtotal = $item['cantidad'] * $item['precio'];
+
+                    $ins->execute([
+                        $idOT,
+                        $item['id_articulo'],
+                        $item['cantidad'],
+                        $item['precio'],
+                        $subtotal
+                    ]);
+                }
+            }
+
+            /* ================= CAMBIAR ESTADO DIAGNOSTICO ================= */
+            $upd = $pdo->prepare("
+            UPDATE diagnostico_servicio
+            SET estado = 3
+            WHERE id_diagnostico = ?
+        ");
+            $upd->execute([$datos['id_diagnostico']]);
+
+            $pdo->commit();
+
+            return [
+                "success" => true,
+                "idorden" => $idOT
+            ];
+        } catch (Exception $e) {
+
+            $pdo->rollBack();
+
+            return [
+                "error" => true,
+                "msg" => $e->getMessage()
+            ];
         }
     }
 }

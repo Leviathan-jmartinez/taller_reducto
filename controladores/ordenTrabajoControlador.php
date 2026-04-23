@@ -472,4 +472,53 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
         ]);
         exit();
     }
+
+    public function crear_ot_reclamo_controlador()
+    {
+        session_start(['name' => 'STR']);
+
+        if (!mainModel::tienePermiso('servicio.ot.crear')) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Sin permisos",
+                "Texto"  => "No puede crear OT",
+                "Tipo"   => "error"
+            ]);
+        }
+
+        if (empty($_POST['id_diagnostico'])) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto"  => "Diagnóstico requerido",
+                "Tipo"   => "error"
+            ]);
+        }
+
+        $datos = [
+            "id_diagnostico" => intval($_POST['id_diagnostico']),
+            "idreclamo_servicio" => $_POST['idreclamo_servicio'] ?? null,
+            "usuario" => $_SESSION['id_str'],
+            "id_sucursal" => $_SESSION['nick_sucursal'],
+            "detalle" => $_POST['detalle'] ?? []
+        ];
+
+        $res = self::crear_ot_desde_diagnostico_modelo($datos);
+
+        if (isset($res['success'])) {
+            return json_encode([
+                "Alerta" => "recargar",
+                "Titulo" => "OT creada",
+                "Texto"  => "Orden de trabajo generada desde reclamo",
+                "Tipo"   => "success"
+            ]);
+        }
+
+        return json_encode([
+            "Alerta" => "simple",
+            "Titulo" => "Error",
+            "Texto"  => $res['msg'] ?? 'Error al crear OT',
+            "Tipo"   => "error"
+        ]);
+    }
 }
