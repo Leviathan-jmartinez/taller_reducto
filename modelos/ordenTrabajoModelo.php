@@ -58,15 +58,15 @@ class ordenTrabajoModelo extends mainModel
             ot.*,
 
             /* ================= CLIENTE ================= */
-            COALESCE(c.nombre_cliente, cR.nombre_cliente) AS nombre_cliente,
-            COALESCE(c.apellido_cliente, cR.apellido_cliente) AS apellido_cliente,
+            MAX(COALESCE(c.nombre_cliente, cR.nombre_cliente)) AS nombre_cliente,
+            MAX(COALESCE(c.apellido_cliente, cR.apellido_cliente)) AS apellido_cliente,
 
             /* ================= VEHICULO ================= */
-            COALESCE(v.placa, vR.placa) AS placa,
+            MAX(COALESCE(v.placa, vR.placa)) AS placa,
             ma.mod_descri AS modelo,
 
             /* ================= KM ================= */
-            COALESCE(r.kilometraje, rR.kilometraje) AS kilometraje,
+            MAX(COALESCE(r.kilometraje, rR.kilometraje)) AS kilometraje,
 
             /* ================= RECLAMO ================= */
             rs.tipo_reclamo,
@@ -358,26 +358,33 @@ class ordenTrabajoModelo extends mainModel
 
         $baseSQL = "
         FROM orden_trabajo ot
-            LEFT JOIN presupuesto_servicio ps 
-                ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
 
-            LEFT JOIN diagnostico_servicio ds 
-                ON ds.id_diagnostico = ps.id_diagnostico
+        /* ================= NORMAL ================= */
+        LEFT JOIN presupuesto_servicio ps 
+            ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
 
-            LEFT JOIN recepcion_servicio r 
-                ON r.idrecepcion = ds.idrecepcion
+        LEFT JOIN diagnostico_servicio ds 
+            ON ds.id_diagnostico = ps.id_diagnostico
 
-            LEFT JOIN clientes c 
-                ON c.id_cliente = r.id_cliente
+        LEFT JOIN recepcion_servicio r_normal 
+            ON r_normal.idrecepcion = ds.idrecepcion
 
-            LEFT JOIN vehiculos v 
-                ON v.id_vehiculo = r.id_vehiculo
+        /* ================= RECLAMO ================= */
+        LEFT JOIN recepcion_servicio r_reclamo 
+            ON r_reclamo.idreclamo_servicio = ot.idreclamo_servicio
 
-            LEFT JOIN modelo_auto ma 
-                ON ma.id_modeloauto = v.id_modeloauto
+        /* ================= DATOS ================= */
+        LEFT JOIN clientes c 
+            ON c.id_cliente = COALESCE(r_normal.id_cliente, r_reclamo.id_cliente)
 
-            INNER JOIN usuarios u 
-                    ON u.id_usuario = ot.id_usuario
+        LEFT JOIN vehiculos v 
+            ON v.id_vehiculo = COALESCE(r_normal.id_vehiculo, r_reclamo.id_vehiculo)
+
+        LEFT JOIN modelo_auto ma 
+            ON ma.id_modeloauto = v.id_modeloauto
+
+        INNER JOIN usuarios u 
+            ON u.id_usuario = ot.id_usuario
         WHERE 1=1
         $filtrosSQL
         ";
@@ -388,12 +395,12 @@ class ordenTrabajoModelo extends mainModel
             ot.fecha_inicio,
             ot.estado,
             ps.idpresupuesto_servicio,
-            c.nombre_cliente,
-            c.apellido_cliente,
-            v.placa,
-            ma.mod_descri AS modelo,
             u.usu_nombre,
-            u.usu_apellido
+            u.usu_apellido,
+            COALESCE(c.nombre_cliente, '') AS nombre_cliente,
+            COALESCE(c.apellido_cliente, '') AS apellido_cliente,
+            COALESCE(v.placa, '') AS placa,
+            COALESCE(ma.mod_descri, '') AS modelo
         ";
 
         $orderSQL = "ORDER BY ot.idorden_trabajo DESC";
@@ -525,7 +532,7 @@ class ordenTrabajoModelo extends mainModel
 
             $pdo->beginTransaction();
 
-            /* 🔥 BORRAR DETALLE */
+            /* BORRAR DETALLE */
             $pdo->prepare("
             DELETE FROM orden_trabajo_detalle 
             WHERE idorden_trabajo = ?
@@ -548,7 +555,6 @@ class ordenTrabajoModelo extends mainModel
 
                 foreach ($d['repuestos'] as $r) {
 
-                    // validar stock
                     $qStock->execute([$r['id_articulo'], $_SESSION['nick_sucursal']]);
                     $stock = $qStock->fetchColumn();
 
@@ -601,22 +607,11 @@ class ordenTrabajoModelo extends mainModel
 
             $pdo->commit();
 
-            return json_encode([
-                "Alerta" => "recargar",
-                "Titulo" => "OT completada",
-                "Texto" => "Orden lista para ejecución",
-                "Tipo" => "success"
-            ]);
+            return true;
         } catch (Exception $e) {
 
             $pdo->rollBack();
-
-            return json_encode([
-                "Alerta" => "simple",
-                "Titulo" => "Error",
-                "Texto" => $e->getMessage(),
-                "Tipo" => "error"
-            ]);
+            return $e->getMessage();
         }
     }
 }

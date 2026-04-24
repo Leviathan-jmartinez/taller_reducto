@@ -1,5 +1,6 @@
 <?php
 $peticionAjax = true;
+require_once "../config/APP.php";
 require_once "../modelos/mainModel.php";
 require_once "../controladores/ordenTrabajoControlador.php";
 

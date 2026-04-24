@@ -276,27 +276,6 @@
         renderTrabajos();
     }
 
-    function renderTrabajos() {
-
-        let html = "";
-
-        trabajos.forEach((t, i) => {
-            html += `
-            <tr>
-                <td>${t}</td>
-                <td>
-                    <button class="btn btn-danger btn-sm" onclick="eliminarTrabajo(${i})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `;
-        });
-
-        document.getElementById("lista_trabajos").innerHTML = html;
-    }
-
-
 
     document.addEventListener("click", function(e) {
         if (!e.target.closest("#buscar_servicio")) {
@@ -330,31 +309,6 @@
 
         document.getElementById("lista_repuestos").innerHTML = html;
     }
-
-    document.addEventListener("DOMContentLoaded", function() {
-
-        const form = document.querySelector(".FormularioAjax");
-
-        if (!form) return;
-
-        form.addEventListener("submit", function() {
-
-            let inputTrabajos = document.createElement("input");
-            inputTrabajos.type = "hidden";
-            inputTrabajos.name = "trabajos";
-            inputTrabajos.value = JSON.stringify(trabajos);
-
-            let inputRepuestos = document.createElement("input");
-            inputRepuestos.type = "hidden";
-            inputRepuestos.name = "repuestos";
-            inputRepuestos.value = JSON.stringify(repuestos);
-
-            form.appendChild(inputTrabajos);
-            form.appendChild(inputRepuestos);
-
-        });
-
-    });
 
     const inputArticulo = document.getElementById("buscar_articulo");
 
@@ -419,78 +373,81 @@
 
     function agregarRepuesto() {
 
-        let cantidad = parseFloat(document.getElementById("rep_cantidad").value);
-
         if (!articuloSeleccionado) {
-            alert("Seleccione un artículo");
+            alert("Seleccione un repuesto");
             return;
         }
+
+        let cantidad = parseFloat(document.getElementById("rep_cantidad").value);
 
         if (!cantidad || cantidad <= 0) {
             alert("Cantidad inválida");
             return;
         }
 
-        if (cantidad > articuloSeleccionado.stock) {
-            alert("Stock insuficiente");
-            return;
+        let existente = repuestos.find(r => r.id_articulo == articuloSeleccionado.id_articulo);
+
+        if (existente) {
+            existente.cantidad += cantidad;
+        } else {
+            repuestos.push({
+                id_articulo: articuloSeleccionado.id_articulo,
+                nombre: articuloSeleccionado.desc_articulo,
+                cantidad: cantidad
+            });
         }
 
-        repuestos.push({
-            id_articulo: articuloSeleccionado.id_articulo,
-            nombre: articuloSeleccionado.desc_articulo,
-            cantidad: cantidad
-        });
+        renderRepuestos();
+
+        // 🔥 LIMPIAR UI
+        articuloSeleccionado = null;
 
         document.getElementById("buscar_articulo").value = "";
         document.getElementById("rep_cantidad").value = "";
 
-        articuloSeleccionado = null;
+        document.getElementById("resultado_articulos").innerHTML = "";
 
-        renderRepuestos();
+        // 👉 opcional: volver foco al buscador
+        document.getElementById("buscar_articulo").focus();
     }
 
     const inputServicio = document.getElementById("buscar_servicio");
 
     if (inputServicio) {
         inputServicio.addEventListener("keyup", function() {
-            document.getElementById("buscar_servicio").addEventListener("keyup", function() {
 
-                let texto = this.value;
+            let texto = this.value;
 
-                if (texto.length < 2) {
-                    document.getElementById("resultado_servicios").innerHTML = "";
-                    return;
-                }
+            if (texto.length < 2) {
+                document.getElementById("resultado_servicios").innerHTML = "";
+                return;
+            }
 
-                let data = new URLSearchParams();
-                data.append("accion", "buscar_servicios");
-                data.append("texto", texto);
+            let data = new URLSearchParams();
+            data.append("accion", "buscar_servicios");
+            data.append("texto", texto);
 
-                fetch(SERVERURL + "ajax/ordenTrabajoAjax.php", {
-                        method: "POST",
-                        body: data
-                    })
-                    .then(r => r.json())
-                    .then(data => {
+            fetch(SERVERURL + "ajax/ordenTrabajoAjax.php", {
+                    method: "POST",
+                    body: data
+                })
+                .then(r => r.json())
+                .then(data => {
 
-                        let html = "";
+                    let html = "";
 
-                        data.forEach(s => {
+                    data.forEach(s => {
 
-                            html += `
-                <button type="button" 
-                    class="list-group-item list-group-item-action"
-                    onclick='seleccionarServicio(${JSON.stringify(s)})'>
-
-                    ${s.desc_articulo} 
-                </button>
-            `;
-                        });
-
-                        document.getElementById("resultado_servicios").innerHTML = html;
+                        html += `
+                    <button type="button" 
+                        class="list-group-item list-group-item-action"
+                        onclick='seleccionarServicio(${JSON.stringify(s)})'>
+                        ${s.desc_articulo}
+                    </button>`;
                     });
-            });
+
+                    document.getElementById("resultado_servicios").innerHTML = html;
+                });
         });
     }
 
@@ -517,15 +474,27 @@
             return;
         }
 
+        let existe = trabajos.some(t => t.id_articulo == servicioSeleccionado.id_articulo);
+
+        if (existe) {
+            Swal.fire("Duplicado", "Este servicio ya fue agregado", "warning");
+            return;
+        }
+
         trabajos.push({
             id_articulo: servicioSeleccionado.id_articulo,
             nombre: servicioSeleccionado.desc_articulo
         });
 
-        document.getElementById("buscar_servicio").value = "";
+        renderTrabajos();
+
+        // 🔥 LIMPIAR UI
         servicioSeleccionado = null;
 
-        renderTrabajos();
+        document.getElementById("buscar_servicio").value = "";
+        document.getElementById("resultado_servicios").innerHTML = "";
+
+        document.getElementById("buscar_servicio").focus();
     }
 
     function renderTrabajos() {
@@ -547,4 +516,81 @@
 
         document.getElementById("lista_trabajos").innerHTML = html;
     }
+
+
+
+    function limpiarFormularioOT() {
+
+        trabajos = [];
+        repuestos = [];
+
+        renderTrabajos();
+        renderRepuestos();
+
+        document.getElementById("buscar_servicio").value = "";
+        document.getElementById("buscar_articulo").value = "";
+        document.getElementById("rep_cantidad").value = "";
+
+        document.getElementById("resultado_servicios").innerHTML = "";
+        document.getElementById("resultado_articulos").innerHTML = "";
+
+    }
+
+    const selectEquipo = document.querySelector("select[name='idtrabajos']");
+    const selectTecnico = document.querySelector("select[name='tecnico_responsable']");
+
+    if (selectEquipo) {
+
+        selectEquipo.addEventListener("change", function() {
+
+            let idEquipo = this.value;
+
+            // 🔒 reset
+            selectTecnico.innerHTML = "<option value=''>Seleccione técnico</option>";
+            selectTecnico.disabled = true;
+
+            if (!idEquipo) return;
+
+            selectTecnico.innerHTML = "<option>Cargando...</option>";
+
+            let data = new URLSearchParams();
+            data.append("cargar_tecnicos_equipo", idEquipo);
+
+            fetch(SERVERURL + "ajax/ordenTrabajoAjax.php", {
+                    method: "POST",
+                    body: data
+                })
+                .then(r => r.text())
+                .then(html => {
+
+                    selectTecnico.innerHTML = html;
+                    selectTecnico.disabled = false;
+
+                })
+                .catch(err => {
+                    console.error("Error cargando técnicos:", err);
+                });
+
+        });
+
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+
+        const form = document.querySelector(".FormularioAjax");
+
+        if (!form) return;
+
+        form.addEventListener("submit", function(e) {
+
+            // 🔥 FORZAR ANTES DE QUE AJAX LEA EL FORM
+            document.getElementById("trabajos_json").value = JSON.stringify(trabajos || []);
+            document.getElementById("repuestos_json").value = JSON.stringify(repuestos || []);
+
+            console.log("INJECTED:");
+            console.log(document.getElementById("trabajos_json").value);
+            console.log(document.getElementById("repuestos_json").value);
+
+        }, true); // 👈 🔥 IMPORTANTE: CAPTURA
+    });
 </script>

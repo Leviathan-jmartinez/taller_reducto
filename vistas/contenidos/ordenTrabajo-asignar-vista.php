@@ -119,25 +119,30 @@ if (!$ot) {
             action="<?php echo SERVERURL; ?>ajax/ordenTrabajoAjax.php"
             method="POST"
             data-form="save">
-
+            <input type="hidden" name="trabajos_json" id="trabajos_json">
+            <input type="hidden" name="repuestos_json" id="repuestos_json">
+            <input type="hidden" name="accion" value="completar_ot">
             <input type="hidden" name="accion" value="completar_ot">
             <input type="hidden" name="idorden_trabajo" value="<?php echo $ot['idorden_trabajo']; ?>">
 
             <div class="row">
 
-                <!-- TECNICO -->
-                <div class="col-md-4">
-                    <label>Técnico</label>
-                    <select name="tecnico_responsable" class="form-control" required>
-                        <?php echo $insOT->listar_tecnicos_select(); ?>
-                    </select>
-                </div>
+
 
                 <!-- EQUIPO -->
                 <div class="col-md-4">
                     <label>Equipo</label>
                     <select name="idtrabajos" class="form-control" required>
                         <?php echo $insOT->listar_equipos_select(); ?>
+                    </select>
+                </div>
+
+
+                <!-- TECNICO -->
+                <div class="col-md-4">
+                    <label>Técnico</label>
+                    <select name="tecnico_responsable" class="form-control" required disabled>
+                        <option value="">Seleccione un equipo primero</option>
                     </select>
                 </div>
 

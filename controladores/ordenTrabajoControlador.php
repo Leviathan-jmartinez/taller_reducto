@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . "/../modelos/ordenTrabajoModelo.php";
 
+
 class ordenTrabajoControlador extends ordenTrabajoModelo
 {
 
@@ -515,37 +516,35 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
     {
         session_start(['name' => 'STR']);
 
-        if (
-            empty($_POST['idorden_trabajo']) ||
-            empty($_POST['tecnico_responsable']) ||
-            empty($_POST['idtrabajos'])
-        ) {
+        $datos = [
+            "idorden_trabajo" => $_POST['idorden_trabajo'],
+            "tecnico" => $_POST['tecnico_responsable'],
+            "equipo" => $_POST['idtrabajos'],
+            "obs" => $_POST['observacion'] ?? '',
+            "trabajos" => json_decode($_POST['trabajos_json'], true),
+            "repuestos" => json_decode($_POST['repuestos_json'], true)
+        ];
+
+        $res = ordenTrabajoModelo::completar_ot_modelo($datos);
+
+        if ($res === true) {
             return json_encode([
-                "Alerta" => "simple",
-                "Titulo" => "Error",
-                "Texto" => "Datos incompletos",
-                "Tipo" => "error"
+                "Alerta" => "redireccionar_confirmado",
+                "URL" => SERVERURL . "ordenTrabajo-buscar/",
+                "Titulo" => "OT completada",
+                "Texto" => "Orden guardada correctamente",
+                "Tipo" => "success"
             ]);
         }
 
-        $datos = [
-            "idorden_trabajo" => mainModel::limpiar_string($_POST['idorden_trabajo']),
-            "tecnico" => mainModel::limpiar_string($_POST['tecnico_responsable']),
-            "equipo" => mainModel::limpiar_string($_POST['idtrabajos']),
-            "obs" => mainModel::limpiar_string($_POST['observacion'] ?? ''),
-
-            // 🔥 NUEVO
-            "trabajos" => isset($_POST['trabajos'])
-                ? json_decode($_POST['trabajos'], true)
-                : [],
-
-            "repuestos" => isset($_POST['repuestos'])
-                ? json_decode($_POST['repuestos'], true)
-                : []
-        ];
-
-        return ordenTrabajoModelo::completar_ot_modelo($datos);
+        return json_encode([
+            "Alerta" => "simple",
+            "Titulo" => "Error",
+            "Texto" => $res,
+            "Tipo" => "error"
+        ]);
     }
+
     public function obtener_ot_controlador($id)
     {
         $id = mainModel::decryption($id);
@@ -610,7 +609,7 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
         WHERE a.estado = 1 AND a.tipo='producto' 
         AND a.desc_articulo LIKE ?
         LIMIT 10
-    ");
+        ");
 
         $sql->execute([
             $_SESSION['nick_sucursal'],
@@ -636,7 +635,7 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
         AND tipo = 'SERVICIO'
         AND desc_articulo LIKE ?
         LIMIT 10
-    ");
+        ");
 
         $sql->execute(["%$texto%"]);
 
