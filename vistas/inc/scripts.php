@@ -34,23 +34,36 @@
    <script src="<?php echo SERVERURL; ?>vistas/js/alertas.js"></script>
 
    <script>
-       function activarSelect2() {
-           $('.select2').select2({
-               width: '100%',
-               placeholder: "Seleccione una opción"
+       function activarSelect2(context = document) {
+
+           $(context).find('.select2').each(function() {
+
+               if (!$(this).hasClass("select2-hidden-accessible")) {
+
+                   $(this).select2({
+                       width: '100%',
+                       placeholder: "Seleccione una opción",
+                       allowClear: true
+                   });
+
+               }
+
            });
 
-           // AUTOFOCUS en el buscador
-           $(document).on('select2:open', () => {
-               document.querySelector('.select2-container--open .select2-search__field').focus();
-           });
        }
 
+       // AUTOFOCUS en buscador
+       $(document).on('select2:open', () => {
+           setTimeout(() => {
+               document.querySelector('.select2-container--open .select2-search__field')?.focus();
+           }, 0);
+       });
+
+       // INIT
        $(document).ready(function() {
            activarSelect2();
        });
    </script>
-
 
    <script>
        $(document).on('click', '#btnCancelar', function() {

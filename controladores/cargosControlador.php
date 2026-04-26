@@ -122,47 +122,48 @@ class cargosControlador extends cargosModelo
     }
 
 
-    public function paginador_cargos_controlador($pagina, $registros, $url, $busqueda)
+    public function listar_cargos_controlador($pagina, $registros, $url)
     {
-        $pagina = mainModel::limpiar_string($pagina);
-        $registros = mainModel::limpiar_string($registros);
-        $busqueda = mainModel::limpiar_string($busqueda);
+        $pagina    = (int) mainModel::limpiar_string($pagina);
+        $registros = (int) mainModel::limpiar_string($registros);
+        $url       = SERVERURL . mainModel::limpiar_string($url) . "/";
 
-        $url = mainModel::limpiar_string($url);
-        $url = SERVERURL . $url . "/";
+        $pagina = ($pagina > 0) ? $pagina : 1;
+        $inicio = ($pagina - 1) * $registros;
 
-        $tabla = "";
+        /* ================= FILTRO ================= */
 
-        $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
-        $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
+        $busqueda = $_SESSION['busqueda_cargo'] ?? "";
 
-        if (isset($busqueda) && $busqueda != "") {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS * FROM cargos 
-                        WHERE descripcion LIKE '%$busqueda%' 
-                        ORDER BY descripcion ASC 
-                        LIMIT $inicio,$registros";
-        } else {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS * FROM cargos 
-                        ORDER BY descripcion ASC 
-                        LIMIT $inicio,$registros";
+        $filtros = [];
+
+        if ($busqueda != "") {
+            $filtros[] = [
+                "campo" => "descripcion",
+                "tipo"  => "LIKE",
+                "valor" => $busqueda
+            ];
         }
 
-        $conexion = mainModel::conectar();
-        $datos = $conexion->query($consulta);
-        $datos = $datos->fetchAll();
+        $filtrosSQL = mainModel::construirFiltros($filtros);
 
-        $total = $conexion->query("SELECT FOUND_ROWS()");
-        $total = (int) $total->fetchColumn();
+        /* ================= DATOS ================= */
 
+        $res = cargosModelo::listar_cargos_modelo($inicio, $registros, $filtrosSQL);
+
+        $datos = $res['datos'];
+        $total = $res['total'];
         $Npaginas = ceil($total / $registros);
 
-        $tabla .= '<div class="table-responsive">
-					<table class="table table-dark table-sm">
-						<thead>
-							<tr class="text-center roboto-medium">
-								<th>#</th>
-								<th>DESCRIPCIÓN</th>
-                                <th>ESTADO</th>';
+        /* ================= TABLA ================= */
+
+        $tabla = '<div class="table-responsive">
+        <table class="table table-dark table-sm">
+        <thead>
+            <tr class="text-center">
+                <th>#</th>
+                <th>DESCRIPCIÓN</th>
+                <th>ESTADO</th>';
 
         if (mainModel::tienePermiso('cargo.editar')) {
             $tabla .= '<th>ACTUALIZAR</th>';
@@ -174,47 +175,73 @@ class cargosControlador extends cargosModelo
         $tabla .= '</tr></thead><tbody>';
 
         if ($total >= 1 && $pagina <= $Npaginas) {
+
             $contador = $inicio + 1;
+            $reg_inicio = $inicio + 1;
 
             foreach ($datos as $rows) {
+
+                $estado = ($rows['estado'] == 1)
+                    ? '<span class="badge badge-success">Activo</span>'
+                    : '<span class="badge badge-danger">Inactivo</span>';
+
                 $tabla .= '<tr class="text-center">
-                    <td>' . $contador . '</td>
-                    <td>' . $rows['descripcion'] . '</td>
-                    <td>' . ($rows['estado'] == 1 
-                        ? '<span class="badge badge-success">Activo</span>' 
-                        : '<span class="badge badge-danger">Inactivo</span>') . '</td>';
+                <td>' . $contador . '</td>
+                <td>' . $rows['descripcion'] . '</td>
+                <td>' . $estado . '</td>';
 
                 if (mainModel::tienePermiso('cargo.editar')) {
                     $tabla .= '<td>
-                        <a href="' . SERVERURL . 'cargo-actualizar/' . mainModel::encryption($rows['idcargos']) . '/" class="btn btn-success">
-                            <i class="fas fa-sync-alt"></i>
-                        </a>
-                    </td>';
+                    <a href="' . SERVERURL . 'cargo-actualizar/' . mainModel::encryption($rows['idcargos']) . '/"
+                    class="btn btn-success btn-sm">
+                        <i class="fas fa-sync-alt"></i>
+                    </a>
+                </td>';
                 }
 
                 if (mainModel::tienePermiso('cargo.eliminar')) {
                     $tabla .= '<td>
-                        <form class="FormularioAjax" action="' . SERVERURL . 'ajax/cargoAjax.php" method="POST" data-form="delete">
-                            <input type="hidden" name="cargo_id_del" value="' . mainModel::encryption($rows['idcargos']) . '">
-                            <button type="submit" class="btn btn-warning">
-                                <i class="far fa-trash-alt"></i>
-                            </button>
-                        </form>
-                    </td>';
+                    <form class="FormularioAjax"
+                        action="' . SERVERURL . 'ajax/cargoAjax.php"
+                        method="POST"
+                        data-form="delete">
+
+                        <input type="hidden" name="cargo_id_del"
+                        value="' . mainModel::encryption($rows['idcargos']) . '">
+
+                        <button type="submit" class="btn btn-warning btn-sm">
+                            <i class="far fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </td>';
                 }
 
                 $tabla .= '</tr>';
                 $contador++;
             }
+
+            $reg_final = $contador - 1;
         } else {
-            $tabla .= '<tr class="text-center">
-                <td colspan="5">No hay registros en el sistema</td>
-            </tr>';
+
+            $tabla .= '<tr>
+            <td colspan="5" class="text-center">No hay registros</td>
+        </tr>';
         }
 
         $tabla .= '</tbody></table></div>';
 
-        echo $tabla;
+        /* ================= PAGINADOR ================= */
+
+        if ($total >= 1 && $pagina <= $Npaginas) {
+
+            $tabla .= '<p class="text-right">
+            Mostrando ' . $reg_inicio . ' al ' . $reg_final . ' de ' . $total . '
+        </p>';
+
+            $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);
+        }
+
+        return $tabla;
     }
 
 
@@ -325,11 +352,5 @@ class cargosControlador extends cargosModelo
 
         echo json_encode($alerta);
         exit();
-    }
-
-
-    public function listar_cargos_controlador()
-    {
-        return cargosModelo::listar_cargos_modelo();
     }
 }

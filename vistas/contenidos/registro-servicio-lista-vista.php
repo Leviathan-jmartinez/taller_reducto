@@ -34,7 +34,7 @@ if (!mainModel::tienePermiso('servicio.registro.ver')) {
 
     $insRS = new registroServicioControlador();
 
-    echo $insRS->paginador_registro_servicio_controlador(
+    echo $insRS->listar_registro_servicio_controlador(
         $pagina[1],
         15,
         $pagina[0],

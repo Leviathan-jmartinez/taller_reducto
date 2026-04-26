@@ -47,12 +47,18 @@
                         method: 'POST',
                         body: datos
                     })
-                    .then(respuesta => respuesta.json())
-                    .then(respuesta => {
-                        return alertasAjax(respuesta);
+                    .then(res => res.text())
+                    .then(text => {
+                        try {
+                            let respuesta = JSON.parse(text);
+                            return alertasAjax(respuesta);
+                        } catch (e) {
+                            console.error("Respuesta inválida:", text);
+                            Swal.fire("Error", "El servidor devolvió algo inesperado", "error");
+                        }
                     });
             } else {
-                $('#ModalproveedorPre').modal('show');
+                $('#ModalproveedorOC').modal('show');
             }
         });
     }
@@ -126,8 +132,4 @@
                 Swal.fire("Error", "No se pudo procesar la petición", "error");
             });
     }
-
-    
-
-    
 </script>

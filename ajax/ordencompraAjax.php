@@ -1,10 +1,15 @@
 
 <?php
+
 $peticionAjax = true;
 require_once "../config/APP.php";
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+session_start(['name' => 'STR']);
 if (
     isset($_POST['idpresupuesto']) || isset($_POST['ordencompra_id_del']) || isset($_POST['buscar_proveedorOC']) || isset($_POST['id_agregar_proveedorOC'])
     || isset($_POST['buscar_articuloOC']) || isset($_POST['id_agregar_articuloOC']) || isset($_POST['agregar_ordencompra']) || isset($_POST['limpiar_ordencompra'])
+    || isset($_POST['id_eliminar_proveedorOC']) || isset($_POST['id_eliminar_articuloOC'])
 ) {
     /** Instancia al controlador */
     require_once "../controladores/ordencompraControlador.php";
@@ -31,6 +36,12 @@ if (
     if (isset($_POST['agregar_ordencompra'])) {
         echo $inst_ocompra->agregar_oc_controlador();
     }
+    if (isset($_POST['id_eliminar_proveedorOC'])) {
+        echo $inst_ocompra->eliminar_proveedor_controlador();
+    }
+    if (isset($_POST['id_eliminar_articuloOC'])) {
+    echo $inst_ocompra->eliminar_articulo_controlador();
+}
     if (isset($_POST['limpiar_ordencompra'])) {
         session_start(['name' => 'STR']);
         unset($_SESSION['tipo_ordencompra']);
@@ -43,9 +54,11 @@ if (
         exit();
     }
 } else {
-    session_start(['name' => 'STR']);
-    session_unset();
-    session_destroy();
-    header("Location: " . SERVERURL . "login/");
+    echo json_encode([
+        "Alerta" => "simple",
+        "Titulo" => "Petición inválida",
+        "Texto" => "No se recibieron datos válidos",
+        "Tipo" => "error"
+    ]);
     exit();
 }

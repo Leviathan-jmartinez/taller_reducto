@@ -118,7 +118,7 @@ class ordencompraControlador extends ordencompraModelo
     /**Controlador agregar OC */
     public function generar_oc_controlador()
     {
-        session_start(['name' => 'STR']);
+
 
 
         // -----------------------------
@@ -153,7 +153,7 @@ class ordencompraControlador extends ordencompraModelo
         $consultaPre = $conexion->prepare("
         SELECT idpresupuesto_compra,idproveedores, id_usuario
         FROM presupuesto_compra
-        WHERE idpresupuesto_compra = :id AND id_sucursal = :sucursal AND estado = 1");
+        WHERE idpresupuesto_compra = :id AND id_sucursal = :sucursal AND estado != 0");
         $consultaPre->execute([":id" => $idpresupuesto, ":sucursal" => $_SESSION['nick_sucursal']]);
         $pre = $consultaPre->fetch(PDO::FETCH_ASSOC);
 
@@ -258,7 +258,7 @@ class ordencompraControlador extends ordencompraModelo
     /**controlador agregar orden de compra */
     public function agregar_oc_controlador()
     {
-        session_start(['name' => 'STR']);
+
         $fecha_entrega = $_POST['fecha_entrega'] ?? null;
 
         if ($_SESSION['tipo_ordencompra'] == "sin_presupuesto") {
@@ -453,7 +453,7 @@ class ordencompraControlador extends ordencompraModelo
                                     <i class="fas fa-file-pdf"></i>
                                 </a>
                                 </td>';
-                 if (mainModel::tienePermiso('compra.oc.anular')) {
+                if (mainModel::tienePermiso('compra.oc.anular')) {
                     $tabla .= '<td>
 									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/ordencompraAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
                                     <input type="hidden" name="ordencompra_id_del" value=' . mainModel::encryption($rows['idorden_compra']) . '>
@@ -493,7 +493,7 @@ class ordencompraControlador extends ordencompraModelo
     {
         $id = mainModel::decryption($_POST['ordencompra_id_del']);
         $id = mainModel::limpiar_string($id);
-        session_start(['name' => 'STR']);
+
         $check_presupuesto = mainModel::ejecutar_consulta_simple("SELECT idorden_compra FROM orden_compra WHERE idorden_compra = '$id' AND id_sucursal = " . $_SESSION['nick_sucursal'] . "");
         if ($check_presupuesto->rowCount() < 0) {
             $alerta = [
@@ -612,8 +612,7 @@ class ordencompraControlador extends ordencompraModelo
         } else {
             $campos = $check_proveedor->fetch();
         }
-        /**iniciar sesion para utilizar variables de sesion */
-        session_start(['name' => 'STR']);
+
         unset($_SESSION['Sdatos_proveedorOC']);
         if (!isset($_SESSION['Sdatos_proveedorOC'])) {
             $_SESSION['Sdatos_proveedorOC'] = [
@@ -645,7 +644,7 @@ class ordencompraControlador extends ordencompraModelo
     public function buscar_articulo_controlador()
     {
         // BUSCAR ARTÍCULO (HTML)
-        session_start(['name' => 'STR']);
+
         if (isset($_POST['buscar_articuloOC'])) {
             $articulo = mainModel::limpiar_string($_POST['buscar_articuloOC']);
             if ($articulo == "") return '<div class="alert alert-warning">Debes introducir código o descripción</div>';
@@ -691,7 +690,7 @@ class ordencompraControlador extends ordencompraModelo
     /**controlador buscador articulo */
     public function articulo_controlador()
     {
-        session_start(['name' => 'STR']);
+
         // AGREGAR ARTÍCULO
         if (isset($_POST['id_agregar_articuloOC'])) {
 
@@ -755,5 +754,40 @@ class ordencompraControlador extends ordencompraModelo
             'cabecera' => ordenCompraModelo::obtener_orden_compra_cabecera($idOC),
             'detalle'  => ordenCompraModelo::obtener_orden_compra_detalle($idOC)
         ];
+    }
+
+    public function eliminar_proveedor_controlador()
+    {
+        unset($_SESSION['Sdatos_proveedorOC']);
+
+        return json_encode([
+            "Alerta" => "recargar",
+            "Titulo" => "Proveedor eliminado",
+            "Texto" => "El proveedor fue quitado correctamente",
+            "Tipo" => "success"
+        ]);
+    }
+
+    public function eliminar_articulo_controlador()
+    {
+        $id = mainModel::limpiar_string($_POST['id_eliminar_articuloOC']);
+
+        if (isset($_SESSION['Sdatos_articuloOC'][$id])) {
+            unset($_SESSION['Sdatos_articuloOC'][$id]);
+
+            return json_encode([
+                "Alerta" => "recargar",
+                "Titulo" => "Artículo eliminado",
+                "Texto" => "El artículo fue quitado correctamente",
+                "Tipo" => "success"
+            ]);
+        } else {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El artículo no existe en la sesión",
+                "Tipo" => "error"
+            ]);
+        }
     }
 }

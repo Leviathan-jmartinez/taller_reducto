@@ -52,12 +52,13 @@ class registroServicioModelo extends mainModel
             $ins = $pdo->prepare("
             INSERT INTO registro_servicio
             (idorden_trabajo, id_sucursal, usuario_registra, fecha_ejecucion, estado, observacion)
-            VALUES (?, ?, ?, NOW(), 1, ?)
+            VALUES (?, ?, ?, ?, 1, ?)
         ");
             $ins->execute([
                 $datos['idorden_trabajo'],
-                $ot['id_sucursal'], // 🔥 ya viene de OT
+                $ot['id_sucursal'],
                 $datos['usuario'],
+                $datos['fecha_ejecucion'], // ✔ ahora correcto
                 $datos['observacion']
             ]);
 
@@ -70,16 +71,13 @@ class registroServicioModelo extends mainModel
             SELECT ?, id_articulo, cantidad, precio_unitario, subtotal, 'OT'
             FROM orden_trabajo_detalle
             WHERE idorden_trabajo = ?
-            ");
-            $det->execute([
-                $idRegistro,
-                $datos['idorden_trabajo']
-            ]);
+        ");
+            $det->execute([$idRegistro, $datos['idorden_trabajo']]);
+
             /* ================= INSERTAR INSUMOS ================= */
             $insumos = json_decode($datos['insumos_json'] ?? '[]', true);
 
             if (!empty($insumos)) {
-
                 $ins = $pdo->prepare("
                 INSERT INTO registro_servicio_detalle
                 (idregistro_servicio, id_articulo, cantidad, precio_unitario, subtotal, origen)
@@ -94,7 +92,6 @@ class registroServicioModelo extends mainModel
                     ]);
                 }
             }
-
 
             /* ================= APLICAR STOCK ================= */
             self::aplicar_stock_registro_servicio(
@@ -118,25 +115,41 @@ class registroServicioModelo extends mainModel
                 $datos['idorden_trabajo']
             ]);
 
-            /* ================= CERRAR RECEPCIÓN ================= */
-            $updRec = $pdo->prepare("
-            UPDATE recepcion_servicio
-            SET estado = 3,
-                fecha_salida = NOW(),
-                fecha_actualizacion = NOW()
-            WHERE idrecepcion = (
-                SELECT ds.idrecepcion
-                FROM orden_trabajo ot
-                INNER JOIN presupuesto_servicio ps 
-                    ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-                INNER JOIN diagnostico_servicio ds 
+            /* ================= OBTENER RECEPCIÓN ================= */
+            $qRec = $pdo->prepare("
+            SELECT COALESCE(
+                /* SI TIENE PRESUPUESTO */
+                (SELECT ds.idrecepcion
+                 FROM presupuesto_servicio ps
+                 INNER JOIN diagnostico_servicio ds 
                     ON ds.id_diagnostico = ps.id_diagnostico
-                WHERE ot.idorden_trabajo = ?
+                 WHERE ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+                 LIMIT 1),
+
+                /* SI ES RECLAMO */
+                (SELECT r.idrecepcion
+                 FROM recepcion_servicio r
+                 WHERE r.idreclamo_servicio = ot.idreclamo_servicio
+                 LIMIT 1)
             )
+            FROM orden_trabajo ot
+            WHERE ot.idorden_trabajo = ?
         ");
-            $updRec->execute([
-                $datos['idorden_trabajo']
-            ]);
+
+            $qRec->execute([$datos['idorden_trabajo']]);
+            $idRecepcion = $qRec->fetchColumn();
+
+            /* ================= CERRAR RECEPCIÓN ================= */
+            if ($idRecepcion) {
+                $updRec = $pdo->prepare("
+                UPDATE recepcion_servicio
+                SET estado = 3,
+                    fecha_salida = NOW(),
+                    fecha_actualizacion = NOW()
+                WHERE idrecepcion = ?
+            ");
+                $updRec->execute([$idRecepcion]);
+            }
 
             $pdo->commit();
             return true;
@@ -146,6 +159,20 @@ class registroServicioModelo extends mainModel
         }
     }
 
+
+    protected static function estado_ot_modelo($idOT)
+    {
+        $pdo = self::conectar();
+
+        $q = $pdo->prepare("
+        SELECT estado 
+        FROM orden_trabajo 
+        WHERE idorden_trabajo = ?
+    ");
+        $q->execute([$idOT]);
+
+        return $q->fetchColumn();
+    }
     protected static function buscar_insumo_modelo($texto)
     {
         $sql = self::conectar()->prepare("
@@ -156,13 +183,14 @@ class registroServicioModelo extends mainModel
         AND a.estado = 1
         AND a.desc_articulo LIKE :b
         LIMIT 20
-    ");
+        ");
 
         $sql->bindValue(':b', "%$texto%");
         $sql->execute();
 
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
+
     protected static function buscar_ot_para_registro_modelo($texto)
     {
         session_start(['name' => 'STR']);
@@ -174,19 +202,33 @@ class registroServicioModelo extends mainModel
             m.mod_descri,
             v.placa
         FROM orden_trabajo ot
-        INNER JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-        INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
-        INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
-        INNER JOIN clientes c ON c.id_cliente = r.id_cliente
-        INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
-        INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
+        LEFT JOIN presupuesto_servicio ps 
+            ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+
+        LEFT JOIN diagnostico_servicio ds 
+            ON ds.id_diagnostico = ps.id_diagnostico
+
+        LEFT JOIN recepcion_servicio r_normal 
+            ON r_normal.idrecepcion = ds.idrecepcion
+
+        LEFT JOIN recepcion_servicio r_reclamo 
+            ON r_reclamo.idreclamo_servicio = ot.idreclamo_servicio
+
+        LEFT JOIN clientes c 
+            ON c.id_cliente = COALESCE(r_normal.id_cliente, r_reclamo.id_cliente)
+
+        LEFT JOIN vehiculos v 
+            ON v.id_vehiculo = COALESCE(r_normal.id_vehiculo, r_reclamo.id_vehiculo)
+
+        LEFT JOIN modelo_auto m 
+            ON m.id_modeloauto = v.id_modeloauto
 
         LEFT JOIN registro_servicio rs 
             ON rs.idorden_trabajo = ot.idorden_trabajo
-            AND rs.estado = 1   
+            AND rs.estado = 1
 
         WHERE ot.estado = 1 
-        AND r.id_sucursal = :sucursal 
+        AND ot.id_sucursal = :sucursal
         AND rs.idorden_trabajo IS NULL 
         AND (
                 c.nombre_cliente LIKE :b
@@ -374,21 +416,53 @@ class registroServicioModelo extends mainModel
 
         $sql = "
         SELECT 
-            rs.*,
+            rs.idregistro_servicio,
+            rs.fecha_ejecucion,
+            rs.estado,
+            rs.usuario_registra,
             ot.idorden_trabajo,
-            c.nombre_cliente,
-            c.apellido_cliente,
-            m.mod_descri,
-            v.placa
+
+            COALESCE(c.nombre_cliente, '') AS nombre_cliente,
+            COALESCE(c.apellido_cliente, '') AS apellido_cliente,
+            COALESCE(m.mod_descri, '') AS mod_descri,
+            COALESCE(v.placa, '') AS placa,
+            CONCAT(u.usu_nombre, ' ', u.usu_apellido) AS nombre_usuario
+
+
         FROM registro_servicio rs
-        INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rs.idorden_trabajo
-        INNER JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-        INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
-        INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
-        INNER JOIN clientes c ON c.id_cliente = r.id_cliente
-        INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
-        INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
+
+        INNER JOIN orden_trabajo ot 
+            ON ot.idorden_trabajo = rs.idorden_trabajo
+
+        /* NORMAL */
+        LEFT JOIN presupuesto_servicio ps 
+            ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+
+        LEFT JOIN diagnostico_servicio ds 
+            ON ds.id_diagnostico = ps.id_diagnostico
+
+        LEFT JOIN recepcion_servicio r_normal 
+            ON r_normal.idrecepcion = ds.idrecepcion
+
+        /* RECLAMO */
+        LEFT JOIN recepcion_servicio r_reclamo 
+            ON r_reclamo.idreclamo_servicio = ot.idreclamo_servicio
+
+        /* DATOS */
+        LEFT JOIN clientes c 
+            ON c.id_cliente = COALESCE(r_normal.id_cliente, r_reclamo.id_cliente)
+
+        LEFT JOIN vehiculos v 
+            ON v.id_vehiculo = COALESCE(r_normal.id_vehiculo, r_reclamo.id_vehiculo)
+
+        LEFT JOIN modelo_auto m 
+            ON m.id_modeloauto = v.id_modeloauto
+
+        LEFT JOIN usuarios u 
+            ON u.id_usuario = rs.usuario_registra
+
         WHERE 1=1 $filtrosSQL
+
         ORDER BY rs.idregistro_servicio DESC
         LIMIT $inicio, $registros
         ";
@@ -396,16 +470,10 @@ class registroServicioModelo extends mainModel
         $datos = $pdo->query($sql)->fetchAll();
 
         $total = $pdo->query("
-                SELECT COUNT(*)
+        SELECT COUNT(*)
         FROM registro_servicio rs
-        INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rs.idorden_trabajo
-        INNER JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-        INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
-        INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
-        INNER JOIN clientes c ON c.id_cliente = r.id_cliente
-        INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
-        INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
-        WHERE 1=1 $filtrosSQL
+        INNER JOIN orden_trabajo ot 
+            ON ot.idorden_trabajo = rs.idorden_trabajo
         ")->fetchColumn();
 
         return [
@@ -440,14 +508,28 @@ class registroServicioModelo extends mainModel
                 return ['msg' => 'El registro no puede ser anulado'];
             }
             $qSuc = $pdo->prepare("
-                SELECT r.id_sucursal
-                FROM registro_servicio rs
-                INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rs.idorden_trabajo
-                INNER JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-                INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
-                INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
-                WHERE rs.idregistro_servicio = ?
-            ");
+                    SELECT COALESCE(
+                        /* NORMAL */
+                        (SELECT r1.id_sucursal
+                        FROM presupuesto_servicio ps
+                        INNER JOIN diagnostico_servicio ds 
+                            ON ds.id_diagnostico = ps.id_diagnostico
+                        INNER JOIN recepcion_servicio r1 
+                            ON r1.idrecepcion = ds.idrecepcion
+                        WHERE ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+                        LIMIT 1),
+
+                        /* RECLAMO */
+                        (SELECT r2.id_sucursal
+                        FROM recepcion_servicio r2
+                        WHERE r2.idreclamo_servicio = ot.idreclamo_servicio
+                        LIMIT 1)
+                    )
+                    FROM registro_servicio rs
+                    INNER JOIN orden_trabajo ot 
+                        ON ot.idorden_trabajo = rs.idorden_trabajo
+                    WHERE rs.idregistro_servicio = ?
+                ");
             $qSuc->execute([$datos['idregistro_servicio']]);
             $idSucursalReal = $qSuc->fetchColumn();
 
@@ -488,9 +570,23 @@ class registroServicioModelo extends mainModel
                     fecha_salida = NULL,
                     fecha_actualizacion = NOW()
                 WHERE idrecepcion = (
-                    SELECT idrecepcion
-                    FROM orden_trabajo
-                    WHERE idorden_trabajo = ?
+                    SELECT COALESCE(
+                        /* NORMAL */
+                        (SELECT ds.idrecepcion
+                        FROM presupuesto_servicio ps
+                        INNER JOIN diagnostico_servicio ds 
+                            ON ds.id_diagnostico = ps.id_diagnostico
+                        WHERE ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+                        LIMIT 1),
+
+                        /* RECLAMO */
+                        (SELECT r.idrecepcion
+                        FROM recepcion_servicio r
+                        WHERE r.idreclamo_servicio = ot.idreclamo_servicio
+                        LIMIT 1)
+                    )
+                    FROM orden_trabajo ot
+                    WHERE ot.idorden_trabajo = ?
                 )
             ");
             $updRec->execute([$reg['idorden_trabajo']]);

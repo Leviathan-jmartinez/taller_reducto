@@ -93,18 +93,28 @@ class cargosModelo extends mainModel
     }
 
     /** Listar cargos */
-    protected static function listar_cargos_modelo()
+    public static function listar_cargos_modelo($inicio, $registros, $filtrosSQL)
     {
-        $sql = mainModel::conectar()->prepare("
-        SELECT
-            idcargos,
-            descripcion
-        FROM cargos
-        WHERE estado = 1
-        ORDER BY descripcion ASC
-        ");
+        $conexion = mainModel::conectar();
 
-        $sql->execute();
-        return $sql->fetchAll(PDO::FETCH_ASSOC);
+        $sql = "SELECT SQL_CALC_FOUND_ROWS * FROM cargos 
+        WHERE 1=1 $filtrosSQL
+        ORDER BY descripcion ASC
+        LIMIT :inicio, :registros";
+
+        $stmt = $conexion->prepare($sql);
+
+        $stmt->bindValue(":inicio", (int)$inicio, PDO::PARAM_INT);
+        $stmt->bindValue(":registros", (int)$registros, PDO::PARAM_INT);
+
+        $stmt->execute();
+
+        $datos = $stmt->fetchAll();
+        $total = $conexion->query("SELECT FOUND_ROWS()")->fetchColumn();
+
+        return [
+            "datos" => $datos,
+            "total" => (int)$total
+        ];
     }
 }

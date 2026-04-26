@@ -4,7 +4,7 @@ if ($peticionAjax) {
 } else {
     require_once "./modelos/registroServicioModelo.php";
 }
-
+require_once __DIR__ . '/../config/APP.php';
 class registroServicioControlador extends registroServicioModelo
 {
     public function registrar_servicio_controlador()
@@ -25,7 +25,6 @@ class registroServicioControlador extends registroServicioModelo
             ]);
         }
 
-        /* ================= DATOS CRÍTICOS DE SESIÓN ================= */
         $idUsuario  = $_SESSION['id_str'];
         $idSucursal = $_SESSION['nick_sucursal'];
 
@@ -33,41 +32,51 @@ class registroServicioControlador extends registroServicioModelo
             return json_encode([
                 'Alerta' => 'simple',
                 'Titulo' => 'Error',
-                'Texto'  => 'Sesión inválida. Vuelva a iniciar sesión',
+                'Texto'  => 'Sesión inválida',
                 'Tipo'   => 'error'
             ]);
         }
 
-        /* ================= DESENCRIPTAR OT ================= */
         $idOT = mainModel::decryption($_POST['idorden_trabajo']);
 
         if (!$idOT) {
             return json_encode([
                 'Alerta' => 'simple',
                 'Titulo' => 'Error',
-                'Texto'  => 'Orden de trabajo inválida',
+                'Texto'  => 'Orden inválida',
                 'Tipo'   => 'error'
             ]);
         }
 
-        /* ================= ARMAR DATA ================= */
+        /* ================= VALIDAR ESTADO OT ================= */
+        $estado = registroServicioModelo::estado_ot_modelo($idOT);
+
+        if ($estado != 2) {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Error',
+                'Texto'  => 'La OT no está disponible para registro',
+                'Tipo'   => 'error'
+            ]);
+        }
+
         $datos = [
             'idorden_trabajo' => $idOT,
             'fecha_ejecucion' => $_POST['fecha_ejecucion'],
             'observacion'     => $_POST['observacion'] ?? '',
             'usuario'         => $idUsuario,
             'updatedby'       => $idUsuario,
-            'insumos_json' => $_POST['insumos_json'] ?? '[]',
+            'insumos_json'    => $_POST['insumos_json'] ?? '[]',
         ];
 
-        /* ================= EJECUTAR ================= */
-        $res = self::registrar_servicio_modelo($datos);
+        $res = registroServicioModelo::registrar_servicio_modelo($datos);
 
         if ($res === true) {
             return json_encode([
-                'Alerta' => 'recargar',
+                'Alerta' => 'redireccionar_confirmado',
+                'URL'    => SERVERURL . 'registro-servicio-buscar/',
                 'Titulo' => 'Servicio registrado',
-                'Texto'  => 'La orden de trabajo fue cerrada correctamente',
+                'Texto'  => 'La orden fue cerrada correctamente',
                 'Tipo'   => 'success'
             ]);
         }
@@ -75,7 +84,7 @@ class registroServicioControlador extends registroServicioModelo
         return json_encode([
             'Alerta' => 'simple',
             'Titulo' => 'Error',
-            'Texto'  => $res['msg'] ?? 'No se pudo registrar el servicio',
+            'Texto'  => $res['msg'] ?? 'Error al registrar',
             'Tipo'   => 'error'
         ]);
     }
@@ -255,13 +264,11 @@ class registroServicioControlador extends registroServicioModelo
             <td>' . $row['nombre_cliente'] . ' ' . $row['apellido_cliente'] . '</td>
             <td>' . $row['mod_descri'] . ' ' . $row['placa'] . '</td>
             <td>' . date("d-m-Y", strtotime($row['fecha_ejecucion'])) . '</td>
-            <td>' . $row['usuario_registra'] . '</td>
+            <td>' . $row['nombre_usuario'] . '</td>
             <td>' . $estado . '</td>
-            <td>
-                ';
-                if (mainModel::tienePermiso('servicio.registro.anular')) {
-                    if ($row['estado'] == 1) {
-                        $tabla .= '
+            <td>';
+                if (mainModel::tienePermiso('servicio.registro.anular') && $row['estado'] == 1) {
+                    $tabla .= '
                 <form class="FormularioAjax d-inline"
                     action="' . SERVERURL . 'ajax/registroServicioAjax.php"
                     method="POST"
@@ -278,11 +285,9 @@ class registroServicioControlador extends registroServicioModelo
                         <i class="fas fa-ban"></i>
                     </button>
                 </form>';
-                    }
-
-                    $tabla .= '
-            </td>';
                 }
+                $tabla .= '
+            </td>';
                 $tabla .= '</tr>';
 
                 $contador++;
@@ -331,6 +336,15 @@ class registroServicioControlador extends registroServicioModelo
             ]);
         }
 
+        if (!mainModel::tienePermiso('servicio.registro.anular')) {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Acceso denegado',
+                'Texto'  => 'No tiene permiso para anular registros',
+                'Tipo'   => 'error'
+            ]);
+        }
+
         $idRegistro = mainModel::decryption($_POST['id_registro']);
 
         if (!$idRegistro) {
@@ -352,7 +366,8 @@ class registroServicioControlador extends registroServicioModelo
 
         if ($res === true) {
             return json_encode([
-                'Alerta' => 'recargar',
+                'Alerta' => 'redireccionar_confirmado',
+                'URL' => SERVERURL . 'registro-servicio-buscar/',
                 'Titulo' => 'Registro anulado',
                 'Texto'  => 'El servicio fue anulado y el stock revertido',
                 'Tipo'   => 'success'

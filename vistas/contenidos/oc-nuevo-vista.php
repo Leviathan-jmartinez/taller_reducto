@@ -69,7 +69,7 @@ if (isset($_POST['tipo_ordencompra'])) {
                 <i class="fas fa-exclamation-triangle"></i> Seleccione un Proveedor
             </span>
         <?php } else { ?>
-            <form class="FormularioAjax d-inline-block" action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php" method="POST" data-form="loans">
+            <form class="FormularioAjax d-inline-block" action="<?php echo SERVERURL ?>ajax/ordencompraAjax.php" method="POST" data-form="loans">
                 <input type="hidden" name="id_eliminar_proveedorOC" value="<?php echo $_SESSION['Sdatos_proveedorOC']['ID']; ?>">
                 <?php echo $_SESSION['Sdatos_proveedorOC']['RAZON'] . " (" . $_SESSION['Sdatos_proveedorOC']['RUC'] . ")"; ?>
                 <button type="submit" class="btn btn-danger"><i class="fas fa-user-times"></i></button>

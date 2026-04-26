@@ -408,117 +408,125 @@ class articuloControlador extends articuloModelo
         $id = mainModel::decryption($_POST['articulo_id_up']);
         $id = mainModel::limpiar_string($id);
 
-        /**Comprobacion de registros */
-        $check_id = mainModel::ejecutar_consulta_simple("SELECT * from articulos where id_articulo='$id'");
-        if ($check_id->rowCount() <= 0) {
-            $alerta = [
-                "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "El ARTICULO ingresado no existe!",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
-        } else {
-            $campos_articulo_up = $check_id->fetch();
-        }
-        $id_categoria = mainModel::limpiar_string($_POST['categoria_up']);
-        $idproveedores = mainModel::limpiar_string($_POST['proveedor_up']);
-        $idunidad_medida = mainModel::limpiar_string($_POST['um_up']);
-        $idiva = mainModel::limpiar_string($_POST['tipo_iva_up']);
-        $id_marcas = mainModel::limpiar_string($_POST['marca_up']);
-        $desc_articulo = mainModel::limpiar_string($_POST['articulo_nombre_up']);
-        $precio_venta = mainModel::limpiar_string($_POST['articulo_priceV_up']);
-        $precio_compra = mainModel::limpiar_string($_POST['articulo_priceC_up']);
-        $codigo = mainModel::limpiar_string($_POST['articulo_codigo_up']);
-        $estado = mainModel::limpiar_string($_POST['articulo_Estado_up']);
-        $tipo = mainModel::limpiar_string($_POST['articulo_Tipo_up']);
+        /* ===== VALIDAR EXISTENCIA ===== */
+        $check_id = mainModel::ejecutar_consulta_simple("SELECT * FROM articulos WHERE id_articulo='$id'");
 
-        /** Comprobar campos vacios */
+        if ($check_id->rowCount() <= 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El ARTICULO no existe",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        $campos_articulo_up = $check_id->fetch();
+
+        /* ===== CAPTURA DE DATOS ===== */
+        $id_categoria     = mainModel::limpiar_string($_POST['categoria_up'] ?? null);
+        $idproveedores    = mainModel::limpiar_string($_POST['proveedor_up'] ?? null);
+        $idunidad_medida  = mainModel::limpiar_string($_POST['um_up'] ?? null);
+        $idiva            = mainModel::limpiar_string($_POST['tipo_iva_up'] ?? null);
+        $id_marcas        = mainModel::limpiar_string($_POST['marca_up'] ?? null);
+
+        $desc_articulo = mainModel::limpiar_string($_POST['articulo_nombre_up']);
+        $precio_venta  = mainModel::limpiar_string($_POST['articulo_priceV_up']);
+        $precio_compra = mainModel::limpiar_string($_POST['articulo_priceC_up']);
+        $codigo        = mainModel::limpiar_string($_POST['articulo_codigo_up']);
+        $estado = mainModel::limpiar_string($_POST['articuloEstadoReg'] ?? 1);
+        $tipo   = mainModel::limpiar_string($_POST['tipoprodReg'] ?? 1);
+
+        /* ===== VALIDAR CAMPOS ===== */
         if ($codigo == "" || $desc_articulo == "" || $precio_venta == "") {
-            $alerta = [
+            echo json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "No has llenado todos los campos que son obligatorios",
+                "Titulo" => "Error",
+                "Texto" => "Campos obligatorios incompletos",
                 "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
+            ]);
             exit();
         }
-        /**verificar integridad de datos  */
+
         if (mainModel::verificarDatos("[0-9]{1,15}", $codigo)) {
-            $alerta = [
+            echo json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "El formato del campo Código no es válido",
+                "Titulo" => "Error",
+                "Texto" => "Código inválido",
                 "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
+            ]);
             exit();
         }
-        if (mainModel::verificarDatos("[[a-zA-záéíóúÁÉÍÓÚñÑ0-9 ]{1,140}", $desc_articulo)) {
-            $alerta = [
+
+        // REGEX CORREGIDO
+        if (mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 ]{1,140}", $desc_articulo)) {
+            echo json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "El formato del campo DESCRIPCION no es válido",
+                "Titulo" => "Error",
+                "Texto" => "Descripción inválida",
                 "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
+            ]);
             exit();
         }
+
         if (mainModel::verificarDatos("[0-9]{1,15}", $precio_compra)) {
-            $alerta = [
+            echo json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "El formato del campo PRECIO COMPRA no es válido",
+                "Titulo" => "Error",
+                "Texto" => "Precio compra inválido",
                 "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
+            ]);
             exit();
         }
 
         if (mainModel::verificarDatos("[0-9]{1,15}", $precio_venta)) {
-            $alerta = [
+            echo json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "El formato del campo PRECIO VENTA no es valido",
+                "Titulo" => "Error",
+                "Texto" => "Precio venta inválido",
                 "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
+            ]);
             exit();
         }
+
+        /* ===== VALIDAR DUPLICADO ===== */
         if ($codigo != $campos_articulo_up['codigo']) {
-            $check_doc = mainModel::ejecutar_consulta_simple("SELECT codigo from articulos where codigo='$codigo'");
+            $check_doc = mainModel::ejecutar_consulta_simple("SELECT codigo FROM articulos WHERE codigo='$codigo'");
             if ($check_doc->rowCount() > 0) {
-                $alerta = [
+                echo json_encode([
                     "Alerta" => "simple",
-                    "Titulo" => "Ocurrio un error inesperado!",
-                    "Texto" => "El CÓDIGO ingresado ya se encuentra registrado!",
+                    "Titulo" => "Error",
+                    "Texto" => "El código ya existe",
                     "Tipo" => "error"
-                ];
-                echo json_encode($alerta);
+                ]);
                 exit();
             }
         }
+
+        /* ===== VALIDAR ESTADO ===== */
         if (!in_array($estado, ['0', '1'], true)) {
-            $alerta = [
+            echo json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto"  => "El estado seleccionado no es válido",
-                "Tipo"   => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
-        }
-        session_start(['name' => 'STR']);
-        if (!mainModel::tienePermiso('articulo.editar')) {
-            return json_encode([
-                "Alerta" => "simple",
-                "Titulo" => "Advertencia!",
-                "Texto" => "No posee los permisos necesarios para realizar esta acción",
+                "Titulo" => "Error",
+                "Texto" => "Estado inválido",
                 "Tipo" => "error"
             ]);
+            exit();
         }
+
+        /* ===== PERMISOS ===== */
+        session_start(['name' => 'STR']);
+        if (!mainModel::tienePermiso('articulo.editar')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Sin permisos",
+                "Texto" => "No puede editar",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        /* ===== DATA ===== */
         $datos_articulo_up = [
             "id_categoria" => $id_categoria,
             "idproveedores" => $idproveedores,
@@ -533,23 +541,27 @@ class articuloControlador extends articuloModelo
             "tipo" => $tipo,
             "id_articulo" => $id
         ];
+
+        /* ===== UPDATE ===== */
         if (articuloModelo::actualizar_articulo_modelo($datos_articulo_up)) {
-            $alerta = [
+
+            echo json_encode([
                 "Alerta" => "redireccionar_confirmado",
-                "Titulo" => "ARTICULO modificado",
-                "Texto" => "Los datos del ARTICULO han sido modificados correctamente",
+                "Titulo" => "Actualizado",
+                "Texto" => "Artículo actualizado correctamente",
                 "Tipo" => "success",
-                "URL" => SERVERURL . "articulo-lista/"
-            ];
+                "URL" => SERVERURL . "articulo-nuevo/"
+            ]);
         } else {
-            $alerta = [
+
+            echo json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "No hemos pido actualizar los datos del ARTICULO!",
+                "Titulo" => "Error",
+                "Texto" => "No se pudo actualizar",
                 "Tipo" => "error"
-            ];
+            ]);
         }
-        echo json_encode($alerta);
+
         exit();
     }
     /**fin controlador */
