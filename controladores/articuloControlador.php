@@ -22,93 +22,135 @@ class articuloControlador extends articuloModelo
         $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
 
-        if (isset($busqueda) && $busqueda != "") {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS * FROM articulos 
-            WHERE ((id_articulo LIKE '%$busqueda%' OR codigo LIKE '%$busqueda%')) 
-            ORDER BY desc_articulo ASC LIMIT $inicio,$registros";
-        } else {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS * FROM articulos 
-            ORDER BY desc_articulo ASC LIMIT $inicio,$registros";
+        /* ================= FILTROS ================= */
+
+        $filtrosSQL = "";
+
+        if ($busqueda != "") {
+
+            $busqueda = mainModel::limpiar_string($busqueda);
+
+            $filtrosSQL .= " AND (
+            id_articulo LIKE '%$busqueda%' 
+            OR codigo LIKE '%$busqueda%' 
+            OR desc_articulo LIKE '%$busqueda%'
+        )";
         }
-        $conexion = mainModel::conectar();
-        $datos = $conexion->query($consulta);
-        $datos = $datos->fetchAll();
 
-        $total = $conexion->query("SELECT FOUND_ROWS()");
-        $total = (int) $total->fetchColumn();
+        /* ================= DATOS ================= */
 
+        $res = articuloModelo::listar_articulos_modelo($inicio, $registros, $filtrosSQL);
+
+        $datos = $res['datos'];
+        $total = $res['total'];
         $Npaginas = ceil($total / $registros);
 
+        /* ================= TABLA ================= */
+
         $tabla .= '<div class="table-responsive">
-					<table class="table table-dark table-sm">
-						<thead>
-							<tr class="text-center roboto-medium">
-								<th>#</th>
-								<th>CÓDIGO</th>
-                                <th>NOMBRE</th>
-                                <th>DETALLE</th>';
+        <table class="table table-dark table-sm">
+        <thead>
+            <tr class="text-center roboto-medium">
+                <th>#</th>
+                <th>CÓDIGO</th>
+                <th>NOMBRE</th>
+                <th>DETALLE</th>';
+
         if (mainModel::tienePermiso('articulo.editar')) {
-            $tabla .=           '<th>ACTUALIZAR</th>';
+            $tabla .= '<th>ACTUALIZAR</th>';
         }
         if (mainModel::tienePermiso('articulo.eliminar')) {
             $tabla .= '<th>ELIMINAR</th>';
         }
-        $tabla .= '
-						</tr>
-						</thead>
-						<tbody>';
+
+        $tabla .= '</tr></thead><tbody>';
+
         if ($total >= 1 && $pagina <= $Npaginas) {
+
             $contador = $inicio + 1;
             $reg_inicio = $inicio + 1;
+
             foreach ($datos as $rows) {
+
                 $tabla .= '
-                            <tr class="text-center">
-								<td>' . $contador . '</td>
-								<td>' . $rows['codigo'] . '</td>
-								<td>' . $rows['desc_articulo'] . '</td>
-								<td>
-                                <button type="button" class="btn btn-info" data-toggle="popover"data-trigger="hover" title="' . 'Precio Compra: ' . number_format((float)$rows['precio_compra'], 0, ',', '.') . '"
-                                    data-content="' . 'Precio Venta: ' . number_format((float)$rows['precio_venta'], 0, ',', '.') . '">
-                                         <i class="fas fa-info-circle"></i>
-                                </button></td>';
+            <tr class="text-center">
+                <td>' . $contador . '</td>
+                <td>' . $rows['codigo'] . '</td>
+                <td>' . $rows['desc_articulo'] . '</td>
+                <td>
+                    <button type="button" class="btn btn-info"
+                        data-toggle="popover"
+                        data-trigger="hover"
+                        title="Precio Compra: ' . number_format((float)$rows['precio_compra'], 0, ',', '.') . '"
+                        data-content="Precio Venta: ' . number_format((float)$rows['precio_venta'], 0, ',', '.') . '">
+                        <i class="fas fa-info-circle"></i>
+                    </button>
+                </td>';
+
                 if (mainModel::tienePermiso('articulo.editar')) {
-                    $tabla .= '<td>
-									<a href="' . SERVERURL . 'articulo-actualizar/' . mainModel::encryption($rows['id_articulo']) . '/" class="btn btn-success">
-										<i class="fas fa-sync-alt"></i>
-									</a>
-								</td>
-								';
+                    $tabla .= '
+                <td>
+                    <a href="' . SERVERURL . 'articulo-actualizar/' . mainModel::encryption($rows['id_articulo']) . '/"
+                    class="btn btn-success">
+                        <i class="fas fa-sync-alt"></i>
+                    </a>
+                </td>';
                 }
+
                 if (mainModel::tienePermiso('articulo.eliminar')) {
-                    $tabla .= ' <td>                          
-									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/articuloAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
-                                    <input type="hidden" name="articulo_id_del" value=' . mainModel::encryption($rows['id_articulo']) . '>
-										<button type="submit" class="btn btn-warning">
-											<i class="far fa-trash-alt"></i>
-										</button>
-									</form>
-								</td>';
+                    $tabla .= '
+                <td>
+                    <form class="FormularioAjax"
+                        action="' . SERVERURL . 'ajax/articuloAjax.php"
+                        method="POST"
+                        data-form="delete">
+
+                        <input type="hidden"
+                        name="articulo_id_del"
+                        value="' . mainModel::encryption($rows['id_articulo']) . '">
+
+                        <button type="submit" class="btn btn-warning">
+                            <i class="far fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </td>';
                 }
 
                 $tabla .= '</tr>';
                 $contador++;
             }
+
             $reg_final = $contador - 1;
         } else {
+
             if ($total >= 1) {
-                $tabla .= '<tr class="text-center"> <td colspan="6"> <a href="' . $url . '" class="btn btn-reaised btn-primary btn-sm"> Haga click aqui para recargar el listado </a> </td> </tr> ';
+                $tabla .= '<tr class="text-center">
+                <td colspan="6">
+                    <a href="' . $url . '" class="btn btn-raised btn-primary btn-sm">
+                        Haga click aquí para recargar el listado
+                    </a>
+                </td>
+            </tr>';
             } else {
-                $tabla .= '<tr class="text-center"> <td colspan="6"> No hay regitros en el sistema</td> </tr> ';
+                $tabla .= '<tr class="text-center">
+                <td colspan="6">No hay registros en el sistema</td>
+            </tr>';
             }
         }
 
-        $tabla .= '       </tbody>
-					</table>
-				</div>';
+        $tabla .= '</tbody></table></div>';
+
+        /* ================= PAGINADOR ================= */
+
         if ($total >= 1 && $pagina <= $Npaginas) {
-            $tabla .= '<p class="text-right"> Mostrando registro ' . $reg_inicio . ' al ' . $reg_final . ' de un total de ' . $total . '</p>';
+
+            $tabla .= '<p class="text-right">
+            Mostrando registro ' . $reg_inicio . ' al ' . $reg_final . ' de un total de ' . $total . '
+        </p>';
+
             $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);
         }
+
         echo $tabla;
     }
     /**fin controlador */
@@ -164,7 +206,6 @@ class articuloControlador extends articuloModelo
         $pricesale = mainModel::limpiar_string($_POST['articulo_priceV_reg']);
         $pricebuy = mainModel::limpiar_string($_POST['articulo_priceC_reg']);
         $code = mainModel::limpiar_string($_POST['articulo_codigo_reg']);
-        $estado = mainModel::limpiar_string($_POST['articuloEstadoReg']);
         $tipo = mainModel::limpiar_string($_POST['tipoprodReg']);
 
         /** Comprobar campos vacios */
@@ -271,16 +312,6 @@ class articuloControlador extends articuloModelo
             exit();
         }
 
-        if ($estado < 0 || $estado > 1 || $estado == "") {
-            $alerta = [
-                "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "El estado seleccionado no corresponde",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
-        }
         /**Comprobacion de registros */
         $check_code = mainModel::ejecutar_consulta_simple("SELECT codigo from articulos where codigo='$code'");
         if ($check_code->rowCount() > 0) {
@@ -304,7 +335,6 @@ class articuloControlador extends articuloModelo
             "pricesale" => $pricesale,
             "pricebuy" => $pricebuy,
             "code" => $code,
-            "estado" => $estado,
             "tipo" => $tipo
         ];
         $agregar_articulo = articuloModelo::agregar_articulo_modelo($datos_articulo);
@@ -434,8 +464,15 @@ class articuloControlador extends articuloModelo
         $precio_venta  = mainModel::limpiar_string($_POST['articulo_priceV_up']);
         $precio_compra = mainModel::limpiar_string($_POST['articulo_priceC_up']);
         $codigo        = mainModel::limpiar_string($_POST['articulo_codigo_up']);
-        $estado = mainModel::limpiar_string($_POST['articuloEstadoReg'] ?? 1);
-        $tipo   = mainModel::limpiar_string($_POST['tipoprodReg'] ?? 1);
+        $estado        = mainModel::limpiar_string($_POST['articuloEstadoReg'] ?? 1);
+        $tipo          = mainModel::limpiar_string($_POST['tipoprodReg'] ?? 1);
+
+        /* ===== VALIDAR SELECTS ===== */
+        mainModel::validarSelect($id_categoria, "una categoría");
+        mainModel::validarSelect($idproveedores, "un proveedor");
+        mainModel::validarSelect($idunidad_medida, "una unidad de medida");
+        mainModel::validarSelect($idiva, "el tipo de IVA");
+        mainModel::validarSelect($id_marcas, "una marca");
 
         /* ===== VALIDAR CAMPOS ===== */
         if ($codigo == "" || $desc_articulo == "" || $precio_venta == "") {
@@ -458,7 +495,6 @@ class articuloControlador extends articuloModelo
             exit();
         }
 
-        // REGEX CORREGIDO
         if (mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 ]{1,140}", $desc_articulo)) {
             echo json_encode([
                 "Alerta" => "simple",

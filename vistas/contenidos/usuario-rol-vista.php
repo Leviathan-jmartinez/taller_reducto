@@ -27,7 +27,7 @@ if (
 
 /* ================= OBTENER DATOS ================= */
 $usuarios = $insUsuario->listar_usuarios_controlador();
-$roles    = $insUsuario->listar_roles_controlador();
+
 ?>
 <div class="full-box page-header">
 	<h3 class="text-left">

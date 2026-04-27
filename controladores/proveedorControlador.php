@@ -111,21 +111,33 @@ class proveedorControlador extends proveedorModelo
 
         if ($stmt->rowCount() > 0) {
 
-            // Verificar cómo quedó
             $verificar = mainModel::ejecutar_consulta_simple(
                 "SELECT estado FROM proveedores WHERE idproveedores='$id'"
             );
 
             if ($verificar->rowCount() > 0) {
-                // Sigue existiendo → fue desactivado
-                $alerta = [
-                    "Alerta" => "recargar",
-                    "Titulo" => "Proveedor desactivado",
-                    "Texto"  => "El proveedor ya tenía movimientos, por lo que fue desactivado.",
-                    "Tipo"   => "warning"
-                ];
+
+                $row = $verificar->fetch();
+
+                if ($row['estado'] == 0) {
+
+                    $alerta = [
+                        "Alerta" => "recargar",
+                        "Titulo" => "Proveedor desactivado",
+                        "Texto"  => "El proveedor tiene registros relacionados (artículos o pedidos). Fue desactivado.",
+                        "Tipo"   => "warning"
+                    ];
+                } else {
+
+                    $alerta = [
+                        "Alerta" => "recargar",
+                        "Titulo" => "Proveedor actualizado",
+                        "Texto"  => "Proveedor modificado.",
+                        "Tipo"   => "success"
+                    ];
+                }
             } else {
-                // Ya no existe → fue eliminado
+
                 $alerta = [
                     "Alerta" => "recargar",
                     "Titulo" => "Proveedor eliminado",
@@ -133,13 +145,6 @@ class proveedorControlador extends proveedorModelo
                     "Tipo"   => "success"
                 ];
             }
-        } else {
-            $alerta = [
-                "Alerta" => "simple",
-                "Titulo" => "Error",
-                "Texto"  => "No se pudo eliminar el proveedor",
-                "Tipo"   => "error"
-            ];
         }
 
         echo json_encode($alerta);
@@ -160,114 +165,133 @@ class proveedorControlador extends proveedorModelo
         $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
 
-        if (isset($busqueda) && $busqueda != "") {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS p.*, c.ciu_descri FROM proveedores p INNER JOIN ciudades c ON c.id_ciudad = p.id_ciudad WHERE ( p.razon_social LIKE '%$busqueda%' OR p.ruc LIKE '%$busqueda%' ) ORDER BY p.razon_social ASC LIMIT $inicio,$registros";
-        } else {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS p.*, c.ciu_descri FROM proveedores p INNER JOIN ciudades c ON c.id_ciudad = p.id_ciudad ORDER BY p.razon_social ASC LIMIT $inicio,$registros";
+        /* ================= FILTROS ================= */
+
+        $filtrosSQL = "";
+
+        if ($busqueda != "") {
+
+            $busqueda = mainModel::limpiar_string($busqueda);
+
+            $filtrosSQL .= " AND (
+            p.razon_social LIKE '%$busqueda%' 
+            OR p.ruc LIKE '%$busqueda%'
+        )";
         }
-        $conexion = mainModel::conectar();
-        $datos = $conexion->query($consulta);
-        $datos = $datos->fetchAll();
 
-        $total = $conexion->query("SELECT FOUND_ROWS()");
-        $total = (int) $total->fetchColumn();
+        /* ================= DATOS ================= */
 
+        $res = proveedorModelo::listar_proveedores_modelo($inicio, $registros, $filtrosSQL);
+
+        $datos = $res['datos'];
+        $total = $res['total'];
         $Npaginas = ceil($total / $registros);
-        $tabla .= '
-        <div class="table-responsive">
-            <div class="p-2" style="background-color:#253556;">
-                <form method="GET" action="' . SERVERURL . 'proveedor-lista/">
-                    <div class="input-group">
-                        <input type="text" name="busqueda" 
-                            class="form-control text-white border-secondary"
-                            placeholder="Buscar proveedor..."
-                            value="' . $busqueda . '">
-                        <div class="input-group-append">
-                            <button class="btn btn-sm btn-outline-light" type="submit">
-                                <i class="fas fa-search"></i>
-                            </button>
 
-                            <!-- BOTÓN LIMPIAR -->
-                            <a href="' . SERVERURL . 'proveedor-lista/" 
-                            class="btn btn-sm btn-outline-light">
-                                <i class="fas fa-times"></i>
-                            </a>
-                        </div>
-                    </div>   
-                </form>
-            </div>
-        ';
+        /* ================= TABLA ================= */
+
         $tabla .= '<div class="table-responsive">
-					<table class="table table-dark table-sm">
-						<thead>
-							<tr class="text-center roboto-medium">
-								<th>#</th>
-								<th>RAZÓN SOCIAL</th> 
-                                <th>RUC</th> 
-                                <th>CIUDAD</th> 
-                                <th>ESTADO</th>';
+        <table class="table table-dark table-sm">
+        <thead>
+            <tr class="text-center roboto-medium">
+                <th>#</th>
+                <th>RAZÓN SOCIAL</th> 
+                <th>RUC</th> 
+                <th>CIUDAD</th> 
+                <th>ESTADO</th>';
+
         if (mainModel::tienePermiso('proveedor.editar')) {
-            $tabla .=           '<th>ACTUALIZAR</th>';
+            $tabla .= '<th>ACTUALIZAR</th>';
         }
         if (mainModel::tienePermiso('proveedor.eliminar')) {
             $tabla .= '<th>ELIMINAR</th>';
         }
-        $tabla .= '
-						</tr>
-						</thead>
-						<tbody>';
+
+        $tabla .= '</tr></thead><tbody>';
+
         if ($total >= 1 && $pagina <= $Npaginas) {
+
             $contador = $inicio + 1;
             $reg_inicio = $inicio + 1;
+
             foreach ($datos as $rows) {
+
+                $estado = ($rows['estado'] == 1)
+                    ? '<span class="badge badge-success">Activo</span>'
+                    : '<span class="badge badge-danger">Inactivo</span>';
+
                 $tabla .= '
-                            <tr class="text-center">
-								<td>' . $contador . '</td>
-                                <td>' . $rows['razon_social'] . '</td>
-								<td>' . $rows['ruc'] . '</td>
-								<td>' . $rows['ciu_descri'] . '</td>
-								<td>
-                                    ' . ($rows['estado'] == 1 ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-danger">Inactivo</span>') . '
-                                </td>';
+            <tr class="text-center">
+                <td>' . $contador . '</td>
+                <td>' . $rows['razon_social'] . '</td>
+                <td>' . $rows['ruc'] . '</td>
+                <td>' . $rows['ciu_descri'] . '</td>
+                <td>' . $estado . '</td>';
+
                 if (mainModel::tienePermiso('proveedor.editar')) {
-                    $tabla .= '<td>
-									<a href="' . SERVERURL . 'proveedor-actualizar/' . mainModel::encryption($rows['idproveedores']) . '/" class="btn btn-success">
-										<i class="fas fa-sync-alt"></i>
-									</a>
-								</td>
-								';
+                    $tabla .= '
+                <td>
+                    <a href="' . SERVERURL . 'proveedor-actualizar/' . mainModel::encryption($rows['idproveedores']) . '/"
+                    class="btn btn-success">
+                        <i class="fas fa-sync-alt"></i>
+                    </a>
+                </td>';
                 }
+
                 if (mainModel::tienePermiso('proveedor.eliminar')) {
-                    $tabla .= ' <td>                          
-									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/proveedorAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
-                                    <input type="hidden" name="proveedor_id_del" value=' . mainModel::encryption($rows['idproveedores']) . '>
-										<button type="submit" class="btn btn-warning">
-											<i class="far fa-trash-alt"></i>
-										</button>
-									</form>
-								</td>';
+                    $tabla .= '
+                <td>
+                    <form class="FormularioAjax"
+                        action="' . SERVERURL . 'ajax/proveedorAjax.php"
+                        method="POST"
+                        data-form="delete">
+
+                        <input type="hidden"
+                        name="proveedor_id_del"
+                        value="' . mainModel::encryption($rows['idproveedores']) . '">
+
+                        <button type="submit" class="btn btn-warning">
+                            <i class="far fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </td>';
                 }
 
                 $tabla .= '</tr>';
                 $contador++;
             }
+
             $reg_final = $contador - 1;
         } else {
+
             if ($total >= 1) {
-                $tabla .= '<tr class="text-center"> <td colspan="7"> <a href="' . SERVERURL . 'proveedor-lista/" class="btn btn-reaised btn-primary btn-sm">Haga click aqui para recargar el listado </a> </td> </tr>';
+                $tabla .= '<tr class="text-center">
+                <td colspan="7">
+                    <a href="' . SERVERURL . 'proveedor-lista/" 
+                    class="btn btn-raised btn-primary btn-sm">
+                    Haga click aquí para recargar el listado
+                    </a>
+                </td>
+            </tr>';
             } else {
-                $tabla .= '<tr class="text-center"> <td colspan="7"> No hay regitros en el sistema</td> </tr> ';
+                $tabla .= '<tr class="text-center">
+                <td colspan="7">No hay registros en el sistema</td>
+            </tr>';
             }
         }
 
-        $tabla .= '       </tbody>
-					</table>
-				</div>';
+        $tabla .= '</tbody></table></div>';
+
+        /* ================= PAGINADOR ================= */
+
         if ($total >= 1 && $pagina <= $Npaginas) {
-            $tabla .= '<p class="text-right"> Mostrando registro ' . $reg_inicio . ' al ' . $reg_final . ' de un total de ' . $total . '</p>';
-            $parametros = ($busqueda != "") ? "?busqueda=" . urlencode($busqueda) : "";
-            $tabla .= mainModel::paginador($pagina, $Npaginas, $url . $parametros, 10);
+
+            $tabla .= '<p class="text-right">
+            Mostrando registro ' . $reg_inicio . ' al ' . $reg_final . ' de un total de ' . $total . '
+        </p>';
+
+            $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);
         }
+
         echo $tabla;
     }
 
@@ -391,7 +415,8 @@ class proveedorControlador extends proveedorModelo
 
         if ($update) {
             $alerta = [
-                "Alerta" => "recargar",
+                "Alerta" => "redireccionar_confirmado",
+                "URL" => SERVERURL . "proveedor-nuevo/",
                 "Titulo" => "Proveedor actualizado",
                 "Texto" => "Los datos del proveedor fueron modificados correctamente",
                 "Tipo" => "success"
@@ -409,8 +434,4 @@ class proveedorControlador extends proveedorModelo
         exit();
     }
 
-    public function listar_proveedores_controlador()
-    {
-        return proveedorModelo::listar_proveedores_modelo();
-    }
 }

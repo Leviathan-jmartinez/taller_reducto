@@ -289,4 +289,18 @@ class mainModel
 
         return $sql;
     }
+    public static function validarSelect($valor, $nombre)
+    {
+        if ($valor === "" || $valor === null) {
+
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Campo requerido",
+                "Texto" => "Debe seleccionar " . $nombre,
+                "Tipo" => "error"
+            ]);
+
+            exit();
+        }
+    }
 }

@@ -6,20 +6,48 @@ class clienteModelo extends mainModel
     /** modelo agregar cliente*/
     protected static function agregar_cliente_modelo($datos)
     {
-        $sql = mainModel::conectar()->prepare("INSERT INTO clientes (id_ciudad, doc_number, nombre_cliente, apellido_cliente, direccion_cliente, celular_cliente, estado_civil, estado_cliente, digito_v, email_cliente, doc_type) 
-        VALUES (:ciudad, :doc_number, :nombre, :apellido, :direccion, :celular, :estadoC, :estado, :dv, :email, :doctype)");
-        $sql->bindParam(":ciudad", $datos['ciudad']);
-        $sql->bindParam(":doc_number", $datos['doc_number']);
-        $sql->bindParam(":nombre", $datos['nombre']);
-        $sql->bindParam(":apellido", $datos['apellido']);
-        $sql->bindParam(":direccion", $datos['direccion']);
-        $sql->bindParam(":celular", $datos['celular']);
-        $sql->bindParam(":estadoC", $datos['estadoC']);
-        $sql->bindParam(":estado", $datos['estado']);
-        $sql->bindParam(":dv", $datos['dv']);
-        $sql->bindParam(":email", $datos['email']);
-        $sql->bindParam(":doctype", $datos['doctype']);
+        $sql = mainModel::conectar()->prepare("
+        INSERT INTO clientes (
+            doc_number,
+            nombre_cliente,
+            apellido_cliente,
+            celular_cliente,
+            email_cliente,
+            direccion_cliente,
+            id_ciudad,
+            doc_type,
+            digito_v,
+            estado_civil,
+            estado_cliente
+        ) VALUES (
+            :doc_number,
+            :nombre_cliente,
+            :apellido_cliente,
+            :celular_cliente,
+            :email_cliente,
+            :direccion_cliente,
+            :id_ciudad,
+            :doc_type,
+            :digito_v,
+            :estado_civil,
+            :estado_cliente
+        )
+        ");
+
+        $sql->bindValue(":doc_number", $datos['doc_number']);
+        $sql->bindValue(":nombre_cliente", $datos['nombre_cliente']);
+        $sql->bindValue(":apellido_cliente", $datos['apellido_cliente']);
+        $sql->bindValue(":celular_cliente", $datos['celular_cliente']);
+        $sql->bindValue(":email_cliente", $datos['email_cliente']);
+        $sql->bindValue(":direccion_cliente", $datos['direccion_cliente']);
+        $sql->bindValue(":id_ciudad", (int)$datos['id_ciudad'], PDO::PARAM_INT);
+        $sql->bindValue(":doc_type", $datos['doc_type']);
+        $sql->bindValue(":digito_v", $datos['digito_v']);
+        $sql->bindValue(":estado_civil", $datos['estado_civil']);
+        $sql->bindValue(":estado_cliente", $datos['estado_cliente']);
+
         $sql->execute();
+
         return $sql;
     }
     /**modelo datos cliente */
@@ -81,23 +109,66 @@ class clienteModelo extends mainModel
     /** */
     protected static function actualizar_cliente_modelo($datos)
     {
-        $sql = mainModel::conectar()->prepare("UPDATE clientes
-        SET id_ciudad=:ciudad, doc_number=:nrodoc, nombre_cliente=:nombre, apellido_cliente=:apellido, direccion_cliente=:direccion, celular_cliente=:telefeono, 
-        estado_civil=:estadoC, estado_cliente=:estado, digito_v=:dv, doc_type=:doctype, email_cliente=:email
-        WHERE id_cliente=:id");
-        $sql->bindParam(":ciudad", $datos['ciudad']);
-        $sql->bindParam(":nrodoc", $datos['nrodoc']);
-        $sql->bindParam(":nombre", $datos['nombre']);
-        $sql->bindParam(":apellido", $datos['apellido']);
-        $sql->bindParam(":direccion", $datos['direccion']);
-        $sql->bindParam(":telefeono", $datos['telefeono']);
-        $sql->bindParam(":estadoC", $datos['estadoC']);
-        $sql->bindParam(":estado", $datos['estado']);
-        $sql->bindParam(":dv", $datos['dv']);
-        $sql->bindParam(":doctype", $datos['doctype']);
-        $sql->bindParam(":email", $datos['email']);
-        $sql->bindParam(":id", $datos['id']);
+        $sql = mainModel::conectar()->prepare("
+        UPDATE clientes SET
+            doc_number = :doc_number,
+            nombre_cliente = :nombre_cliente,
+            apellido_cliente = :apellido_cliente,
+            celular_cliente = :celular_cliente,
+            email_cliente = :email_cliente,
+            direccion_cliente = :direccion_cliente,
+            id_ciudad = :id_ciudad,
+            doc_type = :doc_type,
+            digito_v = :digito_v,
+            estado_civil = :estado_civil,
+            estado_cliente = :estado_cliente
+        WHERE id_cliente = :id_cliente
+    ");
+
+        $sql->bindValue(":doc_number", $datos['doc_number']);
+        $sql->bindValue(":nombre_cliente", $datos['nombre_cliente']);
+        $sql->bindValue(":apellido_cliente", $datos['apellido_cliente']);
+        $sql->bindValue(":celular_cliente", $datos['celular_cliente']);
+        $sql->bindValue(":email_cliente", $datos['email_cliente']);
+        $sql->bindValue(":direccion_cliente", $datos['direccion_cliente']);
+        $sql->bindValue(":id_ciudad", (int)$datos['id_ciudad'], PDO::PARAM_INT);
+
+        // 🔥 ESTO ES LO QUE TE FALTABA
+        $sql->bindValue(":doc_type", $datos['doc_type']);
+        $sql->bindValue(":digito_v", $datos['digito_v']);
+        $sql->bindValue(":estado_civil", $datos['estado_civil']);
+
+        $sql->bindValue(":estado_cliente", $datos['estado_cliente']);
+        $sql->bindValue(":id_cliente", (int)$datos['id_cliente'], PDO::PARAM_INT);
+
         $sql->execute();
+
         return $sql;
+    }
+
+    protected static function listar_clientes_modelo($inicio, $registros, $filtrosSQL)
+    {
+        $conexion = mainModel::conectar();
+
+        $sql = "SELECT SQL_CALC_FOUND_ROWS *
+            FROM clientes
+            WHERE 1=1 $filtrosSQL
+            ORDER BY nombre_cliente ASC
+            LIMIT :inicio, :registros";
+
+        $stmt = $conexion->prepare($sql);
+
+        $stmt->bindValue(":inicio", (int)$inicio, PDO::PARAM_INT);
+        $stmt->bindValue(":registros", (int)$registros, PDO::PARAM_INT);
+
+        $stmt->execute();
+
+        $datos = $stmt->fetchAll();
+        $total = $conexion->query("SELECT FOUND_ROWS()")->fetchColumn();
+
+        return [
+            "datos" => $datos,
+            "total" => (int)$total
+        ];
     }
 }

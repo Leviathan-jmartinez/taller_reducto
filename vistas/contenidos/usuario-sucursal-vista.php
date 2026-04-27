@@ -15,7 +15,7 @@ $insSucursal = new sucursalControlador();
 
 /* ================= DATOS ================= */
 $usuarios   = $insUsuario->listar_usuarios_controlador();
-$sucursales = $insSucursal->listar_sucursales_controlador();
+$sucursales = $insSucursal->listar_sucursales_select_controlador();
 ?>
 <div class="full-box page-header">
     <h3 class="text-left">

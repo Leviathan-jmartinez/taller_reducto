@@ -56,7 +56,7 @@ class articuloModelo extends mainModel
     {
         $sql = mainModel::conectar()->prepare("INSERT INTO articulos 
         (id_categoria, idproveedores, idunidad_medida, idiva, id_marcas, desc_articulo, precio_venta, precio_compra, codigo, estado, date_updated, date_created, tipo) 
-        VALUES(:id_categoria, :idproveedores, :idunidad_medida, :idiva, :id_marcas, :descrip, :pricesale, :pricebuy, :code, :estado, now(), now(), :tipo)");
+        VALUES(:id_categoria, :idproveedores, :idunidad_medida, :idiva, :id_marcas, :descrip, :pricesale, :pricebuy, :code, 1, now(), now(), :tipo)");
         $sql->bindParam(":id_categoria", $datos['id_categoria']);
         $sql->bindParam(":idproveedores", $datos['idproveedores']);
         $sql->bindParam(":idunidad_medida", $datos['idunidad_medida']);
@@ -66,7 +66,6 @@ class articuloModelo extends mainModel
         $sql->bindParam(":pricesale", $datos['pricesale']);
         $sql->bindParam(":pricebuy", $datos['pricebuy']);
         $sql->bindParam(":code", $datos['code']);
-        $sql->bindParam(":estado", $datos['estado']);
         $sql->bindParam(":tipo", $datos['tipo']);
         $sql->execute();
         return $sql;
@@ -134,4 +133,30 @@ class articuloModelo extends mainModel
         return $sql;
     }
     /**fin modelo */
+
+    protected static function listar_articulos_modelo($inicio, $registros, $filtrosSQL)
+    {
+        $conexion = mainModel::conectar();
+
+        $sql = "SELECT SQL_CALC_FOUND_ROWS *
+            FROM articulos
+            WHERE 1=1 $filtrosSQL
+            ORDER BY desc_articulo ASC
+            LIMIT :inicio, :registros";
+
+        $stmt = $conexion->prepare($sql);
+
+        $stmt->bindValue(":inicio", (int)$inicio, PDO::PARAM_INT);
+        $stmt->bindValue(":registros", (int)$registros, PDO::PARAM_INT);
+
+        $stmt->execute();
+
+        $datos = $stmt->fetchAll();
+        $total = $conexion->query("SELECT FOUND_ROWS()")->fetchColumn();
+
+        return [
+            "datos" => $datos,
+            "total" => (int)$total
+        ];
+    }
 }

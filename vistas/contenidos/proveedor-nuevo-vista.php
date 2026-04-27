@@ -2,156 +2,202 @@
 if (!mainModel::tienePermiso('proveedor.crear')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
-} ?>
+}
 
-<!-- Page header -->
+$pagina = explode("/", $_GET['vista']);
+$id = $pagina[1] ?? null;
+
+$editando = false;
+
+require_once "./controladores/proveedorControlador.php";
+$ins_proveedor = new proveedorControlador();
+
+if ($id != null) {
+    $dat = $ins_proveedor->datos_proveedor_controlador("Unico", $id);
+    if ($dat->rowCount() == 1) {
+        $campos = $dat->fetch();
+        $editando = true;
+    }
+}
+
+$busqueda = $_SESSION['busqueda_proveedor'] ?? "";
+$ciudades = $ins_proveedor->listar_ciudades_controlador();
+?>
+
+<!-- HEADER -->
 <div class="full-box page-header">
     <h3 class="text-left">
-        <i class="fas fa-truck fa-fw"></i> &nbsp; AGREGAR PROVEEDOR
+        <i class="fas fa-truck fa-fw"></i> &nbsp;
+        <?php echo $editando ? "ACTUALIZAR PROVEEDOR" : "AGREGAR PROVEEDOR"; ?>
     </h3>
-    <p class="text-justify"></p>
 </div>
 
-<div class="container-fluid">
-    <ul class="full-box list-unstyled page-nav-tabs">
-        <li>
-            <a class="active" href="<?php echo SERVERURL; ?>proveedor-nuevo/">
-                <i class="fas fa-plus fa-fw"></i> &nbsp; AGREGAR PROVEEDOR
-            </a>
-        </li>
-        <li>
-            <a href="<?php echo SERVERURL; ?>proveedor-lista/">
-                <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTA DE PROVEEDORES
-            </a>
-        </li>
-    </ul>
-</div>
-
-<!-- CONTENT -->
+<!-- FORM -->
 <div class="container-fluid">
     <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/proveedorAjax.php"
         method="POST"
-        data-form="save"
-        autocomplete="off">
+        data-form="<?php echo $editando ? 'update' : 'save'; ?>">
+
+        <?php if ($editando) { ?>
+            <input type="hidden" name="proveedor_id_up" value="<?php echo $id; ?>">
+        <?php } ?>
 
         <fieldset>
-            <legend>
-                <i class="far fa-address-card"></i> &nbsp; Información del proveedor
-            </legend>
+            <legend>Información del proveedor</legend>
 
-            <div class="container-fluid">
-                <div class="row">
+            <div class="row">
 
-                    <?php
-                    require_once "./controladores/proveedorControlador.php";
-                    $provCtrl = new proveedorControlador();
-                    $ciudades = $provCtrl->listar_ciudades_controlador();
-                    ?>
-
-                    <!-- Razón Social -->
-                    <div class="col-12 col-md-6">
-                        <div class="form-group">
-                            <label class="bmd-label-floating">Razón Social</label>
-                            <input type="text"
-                                class="form-control"
-                                name="razon_social_reg"
-                                maxlength="70"
-                                required>
-                        </div>
-                    </div>
-
-                    <!-- RUC -->
-                    <div class="col-12 col-md-6">
-                        <div class="form-group">
-                            <label class="bmd-label-floating">RUC</label>
-                            <input type="text"
-                                class="form-control"
-                                name="ruc_reg"
-                                maxlength="15">
-                        </div>
-                    </div>
-
-                    <!-- Teléfono -->
-                    <div class="col-12 col-md-4">
-                        <div class="form-group">
-                            <label class="bmd-label-floating">Teléfono</label>
-                            <input type="text"
-                                class="form-control"
-                                name="telefono_reg"
-                                maxlength="30">
-                        </div>
-                    </div>
-
-                    <!-- Correo -->
-                    <div class="col-12 col-md-4">
-                        <div class="form-group">
-                            <label class="bmd-label-floating">Correo</label>
-                            <input type="email"
-                                class="form-control"
-                                name="correo_reg"
-                                maxlength="100">
-                        </div>
-                    </div>
-
-                    <!-- Ciudad -->
-                    <div class="col-12 col-md-4">
-                        <div class="form-group">
-                            <label>Ciudad</label>
-                            <select class="form-control select2"
-                                name="ciudad_reg"
-                                required>
-                                <option value="" selected>Seleccione una opción</option>
-                                <?php
-                                foreach ($ciudades as $c) {
-                                    echo '<option value="' . $c['id_ciudad'] . '">' . $c['ciu_descri'] . '</option>';
-                                }
-                                ?>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Dirección -->
-                    <div class="col-12">
-                        <div class="form-group">
-                            <label class="bmd-label-floating">Dirección</label>
-                            <input type="text"
-                                class="form-control"
-                                name="direccion_reg"
-                                maxlength="120">
-                        </div>
-                    </div>
-
-                    <!-- Estado -->
-                    <div class="col-12 col-md-4">
-                        <div class="form-group">
-                            <label class="bmd-label-floating">Estado</label>
-                            <select class="form-control"
-                                name="estado_reg"
-                                required>
-                                <option value="" selected>Seleccione una opción</option>
-                                <option value="1">Activo</option>
-                                <option value="0">Inactivo</option>
-                            </select>
-                        </div>
-                    </div>
-
+                <div class="col-12 col-md-6">
+                    <input class="form-control"
+                        name="<?php echo $editando ? 'razon_social_up' : 'razon_social_reg'; ?>"
+                        value="<?php echo $editando ? $campos['razon_social'] : ''; ?>"
+                        placeholder="Razón Social">
                 </div>
+
+                <div class="col-12 col-md-6">
+                    <input class="form-control"
+                        name="<?php echo $editando ? 'ruc_up' : 'ruc_reg'; ?>"
+                        value="<?php echo $editando ? $campos['ruc'] : ''; ?>"
+                        placeholder="RUC">
+                </div>
+
+                <div class="w-100 mt-2"></div>
+
+                <div class="col-12 col-md-4">
+                    <input class="form-control"
+                        name="<?php echo $editando ? 'telefono_up' : 'telefono_reg'; ?>"
+                        value="<?php echo $editando ? $campos['telefono'] : ''; ?>"
+                        placeholder="Teléfono">
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <input class="form-control"
+                        name="<?php echo $editando ? 'correo_up' : 'correo_reg'; ?>"
+                        value="<?php echo $editando ? $campos['correo'] : ''; ?>"
+                        placeholder="Correo">
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <select class="form-control select2"
+                        name="<?php echo $editando ? 'ciudad_up' : 'ciudad_reg'; ?>">
+
+                        <option value=""></option>
+
+                        <?php foreach ($ciudades as $c) { ?>
+                            <option value="<?php echo $c['id_ciudad']; ?>"
+                                <?php if ($editando && $campos['id_ciudad'] == $c['id_ciudad']) echo "selected"; ?>>
+                                <?php echo $c['ciu_descri']; ?>
+                            </option>
+                        <?php } ?>
+                    </select>
+                </div>
+
+                <div class="w-100 mt-2"></div>
+
+                <div class="col-12">
+                    <input class="form-control"
+                        name="<?php echo $editando ? 'direccion_up' : 'direccion_reg'; ?>"
+                        value="<?php echo $editando ? $campos['direccion'] : ''; ?>"
+                        placeholder="Dirección">
+                </div>
+
+                <div class="w-100 mt-2"></div>
+
+                <div class="col-12 col-md-4">
+                    <select class="form-control"
+                        name="<?php echo $editando ? 'estado_up' : 'estado_reg'; ?>">
+
+                        <option value="">Estado</option>
+                        <option value="1" <?php if ($editando && $campos['estado'] == 1) echo "selected"; ?>>Activo</option>
+                        <option value="0" <?php if ($editando && $campos['estado'] == 0) echo "selected"; ?>>Inactivo</option>
+
+                    </select>
+                </div>
+
             </div>
         </fieldset>
 
-        <br><br>
+        <br>
 
-        <p class="text-center">
-            <button type="button" id="btnCancelar" class="btn btn-raised btn-secondary btn-sm">
-                <i class="fas fa-times"></i> &nbsp; CANCELAR
-            </button>
-            &nbsp;&nbsp;
-            <button type="submit"
-                class="btn btn-raised btn-info btn-sm">
-                <i class="far fa-save"></i> &nbsp; GUARDAR
-            </button>
-        </p>
+        <button class="btn btn-info">
+            <?php echo $editando ? "Actualizar" : "Guardar"; ?>
+        </button>
+
+        <?php if ($editando) { ?>
+            <a href="<?php echo SERVERURL; ?>proveedor-nuevo/" class="btn btn-secondary">
+                Cancelar
+            </a>
+        <?php } ?>
 
     </form>
+</div>
+
+<!-- BUSCADOR -->
+<div class="container-fluid mb-3">
+
+    <form class="FormularioAjax"
+        action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
+        method="POST"
+        data-form="search"
+        autocomplete="off">
+
+        <input type="hidden" name="modulo" value="proveedor">
+
+        <div class="row">
+            <div class="col-12 col-md-6">
+                <input type="text"
+                    class="form-control"
+                    name="busqueda_inicial"
+                    placeholder="Buscar proveedor..."
+                    value="<?php echo $_SESSION['busqueda_proveedor'] ?? ''; ?>">
+            </div>
+
+            <div class="col-12 col-md-6">
+                <button type="submit" class="btn btn-info">
+                    <i class="fas fa-search"></i> Buscar
+                </button>
+
+                <?php if (isset($_SESSION['busqueda_proveedor'])) { ?>
+                    <form class="FormularioAjax d-inline"
+                        action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
+                        method="POST">
+
+                        <input type="hidden" name="modulo" value="proveedor">
+                        <input type="hidden" name="eliminar_busqueda" value="1">
+
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-times"></i> Limpiar
+                        </button>
+                    </form>
+                <?php } ?>
+            </div>
+        </div>
+
+    </form>
+
+</div>
+
+<!-- LISTA -->
+<div class="container-fluid mt-4">
+    <?php
+
+    $pag_actual = 1;
+
+    if (isset($pagina[1]) && is_numeric($pagina[1])) {
+        $pag_actual = (int)$pagina[1];
+    }
+
+    if (isset($pagina[2]) && is_numeric($pagina[2])) {
+        $pag_actual = (int)$pagina[2];
+    }
+
+    echo $ins_proveedor->paginador_proveedores_controlador(
+        $pag_actual,
+        10,
+        $pagina[0],
+        $busqueda
+    );
+
+    ?>
 </div>

@@ -161,12 +161,37 @@ class transferenciaControlador extends transferenciaModelo
 
         $pdo = mainModel::conectar();
         $sucursal = $_SESSION['nick_sucursal'];
+        // 🔹 tipo de vista
+        $tipo = $_GET['tipo'] ?? 'historial';
 
         $where = [];
         $params = [];
 
-        // 🔒 Siempre limitar a mi sucursal
-        $where[] = "(t.sucursal_origen = :suc OR t.sucursal_destino = :suc)";
+        switch ($tipo) {
+
+            case 'pendientes':
+                // SOLO lo que debo recibir
+                $where[] = "t.sucursal_destino = :suc AND t.estado = 'en_transito'";
+                break;
+
+            case 'enviadas':
+                // SOLO lo que yo envié
+                $where[] = "t.sucursal_origen = :suc";
+                break;
+
+            default:
+                // HISTORIAL (participación)
+                $where[] = "
+        (
+            t.sucursal_origen = :suc 
+            OR 
+            t.sucursal_destino = :suc
+        )
+        AND t.estado IS NOT NULL
+        ";
+                break;
+        }
+
         $params[':suc'] = $sucursal;
 
         // 🔎 Filtro por estado (opcional)

@@ -68,7 +68,7 @@ class loginControlador extends loginModelo
             $_SESSION['apellido_str'] = $row['usu_apellido'];
             $_SESSION['nick_str'] = $row['usu_nick'];          
             $_SESSION['nick_sucursal'] = $row['sucursalid'];
-            $_SESSION['id_rol']        = $row['id_rol'];
+            $_SESSION['roles'] = loginModelo::obtener_roles_usuario($row['id_usuario']);
             $_SESSION['permisos'] = loginModelo::obtener_permisos_usuario($row['id_usuario']);
             $empresa = mainModel::ejecutar_consulta_simple("
             SELECT razon_social 

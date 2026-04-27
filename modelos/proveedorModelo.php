@@ -57,25 +57,29 @@ class proveedorModelo extends mainModel
     {
         $pdo = mainModel::conectar();
 
-        // 1) Verificar si el proveedor está usado en compras o pedidos
+
         $check = $pdo->prepare("
-        SELECT 1 
-        FROM pedido_cabecera 
-        WHERE id_proveedor = :id 
-        LIMIT 1
+        SELECT 1 FROM (
+            SELECT idproveedores FROM articulos WHERE idproveedores = :id
+            UNION
+            SELECT id_proveedor FROM pedido_cabecera WHERE id_proveedor = :id
+        ) AS t LIMIT 1
         ");
+
         $check->bindParam(":id", $id, PDO::PARAM_INT);
         $check->execute();
 
         if ($check->rowCount() > 0) {
-            // Ya fue usado → solo desactivar
+
+
             $stmt = $pdo->prepare("
             UPDATE proveedores 
             SET estado = 0 
             WHERE idproveedores = :id
         ");
         } else {
-            // No está relacionado → se puede eliminar
+
+
             $stmt = $pdo->prepare("
             DELETE FROM proveedores 
             WHERE idproveedores = :id
@@ -116,17 +120,30 @@ class proveedorModelo extends mainModel
         return $sql;
     }
 
-    protected static function listar_proveedores_modelo()
+    protected static function listar_proveedores_modelo($inicio, $registros, $filtrosSQL)
     {
-        $sql = mainModel::conectar()->prepare("
-        SELECT
-            idproveedores,
-            razon_social
-        FROM proveedores
-        WHERE estado = 1
-        ORDER BY razon_social ASC
-        ");
-        $sql->execute();
-        return $sql->fetchAll(PDO::FETCH_ASSOC);
+        $conexion = mainModel::conectar();
+
+        $sql = "SELECT SQL_CALC_FOUND_ROWS p.*, c.ciu_descri
+            FROM proveedores p
+            INNER JOIN ciudades c ON c.id_ciudad = p.id_ciudad
+            WHERE 1=1 $filtrosSQL
+            ORDER BY p.razon_social ASC
+            LIMIT :inicio, :registros";
+
+        $stmt = $conexion->prepare($sql);
+
+        $stmt->bindValue(":inicio", (int)$inicio, PDO::PARAM_INT);
+        $stmt->bindValue(":registros", (int)$registros, PDO::PARAM_INT);
+
+        $stmt->execute();
+
+        $datos = $stmt->fetchAll();
+        $total = $conexion->query("SELECT FOUND_ROWS()")->fetchColumn();
+
+        return [
+            "datos" => $datos,
+            "total" => (int)$total
+        ];
     }
 }

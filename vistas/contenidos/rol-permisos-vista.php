@@ -4,14 +4,14 @@ if (!mainModel::tienePermiso('usuarios.permisos_por_roles')) {
     return;
 }
 
-require_once "./controladores/usuarioControlador.php";
-$insUsuario = new usuarioControlador();
-$roles = $insUsuario->listar_roles_controlador();
+require_once "./controladores/rolesControlador.php";
+$insRoles = new rolesControlador();
+$roles = $insRoles->listar_rolesSelect_controlador();
 ?>
 
 <div class="full-box page-header">
     <h3 class="text-left">
-        <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; PERMISOS POR ROL
+        <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; PERMISOS
     </h3>
     <p class="text-justify">
 
@@ -23,40 +23,10 @@ $roles = $insUsuario->listar_roles_controlador();
 
     <ul class="full-box list-unstyled page-nav-tabs">
 
-        <?php if (mainModel::tienePermiso('usuarios.crear')) { ?>
+        <?php if (mainModel::tienePermiso('roles.ver')) { ?>
             <li>
-                <a href="<?php echo SERVERURL; ?>usuario-nuevo/">
-                    <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO USUARIO
-                </a>
-            </li>
-        <?php } ?>
-
-        <?php if (mainModel::tienePermiso('usuarios.ver')) { ?>
-            <li>
-                <a href="<?php echo SERVERURL; ?>usuario-lista/">
-                    <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTA DE USUARIOS
-                </a>
-            </li>
-
-            <li>
-                <a href="<?php echo SERVERURL; ?>usuario-buscar/">
-                    <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR USUARIO
-                </a>
-            </li>
-        <?php } ?>
-
-        <?php if (mainModel::tienePermiso('usuarios.asignarrol')) { ?>
-            <li>
-                <a href="<?php echo SERVERURL; ?>usuario-rol/">
-                    <i class="fas fa-user-tag fa-fw"></i> &nbsp; ASIGNAR ROL
-                </a>
-            </li>
-        <?php } ?>
-
-        <?php if (mainModel::tienePermiso('usuarios.asignarlocal')) { ?>
-            <li>
-                <a href="<?php echo SERVERURL; ?>usuario-sucursal/">
-                    <i class="fas fa-store-alt fa-fw"></i> &nbsp; ASIGNAR SUCURSAL
+                <a href="<?php echo SERVERURL; ?>rol-nuevo/">
+                    <i class="fas fa-key fa-fw"></i> &nbsp; Roles
                 </a>
             </li>
         <?php } ?>
@@ -64,7 +34,7 @@ $roles = $insUsuario->listar_roles_controlador();
         <?php if (mainModel::tienePermiso('usuarios.permisos_por_roles')) { ?>
             <li>
                 <a class="active" href="<?php echo SERVERURL; ?>rol-permisos/">
-                    <i class="fas fa-key fa-fw"></i> &nbsp; PERMISOS POR ROL
+                    <i class="fas fa-key fa-fw"></i> &nbsp; PERMISOS
                 </a>
             </li>
         <?php } ?>
@@ -75,7 +45,7 @@ $roles = $insUsuario->listar_roles_controlador();
 <div class="container-fluid">
     <div class="form-neon">
         <form class="FormularioAjax"
-            action="<?= SERVERURL ?>ajax/usuarioAjax.php"
+            action="<?= SERVERURL ?>ajax/rolesAjax.php"
             method="POST"
             data-form="update">
 

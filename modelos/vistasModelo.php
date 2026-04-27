@@ -6,7 +6,7 @@ class vistasModelo
     {
         $lista_blanca = ["home", "articulo-actualizar", "articulo-buscar", "articulo-lista", "articulo-nuevo", 
         "cliente-actualizar", "cliente-buscar", "cliente-lista", "cliente-nuevo", "company",  "proveedor-actualizar", "proveedor-buscar", "proveedor-lista", "proveedor-nuevo",      
-        "usuario-actualizar", "usuario-buscar", "usuario-lista", "usuario-rol", "rol-permisos","usuario-nuevo", "usuario-sucursal","pedido-lista","pedido-nuevo","pedido-buscar",
+        "usuario-actualizar", "usuario-buscar", "usuario-lista", "usuario-rol", "rol-permisos", "rol-nuevo","rol-actualizar","usuario-nuevo", "usuario-sucursal","pedido-lista","pedido-nuevo","pedido-buscar",
         "sucursal-nuevo","sucursal-lista","sucursal-actualizar","sucursal-buscar", "vehiculo-lista","vehiculo-nuevo","vehiculo-actualizar","vehiculo-buscar",
         "empleado-actualizar","empleado-nuevo","empleado-lista","empleado-buscar","cargo-nuevo","cargo-lista","cargo-actualizar","cargo-buscar", "empleado-equipo-asignar", 
         "empleado-equipo","empleado-equipo-miembros", 
@@ -14,7 +14,7 @@ class vistasModelo
         ,"inventario", "inventario-buscar", "remision-nuevo", "remision-buscar", "notasCreDe-nuevo", "notasCreDe-buscar","recepcionServicio-nuevo","recepcionServicio-buscar",
         "diagnostico-servicio-nuevo", "diagnostico-servicio-buscar","promocion-nuevo","promocion-lista", "promocion-editar","descuento-nuevo","descuento-asignar","descuento-lista","descuento-editar","presupuesto-servicio-nuevo",
         "presupuesto-servicio-lista", "presupuesto-servicio-buscar", "ordenTrabajo-lista","ordenTrabajo-nuevo", "ordenTrabajo-asignar", "ordenTrabajo-buscar","registro-servicio-nuevo","registro-servicio-lista",
-        "registro-servicio-buscar"   ,"reclamo-servicio-nuevo","reclamo-servicio-lista","transferencia-nuevo","transferencia-historial","transferencia-recibir",
+        "registro-servicio-buscar"   ,"reclamo-servicio-nuevo","reclamo-servicio-lista","transferencia-nuevo","transferencia-historial","transferencia-recibir","reporte-stock",
         "reporte-pedidos", "reporte-presupuestos", "reporte-ordenes-compra", "reporte-compras", "reporte-recepcion-servicio", "reporte-presupuesto-servicio","reporte-orden-trabajo"
          ,"reporte-registro-servicio", "reporte-LibroCompras","reporte-articulos", "reporte-proveedores", "reporte-clientes", "reporte-empleados","reporte-transferencias","reporte-movimientostock"];
         if (in_array($vistas, $lista_blanca)) {

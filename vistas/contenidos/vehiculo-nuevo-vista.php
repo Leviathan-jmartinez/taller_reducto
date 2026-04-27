@@ -1,131 +1,230 @@
 <?php
-if (!mainModel::tienePermiso('vehiculo.crear')) {
+if (!mainModel::tienePermiso('vehiculo.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
+
+$pagina = explode("/", $_GET['vista']);
+$id = $pagina[1] ?? null;
+
+$editando = false;
+
+require_once "./controladores/vehiculoControlador.php";
+$ins_vehiculo = new vehiculoControlador();
+
+if ($id != null) {
+    $dat = $ins_vehiculo->datos_vehiculo_controlador("Unico", $id);
+
+    if ($dat->rowCount() == 1) {
+        $campos = $dat->fetch();
+        $editando = true;
+    }
+}
+
+$busqueda = $_SESSION['busqueda_vehiculo'] ?? "";
+
+
+/* LISTAS */
+$clientes = $ins_vehiculo->listar_clientes_controlador();
+$modelos  = $ins_vehiculo->listar_modelos_controlador();
+$colores  = $ins_vehiculo->listar_colores_controlador();
 ?>
 
 <div class="full-box page-header">
-    <h3 class="text-left">
-        <i class="fas fa-car fa-fw"></i> &nbsp; AGREGAR VEHÍCULO
+    <h3>
+        <?php echo $editando ? "ACTUALIZAR VEHICULO" : "AGREGAR VEHICULO"; ?>
     </h3>
 </div>
 
 <div class="container-fluid">
-    <ul class="full-box list-unstyled page-nav-tabs">
-        <li>
-            <a class="active" href="<?php echo SERVERURL; ?>vehiculo-nuevo/">
-                <i class="fas fa-plus fa-fw"></i> &nbsp; AGREGAR VEHÍCULO
-            </a>
-        </li>
-        <li>
-            <a href="<?php echo SERVERURL; ?>vehiculo-lista/">
-                <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTA DE VEHÍCULOS
-            </a>
-        </li>
-        <li>
-            <a href="<?php echo SERVERURL; ?>vehiculo-buscar/">
-                <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR VEHÍCULO
-            </a>
-        </li>
-    </ul>
-</div>
 
-<div class="container-fluid">
-    <?php
-    require_once "./controladores/vehiculoControlador.php";
-    $ins = new vehiculoControlador();
-
-    $clientes = $ins->listar_clientes_controlador();
-    $modelos  = $ins->listar_modelos_controlador();
-    $colores  = $ins->listar_colores_controlador();
-    ?>
     <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/vehiculoAjax.php"
         method="POST"
-        data-form="save"
-        autocomplete="off">
+        data-form="<?php echo $editando ? 'update' : 'save'; ?>">
 
-        <fieldset>
+        <?php if ($editando) { ?>
+            <input type="hidden" name="vehiculo_id_up" value="<?php echo $id; ?>">
+        <?php } ?>
+
+        <div class="row">
             <legend><i class="far fa-car"></i> &nbsp; Datos del vehículo</legend>
+            <!-- CLIENTE -->
+            <div class="col-md-4">
+                <div class="form-group">
+                    <select class="form-control select2-clientes"
+                        name="<?php echo $editando ? 'cliente_up' : 'cliente_reg'; ?>">
 
-            <div class="row">
+                        <?php if ($editando) { ?>
+                            <option value="<?php echo $campos['id_cliente']; ?>" selected>
+                                <?php echo $campos['cliente']; ?>
+                            </option>
+                        <?php } ?>
 
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label class="bmd-label-floating">Cliente</label>
-                        <select class="form-control" name="cliente_reg">
-                            <option value="" selected>Seleccione</option>
-                            <?php foreach ($clientes as $c) {
-                                echo '<option value="' . $c['id_cliente'] . '">' . $c['cliente'] . '</option>';
-                            } ?>
-                        </select>
-                    </div>
+                    </select>
                 </div>
-
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label class="bmd-label-floating">Modelo</label>
-                        <select class="form-control" name="modelo_reg">
-                            <option value="" selected>Seleccione</option>
-                            <?php foreach ($modelos as $m) {
-                                echo '<option value="' . $m['id_modeloauto'] . '">' . $m['mod_descri'] . '</option>';
-                            } ?>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label class="bmd-label-floating">Color</label>
-                        <select class="form-control" name="color_reg">
-                            <option value="" selected>Seleccione</option>
-                            <?php foreach ($colores as $c) {
-                                echo '<option value="' . $c['id_color'] . '">' . $c['col_descripcion'] . '</option>';
-                            } ?>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label class="bmd-label-floating">Placa</label>
-                        <input type="text" class="form-control" name="placa_reg" maxlength="20">
-                    </div>
-                </div>
-
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label class="bmd-label-floating">Año</label>
-                        <input type="text" class="form-control" name="anho_reg" maxlength="4">
-                    </div>
-                </div>
-
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label class="bmd-label-floating">Nro Serie</label>
-                        <input type="text" class="form-control" name="serie_reg" maxlength="50">
-                    </div>
-                </div>
-
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label class="bmd-label-floating">Estado</label>
-                        <select class="form-control" name="estado_reg">
-                            <option value="" selected>Seleccione</option>
-                            <option value="1">Activo</option>
-                            <option value="0">Inactivo</option>
-                        </select>
-                    </div>
-                </div>
-
             </div>
-        </fieldset>
+
+            <!-- MODELO -->
+            <div class="col-md-4">
+                <div class="form-group">
+                    <select class="form-control select2"
+                        name="<?php echo $editando ? 'modelo_up' : 'modelo_reg'; ?>">
+                        <option value="" disabled selected>Seleccione modelo</option>
+                        <?php foreach ($modelos as $m) { ?>
+                            <option value="<?php echo $m['id_modeloauto']; ?>"
+                                <?php if ($editando && $campos['id_modeloauto'] == $m['id_modeloauto']) echo "selected"; ?>>
+                                <?php echo $m['mod_descri']; ?>
+                            </option>
+                        <?php } ?>
+                    </select>
+                </div>
+            </div>
+
+            <!-- COLOR -->
+            <div class="col-md-4">
+                <div class="form-group">
+                    <select class="form-control select2"
+                        name="<?php echo $editando ? 'color_up' : 'color_reg'; ?>">
+                        <option value="" disabled selected>Seleccione color</option>
+                        <?php foreach ($colores as $c) { ?>
+                            <option value="<?php echo $c['id_color']; ?>"
+                                <?php if ($editando && $campos['id_color'] == $c['id_color']) echo "selected"; ?>>
+                                <?php echo $c['col_descripcion']; ?>
+                            </option>
+                        <?php } ?>
+                    </select>
+                </div>
+            </div>
+
+            <!-- PLACA -->
+            <div class="col-md-4">
+                <div class="form-group">
+                    <input type="text"
+                        class="form-control"
+                        placeholder="Placa *"
+                        name="<?php echo $editando ? 'placa_up' : 'placa_reg'; ?>"
+                        value="<?php echo $editando ? $campos['placa'] : ''; ?>">
+                </div>
+            </div>
+
+            <!-- AÑO -->
+            <div class="col-md-4">
+                <div class="form-group">
+                    <input type="text"
+                        class="form-control"
+                        placeholder="Año"
+                        name="<?php echo $editando ? 'anho_up' : 'anho_reg'; ?>"
+                        value="<?php echo $editando ? $campos['anho'] : ''; ?>">
+                </div>
+            </div>
+
+            <!-- SERIE -->
+            <div class="col-md-4">
+                <div class="form-group">
+                    <input type="text"
+                        class="form-control"
+                        placeholder="Nro Serie"
+                        name="<?php echo $editando ? 'serie_up' : 'serie_reg'; ?>"
+                        value="<?php echo $editando ? $campos['nro_serie'] : ''; ?>">
+                </div>
+            </div>
+
+            <!-- ESTADO -->
+            <div class="col-md-4">
+                <div class="form-group">
+                    <select class="form-control select2"
+                        name="<?php echo $editando ? 'estado_up' : 'estado_reg'; ?>">
+                        <option value="" disabled selected>Seleccione estado</option>
+                        <option value="1" <?php if ($editando && $campos['estado'] == 1) echo "selected"; ?>>Activo</option>
+                        <option value="0" <?php if ($editando && $campos['estado'] == 0) echo "selected"; ?>>Inactivo</option>
+                    </select>
+                </div>
+            </div>
+
+        </div>
 
         <p class="text-center mt-4">
-            <button type="submit" class="btn btn-raised btn-info btn-sm">
-                <i class="far fa-save"></i> &nbsp; GUARDAR
+            <button type="submit"
+                class="btn btn-raised <?php echo $editando ? 'btn-success' : 'btn-info'; ?>">
+                <?php echo $editando ? 'ACTUALIZAR' : 'GUARDAR'; ?>
             </button>
+
+            <?php if ($editando) { ?>
+                <a href="<?php echo SERVERURL; ?>vehiculo-nuevo/"
+                    class="btn btn-raised btn-secondary">
+                    CANCELAR
+                </a>
+            <?php } ?>
         </p>
+
     </form>
 </div>
+
+<!-- BUSCADOR -->
+<div class="container-fluid mb-3">
+
+    <form class="FormularioAjax"
+        action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
+        method="POST"
+        data-form="search"
+        autocomplete="off">
+
+        <input type="hidden" name="modulo" value="vehiculo">
+
+        <div class="row">
+            <div class="col-12 col-md-6">
+                <input type="text"
+                    class="form-control"
+                    name="busqueda_inicial"
+                    placeholder="Buscar vehículo..."
+                    value="<?php echo $_SESSION['busqueda_vehiculo'] ?? ''; ?>">
+            </div>
+
+            <div class="col-12 col-md-6">
+                <button type="submit" class="btn btn-info">
+                    <i class="fas fa-search"></i> Buscar
+                </button>
+
+                <?php if (isset($_SESSION['busqueda_vehiculo'])) { ?>
+                    <form class="FormularioAjax d-inline"
+                        action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
+                        method="POST">
+
+                        <input type="hidden" name="modulo" value="vehiculo">
+                        <input type="hidden" name="eliminar_busqueda" value="1">
+
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-times"></i> Limpiar
+                        </button>
+                    </form>
+                <?php } ?>
+            </div>
+        </div>
+
+    </form>
+
+</div>
+
+<!-- LISTA -->
+<div class="container-fluid mt-4">
+    <?php
+    $pag_actual = 1;
+
+    if (isset($pagina[1]) && is_numeric($pagina[1])) {
+        $pag_actual = (int)$pagina[1];
+    }
+    if (isset($pagina[2]) && is_numeric($pagina[2])) {
+        $pag_actual = (int)$pagina[2];
+    }
+
+    echo $ins_vehiculo->paginador_vehiculos_controlador(
+        $pag_actual,
+        10,
+        $pagina[0],
+        $busqueda
+    );
+    ?>
+</div>
+
+

@@ -45,10 +45,10 @@ class empleadoModelo extends mainModel
         $sql = mainModel::conectar()->prepare(
             "INSERT INTO empleados
             (idcargos, id_sucursal, nombre, apellido, direccion, celular,
-             nro_cedula, estado_civil, empleado_estado, estado)
+            nro_cedula, estado_civil, estado)
             VALUES
             (:cargo, :sucursal, :nombre, :apellido, :direccion, :celular,
-             :cedula, :estado_civil, :empleado_estado, :estado)"
+            :cedula, :estado_civil, :estado)"
         );
 
         foreach ($datos as $key => $value) {
@@ -72,7 +72,6 @@ class empleadoModelo extends mainModel
                 celular = :celular,
                 nro_cedula = :cedula,
                 estado_civil = :estado_civil,
-                empleado_estado = :empleado_estado,
                 estado = :estado
             WHERE idempleados = :id"
         );
@@ -119,5 +118,35 @@ class empleadoModelo extends mainModel
         $stmt->execute();
 
         return $stmt;
+    }
+
+    protected static function listar_empleados_modelo($inicio, $registros, $filtrosSQL)
+    {
+        $conexion = mainModel::conectar();
+
+        $sql = "
+        SELECT SQL_CALC_FOUND_ROWS e.*,
+            c.descripcion AS cargo,
+            s.suc_descri AS sucursal
+        FROM empleados e
+        INNER JOIN cargos c ON c.idcargos = e.idcargos
+        INNER JOIN sucursales s ON s.id_sucursal = e.id_sucursal
+        WHERE 1=1 $filtrosSQL
+        ORDER BY e.apellido ASC
+        LIMIT :inicio, :registros
+        ";
+
+        $stmt = $conexion->prepare($sql);
+        $stmt->bindValue(":inicio", (int)$inicio, PDO::PARAM_INT);
+        $stmt->bindValue(":registros", (int)$registros, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $datos = $stmt->fetchAll();
+        $total = (int)$conexion->query("SELECT FOUND_ROWS()")->fetchColumn();
+
+        return [
+            "datos" => $datos,
+            "total" => $total
+        ];
     }
 }

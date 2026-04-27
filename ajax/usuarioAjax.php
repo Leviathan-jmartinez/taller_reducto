@@ -18,27 +18,25 @@ if (isset($_POST['usuario_nombre_reg']) || isset($_POST['usuario_id_del']) || is
     if (isset($_POST['usuario_id_up'])) {
         echo $inst_usuario->actualizar_usuario_controlador();
     }
-    if (isset($_POST['accion']) && $_POST['accion'] === 'asignar_rol') {
-        echo $inst_usuario->asignar_rol_controlador();
+    if ($_POST['accion'] === 'roles_por_usuario') {
+        echo $inst_usuario->roles_por_usuario_controlador();
         exit();
     }
 
-    if (isset($_POST['accion']) && $_POST['accion'] === 'guardar_permisos_rol') {
-        echo $inst_usuario->guardar_permisos_rol_controlador();
+    if ($_POST['accion'] === 'guardar_roles_usuario') {
+        echo $inst_usuario->guardar_roles_usuario_controlador();
+        exit();
+    }
+    if ($_POST['accion'] === 'sucursal_por_usuario') {
+        echo $inst_usuario->sucursal_por_usuario_controlador();
         exit();
     }
 
-    if (isset($_POST['accion']) && $_POST['accion'] === 'permisos_por_rol') {
-        echo $inst_usuario->permisos_por_rol_controlador();
-        exit();
-    }
-
-    /* ================= ASIGNAR SUCURSAL ================= */
-    if (isset($_POST['accion']) && $_POST['accion'] === 'asignar_sucursal') {
+    if ($_POST['accion'] === 'asignar_sucursal') {
         echo $inst_usuario->asignar_sucursal_controlador();
         exit();
     }
-    } else {
+} else {
     session_start(['name' => 'STR']);
     session_unset();
     session_destroy();

@@ -14,7 +14,6 @@ if (!mainModel::tienePermiso('proveedor.ver')) {
 <div class="container-fluid">
     <!-- FORM PREVIEW -->
     <form id="formPreview" class="form-neon" autocomplete="off">
-        <input type="hidden" name="modulo" value="proveedores">
 
         <div class="row">
             <div class="col-md-3">
@@ -88,7 +87,7 @@ if (!mainModel::tienePermiso('proveedor.ver')) {
         e.preventDefault();
 
         let fd = new FormData(this);
-
+        fd.append("accion", "reporte_proveedores");
         fetch("<?php echo SERVERURL; ?>ajax/reportesAjax.php", {
                 method: "POST",
                 body: fd

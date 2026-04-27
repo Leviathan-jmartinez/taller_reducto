@@ -33,6 +33,60 @@ class reporteControlador extends reportesModelo
     /* ==================================================
         REPORTE ARTICULOS
     ================================================== */
+
+    public function reporte_articulos_simple_controlador()
+    {
+        $filtros = [
+            "categoria" => mainModel::limpiar_string($_POST['categoria']) ?? 0,
+            "proveedor" => mainModel::limpiar_string($_POST['proveedor']) ?? 0,
+            "estado"    => mainModel::limpiar_string($_POST['estado']) ?? 'T',
+            "codigo"    => trim($_POST['codigo']) ?? ''
+        ];
+
+        $data = reportesModelo::reporte_articulos_simple_modelo($filtros);
+        $resumen = reportesModelo::resumen_articulos_simple_modelo($filtros);
+
+        return json_encode([
+            "data" => $data,
+            "resumen" => $resumen
+        ]);
+    }
+
+    public function imprimir_reporte_articulos_simple_controlador()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start(['name' => 'STR']);
+        }
+
+        if (!mainModel::tienePermiso('articulo.ver')) {
+            header("Location: " . SERVERURL . "home/");
+            exit();
+        }
+
+        $filtros = [
+            "categoria" => mainModel::limpiar_string($_POST['categoria'] ?? 0),
+            "proveedor" => mainModel::limpiar_string($_POST['proveedor'] ?? 0),
+            "estado"    => mainModel::limpiar_string($_POST['estado'] ?? 'T'),
+            "codigo"    => trim($_POST['codigo'] ?? '')
+        ];
+
+        $datos = reportesModelo::reporte_articulos_simple_modelo($filtros);
+
+        $empresa = $_SESSION['empresa_nombre'] ?? 'Empresa';
+        $usuario = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
+
+        ob_start();
+        require_once __DIR__ . "/../pdf/articulos_reportesimple_pdf.php";
+        $html = ob_get_clean();
+
+        $dompdf = new Dompdf();
+        $dompdf->setPaper('A4', 'landscape'); // 🔥 horizontal
+        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->render();
+        $dompdf->stream("reporte_articulos.pdf", ["Attachment" => false]);
+        exit();
+    }
+
     public function reporte_articulos_controlador()
     {
         $filtros = [

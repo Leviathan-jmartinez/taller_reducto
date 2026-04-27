@@ -1,0 +1,1 @@
+<?php require_once "./vistas/contenidos/cliente-nuevo-vista.php"; ?>

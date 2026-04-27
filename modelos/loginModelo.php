@@ -16,14 +16,29 @@ class loginModelo extends mainModel
     protected static function obtener_permisos_usuario($idUsuario)
     {
         $sql = self::conectar()->prepare("
-        SELECT p.clave
-        FROM usuarios u
-        INNER JOIN roles r ON r.id_rol = u.id_rol
-        INNER JOIN rol_permiso rp ON rp.id_rol = r.id_rol
+        SELECT DISTINCT p.clave
+        FROM usuario_rol ur
+        INNER JOIN rol_permiso rp ON rp.id_rol = ur.id_rol
         INNER JOIN permisos p ON p.id_permiso = rp.id_permiso
-        WHERE u.id_usuario = ?
-    ");
+        WHERE ur.id_usuario = ?
+        ");
+
         $sql->execute([$idUsuario]);
+
+        return $sql->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    protected static function obtener_roles_usuario($idUsuario)
+    {
+        $sql = self::conectar()->prepare("
+        SELECT r.nombre
+        FROM usuario_rol ur
+        INNER JOIN roles r ON r.id_rol = ur.id_rol
+        WHERE ur.id_usuario = ?
+        ");
+
+        $sql->execute([$idUsuario]);
+
         return $sql->fetchAll(PDO::FETCH_COLUMN);
     }
 }

@@ -7,15 +7,79 @@ class reportesModelo extends mainModel
     /* ==================================================
         REPORTE ARTICULOS - DETALLE
     ================================================== */
+    protected static function reporte_articulos_simple_modelo($f)
+    {
+        $where = " WHERE 1=1 ";
+        $params = [];
+
+        // FILTROS
+        if (!empty($f['categoria']) && $f['categoria'] != 0) {
+            $where .= " AND a.id_categoria = :categoria ";
+            $params[':categoria'] = $f['categoria'];
+        }
+
+        if (!empty($f['proveedor']) && $f['proveedor'] != 0) {
+            $where .= " AND a.idproveedores = :proveedor ";
+            $params[':proveedor'] = $f['proveedor'];
+        }
+
+        if (!empty($f['codigo'])) {
+            $where .= " AND a.codigo = :codigo ";
+            $params[':codigo'] = $f['codigo'];
+        }
+
+        if (!empty($f['estado']) && $f['estado'] != 'T') {
+            if ($f['estado'] == 'A') {
+                $where .= " AND a.estado = 1 ";
+            } elseif ($f['estado'] == 'I') {
+                $where .= " AND a.estado = 0 ";
+            }
+        }
+
+        $sql = self::conectar()->prepare("
+        SELECT
+            a.id_articulo,
+            a.codigo,
+            a.desc_articulo,
+            a.tipo,
+            a.precio_compra,
+            a.precio_venta,
+            a.estado,
+            a.date_created,
+
+            c.cat_descri AS categoria,
+            m.mar_descri AS marca,
+            p.razon_social AS proveedor,
+            u.medida AS unidad,
+            i.tipo_impuesto_descri AS iva
+
+        FROM articulos a
+
+        INNER JOIN categorias c ON c.id_categoria = a.id_categoria
+        INNER JOIN marcas m ON m.id_marcas = a.id_marcas
+        INNER JOIN proveedores p ON p.idproveedores = a.idproveedores
+        INNER JOIN unidad_medida u ON u.idunidad_medida = a.idunidad_medida
+        INNER JOIN tipo_impuesto i ON i.idiva = a.idiva
+
+        $where
+
+        ORDER BY a.desc_articulo ASC
+        ");
+
+        $sql->execute($params);
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     protected static function reporte_articulos_modelo($f)
     {
         $where = " WHERE 1=1 ";
         $params = [];
 
         if (!empty($f['sucursal']) && $f['sucursal'] != 0) {
-            $where .= " AND suc.id_sucursal = :sucursal ";
+            $where .= " AND st.id_sucursal = :sucursal ";
             $params[':sucursal'] = $f['sucursal'];
         }
+        $where .= " AND st.stockDisponible > 0 ";
 
         if (!empty($f['categoria']) && $f['categoria'] != 0) {
             $where .= " AND c.id_categoria = :categoria ";
@@ -70,11 +134,11 @@ class reportesModelo extends mainModel
             st.stockcant_min,
             st.stockcant_max
         FROM articulos a
-        INNER JOIN categorias c ON c.id_categoria = a.id_categoria
-        INNER JOIN marcas m ON m.id_marcas = a.id_marcas
-        INNER JOIN proveedores p ON p.idproveedores = a.idproveedores
-        INNER JOIN unidad_medida u ON u.idunidad_medida = a.idunidad_medida
-        LEFT JOIN stock st ON st.id_articulo = a.id_articulo
+        LEFT JOIN categorias c ON c.id_categoria = a.id_categoria
+        LEFT JOIN marcas m ON m.id_marcas = a.id_marcas
+        LEFT JOIN proveedores p ON p.idproveedores = a.idproveedores
+        LEFT JOIN unidad_medida u ON u.idunidad_medida = a.idunidad_medida
+        INNER JOIN stock st ON st.id_articulo = a.id_articulo
         LEFT JOIN sucursales suc ON suc.id_sucursal = st.id_sucursal
         $where
         ORDER BY a.desc_articulo
@@ -87,20 +151,55 @@ class reportesModelo extends mainModel
     /* ==================================================
         REPORTE ARTICULOS - RESUMEN
     ================================================== */
+    protected static function resumen_articulos_simple_modelo($f)
+    {
+        $where = " WHERE 1=1 ";
+        $params = [];
+
+        if (!empty($f['categoria']) && $f['categoria'] != 0) {
+            $where .= " AND id_categoria = :categoria ";
+            $params[':categoria'] = $f['categoria'];
+        }
+
+        if (!empty($f['proveedor']) && $f['proveedor'] != 0) {
+            $where .= " AND idproveedores = :proveedor ";
+            $params[':proveedor'] = $f['proveedor'];
+        }
+
+        if (!empty($f['estado']) && $f['estado'] != 'T') {
+            if ($f['estado'] == 'A') {
+                $where .= " AND estado = 1 ";
+            } elseif ($f['estado'] == 'I') {
+                $where .= " AND estado = 0 ";
+            }
+        }
+
+        $sql = self::conectar()->prepare("
+        SELECT
+            COUNT(*) AS total,
+            SUM(CASE WHEN estado = 1 THEN 1 ELSE 0 END) AS activos,
+            SUM(CASE WHEN estado = 0 THEN 1 ELSE 0 END) AS inactivos
+        FROM articulos
+        $where
+        ");
+
+        $sql->execute($params);
+        return $sql->fetch(PDO::FETCH_ASSOC);
+    }
+
     protected static function resumen_articulos_modelo($f)
     {
         $sql = self::conectar()->prepare("
         SELECT
-            COUNT(DISTINCT a.id_articulo) AS total,
+            COUNT(*) AS total,
             SUM(CASE WHEN a.estado = 1 THEN 1 ELSE 0 END) AS activos,
             SUM(CASE WHEN a.estado = 0 THEN 1 ELSE 0 END) AS inactivos,
             SUM(CASE WHEN IFNULL(st.stockDisponible,0) > 0 THEN 1 ELSE 0 END) AS con_stock,
             SUM(CASE WHEN IFNULL(st.stockDisponible,0) = 0 THEN 1 ELSE 0 END) AS sin_stock,
             SUM(CASE WHEN IFNULL(st.stockDisponible,0) <= IFNULL(st.stockcant_min,0) THEN 1 ELSE 0 END) AS bajo_minimo
         FROM articulos a
-        LEFT JOIN stock st ON st.id_articulo = a.id_articulo
-        LEFT JOIN sucursales suc ON suc.id_sucursal = st.id_sucursal
-        WHERE (:sucursal = 0 OR suc.id_sucursal = :sucursal)
+        INNER JOIN stock st ON st.id_articulo = a.id_articulo
+        WHERE (:sucursal = 0 OR st.id_sucursal = :sucursal)
         ");
 
         $sql->execute([

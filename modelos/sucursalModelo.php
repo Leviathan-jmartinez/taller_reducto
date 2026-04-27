@@ -82,7 +82,7 @@ class sucursalModelo extends mainModel
     {
         $pdo = mainModel::conectar();
 
-        
+
         $check = $pdo->prepare("
         SELECT 1 
         FROM usuarios 
@@ -114,18 +114,31 @@ class sucursalModelo extends mainModel
     }
 
 
-    protected static function listar_sucursales_modelo()
+    protected static function listar_sucursales_modelo($inicio, $registros, $filtrosSQL)
     {
-        $sql = mainModel::conectar()->prepare("
-        SELECT
-            id_sucursal,
-            suc_descri
-        FROM sucursales
-        WHERE estado = 1
-        ORDER BY suc_descri ASC
-        ");
-        $sql->execute();
-        return $sql->fetchAll(PDO::FETCH_ASSOC);
+        $conexion = mainModel::conectar();
+
+        $sql = "SELECT SQL_CALC_FOUND_ROWS s.*, e.razon_social
+            FROM sucursales s
+            INNER JOIN empresa e ON e.id_empresa = s.id_empresa
+            WHERE 1=1 $filtrosSQL
+            ORDER BY s.suc_descri ASC
+            LIMIT :inicio, :registros";
+
+        $stmt = $conexion->prepare($sql);
+
+        $stmt->bindValue(":inicio", (int)$inicio, PDO::PARAM_INT);
+        $stmt->bindValue(":registros", (int)$registros, PDO::PARAM_INT);
+
+        $stmt->execute();
+
+        $datos = $stmt->fetchAll();
+        $total = $conexion->query("SELECT FOUND_ROWS()")->fetchColumn();
+
+        return [
+            "datos" => $datos,
+            "total" => (int)$total
+        ];
     }
 
     protected static function listar_empleados_modelo()
@@ -138,6 +151,19 @@ class sucursalModelo extends mainModel
         WHERE ee.estado = 1 AND e.estado = 1
         ORDER BY nombre ASC
         ");
+        $sql->execute();
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    protected static function obtener_sucursales_modelo()
+    {
+        $sql = mainModel::conectar()->prepare("
+        SELECT id_sucursal, suc_descri
+        FROM sucursales
+        WHERE estado = 1
+        ORDER BY suc_descri
+    ");
+
         $sql->execute();
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }

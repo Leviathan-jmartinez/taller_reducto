@@ -5,9 +5,13 @@ require_once "../config/APP.php";
 ob_start();
 session_start(['name' => 'STR']);
 
+$accion = $_POST['accion'] ?? null; 
+
 require_once "../controladores/reportesControlador.php";
 
 $inst_reporte = new reporteControlador();
+
+
 
 /* =========================================
    REPORTE DE ARTICULOS (PREVIEW)
@@ -22,6 +26,15 @@ if (isset($_POST['modulo']) && $_POST['modulo'] == "articulos") {
    REPORTE DE ARTICULOS (PDF)
 ========================================= */
 
+if ($_POST['accion'] == 'reporte_articulos_simple') {
+    echo $inst_reporte->reporte_articulos_simple_controlador();
+}
+
+if ($_POST['accion'] === 'imprimir_reporte_articulos_simple') {
+    $inst_reporte->imprimir_reporte_articulos_simple_controlador();
+    exit();
+}
+
 if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_articulos') {
     $inst_reporte->imprimir_reporte_articulos_controlador();
     exit();
@@ -29,7 +42,7 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_articulos'
 /* =========================================
    REPORTE DE PROVEEDORES (PREVIEW)
 ========================================= */
-if (isset($_POST['modulo']) && $_POST['modulo'] == "proveedores") {
+if ($accion === 'reporte_proveedores') {
     echo $inst_reporte->reporte_proveedores_controlador();
     exit();
 }
@@ -37,7 +50,9 @@ if (isset($_POST['modulo']) && $_POST['modulo'] == "proveedores") {
 /* =========================================
    REPORTE DE PROVEEDORES (PDF)
 ========================================= */
-if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_proveedores') {
+
+
+if ($accion === 'imprimir_reporte_proveedores') {
     $inst_reporte->imprimir_reporte_proveedores_controlador();
     exit();
 }

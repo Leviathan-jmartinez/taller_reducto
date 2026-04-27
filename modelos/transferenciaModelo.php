@@ -429,6 +429,42 @@ class transferenciaModelo extends mainModel
                 ]);
 
                 if ($recibido > 0) {
+                    // REGISTRAR MOVIMIENTO DE ENTRADA
+                    $pdo->prepare("
+                        INSERT INTO sucmovimientostock
+                        (
+                            id_sucursal,
+                            TipoMovStockId,
+                            MovStockProductoId,
+                            MovStockCantidad,
+                            MovStockPrecioVenta,
+                            MovStockCosto,
+                            MovStockFechaHora,
+                            MovStockUsuario,
+                            MovStockSigno,
+                            MovStockReferencia
+                        )
+                        VALUES
+                        (
+                            :suc,
+                            'TRANSFERENCIA_ENTRADA',
+                            :art,
+                            :cant,
+                            0,
+                            0,
+                            NOW(),
+                            :usr,
+                            1,
+                            :ref
+                        )
+                    ")->execute([
+                        ':suc' => $t['sucursal_destino'], 
+                        ':art' => $idArticulo,
+                        ':cant' => $recibido,
+                        ':usr' => $idUsuario,
+                        ':ref' => 'TRF-' . $idTransferencia
+                    ]);
+
                     $pdo->prepare("
                     INSERT INTO stock
                         (id_articulo, id_sucursal, stockcant_max, stockcant_min, stockDisponible,

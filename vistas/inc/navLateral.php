@@ -143,7 +143,7 @@
 
                                         <?php if (mainModel::tienePermiso('articulo.ver')) { ?>
                                             <li>
-                                                <a href="<?= SERVERURL; ?>articulo-lista/">
+                                                <a href="<?= SERVERURL; ?>articulo-nuevo/">
                                                     <i class="fas fa-pallet fa-fw"></i> &nbsp; Artículos
                                                 </a>
                                             </li>
@@ -215,10 +215,10 @@
                         </a>
                         <ul>
                             <?php if (mainModel::tienePermiso('usuarios.ver')) { ?>
-                                <li><a href="<?= SERVERURL; ?>usuario-lista/"><i class="fas fa-user fa-fw"></i> &nbsp; Usuarios</a></li>
+                                <li><a href="<?= SERVERURL; ?>usuario-nuevo/"><i class="fas fa-user fa-fw"></i> &nbsp; Usuarios</a></li>
                             <?php } ?>
 
-                            <?php if (mainModel::tienePermiso('seguridad.roles.ver')) { ?>
+                            <?php if (mainModel::tienePermiso('roles.ver')) { ?>
                                 <li><a href="<?= SERVERURL; ?>rol-permisos/"><i class="fas fa-key fa-fw"></i> &nbsp; Roles y Permisos</a></li>
                             <?php } ?>
                         </ul>
@@ -314,6 +314,12 @@
                                     <li>
                                         <a href="<?= SERVERURL; ?>reporte-LibroCompras/">
                                             <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Informe Libro de Compras
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        <a href="<?= SERVERURL; ?>reporte-stock/">
+                                            <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Informe de Stock
                                         </a>
                                     </li>
                                     <li>

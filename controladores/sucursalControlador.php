@@ -71,42 +71,62 @@ class sucursalControlador extends sucursalModelo
         echo json_encode($alerta);
     }
 
-    public function paginador_sucursales_controlador($pagina, $registros, $url, $busqueda)
+    public function listar_sucursales_select_controlador()
+    {
+        return sucursalModelo::obtener_sucursales_modelo();
+    }
+
+    public function listar_sucursales_controlador($pagina, $registros, $url)
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
-        $busqueda = mainModel::limpiar_string($busqueda);
 
+        $url = mainModel::limpiar_string($url);
         $url = SERVERURL . $url . "/";
-        $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
-        $inicio = ($pagina * $registros) - $registros;
 
-        $consulta = "SELECT SQL_CALC_FOUND_ROWS s.*, e.razon_social
-                 FROM sucursales s
-                 INNER JOIN empresa e ON e.id_empresa = s.id_empresa";
+        $tabla = "";
+
+        $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
+        $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
+
+        /* ===== FILTROS ===== */
+
+        $busqueda = $_SESSION['busqueda_sucursal'] ?? "";
+
+        $filtros = [];
 
         if ($busqueda != "") {
-            $consulta .= " WHERE s.suc_descri LIKE '%$busqueda%'";
+            $filtros[] = [
+                "campo" => "s.suc_descri",
+                "tipo"  => "LIKE",
+                "valor" => $busqueda
+            ];
         }
 
-        $consulta .= " ORDER BY s.suc_descri ASC LIMIT $inicio,$registros";
+        $filtrosSQL = mainModel::construirFiltros($filtros);
 
-        $conexion = mainModel::conectar();
-        $datos = $conexion->query($consulta)->fetchAll();
-        $total = (int)$conexion->query("SELECT FOUND_ROWS()")->fetchColumn();
+        /* ===== DATOS ===== */
+
+        $res = sucursalModelo::listar_sucursales_modelo($inicio, $registros, $filtrosSQL);
+
+        $datos = $res["datos"];
+        $total = $res["total"];
         $Npaginas = ceil($total / $registros);
 
-        $tabla = '<div class="table-responsive">
+        /* ===== TABLA ===== */
+
+        $tabla .= '<div class="table-responsive">
         <table class="table table-dark table-sm">
-        <thead><tr class="text-center">
+        <thead>
+        <tr class="text-center roboto-medium">
             <th>#</th>
-        <th>SUCURSAL</th>
-        <th>EMPRESA</th>
-        <th>ESTABLEC.</th>
-        <th>ESTADO</th>';
+            <th>SUCURSAL</th>
+            <th>EMPRESA</th>
+            <th>ESTABLEC.</th>
+            <th>ESTADO</th>';
 
         if (mainModel::tienePermiso('sucursal.editar')) {
-            $tabla .=           '<th>ACTUALIZAR</th>';
+            $tabla .= '<th>ACTUALIZAR</th>';
         }
         if (mainModel::tienePermiso('sucursal.eliminar')) {
             $tabla .= '<th>ELIMINAR</th>';
@@ -114,47 +134,80 @@ class sucursalControlador extends sucursalModelo
 
         $tabla .= '</tr></thead><tbody>';
 
-        $contador = $inicio + 1;
-        foreach ($datos as $row) {
-            $estado = $row['estado'] == 1
-                ? '<span class="badge badge-success">Activo</span>'
-                : '<span class="badge badge-danger">Inactivo</span>';
+        if ($total >= 1 && $pagina <= $Npaginas) {
 
-            $tabla .= "<tr class='text-center'>
-            <td>$contador</td>
-            <td>{$row['suc_descri']}</td>
-            <td>{$row['razon_social']}</td>
-            <td>{$row['nro_establecimiento']}</td>
-            <td>$estado</td>";
+            $contador = $inicio + 1;
+            $reg_inicio = $inicio + 1;
 
-            if (mainModel::tienePermiso('sucursal.editar')) {
+            foreach ($datos as $rows) {
+
+                $estado = $rows['estado'] == 1
+                    ? '<span class="badge badge-success">Activo</span>'
+                    : '<span class="badge badge-danger">Inactivo</span>';
+
                 $tabla .= '
-            <td>
-                <a href="' . SERVERURL . 'sucursal-actualizar/' . mainModel::encryption($row['id_sucursal']) . '/" class="btn btn-success">
-                    <i class="fas fa-sync-alt"></i>
-                </a>
-            </td>
-            ';
-            }
-            if (mainModel::tienePermiso('sucursal.eliminar')) {
-                $tabla .= '
-            <td>
-                <form class="FormularioAjax" action="' . SERVERURL . 'ajax/sucursalAjax.php" method="POST" data-form="delete">
-                    <input type="hidden" name="sucursal_id_del" value="' . mainModel::encryption($row['id_sucursal']) . '">
-                    <button type="submit" class="btn btn-warning">
-                        <i class="far fa-trash-alt"></i>
-                    </button>
-                </form>
-            </td>';
+            <tr class="text-center">
+                <td>' . $contador . '</td>
+                <td>' . $rows['suc_descri'] . '</td>
+                <td>' . $rows['razon_social'] . '</td>
+                <td>' . $rows['nro_establecimiento'] . '</td>
+                <td>' . $estado . '</td>';
+
+                if (mainModel::tienePermiso('sucursal.editar')) {
+                    $tabla .= '
+                <td>
+                    <a href="' . SERVERURL . 'sucursal-actualizar/' . mainModel::encryption($rows['id_sucursal']) . '/"
+                    class="btn btn-success">
+                        <i class="fas fa-sync-alt"></i>
+                    </a>
+                </td>';
+                }
+
+                if (mainModel::tienePermiso('sucursal.eliminar')) {
+                    $tabla .= '
+                <td>
+                    <form class="FormularioAjax"
+                        action="' . SERVERURL . 'ajax/sucursalAjax.php"
+                        method="POST"
+                        data-form="delete">
+
+                        <input type="hidden"
+                        name="sucursal_id_del"
+                        value="' . mainModel::encryption($rows['id_sucursal']) . '">
+
+                        <button type="submit" class="btn btn-warning">
+                            <i class="far fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </td>';
+                }
+
+                $tabla .= '</tr>';
+                $contador++;
             }
 
-            $tabla .= '</tr>';
-            $contador++;
+            $reg_final = $contador - 1;
+        } else {
+
+            $tabla .= '<tr class="text-center">
+            <td colspan="6">No hay registros en el sistema</td>
+        </tr>';
         }
 
         $tabla .= '</tbody></table></div>';
 
-        echo $tabla;
+        /* ===== PAGINACIÓN ===== */
+
+        if ($total >= 1 && $pagina <= $Npaginas) {
+
+            $tabla .= '<p class="text-right">
+            Mostrando registro ' . $reg_inicio . ' al ' . $reg_final . ' de un total de ' . $total . '
+        </p>';
+
+            $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);
+        }
+
+        return $tabla;
     }
 
     public function actualizar_sucursal_controlador()
@@ -189,7 +242,8 @@ class sucursalControlador extends sucursalModelo
         sucursalModelo::actualizar_sucursal_modelo($datos);
 
         echo json_encode([
-            "Alerta" => "recargar",
+            "Alerta" => "redireccionar_confirmado",
+            "URL" => SERVERURL . "sucursal-nuevo/",
             "Titulo" => "Sucursal",
             "Texto" => "Sucursal actualizada correctamente",
             "Tipo" => "success"
@@ -231,7 +285,8 @@ class sucursalControlador extends sucursalModelo
             if ($verificar->rowCount() > 0) {
                 // Sigue existiendo → fue desactivada
                 $alerta = [
-                    "Alerta" => "recargar",
+                    "Alerta" => "redireccionar_confirmado",
+                    "URL" => SERVERURL . "sucursal-nuevo/",
                     "Titulo" => "Sucursal desactivada",
                     "Texto"  => "La sucursal ya tenía movimientos, por lo que fue desactivada.",
                     "Tipo"   => "warning"
@@ -239,7 +294,8 @@ class sucursalControlador extends sucursalModelo
             } else {
                 // Ya no existe → fue eliminada
                 $alerta = [
-                    "Alerta" => "recargar",
+                    "Alerta" => "redireccionar_confirmado",
+                    "URL" => SERVERURL . "sucursal-nuevo/",
                     "Titulo" => "Sucursal eliminada",
                     "Texto"  => "Sucursal eliminada correctamente.",
                     "Tipo"   => "success"
@@ -255,12 +311,6 @@ class sucursalControlador extends sucursalModelo
         }
 
         echo json_encode($alerta);
-    }
-
-
-    public function listar_sucursales_controlador()
-    {
-        return sucursalModelo::listar_sucursales_modelo();
     }
 
     public function listar_empleados_controlador()

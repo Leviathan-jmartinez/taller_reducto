@@ -195,102 +195,152 @@ class usuarioControlador extends usuarioModelo
         $id = mainModel::limpiar_string($id);
         $busqueda = mainModel::limpiar_string($busqueda);
 
-        $url = mainModel::limpiar_string($url);
-        $url = SERVERURL . $url . "/";
+        $url = SERVERURL . mainModel::limpiar_string($url) . "/";
 
-        $tabla = "";
+        $pagina = ($pagina > 0) ? (int)$pagina : 1;
+        $inicio = ($pagina - 1) * $registros;
 
-        $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
-        $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
-
-        if (isset($busqueda) && $busqueda != "") {
+        /* ========= CONSULTA ========= */
+        if ($busqueda != "") {
             $consulta = "SELECT SQL_CALC_FOUND_ROWS * FROM usuarios 
-            WHERE ((id_usuario != '$id' AND id_usuario !='1') AND (usu_ci LIKE '%$busqueda%' OR usu_nick LIKE '%$busqueda%')) 
-            ORDER BY usu_nombre ASC LIMIT $inicio,$registros";
+        WHERE id_usuario != '$id' AND id_usuario !='1'
+        AND (usu_ci LIKE '%$busqueda%' OR usu_nick LIKE '%$busqueda%')
+        ORDER BY usu_nombre ASC LIMIT $inicio,$registros";
         } else {
             $consulta = "SELECT SQL_CALC_FOUND_ROWS * FROM usuarios 
-            WHERE id_usuario != '$id' AND id_usuario !='1' 
-            ORDER BY usu_nombre ASC LIMIT $inicio,$registros";
+        WHERE id_usuario != '$id' AND id_usuario !='1'
+        ORDER BY usu_nombre ASC LIMIT $inicio,$registros";
         }
+
         $conexion = mainModel::conectar();
-        $datos = $conexion->query($consulta);
-        $datos = $datos->fetchAll();
+        $datos = $conexion->query($consulta)->fetchAll();
 
-        $total = $conexion->query("SELECT FOUND_ROWS()");
-        $total = (int) $total->fetchColumn();
-
+        $total = (int)$conexion->query("SELECT FOUND_ROWS()")->fetchColumn();
         $Npaginas = ceil($total / $registros);
 
-        $tabla .= '<div class="table-responsive">
-					<table class="table table-dark table-sm">
-						<thead>
-							<tr class="text-center roboto-medium">
-								<th>#</th>
-								<th>CI</th>
-								<th>NOMBRE COMPLETO</th>
-								<th>TELÉFONO</th>
-								<th>USUARIO</th>
-								<th>EMAIL</th>';
+        /* ========= TABLA ========= */
+        $tabla = '<div class="table-responsive">
+        <table class="table table-dark table-sm">
+        <thead>
+            <tr class="text-center roboto-medium">
+                <th>#</th>
+                <th>CI</th>
+                <th>NOMBRE</th>
+                <th>TELÉFONO</th>
+                <th>USUARIO</th>
+                <th>EMAIL</th>';
 
-        if (mainModel::tienePermiso('usuarios.editar')) {
-            $tabla .=           '<th>ACTUALIZAR</th>';
+        if (
+            mainModel::tienePermiso('usuarios.editar') ||
+            mainModel::tienePermiso('usuarios.eliminar') ||
+            mainModel::tienePermiso('usuarios.asignarrol') ||
+            mainModel::tienePermiso('usuarios.asignarlocal')
+        ) {
+            $tabla .= '<th>ACCIONES</th>';
         }
-        if (mainModel::tienePermiso('usuarios.eliminar')) {
-            $tabla .= '         <th>ELIMINAR</th>';
-        }
+
         $tabla .= '</tr></thead><tbody>';
+
         if ($total >= 1 && $pagina <= $Npaginas) {
+
             $contador = $inicio + 1;
             $reg_inicio = $inicio + 1;
+
             foreach ($datos as $rows) {
+
                 $tabla .= '
-                            <tr class="text-center">
-								<td>' . $contador . '</td>
-								<td>' . $rows['usu_ci'] . '</td>
-								<td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
-								<td>' . $rows['usu_telefono'] . '</td>
-								<td>' . $rows['usu_nick'] . '</td>
-								<td>' . $rows['usu_email'] . '</td>
-                ';
-                if (mainModel::tienePermiso('usuarios.editar')) {
-                    $tabla .= '
-								<td>
-									<a href="' . SERVERURL . 'usuario-actualizar/' . mainModel::encryption($rows['id_usuario']) . '/" class="btn btn-success">
-										<i class="fas fa-sync-alt"></i>
-									</a>
-								</td>';
+            <tr class="text-center">
+                <td>' . $contador . '</td>
+                <td>' . $rows['usu_ci'] . '</td>
+                <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
+                <td>' . $rows['usu_telefono'] . '</td>
+                <td>' . $rows['usu_nick'] . '</td>
+                <td>' . $rows['usu_email'] . '</td>';
+
+                /* ========= ACCIONES ========= */
+                if (
+                    mainModel::tienePermiso('usuarios.editar') ||
+                    mainModel::tienePermiso('usuarios.eliminar') ||
+                    mainModel::tienePermiso('usuarios.asignarrol')
+                ) {
+
+                    $tabla .= '<td>';
+
+                    // EDITAR
+                    if (mainModel::tienePermiso('usuarios.editar')) {
+                        $tabla .= '
+                    <a href="' . SERVERURL . 'usuario-actualizar/' . mainModel::encryption($rows['id_usuario']) . '/"
+                    class="btn btn-success btn-sm" data-toggle="tooltip" title="Editar usuario">
+                        <i class="fas fa-sync-alt"></i>
+                    </a> ';
+                    }
+
+                    // ROLES
+                    if (mainModel::tienePermiso('usuarios.asignarrol')) {
+                        $tabla .= '
+                    <button class="btn btn-info btn-sm btn-roles" 
+                        data-id="' . mainModel::encryption($rows['id_usuario']) . '" data-toggle="tooltip" title="Asignar roles">
+                         <i class="fas fa-user-tag"></i>
+                    </button> ';
+                    }
+
+                    // SUCURSAL
+                    if (mainModel::tienePermiso('usuarios.asignarlocal')) {
+                        $tabla .= '
+                        <button class="btn btn-warning btn-sm btn-sucursal"
+                            data-id="' . mainModel::encryption($rows['id_usuario']) . '"
+                            data-toggle="tooltip"
+                            title="Asignar sucursal">
+                            <i class="fas fa-store"></i>
+                        </button> ';
+                    }
+
+                    // ELIMINAR
+                    if (mainModel::tienePermiso('usuarios.eliminar')) {
+                        $tabla .= '
+                    <form class="FormularioAjax d-inline"
+                        action="' . SERVERURL . 'ajax/usuarioAjax.php"
+                        method="POST"
+                        data-form="delete">
+
+                        <input type="hidden"
+                        name="usuario_id_del" 
+                        value="' . mainModel::encryption($rows['id_usuario']) . '">
+
+                        <button type="submit" class="btn btn-warning btn-sm" data-toggle="tooltip" title="Eliminar usuario">
+                            <i class="far fa-trash-alt"></i>
+                        </button>
+                    </form>';
+                    }
+
+                    $tabla .= '</td>';
                 }
-                if (mainModel::tienePermiso('usuarios.eliminar')) {
-                    $tabla .= '
-								<td>
-									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/usuarioAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
-                                    <input type="hidden" name="usuario_id_del" value=' . mainModel::encryption($rows['id_usuario']) . '>
-										<button type="submit" class="btn btn-warning">
-											<i class="far fa-trash-alt"></i>
-										</button>
-									</form>
-								</td>';
-                }
+
                 $tabla .= '</tr>';
                 $contador++;
             }
+
             $reg_final = $contador - 1;
         } else {
-            if ($total >= 1) {
-                $tabla .= '<tr class="text-center"> <td colspan="9"> <a href="' . $url . '" class="btn btn-reaised btn-primary btn-sm"> Haga click aqui para recargar el listado </a> </td> </tr> ';
-            } else {
-                $tabla .= '<tr class="text-center"> <td colspan="9"> No hay regitros en el sistema</td> </tr> ';
-            }
+
+            $tabla .= '<tr class="text-center">
+            <td colspan="7">No hay registros en el sistema</td>
+        </tr>';
         }
 
-        $tabla .= '       </tbody>
-					</table>
-				</div>';
+        $tabla .= '</tbody></table></div>';
+
+        /* ========= PAGINADOR ========= */
         if ($total >= 1 && $pagina <= $Npaginas) {
-            $tabla .= '<p class="text-right"> Mostrando registro ' . $reg_inicio . ' al ' . $reg_final . ' de un total de ' . $total . '</p>';
+
+            $tabla .= '<p class="text-right">
+            Mostrando ' . $reg_inicio . ' al ' . $reg_final . ' de ' . $total . '
+        </p>';
+
             $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);
         }
-        echo $tabla;
+
+        return $tabla;
     }
     /**fin controlador */
 
@@ -655,56 +705,10 @@ class usuarioControlador extends usuarioModelo
     }
     /**fin controlador */
 
-    public function asignar_rol_controlador()
-    {
-        session_start(['name' => 'STR']);
-
-        if (
-            !mainModel::tienePermiso('seguridad.roles.editar')
-        ) {
-            return json_encode([
-                "Alerta" => "simple",
-                "Titulo" => "Acceso denegado",
-                "Texto"  => "No tiene permisos para asignar roles",
-                "Tipo"   => "error"
-            ]);
-        }
-
-        $idUsuario = mainModel::limpiar_string($_POST['id_usuario']);
-        $idRol     = mainModel::limpiar_string($_POST['id_rol']);
-
-        if ($idUsuario == "" || $idRol == "") {
-            return json_encode([
-                "Alerta" => "simple",
-                "Titulo" => "Error",
-                "Texto"  => "Datos incompletos",
-                "Tipo"   => "error"
-            ]);
-        }
-
-        $res = usuarioModelo::asignar_rol_modelo($idUsuario, $idRol);
-
-        if ($res) {
-            return json_encode([
-                "Alerta" => "recargar",
-                "Titulo" => "Rol asignado",
-                "Texto"  => "El rol fue asignado correctamente",
-                "Tipo"   => "success"
-            ]);
-        }
-
-        return json_encode([
-            "Alerta" => "simple",
-            "Titulo" => "Error",
-            "Texto"  => "No se pudo asignar el rol",
-            "Tipo"   => "error"
-        ]);
-    }
-
     public function listar_usuarios_controlador()
     {
         if (
-            !mainModel::tienePermiso('seguridad.roles.ver')
+            !mainModel::tienePermiso('roles.ver')
         ) {
             return [];
         }
@@ -712,77 +716,34 @@ class usuarioControlador extends usuarioModelo
         return usuarioModelo::listar_usuarios_modelo();
     }
 
-    public function listar_roles_controlador()
+
+    public function roles_por_usuario_controlador()
     {
-        return usuarioModelo::listar_roles_modelo();
-    }
+        $idUsuario = mainModel::decryption($_POST['id_usuario']);
+        $idUsuario = mainModel::limpiar_string($idUsuario);
 
-    public function permisos_por_rol_controlador()
-    {
-        session_start(['name' => 'STR']);
+        $roles = usuarioModelo::obtener_roles_usuario_modelo($idUsuario);
 
-        if (
-            !mainModel::tienePermiso('seguridad.roles.editar')
-        ) {
-            return '<div class="alert alert-danger">Acceso denegado</div>';
-        }
+        $html = '<div class="row">';
 
-        $idRol = mainModel::limpiar_string($_POST['id_rol']);
-        $permisos = usuarioModelo::permisos_por_rol_modelo($idRol);
+        foreach ($roles as $r) {
 
-        $grupos = [];
-
-        foreach ($permisos as $p) {
-            // "compra.oc.crear" -> "compra"
-            $modulo = explode('.', $p['clave'])[0];
-            $grupos[$modulo][] = $p;
-        }
-
-        $html = '<div class="accordion" id="accordionPermisos">';
-        $i = 0;
-
-        foreach ($grupos as $modulo => $items) {
-            $i++;
-            $titulo = ucfirst($modulo);
+            $checked = $r['activo'] ? 'checked' : '';
 
             $html .= '
-        <div class="card">
-        <div class="card-header p-2" id="heading' . $i . '">
-            <h6 class="mb-0">
-                <button class="btn btn-link" type="button" data-toggle="collapse"
-                    data-target="#collapse' . $i . '" aria-expanded="true">
-                    ' . $titulo . '
-                </button>
-            </h6>
-        </div>
-
-        <div id="collapse' . $i . '" class="collapse" data-parent="#accordionPermisos">
-            <div class="card-body">
-                <div class="row">';
-
-            foreach ($items as $p) {
-                $checked = $p['activo'] ? 'checked' : '';
-
-                $html .= '
-        <div class="col-md-4 mb-2">
+        <div class="col-md-6 mb-2">
             <div class="custom-control custom-checkbox">
                 <input type="checkbox"
-                       class="custom-control-input"
-                       id="perm_' . $p['id_permiso'] . '"
-                       name="permisos[]"
-                       value="' . $p['id_permiso'] . '"
-                       ' . $checked . '>
-                <label class="custom-control-label" for="perm_' . $p['id_permiso'] . '">
-                    <small>' . $p['descripcion'] . '</small>
+                    class="custom-control-input"
+                    name="roles[]"
+                    value="' . $r['id_rol'] . '"
+                    id="rol_' . $r['id_rol'] . '"
+                    ' . $checked . '>
+
+                <label class="custom-control-label" for="rol_' . $r['id_rol'] . '">
+                    ' . $r['nombre'] . '
                 </label>
             </div>
-        </div>';
-            }
-
-            $html .= '
-                </div>
-            </div>
-        </div>
         </div>';
         }
 
@@ -791,77 +752,81 @@ class usuarioControlador extends usuarioModelo
         return $html;
     }
 
-    public function guardar_permisos_rol_controlador()
-    {
-        session_start(['name' => 'STR']);
 
-        if (
-            !mainModel::tienePermiso('seguridad.roles.editar')
-        ) {
+    public function guardar_roles_usuario_controlador()
+    {
+        $idUsuario = mainModel::decryption($_POST['id_usuario']);
+        $idUsuario = mainModel::limpiar_string($idUsuario);
+
+        $roles = $_POST['roles'] ?? [];
+
+        $res = usuarioModelo::guardar_roles_usuario_modelo($idUsuario, $roles);
+
+        if ($res) {
             return json_encode([
                 "Alerta" => "simple",
-                "Titulo" => "Acceso denegado",
-                "Texto"  => "No tiene permisos",
+                "Titulo" => "Roles actualizados",
+                "Texto"  => "Los cambios se guardaron correctamente",
+                "Tipo"   => "success"
+            ]);
+        } else {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto"  => "No se pudieron guardar los cambios",
                 "Tipo"   => "error"
             ]);
         }
+    }
 
-        $idRol = $_POST['id_rol'];
-        $permisos = $_POST['permisos'] ?? [];
+    public function sucursal_por_usuario_controlador()
+    {
+        $idUsuario = mainModel::decryption($_POST['id_usuario']);
 
-        usuarioModelo::guardar_permisos_rol_modelo($idRol, $permisos);
+        $data = usuarioModelo::obtener_sucursal_usuario_modelo($idUsuario);
 
-        return json_encode([
-            "Alerta" => "simple",
-            "Titulo" => "Permisos actualizados",
-            "Texto"  => "Los permisos fueron guardados correctamente",
-            "Tipo"   => "success"
-        ]);
+        $sucursales = $data['sucursales'];
+        $actual = $data['actual'];
+
+        $html = '<div class="form-group">
+        <label>Sucursal</label>
+        <select name="id_sucursal" class="form-control select2" required>
+        <option value="">Seleccione</option>';
+
+        foreach ($sucursales as $s) {
+
+            $selected = ($s['id_sucursal'] == $actual) ? 'selected' : '';
+
+            $html .= '<option value="' . $s['id_sucursal'] . '" ' . $selected . '>
+            ' . $s['suc_descri'] . '
+        </option>';
+        }
+
+        $html .= '</select></div>';
+
+        return $html;
     }
 
     public function asignar_sucursal_controlador()
     {
-        session_start(['name' => 'STR']);
+        $idUsuario = mainModel::decryption($_POST['id_usuario']);
+        $idSucursal = $_POST['id_sucursal'];
+        $res = usuarioModelo::guardar_sucursal_usuario_modelo($idUsuario, $idSucursal);
 
-        if (empty($_POST['id_usuario']) || empty($_POST['id_sucursal'])) {
+        if ($res > 0) {
             return json_encode([
-                'Alerta' => 'simple',
-                'Titulo' => 'Error',
-                'Texto'  => 'Datos incompletos',
-                'Tipo'   => 'error'
+                "Alerta" => "simple",
+                "Titulo" => "Sucursal actualizada",
+                "Texto"  => "Se asignó correctamente",
+                "Tipo"   => "success"
+            ]);
+        } else {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto"  => "No se pudieron guardar los cambios",
+                "Tipo"   => "error"
             ]);
         }
-
-        if (
-            !mainModel::tienePermiso('usuarios.asignarlocal')
-        ) {
-            return json_encode([
-                'Alerta' => 'simple',
-                'Titulo' => 'Acceso denegado',
-                'Texto'  => 'No tiene permisos',
-                'Tipo'   => 'error'
-            ]);
-        }
-
-        $res = usuarioModelo::asignar_sucursal_modelo(
-            $_POST['id_usuario'],
-            $_POST['id_sucursal']
-        );
-
-        if ($res) {
-            return json_encode([
-                'Alerta' => 'recargar',
-                'Titulo' => 'Sucursal asignada',
-                'Texto'  => 'La sucursal fue asignada correctamente',
-                'Tipo'   => 'success'
-            ]);
-        }
-
-        return json_encode([
-            'Alerta' => 'simple',
-            'Titulo' => 'Error',
-            'Texto'  => 'No se pudo asignar la sucursal',
-            'Tipo'   => 'error'
-        ]);
     }
 }

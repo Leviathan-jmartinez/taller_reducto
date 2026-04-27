@@ -86,38 +86,6 @@ class usuarioModelo extends mainModel
         return $sql;
     }
 
-    protected static function listar_roles_modelo()
-    {
-        return self::conectar()
-            ->query("SELECT id_rol, nombre FROM roles WHERE estado = 1")
-            ->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    protected static function asignar_rol_modelo($idUsuario, $idRol)
-    {
-        $sql = self::conectar()->prepare("
-        UPDATE usuarios
-        SET id_rol = ?
-        WHERE id_usuario = ?
-        ");
-        return $sql->execute([$idRol, $idUsuario]);
-    }
-
-    protected static function obtener_permisos_rol_modelo($idRol)
-    {
-        $sql = self::conectar()->prepare("
-        SELECT p.id_permiso, p.clave,
-               IF(rp.id_permiso IS NULL, 0, 1) AS activo
-        FROM permisos p
-        LEFT JOIN rol_permiso rp
-            ON rp.id_permiso = p.id_permiso
-           AND rp.id_rol = ?
-        ORDER BY p.clave
-      ");
-        $sql->execute([$idRol]);
-        return $sql->fetchAll(PDO::FETCH_ASSOC);
-    }
-
     protected static function listar_usuarios_modelo()
     {
         $sql = self::conectar()->prepare("
@@ -133,56 +101,84 @@ class usuarioModelo extends mainModel
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    protected static function permisos_por_rol_modelo($idRol)
+    protected static function obtener_roles_usuario_modelo($idUsuario)
     {
         $sql = self::conectar()->prepare("
-        SELECT 
-            p.id_permiso,
-            p.clave,
-            p.descripcion,
-            IF(rp.id_permiso IS NULL, 0, 1) AS activo
-        FROM permisos p
-        LEFT JOIN rol_permiso rp 
-            ON rp.id_permiso = p.id_permiso
-           AND rp.id_rol = ?
-        ORDER BY p.clave ASC
+        SELECT r.id_rol, r.nombre,
+               IF(ur.id_rol IS NULL, 0, 1) AS activo
+        FROM roles r
+        LEFT JOIN usuario_rol ur
+            ON ur.id_rol = r.id_rol
+           AND ur.id_usuario = ?
+        ORDER BY r.nombre
         ");
-        $sql->execute([$idRol]);
+
+        $sql->execute([$idUsuario]);
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    protected static function guardar_permisos_rol_modelo($idRol, $permisos)
+    protected static function guardar_roles_usuario_modelo($idUsuario, $roles)
     {
         $pdo = self::conectar();
-        $pdo->beginTransaction();
 
-        $pdo->prepare("DELETE FROM rol_permiso WHERE id_rol = ?")
-            ->execute([$idRol]);
+        try {
 
-        $stmt = $pdo->prepare("
-        INSERT INTO rol_permiso (id_rol, id_permiso)
-        VALUES (?, ?)
+            $pdo->beginTransaction();
+
+            $pdo->prepare("DELETE FROM usuario_rol WHERE id_usuario = ?")
+                ->execute([$idUsuario]);
+
+            $stmt = $pdo->prepare("
+            INSERT INTO usuario_rol (id_usuario, id_rol)
+            VALUES (?, ?)
         ");
 
-        foreach ($permisos as $idPermiso) {
-            $stmt->execute([$idRol, $idPermiso]);
-        }
+            foreach ($roles as $idRol) {
+                $stmt->execute([$idUsuario, $idRol]);
+            }
 
-        $pdo->commit();
-        return true;
+            $pdo->commit();
+            return true;
+        } catch (Exception $e) {
+
+            $pdo->rollBack();
+            return false;
+        }
     }
 
-    protected static function asignar_sucursal_modelo($idUsuario, $idSucursal)
+    protected static function obtener_sucursal_usuario_modelo($idUsuario)
     {
-        $sql = mainModel::conectar()->prepare("
+        $pdo = self::conectar();
+
+        $actual = $pdo->prepare("
+        SELECT sucursalid FROM usuarios WHERE id_usuario = ?
+        ");
+        $actual->execute([$idUsuario]);
+        $actual = $actual->fetchColumn();
+
+        $sucursales = $pdo->query("
+        SELECT id_sucursal, suc_descri
+        FROM sucursales
+        WHERE estado = 1
+        ORDER BY suc_descri
+        ")->fetchAll(PDO::FETCH_ASSOC);
+
+        return [
+            "actual" => $actual,
+            "sucursales" => $sucursales
+        ];
+    }
+
+    protected static function guardar_sucursal_usuario_modelo($idUsuario, $idSucursal)
+    {
+        $sql = self::conectar()->prepare("
         UPDATE usuarios
-        SET sucursalid = :sucursal
-        WHERE id_usuario = :usuario
+        SET sucursalid = ?
+        WHERE id_usuario = ?
         ");
 
-        return $sql->execute([
-            ':sucursal' => $idSucursal,
-            ':usuario'  => $idUsuario
-        ]);
+        $sql->execute([$idSucursal, $idUsuario]);
+
+        return $sql->rowCount();
     }
 }

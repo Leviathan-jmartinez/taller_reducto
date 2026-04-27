@@ -1,0 +1,199 @@
+<?php
+if (!mainModel::tienePermiso('roles.ver')) {
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
+
+$pagina = explode("/", $_GET['vista']);
+$id = $pagina[1] ?? null;
+
+$editando = false;
+
+require_once "./controladores/rolesControlador.php";
+$ins = new rolesControlador();
+
+if ($id != null) {
+    $dat = $ins->datos_roles_controlador("Unico", $id);
+
+    if ($dat->rowCount() == 1) {
+        $campos = $dat->fetch();
+        $editando = true;
+    }
+}
+
+$busqueda = $_SESSION['busqueda_roles'] ?? "";
+?>
+
+<div class="full-box page-header">
+    <h3>
+        <?php echo $editando ? "ACTUALIZAR ROL" : "AGREGAR ROL"; ?>
+    </h3>
+</div>
+
+<div class="container-fluid">
+
+
+    <ul class="full-box list-unstyled page-nav-tabs">
+
+        <?php if (mainModel::tienePermiso('roles.ver')) { ?>
+            <li>
+                <a class="active"  href="<?php echo SERVERURL; ?>rol-nuevo/">
+                    <i class="fas fa-key fa-fw"></i> &nbsp; Roles
+                </a>
+            </li>
+        <?php } ?>
+
+        <?php if (mainModel::tienePermiso('usuarios.permisos_por_roles')) { ?>
+            <li>
+                <a href="<?php echo SERVERURL; ?>rol-permisos/">
+                    <i class="fas fa-key fa-fw"></i> &nbsp; PERMISOS
+                </a>
+            </li>
+        <?php } ?>
+
+    </ul>
+</div>
+
+<div class="container-fluid">
+
+    <form class="form-neon FormularioAjax"
+        action="<?php echo SERVERURL; ?>ajax/rolesAjax.php"
+        method="POST"
+        data-form="<?php echo $editando ? 'update' : 'save'; ?>">
+
+        <?php if ($editando) { ?>
+            <input type="hidden" name="rol_id_up" value="<?php echo $id; ?>">
+        <?php } ?>
+
+        <div class="row">
+
+            <div class="col-md-4">
+                <div class="form-group">
+                    <input type="text" class="form-control"
+                        placeholder="Nombre del rol"
+                        name="<?php echo $editando ? 'rol_nombre_up' : 'rol_nombre_reg'; ?>"
+                        value="<?php echo $editando ? $campos['nombre'] : ''; ?>">
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="form-group">
+                    <input type="text" class="form-control"
+                        placeholder="Descripción del rol"
+                        name="<?php echo $editando ? 'rol_descripcion_up' : 'rol_descripcion_reg'; ?>"
+                        value="<?php echo $editando ? $campos['descripcion'] : ''; ?>">
+                </div>
+            </div>
+
+            <!-- ESTADO SOLO EN UPDATE -->
+            <?php if ($editando) { ?>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <select class="form-control select2"
+                            name="rol_estado_up"
+                            data-placeholder="Estado">
+
+                            <option value=""></option>
+
+                            <option value="1" <?php if ($campos['estado'] == 1) echo "selected"; ?>>
+                                Activo
+                            </option>
+
+                            <option value="0" <?php if ($campos['estado'] == 0) echo "selected"; ?>>
+                                Inactivo
+                            </option>
+
+                        </select>
+                    </div>
+                </div>
+            <?php } ?>
+
+        </div>
+
+        <p class="text-center mt-4">
+            <button type="submit"
+                class="btn btn-raised <?php echo $editando ? 'btn-success' : 'btn-info'; ?>">
+                <?php echo $editando ? 'ACTUALIZAR' : 'GUARDAR'; ?>
+            </button>
+
+            <?php if ($editando) { ?>
+                <a href="<?php echo SERVERURL; ?>rol-nuevo/"
+                    class="btn btn-raised btn-secondary">
+                    CANCELAR
+                </a>
+            <?php } ?>
+        </p>
+
+    </form>
+</div>
+
+<!-- ================= BUSCADOR ================= -->
+<div class="container-fluid mb-3">
+
+    <form class="FormularioAjax"
+        action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
+        method="POST"
+        data-form="search">
+
+        <input type="hidden" name="modulo" value="roles">
+
+        <div class="row">
+            <div class="col-md-6">
+                <input type="text"
+                    class="form-control"
+                    name="busqueda_inicial"
+                    placeholder="Buscar rol..."
+                    value="<?php echo $busqueda; ?>">
+            </div>
+
+            <div class="col-md-6">
+                <button type="submit" class="btn btn-info">
+                    Buscar
+                </button>
+
+                <?php if (isset($_SESSION['busqueda_roles'])) { ?>
+                    <form class="FormularioAjax d-inline"
+                        action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
+                        method="POST">
+
+                        <input type="hidden" name="modulo" value="roles">
+                        <input type="hidden" name="eliminar_busqueda" value="1">
+
+                        <button type="submit" class="btn btn-danger">
+                            Limpiar
+                        </button>
+                    </form>
+                <?php } ?>
+
+            </div>
+        </div>
+
+    </form>
+</div>
+
+<!-- ================= LISTA ================= -->
+<div class="container-fluid mt-4">
+    <?php
+
+    $pag_actual = 1;
+
+    if (isset($pagina[1]) && is_numeric($pagina[1])) {
+        $pag_actual = (int)$pagina[1];
+    }
+
+    if (isset($pagina[2]) && is_numeric($pagina[2])) {
+        $pag_actual = (int)$pagina[2];
+    }
+
+    if ($pag_actual <= 0) {
+        $pag_actual = 1;
+    }
+
+    echo $ins->listar_roles_controlador(
+        $pag_actual,
+        10,
+        $pagina[0],
+        $busqueda
+    );
+    ?>
+</div>

@@ -34,24 +34,7 @@
    <script src="<?php echo SERVERURL; ?>vistas/js/alertas.js"></script>
 
    <script>
-       function activarSelect2(context = document) {
-
-           $(context).find('.select2').each(function() {
-
-               if (!$(this).hasClass("select2-hidden-accessible")) {
-
-                   $(this).select2({
-                       width: '100%',
-                       placeholder: "Seleccione una opción",
-                       allowClear: true
-                   });
-
-               }
-
-           });
-
-       }
-
+       const SERVERURL = "<?php echo SERVERURL; ?>";
        // AUTOFOCUS en buscador
        $(document).on('select2:open', () => {
            setTimeout(() => {
@@ -75,4 +58,61 @@
            // Reset visual de Select2
            form.find('.select2').val(null).trigger('change');
        });
+   </script>
+
+   <script>
+       function activarSelect2(context = document) {
+
+           // SELECT NORMAL
+           $(context).find('.select2').each(function() {
+
+               if (!$(this).hasClass("select2-hidden-accessible")) {
+
+                   let placeholder = $(this).data('placeholder') ||
+                       $(this).find('option:first').text() ||
+                       "Seleccione una opción";
+
+                   $(this).select2({
+                       width: '100%',
+                       placeholder: placeholder,
+                       allowClear: true
+                   });
+
+               }
+
+           });
+
+           // 🔥 SELECT CLIENTES AJAX
+           $(context).find('.select2-clientes').each(function() {
+
+               if (!$(this).hasClass("select2-hidden-accessible")) {
+
+                   $(this).select2({
+                       width: '100%',
+                       placeholder: "Buscar cliente...",
+                       minimumInputLength: 2,
+                       ajax: {
+                           url: SERVERURL + 'ajax/vehiculoAjax.php',
+                           type: 'POST',
+                           dataType: 'json',
+                           delay: 250,
+                           data: function(params) {
+                               return {
+                                   accion: "buscar_cliente",
+                                   term: params.term
+                               };
+                           },
+                           processResults: function(data) {
+                               return {
+                                   results: data
+                               };
+                           }
+                       }
+                   });
+
+               }
+
+           });
+
+       }
    </script>

@@ -3,19 +3,60 @@ require_once "mainModel.php";
 
 class vehiculoModelo extends mainModel
 {
+
+    protected static function listar_vehiculos_modelo($inicio, $registros, $filtrosSQL)
+    {
+        $conexion = mainModel::conectar();
+
+        $sql = "SELECT SQL_CALC_FOUND_ROWS v.*, 
+                c.nombre_cliente, c.apellido_cliente,
+                m.mod_descri,
+                co.col_descripcion
+            FROM vehiculos v
+            INNER JOIN clientes c ON c.id_cliente = v.id_cliente
+            INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
+            LEFT JOIN colores co ON co.id_color = v.id_color
+            WHERE 1=1 $filtrosSQL
+            ORDER BY v.id_vehiculo ASC
+            LIMIT :inicio, :registros";
+
+        $stmt = $conexion->prepare($sql);
+        $stmt->bindValue(":inicio", (int)$inicio, PDO::PARAM_INT);
+        $stmt->bindValue(":registros", (int)$registros, PDO::PARAM_INT);
+
+        $stmt->execute();
+
+        $datos = $stmt->fetchAll();
+        $total = $conexion->query("SELECT FOUND_ROWS()")->fetchColumn();
+
+        return [
+            "datos" => $datos,
+            "total" => (int)$total
+        ];
+    }
     /** datos vehiculo */
     protected static function datos_vehiculo_modelo($tipo, $id)
     {
         if ($tipo == "Unico") {
-            $sql = mainModel::conectar()->prepare(
-                "SELECT * FROM vehiculos WHERE id_vehiculo = :id"
-            );
+
+            $sql = mainModel::conectar()->prepare("
+            SELECT v.*, 
+                   CONCAT(c.nombre_cliente,' ',c.apellido_cliente) AS cliente
+            FROM vehiculos v
+            INNER JOIN clientes c ON c.id_cliente = v.id_cliente
+            WHERE v.id_vehiculo = :id
+        ");
+
             $sql->bindParam(":id", $id);
         } elseif ($tipo == "Conteo") {
-            $sql = mainModel::conectar()->prepare(
-                "SELECT id_vehiculo FROM vehiculos WHERE estado = 1"
-            );
+
+            $sql = mainModel::conectar()->prepare("
+            SELECT id_vehiculo 
+            FROM vehiculos 
+            WHERE estado = 1
+        ");
         }
+
         $sql->execute();
         return $sql;
     }
@@ -135,5 +176,22 @@ class vehiculoModelo extends mainModel
         $stmt->execute();
 
         return $stmt;
+    }
+
+    protected static function buscar_cliente_modelo($term)
+    {
+        $sql = mainModel::conectar()->prepare("
+        SELECT id_cliente,
+               CONCAT(nombre_cliente,' ',apellido_cliente) AS cliente
+        FROM clientes
+        WHERE nombre_cliente LIKE :term
+        OR apellido_cliente LIKE :term
+        LIMIT 20
+        ");
+
+        $sql->bindValue(":term", "%$term%");
+        $sql->execute();
+
+        return $sql->fetchAll();
     }
 }

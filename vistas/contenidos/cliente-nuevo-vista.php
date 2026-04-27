@@ -3,131 +3,246 @@ if (!mainModel::tienePermiso('cliente.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
+
+$pagina = explode("/", $_GET['vista']);
+$id = $pagina[1] ?? null;
+
+$editando = false;
+
+require_once "./controladores/clienteControlador.php";
+$ins_cliente = new clienteControlador();
+
+if ($id != null) {
+    $dat = $ins_cliente->datos_cliente_controlador("Unico", $id);
+    if ($dat->rowCount() == 1) {
+        $campos = $dat->fetch();
+        $editando = true;
+    }
+}
+
+$busqueda = $_SESSION['busqueda_cliente'] ?? "";
 ?>
 
-<!-- Page header -->
 <div class="full-box page-header">
-    <h3 class="text-left">
-        <i class="fas fa-plus fa-fw"></i> &nbsp; AGREGAR CLIENTE
+    <h3>
+        <?php echo $editando ? "ACTUALIZAR CLIENTE" : "AGREGAR CLIENTE"; ?>
     </h3>
-    <p class="text-justify">
-
-    </p>
 </div>
 
 <div class="container-fluid">
-    <ul class="full-box list-unstyled page-nav-tabs">
-        <li>
-            <a class="active" href="<?php echo SERVERURL; ?>cliente-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; AGREGAR CLIENTE</a>
-        </li>
-        <li>
-            <a href="<?php echo SERVERURL; ?>cliente-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTA DE CLIENTES</a>
-        </li>
-        <li>
-            <a href="<?php echo SERVERURL; ?>cliente-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR CLIENTE</a>
-        </li>
-    </ul>
-</div>
 
-<!-- Content here-->
-<div class="container-fluid">
-    <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/clienteAjax.php" method="POST" data-form="save" autocomplete="off">
-        <fieldset>
+    <form class="form-neon FormularioAjax"
+        action="<?php echo SERVERURL; ?>ajax/clienteAjax.php"
+        method="POST"
+        data-form="<?php echo $editando ? 'update' : 'save'; ?>">
+
+        <?php if ($editando) { ?>
+            <input type="hidden" name="cliente_id_up" value="<?php echo $id; ?>">
+        <?php } ?>
+
+        <div class="row">
             <legend><i class="fas fa-user"></i> &nbsp; Información básica</legend>
-            <div class="container-fluid">
-                <div class="row">
-                    <div class="col-12 col-md-4">
-                        <div class="form-group">
-                            <label for="tipo_documento" class="bmd-label-floating">Tipo de Documento</label>
-                            <select class="form-control" name="tipo_documento" id="cliente_tipo">
-                                <option value="" selected>Seleccione una opción</option>
-                                <option value="CI">C.I</option>
-                                <option value="CC">CC</option>
-                                <option value="CD">CD</option>
-                                <option value="OF">OF</option>
-                                <option value="RUC">RUC</option>
-                                <option value="PASAPORTE">PASAPORTE</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <div class="form-group">
-                            <label for="cliente_doc" class="bmd-label-floating">CI o RUC</label>
-                            <input type="text" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 ]{1,27}" class="form-control" name="cliente_doc_reg" id="cliente_dni" maxlength="27">
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <div class="form-group">
-                            <label for="cliente_dni" class="bmd-label-floating">Informacion Adicional</label>
-                            <input type="text" pattern="[0-9()\+]{1,2}" class="form-control" name="cliente_dv_reg" id="cliente_dv" maxlength="27">
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <div class="form-group">
-                            <label for="cliente_nombre" class="bmd-label-floating">Nombre</label>
-                            <input type="text" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{1,40}" class="form-control" name="cliente_nombre_reg" id="cliente_nombre" maxlength="40">
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <div class="form-group">
-                            <label for="cliente_apellido" class="bmd-label-floating">Apellido</label>
-                            <input type="text" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{1,40}" class="form-control" name="cliente_apellido_reg" id="cliente_apellido" maxlength="40">
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <div class="form-group">
-                            <label for="cliente_telefono" class="bmd-label-floating">Teléfono</label>
-                            <input type="text" pattern="[0-9()\+]{8,20}" class="form-control" name="cliente_telefono_reg" id="cliente_telefono" maxlength="20">
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <div class="form-group">
-                            <label for="cliente_direccion" class="bmd-label-floating">Dirección</label>
-                            <input type="text" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ().,#\-\ ]{1,150}" class="form-control" name="cliente_direccion_reg" id="cliente_direccion" maxlength="150">
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <div class="form-group">
-                            <label for="cliente_email_reg" class="bmd-label-floating">Email</label>
-                            <input type="text" class="form-control" name="cliente_email_reg" id="cliente_email_reg" maxlength="150">
-                        </div>
-                    </div>
+            <div class="col-md-4">
+                <select class="form-control select2"
+                    name="<?php echo $editando ? 'tipo_documento_up' : 'tipo_documento_reg'; ?>">
 
-                    <?php
-                    require_once "./controladores/clienteControlador.php";
-                    $ciudadController = new clienteControlador();
-                    $ciudades = $ciudadController->listar_ciudades_controlador();
-                    ?>
+                    <option value="">Tipo de documento</option>
+                    <option value="CI" <?php echo ($editando && $campos['doc_type'] == "CI") ? 'selected' : ''; ?>>CI</option>
+                    <option value="RUC" <?php echo ($editando && $campos['doc_type'] == "RUC") ? 'selected' : ''; ?>>RUC</option>
+                    <option value="PASAPORTE" <?php echo ($editando && $campos['doc_type'] == "PASAPORTE") ? 'selected' : ''; ?>>Pasaporte</option>
+                    <option value="CC" <?php echo ($editando && $campos['doc_type'] == "CC") ? 'selected' : ''; ?>>CC</option>
+                    <option value="CD" <?php echo ($editando && $campos['doc_type'] == "CD") ? 'selected' : ''; ?>>CD</option>
+                    <option value="OF" <?php echo ($editando && $campos['doc_type'] == "OF") ? 'selected' : ''; ?>>OF</option>
+                </select>
+            </div>
+            <br><br>
+            <div class="col-md-4">
+                <input type="text" class="form-control"
+                    placeholder="Documento (Ej: 1234567)"
+                    name="<?php echo $editando ? 'cliente_doc_up' : 'cliente_doc_reg'; ?>"
+                    value="<?php echo $editando ? $campos['doc_number'] : ''; ?>">
+            </div>
+            <br><br>
+            <div class="col-md-4">
+                <input type="text" class="form-control"
+                    placeholder="DV (Ej: 5)"
+                    name="<?php echo $editando ? 'cliente_dv_up' : 'cliente_dv_reg'; ?>"
+                    value="<?php echo $editando ? $campos['digito_v'] : ''; ?>">
+            </div>
+            <br><br>
+            <div class="col-md-4">
+                <input type="text" class="form-control"
+                    placeholder="Nombre del cliente"
+                    name="<?php echo $editando ? 'cliente_nombre_up' : 'cliente_nombre_reg'; ?>"
+                    value="<?php echo $editando ? $campos['nombre_cliente'] : ''; ?>">
+            </div>
+            <br><br>
+            <div class="col-md-4">
+                <input type="text" class="form-control"
+                    placeholder="Apellido del cliente"
+                    name="<?php echo $editando ? 'cliente_apellido_up' : 'cliente_apellido_reg'; ?>"
+                    value="<?php echo $editando ? $campos['apellido_cliente'] : ''; ?>">
+            </div>
+            <br><br>
+            <div class="col-md-4">
+                <input type="text" class="form-control"
+                    placeholder="Teléfono (Ej: 0981...)"
+                    name="<?php echo $editando ? 'cliente_telefono_up' : 'cliente_telefono_reg'; ?>"
+                    value="<?php echo $editando ? $campos['celular_cliente'] : ''; ?>">
+            </div>
+            <br><br>
+            <div class="col-md-4">
+                <input type="email" class="form-control"
+                    placeholder="Email (Ej: correo@mail.com)"
+                    name="<?php echo $editando ? 'cliente_email_up' : 'cliente_email_reg'; ?>"
+                    value="<?php echo $editando ? $campos['email_cliente'] : ''; ?>">
+            </div>
+            <br><br>
+            <div class="col-md-4">
+                <input type="text" class="form-control"
+                    placeholder="Dirección del cliente"
+                    name="<?php echo $editando ? 'cliente_direccion_up' : 'cliente_direccion_reg'; ?>"
+                    value="<?php echo $editando ? $campos['direccion_cliente'] : ''; ?>">
+            </div>
+            <br><br>
+            <div class="col-md-4">
 
-                    <div class="col-12 col-md-4">
-                        <div class="form-group">
-                            <label for="ciudad_reg" class="bmd-label-floating">Ciudades</label>
-                            <select class="form-control" name="ciudad_reg" id="ciudad_reg">
-                                <?php echo $ciudades; ?>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <div class="form-group">
-                            <label for="cliente_estadoC" class="bmd-label-floating">Estado Civil</label>
-                            <select class="form-control" name="cliente_estadoC" id="cliente_estadoC">
-                                <option value="" selected>Seleccione una opción</option>
-                                <option value="Soltero/a">Soltero/a</option>
-                                <option value="Casado/a">Casado/a</option>
-                                <option value="Viudo/a">Viudo/a</option>
-                                <option value="Divorciado/a">Divorciado/a</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
+                <?php
+                $ciudades = $ins_cliente->listar_ciudades_controlador_up();
+                ?>
+
+                <select class="form-control select2"
+                    name="<?php echo $editando ? 'ciudad_up' : 'ciudad_reg'; ?>">
+
+                    <option value="">Seleccione ciudad</option>
+
+                    <?php foreach ($ciudades as $ciu) { ?>
+
+                        <option value="<?php echo $ciu['id_ciudad']; ?>"
+                            <?php
+                            if ($editando && $campos['id_ciudad'] == $ciu['id_ciudad']) {
+                                echo "selected";
+                            }
+                            ?>>
+                            <?php echo $ciu['ciu_descri']; ?>
+                        </option>
+
+                    <?php } ?>
+
+                </select>
 
             </div>
-        </fieldset>
-        <br><br><br>
-        <p class="text-center" style="margin-top: 40px;">
-            <button type="reset" class="btn btn-raised btn-secondary btn-sm"><i class="fas fa-paint-roller"></i> &nbsp; LIMPIAR</button>
-            &nbsp; &nbsp;
-            <button type="submit" class="btn btn-raised btn-info btn-sm"><i class="far fa-save"></i> &nbsp; GUARDAR</button>
+            <br><br>
+            <div class="col-md-4">
+                <?php $estadoCivil = $editando ? trim($campos['estado_civil']) : ""; ?>
+
+                <select class="form-control select2"
+                    name="<?php echo $editando ? 'cliente_estadoC_up' : 'cliente_estadoC_reg'; ?>">
+
+                    <option value="">Estado civil</option>
+
+                    <option value="Soltero" <?php echo ($estadoCivil == "Soltero") ? 'selected' : ''; ?>>
+                        Soltero/a
+                    </option>
+
+                    <option value="Casado" <?php echo ($estadoCivil == "Casado") ? 'selected' : ''; ?>>
+                        Casado/a
+                    </option>
+
+                    <option value="Viudo" <?php echo ($estadoCivil == "Viudo") ? 'selected' : ''; ?>>
+                        Viudo/a
+                    </option>
+
+                    <option value="Divorciado" <?php echo ($estadoCivil == "Divorciado") ? 'selected' : ''; ?>>
+                        Divorciado/a
+                    </option>
+
+                </select>
+            </div>
+        </div>
+        <br><br>
+        <p class="text-center mt-4">
+            <button type="submit"
+                class="btn btn-raised <?php echo $editando ? 'btn-success' : 'btn-info'; ?>">
+                <?php echo $editando ? 'ACTUALIZAR' : 'GUARDAR'; ?>
+            </button>
+
+            <?php if ($editando) { ?>
+                <a href="<?php echo SERVERURL; ?>cliente-nuevo/"
+                    class="btn btn-raised btn-secondary">
+                    CANCELAR
+                </a>
+            <?php } ?>
         </p>
+
     </form>
+</div>
+
+<!-- ================= BUSCADOR ================= -->
+<div class="container-fluid mb-3">
+
+    <form class="FormularioAjax"
+        action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
+        method="POST"
+        data-form="search"
+        autocomplete="off">
+
+        <input type="hidden" name="modulo" value="cliente">
+
+        <div class="row">
+            <div class="col-12 col-md-6">
+                <input type="text"
+                    class="form-control"
+                    name="busqueda_inicial"
+                    placeholder="Buscar cliente..."
+                    value="<?php echo $_SESSION['busqueda_cliente'] ?? ''; ?>">
+            </div>
+
+            <div class="col-12 col-md-6">
+                <button type="submit" class="btn btn-info">
+                    <i class="fas fa-search"></i> Buscar
+                </button>
+
+                <?php if (isset($_SESSION['busqueda_cliente'])) { ?>
+                    <form class="FormularioAjax d-inline"
+                        action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
+                        method="POST">
+
+                        <input type="hidden" name="modulo" value="cliente">
+                        <input type="hidden" name="eliminar_busqueda" value="1">
+
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-times"></i> Limpiar
+                        </button>
+                    </form>
+                <?php } ?>
+            </div>
+        </div>
+
+    </form>
+
+</div>
+
+<!-- ================= LISTA ================= -->
+<div class="container-fluid mt-4">
+    <?php
+
+    $pag_actual = 1;
+
+    if (isset($pagina[1]) && is_numeric($pagina[1])) {
+        $pag_actual = (int)$pagina[1];
+    }
+
+    if (isset($pagina[2]) && is_numeric($pagina[2])) {
+        $pag_actual = (int)$pagina[2];
+    }
+
+    echo $ins_cliente->listar_cliente_controlador(
+        $pag_actual,
+        10,
+        $pagina[0],
+        $busqueda
+    );
+
+    ?>
 </div>

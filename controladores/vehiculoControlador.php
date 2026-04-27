@@ -52,56 +52,36 @@ class vehiculoControlador extends vehiculoModelo
         $url = mainModel::limpiar_string($url);
         $url = SERVERURL . $url . "/";
 
-        $tabla = "";
+        $pagina = ($pagina > 0) ? (int)$pagina : 1;
+        $inicio = ($pagina - 1) * $registros;
 
-        $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
-        $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
+        /* ===== FILTROS ===== */
+        $filtrosSQL = "";
 
-        if (isset($busqueda) && $busqueda != "") {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS v.*, 
-                        c.nombre_cliente, c.apellido_cliente,
-                        m.mod_descri,
-                        co.col_descripcion
-                    FROM vehiculos v
-                    INNER JOIN clientes c ON c.id_cliente = v.id_cliente
-                    INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
-                    LEFT JOIN colores co ON co.id_color = v.id_color
-                    WHERE (v.placa LIKE '%$busqueda%' 
-                        OR c.nombre_cliente LIKE '%$busqueda%'
-                        OR c.apellido_cliente LIKE '%$busqueda%')
-                    ORDER BY v.id_vehiculo ASC 
-                    LIMIT $inicio,$registros";
-        } else {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS v.*, 
-                        c.nombre_cliente, c.apellido_cliente,
-                        m.mod_descri,
-                        co.col_descripcion
-                    FROM vehiculos v
-                    INNER JOIN clientes c ON c.id_cliente = v.id_cliente
-                    INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
-                    LEFT JOIN colores co ON co.id_color = v.id_color
-                    ORDER BY v.id_vehiculo ASC 
-                    LIMIT $inicio,$registros";
+        if ($busqueda != "") {
+            $filtrosSQL .= " AND (
+            v.placa LIKE '%$busqueda%' 
+            OR c.nombre_cliente LIKE '%$busqueda%'
+            OR c.apellido_cliente LIKE '%$busqueda%'
+        )";
         }
 
-        $conexion = mainModel::conectar();
-        $datos = $conexion->query($consulta);
-        $datos = $datos->fetchAll();
+        /* ===== DATOS ===== */
+        $res = vehiculoModelo::listar_vehiculos_modelo($inicio, $registros, $filtrosSQL);
 
-        $total = $conexion->query("SELECT FOUND_ROWS()");
-        $total = (int)$total->fetchColumn();
-
+        $datos = $res['datos'];
+        $total = $res['total'];
         $Npaginas = ceil($total / $registros);
 
-        $tabla .= '<div class="table-responsive">
-    <table class="table table-dark table-sm">
-    <thead>
-        <tr class="text-center roboto-medium">
-            <th>#</th>
-            <th>PLACA</th>
-            <th>CLIENTE</th>
-            <th>MODELO</th>
-            <th>COLOR</th>
+        $tabla = '<div class="table-responsive">
+        <table class="table table-dark table-sm">
+        <thead>
+            <tr class="text-center roboto-medium">
+                <th>#</th>
+                <th>PLACA</th>
+                <th>CLIENTE</th>
+                <th>MODELO</th>
+                <th>COLOR</th>
             <th>ESTADO</th>';
 
         if (mainModel::tienePermiso('vehiculo.editar')) {
@@ -134,8 +114,8 @@ class vehiculoControlador extends vehiculoModelo
 
                 if (mainModel::tienePermiso('vehiculo.editar')) {
                     $tabla .= '<td>
-                    <a href="' . SERVERURL . 'vehiculo-actualizar/' . mainModel::encryption($rows['id_vehiculo']) . '/" 
-                       class="btn btn-success">
+                    <a href="' . SERVERURL . 'vehiculo-actualizar/' . mainModel::encryption($rows['id_vehiculo']) . '/"
+                    class="btn btn-success">
                         <i class="fas fa-sync-alt"></i>
                     </a>
                 </td>';
@@ -143,10 +123,15 @@ class vehiculoControlador extends vehiculoModelo
 
                 if (mainModel::tienePermiso('vehiculo.eliminar')) {
                     $tabla .= '<td>
-                    <form class="FormularioAjax" action="' . SERVERURL . 'ajax/vehiculoAjax.php"
-                          method="POST" data-form="delete">
-                        <input type="hidden" name="vehiculo_id_del"
-                               value="' . mainModel::encryption($rows['id_vehiculo']) . '">
+                    <form class="FormularioAjax"
+                        action="' . SERVERURL . 'ajax/vehiculoAjax.php"
+                        method="POST"
+                        data-form="delete">
+
+                        <input type="hidden"
+                        name="vehiculo_id_del"
+                        value="' . mainModel::encryption($rows['id_vehiculo']) . '">
+
                         <button type="submit" class="btn btn-warning">
                             <i class="far fa-trash-alt"></i>
                         </button>
@@ -161,7 +146,7 @@ class vehiculoControlador extends vehiculoModelo
             $reg_final = $contador - 1;
         } else {
             $tabla .= '<tr class="text-center">
-        <td colspan="8">No hay registros</td>
+            <td colspan="7">No hay registros</td>
         </tr>';
         }
 
@@ -169,7 +154,7 @@ class vehiculoControlador extends vehiculoModelo
 
         if ($total >= 1 && $pagina <= $Npaginas) {
             $tabla .= '<p class="text-right">
-        Mostrando ' . $reg_inicio . ' al ' . $reg_final . ' de ' . $total . '
+            Mostrando ' . $reg_inicio . ' al ' . $reg_final . ' de ' . $total . '
         </p>';
 
             $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);
@@ -215,7 +200,7 @@ class vehiculoControlador extends vehiculoModelo
         vehiculoModelo::agregar_vehiculo_modelo($datos);
 
         echo json_encode([
-            "Alerta" => "limpiar",
+            "Alerta" => "recargar",
             "Titulo" => "Vehículo",
             "Texto" => "Vehículo registrado correctamente",
             "Tipo" => "success"
@@ -244,7 +229,8 @@ class vehiculoControlador extends vehiculoModelo
         vehiculoModelo::actualizar_vehiculo_modelo($datos);
 
         echo json_encode([
-            "Alerta" => "recargar",
+            "Alerta" => "redireccionar_confirmado",
+            "URL" => SERVERURL . "vehiculo-nuevo/",
             "Titulo" => "Vehículo",
             "Texto" => "Vehículo actualizado correctamente",
             "Tipo" => "success"
@@ -324,5 +310,23 @@ class vehiculoControlador extends vehiculoModelo
         }
 
         echo json_encode($alerta);
+    }
+
+    public function buscar_cliente_controlador()
+    {
+        $term = mainModel::limpiar_string($_POST['term']);
+
+        $datos = vehiculoModelo::buscar_cliente_modelo($term);
+
+        $resultado = [];
+
+        foreach ($datos as $row) {
+            $resultado[] = [
+                "id" => $row['id_cliente'],
+                "text" => $row['cliente']
+            ];
+        }
+
+        return json_encode($resultado);
     }
 }
