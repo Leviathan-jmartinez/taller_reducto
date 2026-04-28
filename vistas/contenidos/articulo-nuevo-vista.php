@@ -45,7 +45,7 @@ $articlesMAR = $ins_articulo->listar_marca_controlador();
         <?php if ($editando) { ?>
             <input type="hidden" name="articulo_id_up" value="<?php echo $id; ?>">
         <?php } ?>
-
+        <legend><i class="fas fa-info-circle"></i> &nbsp; Información básica</legend>
         <div class="row">
 
             <!-- CODIGO -->
@@ -110,7 +110,7 @@ $articlesMAR = $ins_articulo->listar_marca_controlador();
             <!-- PROVEEDOR -->
             <div class="col-md-4">
                 <div class="form-group">
-                    <select class="form-control select2" 
+                    <select class="form-control select2"
                         name="<?php echo $editando ? 'proveedor_up' : 'proveedor_reg'; ?>">
                         <option value="" disabled selected>Seleccione proveedor</option>
                         <?php foreach ($articlesPro as $prov) { ?>
@@ -176,7 +176,7 @@ $articlesMAR = $ins_articulo->listar_marca_controlador();
         <p class="text-center mt-4">
             <button type="submit"
                 class="btn btn-raised <?php echo $editando ? 'btn-success' : 'btn-info'; ?>">
-                <?php echo $editando ? 'ACTUALIZAR' : 'GUARDAR'; ?>
+                <?php echo $editando ? 'Guardar' : 'GUARDAR'; ?>
             </button>
 
             <?php if ($editando) { ?>
@@ -193,7 +193,7 @@ $articlesMAR = $ins_articulo->listar_marca_controlador();
 <!-- BUSCADOR -->
 <div class="container-fluid mb-3">
 
-    <form class="FormularioAjax"
+    <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
         method="POST"
         data-form="search"

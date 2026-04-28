@@ -41,13 +41,13 @@ $empresas = $ins->listar_empresas_controlador();
         <?php if ($editando) { ?>
             <input type="hidden" name="sucursal_id_up" value="<?php echo $id; ?>">
         <?php } ?>
-
+        <legend><i class="fas fa-info-circle"></i> &nbsp; Información básica</legend>   
         <div class="row">
 
             <div class="col-md-4">
                 <select class="form-control select2"
                     name="<?php echo $editando ? 'empresa_up' : 'empresa_reg'; ?>">
-                    <option value=""></option>
+                    <option value="">Seleccione empresa</option>
                     <?php foreach ($empresas as $e) { ?>
                         <option value="<?php echo $e['id_empresa']; ?>"
                             <?php if ($editando && $campos['id_empresa'] == $e['id_empresa']) echo "selected"; ?>>
@@ -101,7 +101,7 @@ $empresas = $ins->listar_empresas_controlador();
         <br>
 
         <button class="btn btn-info">
-            <?php echo $editando ? "Actualizar" : "Guardar"; ?>
+            <?php echo $editando ? "Guardar" : "Guardar"; ?>
         </button>
 
         <?php if ($editando) { ?>
@@ -116,7 +116,7 @@ $empresas = $ins->listar_empresas_controlador();
 <!-- BUSCADOR -->
 <div class="container-fluid mb-3">
 
-    <form class="FormularioAjax"
+    <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
         method="POST"
         data-form="search"

@@ -125,7 +125,7 @@ if ($id != null) {
                 <i class="far <?php echo $editando ? 'fa-sync-alt' : 'fa-save'; ?>"></i>
                 &nbsp;
 
-                <?php echo $editando ? "ACTUALIZAR" : "GUARDAR"; ?>
+                <?php echo $editando ? "GUARDAR" : "GUARDAR"; ?>
             </button>
 
         </p>
@@ -134,7 +134,7 @@ if ($id != null) {
 </div>
 <div class="container-fluid mb-3">
 
-    <form class="FormularioAjax"
+    <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
         method="POST"
         data-form="search"

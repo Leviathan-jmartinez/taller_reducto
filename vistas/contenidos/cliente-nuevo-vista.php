@@ -39,9 +39,9 @@ $busqueda = $_SESSION['busqueda_cliente'] ?? "";
         <?php if ($editando) { ?>
             <input type="hidden" name="cliente_id_up" value="<?php echo $id; ?>">
         <?php } ?>
-
+        <legend><i class="fas fa-user"></i> &nbsp; Información básica</legend>
         <div class="row">
-            <legend><i class="fas fa-user"></i> &nbsp; Información básica</legend>
+
             <div class="col-md-4">
                 <select class="form-control select2"
                     name="<?php echo $editando ? 'tipo_documento_up' : 'tipo_documento_reg'; ?>">
@@ -181,7 +181,7 @@ $busqueda = $_SESSION['busqueda_cliente'] ?? "";
 <!-- ================= BUSCADOR ================= -->
 <div class="container-fluid mb-3">
 
-    <form class="FormularioAjax"
+    <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
         method="POST"
         data-form="search"

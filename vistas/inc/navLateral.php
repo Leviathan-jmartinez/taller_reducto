@@ -170,7 +170,7 @@
                                     <ul>
                                         <?php if (mainModel::tienePermiso('cliente.ver')) { ?>
                                             <li>
-                                                <a href="<?= SERVERURL; ?>cliente-lista/">
+                                                <a href="<?= SERVERURL; ?>cliente-nuevo/">
                                                     <i class="fas fa-users fa-fw"></i> &nbsp; Clientes
                                                 </a>
                                             </li>
@@ -178,7 +178,7 @@
 
                                         <?php if (mainModel::tienePermiso('vehiculo.ver')) { ?>
                                             <li>
-                                                <a href="<?= SERVERURL; ?>vehiculo-lista/">
+                                                <a href="<?= SERVERURL; ?>vehiculo-nuevo/">
                                                     <i class="fas fa-car fa-fw"></i> &nbsp; Vehículos
                                                 </a>
                                             </li>
@@ -186,7 +186,7 @@
 
                                         <?php if (mainModel::tienePermiso('empleado.ver')) { ?>
                                             <li>
-                                                <a href="<?= SERVERURL; ?>empleado-lista/">
+                                                <a href="<?= SERVERURL; ?>empleado-nuevo/">
                                                     <i class="fas fa-user fa-fw"></i> &nbsp; Empleados
                                                 </a>
                                             </li>

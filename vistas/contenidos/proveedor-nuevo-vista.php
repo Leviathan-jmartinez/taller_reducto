@@ -121,7 +121,7 @@ $ciudades = $ins_proveedor->listar_ciudades_controlador();
         <br>
 
         <button class="btn btn-info">
-            <?php echo $editando ? "Actualizar" : "Guardar"; ?>
+            <?php echo $editando ? "Guardar" : "Guardar"; ?>
         </button>
 
         <?php if ($editando) { ?>
@@ -136,7 +136,7 @@ $ciudades = $ins_proveedor->listar_ciudades_controlador();
 <!-- BUSCADOR -->
 <div class="container-fluid mb-3">
 
-    <form class="FormularioAjax"
+    <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
         method="POST"
         data-form="search"

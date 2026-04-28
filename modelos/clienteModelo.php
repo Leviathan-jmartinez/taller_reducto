@@ -123,7 +123,7 @@ class clienteModelo extends mainModel
             estado_civil = :estado_civil,
             estado_cliente = :estado_cliente
         WHERE id_cliente = :id_cliente
-    ");
+        ");
 
         $sql->bindValue(":doc_number", $datos['doc_number']);
         $sql->bindValue(":nombre_cliente", $datos['nombre_cliente']);

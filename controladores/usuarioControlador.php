@@ -829,4 +829,9 @@ class usuarioControlador extends usuarioModelo
             ]);
         }
     }
+
+    public function listar_sucursales_select_controlador()
+    {
+        return usuarioModelo::obtener_sucursales_modelo();
+    }
 }

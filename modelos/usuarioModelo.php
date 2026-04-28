@@ -181,4 +181,17 @@ class usuarioModelo extends mainModel
 
         return $sql->rowCount();
     }
+
+    protected static function obtener_sucursales_modelo()
+    {
+        $sql = mainModel::conectar()->prepare("
+        SELECT id_sucursal, suc_descri
+        FROM sucursales
+        WHERE estado = 1
+        ORDER BY suc_descri
+        ");
+
+        $sql->execute();
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

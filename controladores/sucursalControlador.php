@@ -71,10 +71,6 @@ class sucursalControlador extends sucursalModelo
         echo json_encode($alerta);
     }
 
-    public function listar_sucursales_select_controlador()
-    {
-        return sucursalModelo::obtener_sucursales_modelo();
-    }
 
     public function listar_sucursales_controlador($pagina, $registros, $url)
     {
@@ -311,10 +307,5 @@ class sucursalControlador extends sucursalModelo
         }
 
         echo json_encode($alerta);
-    }
-
-    public function listar_empleados_controlador()
-    {
-        return sucursalModelo::listar_empleados_modelo();
     }
 }
