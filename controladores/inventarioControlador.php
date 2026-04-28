@@ -459,10 +459,10 @@ class inventarioControlador extends inventarioModelo
             $signo = $cantidad > 0 ? 1 : -1;
 
             mainModel::ejecutar_consulta_simple("
-            INSERT INTO sucmovimientostock (
+            INSERT INTO movimientostock (
                 id_sucursal,
                 TipoMovStockId,
-                MovStockProductoId,
+                MovStockArticuloId,
                 MovStockCantidad,
                 MovStockPrecioVenta,
                 MovStockCosto,
@@ -726,10 +726,10 @@ class inventarioControlador extends inventarioModelo
                     $signo = ($d['diferencia'] > 0) ? -1 : 1;
 
                     $db->exec("
-                    INSERT INTO sucmovimientostock (
+                    INSERT INTO movimientostock (
                         id_sucursal,
                         TipoMovStockId,
-                        MovStockProductoId,
+                        MovStockArticuloId,
                         MovStockCantidad,
                         MovStockPrecioVenta,
                         MovStockCosto,

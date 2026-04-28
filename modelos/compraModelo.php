@@ -136,11 +136,11 @@
         {
 
             $sql = mainModel::conectar()->prepare("
-            INSERT INTO sucmovimientostock
+            INSERT INTO movimientostock
             (
                 id_sucursal,
                 TipoMovStockId,
-                MovStockProductoId,
+                MovStockArticuloId,
                 MovStockCantidad,
                 MovStockPrecioVenta,
                 MovStockCosto,
@@ -346,8 +346,8 @@
         protected static function movimiento_stock_anulacion_modelo($datos)
         {
             $sql = mainModel::conectar()->prepare("
-            INSERT INTO sucmovimientostock
-            (id_sucursal, TipoMovStockId, MovStockProductoId, MovStockCantidad,
+            INSERT INTO movimientostock
+            (id_sucursal, TipoMovStockId, MovStockArticuloId, MovStockCantidad,
             MovStockPrecioVenta, MovStockCosto, MovStockFechaHora,
             MovStockNroTicket, MovStockPOS, MovStockUsuario,
             MovStockSigno, MovStockReferencia)

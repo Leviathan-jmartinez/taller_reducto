@@ -304,8 +304,8 @@ class registroServicioModelo extends mainModel
 
             /* ===== 1. INSERTAR MOVIMIENTO STOCK ===== */
             $mov = $pdo->prepare("
-            INSERT INTO sucmovimientostock
-            (id_sucursal, TipoMovStockId, MovStockProductoId, MovStockCantidad,
+            INSERT INTO movimientostock
+            (id_sucursal, TipoMovStockId, MovStockArticuloId, MovStockCantidad,
              MovStockPrecioVenta, MovStockCosto,
              MovStockFechaHora, MovStockUsuario,
              MovStockSigno, MovStockReferencia)
@@ -390,8 +390,8 @@ class registroServicioModelo extends mainModel
 
             /* ===== MOVIMIENTO INVERSO ===== */
             $mov = $pdo->prepare("
-            INSERT INTO sucmovimientostock
-            (id_sucursal, TipoMovStockId, MovStockProductoId, MovStockCantidad,
+            INSERT INTO movimientostock
+            (id_sucursal, TipoMovStockId, MovStockArticuloId, MovStockCantidad,
              MovStockPrecioVenta, MovStockCosto,
              MovStockFechaHora, MovStockUsuario,
              MovStockSigno, MovStockReferencia)

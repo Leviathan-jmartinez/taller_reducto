@@ -2124,17 +2124,17 @@ LOCK TABLES `stock` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `sucmovimientostock`
+-- Table structure for table `movimientostock`
 --
 
-DROP TABLE IF EXISTS `sucmovimientostock`;
+DROP TABLE IF EXISTS `movimientostock`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `sucmovimientostock` (
+CREATE TABLE `movimientostock` (
   `LocalId` varchar(16) NOT NULL,
   `MovStockId` bigint(20) NOT NULL,
   `TipoMovStockId` varchar(30) DEFAULT NULL,
-  `MovStockProductoId` varchar(16) DEFAULT NULL,
+  `MovStockArticuloId` varchar(16) DEFAULT NULL,
   `MovStockCantidad` decimal(12,4) NOT NULL,
   `MovStockPrecioVenta` decimal(14,2) NOT NULL,
   `MovStockCosto` decimal(14,2) NOT NULL,
@@ -2149,12 +2149,12 @@ CREATE TABLE `sucmovimientostock` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `sucmovimientostock`
+-- Dumping data for table `movimientostock`
 --
 
-LOCK TABLES `sucmovimientostock` WRITE;
-/*!40000 ALTER TABLE `sucmovimientostock` DISABLE KEYS */;
-/*!40000 ALTER TABLE `sucmovimientostock` ENABLE KEYS */;
+LOCK TABLES `movimientostock` WRITE;
+/*!40000 ALTER TABLE `movimientostock` DISABLE KEYS */;
+/*!40000 ALTER TABLE `movimientostock` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --

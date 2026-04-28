@@ -11,11 +11,10 @@ class vehiculoModelo extends mainModel
         $sql = "SELECT SQL_CALC_FOUND_ROWS v.*, 
                 c.nombre_cliente, c.apellido_cliente,
                 m.mod_descri,
-                co.col_descripcion
+                v.color
             FROM vehiculos v
             INNER JOIN clientes c ON c.id_cliente = v.id_cliente
             INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
-            LEFT JOIN colores co ON co.id_color = v.id_color
             WHERE 1=1 $filtrosSQL
             ORDER BY v.id_vehiculo ASC
             LIMIT :inicio, :registros";
@@ -74,15 +73,6 @@ class vehiculoModelo extends mainModel
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    protected static function obtener_colores_modelo()
-    {
-        $sql = mainModel::conectar()->prepare(
-            "SELECT id_color, col_descripcion FROM colores ORDER BY col_descripcion ASC"
-        );
-        $sql->execute();
-        return $sql->fetchAll(PDO::FETCH_ASSOC);
-    }
-
     protected static function obtener_modelos_modelo()
     {
         $sql = mainModel::conectar()->prepare(
@@ -97,14 +87,14 @@ class vehiculoModelo extends mainModel
     {
         $sql = mainModel::conectar()->prepare(
             "INSERT INTO vehiculos
-            (id_cliente,id_modeloauto,id_color,nro_serie,placa,anho,estado)
+            (id_cliente,id_modeloauto,color,nro_serie,placa,anho,estado)
             VALUES
             (:cliente,:modelo,:color,:serie,:placa,:anho,:estado)"
         );
 
         $sql->bindParam(":cliente", $datos['id_cliente']);
         $sql->bindParam(":modelo", $datos['id_modeloauto']);
-        $sql->bindParam(":color", $datos['id_color']);
+        $sql->bindParam(":color", $datos['color']);
         $sql->bindParam(":serie", $datos['nro_serie']);
         $sql->bindParam(":placa", $datos['placa']);
         $sql->bindParam(":anho", $datos['anho']);
@@ -182,10 +172,12 @@ class vehiculoModelo extends mainModel
     {
         $sql = mainModel::conectar()->prepare("
         SELECT id_cliente,
-               CONCAT(nombre_cliente,' ',apellido_cliente) AS cliente
+               CONCAT(doc_number, ' - ',nombre_cliente,' ',apellido_cliente) AS cliente
         FROM clientes
         WHERE nombre_cliente LIKE :term
-        OR apellido_cliente LIKE :term
+        OR apellido_cliente LIKE :term 
+        OR doc_number LIKE :term
+        ORDER BY nombre_cliente ASC
         LIMIT 20
         ");
 

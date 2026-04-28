@@ -27,7 +27,6 @@ $busqueda = $_SESSION['busqueda_vehiculo'] ?? "";
 /* LISTAS */
 $clientes = $ins_vehiculo->listar_clientes_controlador();
 $modelos  = $ins_vehiculo->listar_modelos_controlador();
-$colores  = $ins_vehiculo->listar_colores_controlador();
 ?>
 
 <div class="full-box page-header">
@@ -84,16 +83,11 @@ $colores  = $ins_vehiculo->listar_colores_controlador();
             <!-- COLOR -->
             <div class="col-md-4">
                 <div class="form-group">
-                    <select class="form-control select2"
-                        name="<?php echo $editando ? 'color_up' : 'color_reg'; ?>">
-                        <option value="" disabled selected>Seleccione color</option>
-                        <?php foreach ($colores as $c) { ?>
-                            <option value="<?php echo $c['id_color']; ?>"
-                                <?php if ($editando && $campos['id_color'] == $c['id_color']) echo "selected"; ?>>
-                                <?php echo $c['col_descripcion']; ?>
-                            </option>
-                        <?php } ?>
-                    </select>
+                    <input type="text"
+                        class="form-control"
+                        placeholder="Color"
+                        name="<?php echo $editando ? 'color_up' : 'color_reg'; ?>"
+                        value="<?php echo $editando ? $campos['color'] : ''; ?>">
                 </div>
             </div>
 
@@ -226,5 +220,3 @@ $colores  = $ins_vehiculo->listar_colores_controlador();
     );
     ?>
 </div>
-
-

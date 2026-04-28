@@ -145,11 +145,11 @@ class transferenciaModelo extends mainModel
                 $costo = $costos[$idProducto];
 
                 $pdo->prepare("
-                INSERT INTO sucmovimientostock
+                INSERT INTO movimientostock
                     (
                         id_sucursal,
                         TipoMovStockId,
-                        MovStockProductoId,
+                        MovStockArticuloId,
                         MovStockCantidad,
                         MovStockPrecioVenta,
                         MovStockCosto,
@@ -431,11 +431,11 @@ class transferenciaModelo extends mainModel
                 if ($recibido > 0) {
                     // REGISTRAR MOVIMIENTO DE ENTRADA
                     $pdo->prepare("
-                        INSERT INTO sucmovimientostock
+                        INSERT INTO movimientostock
                         (
                             id_sucursal,
                             TipoMovStockId,
-                            MovStockProductoId,
+                            MovStockArticuloId,
                             MovStockCantidad,
                             MovStockPrecioVenta,
                             MovStockCosto,

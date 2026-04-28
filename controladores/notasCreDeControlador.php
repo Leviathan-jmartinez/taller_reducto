@@ -373,8 +373,8 @@ class notasCreDeControlador extends notasCreDeModelo
                     ]);
 
                     $pdo->prepare("
-                    INSERT INTO sucmovimientostock
-                    (id_sucursal, TipoMovStockId, MovStockProductoId,
+                    INSERT INTO movimientostock
+                    (id_sucursal, TipoMovStockId, MovStockArticuloId,
                      MovStockCantidad, MovStockPrecioVenta, MovStockCosto,
                      MovStockFechaHora, MovStockUsuario,
                      MovStockSigno, MovStockReferencia)
@@ -645,8 +645,8 @@ class notasCreDeControlador extends notasCreDeModelo
                     ]);
 
                     $pdo->prepare("
-                    INSERT INTO sucmovimientostock
-                    (id_sucursal, TipoMovStockId, MovStockProductoId,
+                    INSERT INTO movimientostock
+                    (id_sucursal, TipoMovStockId, MovStockArticuloId,
                      MovStockCantidad, MovStockPrecioVenta, MovStockCosto,
                      MovStockFechaHora, MovStockUsuario,
                      MovStockSigno, MovStockReferencia)

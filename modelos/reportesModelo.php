@@ -1002,9 +1002,9 @@ class reportesModelo extends mainModel
             m.MovStockNroTicket,
             m.MovStockReferencia,
             CONCAT(u.usu_nombre,' ',u.usu_apellido) AS usuario
-        FROM sucmovimientostock m
+        FROM movimientostock m
         INNER JOIN sucursales s ON s.id_sucursal = m.id_sucursal
-        LEFT JOIN articulos a ON a.id_articulo = m.MovStockProductoId
+        LEFT JOIN articulos a ON a.id_articulo = m.MovStockArticuloId
         INNER JOIN usuarios u ON u.id_usuario = m.MovStockUsuario
         $where
         ORDER BY m.MovStockFechaHora DESC
@@ -1055,7 +1055,7 @@ class reportesModelo extends mainModel
             COUNT(*) AS total,
             SUM(CASE WHEN m.MovStockSigno = 1 THEN 1 ELSE 0 END) AS entradas,
             SUM(CASE WHEN m.MovStockSigno = -1 THEN 1 ELSE 0 END) AS salidas
-        FROM sucmovimientostock m
+        FROM movimientostock m
         $where
         ");
 

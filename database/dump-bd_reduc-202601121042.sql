@@ -1491,16 +1491,16 @@ CREATE TABLE `stock` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `sucmovimientostock`
+-- Table structure for table `movimientostock`
 --
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `sucmovimientostock` (
+CREATE TABLE `movimientostock` (
   `MovStockId` bigint(20) NOT NULL AUTO_INCREMENT,
   `id_sucursal` int(10) unsigned NOT NULL,
   `TipoMovStockId` varchar(30) DEFAULT NULL,
-  `MovStockProductoId` varchar(16) DEFAULT NULL,
+  `MovStockArticuloId` varchar(16) DEFAULT NULL,
   `MovStockCantidad` decimal(12,4) NOT NULL,
   `MovStockPrecioVenta` decimal(14,2) NOT NULL,
   `MovStockCosto` decimal(14,2) NOT NULL,

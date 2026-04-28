@@ -21,11 +21,6 @@ class vehiculoControlador extends vehiculoModelo
         return vehiculoModelo::obtener_modelos_modelo();
     }
 
-    public function listar_colores_controlador()
-    {
-        return vehiculoModelo::obtener_colores_modelo();
-    }
-
     /* ==================================================
        DATOS VEHICULO
     ================================================== */
@@ -107,7 +102,7 @@ class vehiculoControlador extends vehiculoModelo
                 <td>' . $rows['placa'] . '</td>
                 <td>' . $cliente . '</td>
                 <td>' . $rows['mod_descri'] . '</td>
-                <td>' . ($rows['col_descripcion'] ?? '-') . '</td>
+                <td>' . ($rows['color'] ?? '-') . '</td>
                 <td>' . ($rows['estado'] == 1
                     ? '<span class="badge badge-success">Activo</span>'
                     : '<span class="badge badge-danger">Inactivo</span>') . '</td>';
@@ -190,7 +185,7 @@ class vehiculoControlador extends vehiculoModelo
         $datos = [
             "id_cliente" => $cliente,
             "id_modeloauto" => $modelo,
-            "id_color" => $color,
+            "color" => $color,
             "placa" => $placa,
             "anho" => $anho,
             "nro_serie" => $serie,
