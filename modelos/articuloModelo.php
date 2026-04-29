@@ -54,20 +54,37 @@ class articuloModelo extends mainModel
 
     protected static function agregar_articulo_modelo($datos)
     {
-        $sql = mainModel::conectar()->prepare("INSERT INTO articulos 
-        (id_categoria, idproveedores, idunidad_medida, idiva, id_marcas, desc_articulo, precio_venta, precio_compra, codigo, estado, date_updated, date_created, tipo) 
-        VALUES(:id_categoria, :idproveedores, :idunidad_medida, :idiva, :id_marcas, :descrip, :pricesale, :pricebuy, :code, 1, now(), now(), :tipo)");
-        $sql->bindParam(":id_categoria", $datos['id_categoria']);
-        $sql->bindParam(":idproveedores", $datos['idproveedores']);
-        $sql->bindParam(":idunidad_medida", $datos['idunidad_medida']);
-        $sql->bindParam(":idiva", $datos['idiva']);
-        $sql->bindParam(":id_marcas", $datos['id_marcas']);
-        $sql->bindParam(":descrip", $datos['descrip']);
-        $sql->bindParam(":pricesale", $datos['pricesale']);
-        $sql->bindParam(":pricebuy", $datos['pricebuy']);
-        $sql->bindParam(":code", $datos['code']);
-        $sql->bindParam(":tipo", $datos['tipo']);
-        $sql->execute();
+        $pdo = mainModel::conectar();
+
+        // 1Insertar artículo (SIN proveedor ni precio compra)
+        $sql = $pdo->prepare("INSERT INTO articulos 
+        (id_categoria, idunidad_medida, idiva, id_marcas, desc_articulo, precio_venta, codigo, estado, date_updated, date_created, tipo) 
+        VALUES(:id_categoria, :idunidad_medida, :idiva, :id_marcas, :descrip, :pricesale, :code, 1, now(), now(), :tipo)");
+
+        $sql->execute([
+            ":id_categoria" => $datos['id_categoria'],
+            ":idunidad_medida" => $datos['idunidad_medida'],
+            ":idiva" => $datos['idiva'],
+            ":id_marcas" => $datos['id_marcas'],
+            ":descrip" => $datos['descrip'],
+            ":pricesale" => $datos['pricesale'],
+            ":code" => $datos['code'],
+            ":tipo" => $datos['tipo']
+        ]);
+
+        $id_articulo = $pdo->lastInsertId();
+
+        // 2Insertar proveedor + precio compra
+        $sql2 = $pdo->prepare("INSERT INTO articulo_proveedor
+        (id_articulo, idproveedores, precio_compra)
+        VALUES(:id_articulo, :idproveedor, :precio)");
+
+        $sql2->execute([
+            ":id_articulo" => $id_articulo,
+            ":idproveedor" => $datos['idproveedores'],
+            ":precio" => $datos['pricebuy']
+        ]);
+
         return $sql;
     }
     /** fin modelo*/
@@ -80,8 +97,8 @@ class articuloModelo extends mainModel
         // 1) Verificar si el artículo ya fue usado
         $check = $pdo->prepare("
         SELECT 1 
-        FROM pedido_detalle 
-        WHERE id_articulo = :id
+        FROM movimientostock 
+        WHERE MovStockArticuloId = :id
         LIMIT 1
         ");
         $check->bindParam(":id", $id, PDO::PARAM_INT);
@@ -113,23 +130,39 @@ class articuloModelo extends mainModel
     /**modelo actualizar articulo */
     protected static function actualizar_articulo_modelo($datos)
     {
-        $sql = mainModel::conectar()->prepare("UPDATE articulos
-        SET id_categoria=:id_categoria, idproveedores=:idproveedores, idunidad_medida=:idunidad_medida, idiva=:idiva, id_marcas=:id_marcas, desc_articulo=:desc_articulo, 
-        precio_venta=:precio_venta, precio_compra=:precio_compra, codigo=:codigo, estado=:estado, date_updated=now(), tipo=:tipo
+        $pdo = mainModel::conectar();
+
+        // 1Update artículo
+        $sql = $pdo->prepare("UPDATE articulos
+        SET id_categoria=:id_categoria, idunidad_medida=:idunidad_medida, idiva=:idiva, id_marcas=:id_marcas,
+            desc_articulo=:desc_articulo, precio_venta=:precio_venta, codigo=:codigo,
+            estado=:estado, date_updated=now(), tipo=:tipo
         WHERE id_articulo=:id_articulo");
-        $sql->bindParam(":id_categoria", $datos['id_categoria']);
-        $sql->bindParam(":idproveedores", $datos['idproveedores']);
-        $sql->bindParam(":idunidad_medida", $datos['idunidad_medida']);
-        $sql->bindParam(":idiva", $datos['idiva']);
-        $sql->bindParam(":id_marcas", $datos['id_marcas']);
-        $sql->bindParam(":desc_articulo", $datos['desc_articulo']);
-        $sql->bindParam(":precio_venta", $datos['precio_venta']);
-        $sql->bindParam(":precio_compra", $datos['precio_compra']);
-        $sql->bindParam(":codigo", $datos['codigo']);
-        $sql->bindParam(":estado", $datos['estado']);
-        $sql->bindParam(":tipo", $datos['tipo']);
-        $sql->bindParam(":id_articulo", $datos['id_articulo']);
-        $sql->execute();
+
+        $sql->execute([
+            ":id_categoria" => $datos['id_categoria'],
+            ":idunidad_medida" => $datos['idunidad_medida'],
+            ":idiva" => $datos['idiva'],
+            ":id_marcas" => $datos['id_marcas'],
+            ":desc_articulo" => $datos['desc_articulo'],
+            ":precio_venta" => $datos['precio_venta'],
+            ":codigo" => $datos['codigo'],
+            ":estado" => $datos['estado'],
+            ":tipo" => $datos['tipo'],
+            ":id_articulo" => $datos['id_articulo']
+        ]);
+
+        // Update proveedor/precio
+        $sql2 = $pdo->prepare("UPDATE articulo_proveedor
+        SET idproveedores=:idproveedor, precio_compra=:precio
+        WHERE id_articulo=:id_articulo");
+
+        $sql2->execute([
+            ":idproveedor" => $datos['idproveedores'],
+            ":precio" => $datos['precio_compra'],
+            ":id_articulo" => $datos['id_articulo']
+        ]);
+
         return $sql;
     }
     /**fin modelo */
@@ -138,8 +171,9 @@ class articuloModelo extends mainModel
     {
         $conexion = mainModel::conectar();
 
-        $sql = "SELECT SQL_CALC_FOUND_ROWS *
-            FROM articulos
+        $sql = "SELECT SQL_CALC_FOUND_ROWS a.*, ap.precio_compra
+            FROM articulos a
+            LEFT JOIN articulo_proveedor ap ON ap.id_articulo = a.id_articulo
             WHERE 1=1 $filtrosSQL
             ORDER BY desc_articulo ASC
             LIMIT :inicio, :registros";
@@ -158,5 +192,19 @@ class articuloModelo extends mainModel
             "datos" => $datos,
             "total" => (int)$total
         ];
+    }
+
+    protected static function obtener_articulo_con_proveedor_modelo($id)
+    {
+        $sql = mainModel::conectar()->prepare("
+        SELECT a.*, ap.idproveedores, ap.precio_compra
+        FROM articulos a
+        LEFT JOIN articulo_proveedor ap 
+        ON ap.id_articulo = a.id_articulo
+        WHERE a.id_articulo = :id
+        ");
+        $sql->bindParam(":id", $id);
+        $sql->execute();
+        return $sql;
     }
 }

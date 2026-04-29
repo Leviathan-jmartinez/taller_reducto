@@ -153,7 +153,7 @@ $ciudades = $ins_proveedor->listar_ciudades_controlador();
                     value="<?php echo $_SESSION['busqueda_proveedor'] ?? ''; ?>">
             </div>
 
-            <div class="col-12 col-md-6">
+            <div class="col-12 col-md-6">a
                 <button type="submit" class="btn btn-info">
                     <i class="fas fa-search"></i> Buscar
                 </button>
@@ -192,7 +192,7 @@ $ciudades = $ins_proveedor->listar_ciudades_controlador();
         $pag_actual = (int)$pagina[2];
     }
 
-    echo $ins_proveedor->paginador_proveedores_controlador(
+    $ins_proveedor->paginador_proveedores_controlador(
         $pag_actual,
         10,
         $pagina[0],

@@ -5,166 +5,139 @@ require_once "../config/APP.php";
 ob_start();
 session_start(['name' => 'STR']);
 
-$accion = $_POST['accion'] ?? null; 
+/* ===== VARIABLES SEGURAS ===== */
+$accion = $_POST['accion'] ?? null;
+$modulo = $_POST['modulo'] ?? null;
 
 require_once "../controladores/reportesControlador.php";
 
 $inst_reporte = new reporteControlador();
 
 
-
 /* =========================================
-   REPORTE DE ARTICULOS (PREVIEW)
+   PREVIEWS (MODULO)
 ========================================= */
 
-if (isset($_POST['modulo']) && $_POST['modulo'] == "articulos") {
+if ($modulo === "articulos") {
     echo $inst_reporte->reporte_articulos_controlador();
     exit();
 }
 
-/* =========================================
-   REPORTE DE ARTICULOS (PDF)
-========================================= */
-
-if ($_POST['accion'] == 'reporte_articulos_simple') {
-    echo $inst_reporte->reporte_articulos_simple_controlador();
-}
-
-if ($_POST['accion'] === 'imprimir_reporte_articulos_simple') {
-    $inst_reporte->imprimir_reporte_articulos_simple_controlador();
-    exit();
-}
-
-if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_articulos') {
-    $inst_reporte->imprimir_reporte_articulos_controlador();
-    exit();
-}
-/* =========================================
-   REPORTE DE PROVEEDORES (PREVIEW)
-========================================= */
-if ($accion === 'reporte_proveedores') {
-    echo $inst_reporte->reporte_proveedores_controlador();
-    exit();
-}
-
-/* =========================================
-   REPORTE DE PROVEEDORES (PDF)
-========================================= */
-
-
-if ($accion === 'imprimir_reporte_proveedores') {
-    $inst_reporte->imprimir_reporte_proveedores_controlador();
-    exit();
-}
-
-/* =========================================
-   REPORTE DE CLIENTES (PREVIEW)
-========================================= */
-if (isset($_POST['modulo']) && $_POST['modulo'] == "clientes") {
+if ($modulo === "clientes") {
     echo $inst_reporte->reporte_clientes_controlador();
     exit();
 }
 
-/* =========================================
-   REPORTE DE CLIENTES (PDF)
-========================================= */
-if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_clientes') {
-    $inst_reporte->imprimir_reporte_clientes_controlador();
-    exit();
-}
-
-/* =========================================
-   REPORTE DE EMPLEADOS (PREVIEW)
-========================================= */
-if (isset($_POST['modulo']) && $_POST['modulo'] == "empleados") {
+if ($modulo === "empleados") {
     echo $inst_reporte->reporte_empleados_controlador();
     exit();
 }
 
-/* =========================================
-   REPORTE DE EMPLEADOS (PDF)
-========================================= */
-if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_empleados') {
-    $inst_reporte->imprimir_reporte_empleados_controlador();
-    exit();
-}
-
-/* =========================================
-   REPORTE DE COMPRAS
-========================================= */
-if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_pedidos') {
-    $inst_reporte->imprimir_reporte_pedidos_controlador();
-    exit();
-}
-
-if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_presupuestos') {
-    $inst_reporte->imprimir_reporte_presupuestos_controlador();
-    exit();
-}
-
-if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_ordenes_compra') {
-    $inst_reporte->imprimir_reporte_ordenes_compra_controlador();
-    exit();
-}
-
-if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_compras') {
-    $inst_reporte->imprimir_reporte_compras_controlador();
-    exit();
-}
-if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_libro_compras') {
-    $inst_reporte->imprimir_reporte_libro_compras_controlador();
-    exit();
-}
-if (isset($_POST['modulo']) && $_POST['modulo'] == "movimientos_stock") {
+if ($modulo === "movimientos_stock") {
     echo $inst_reporte->reporte_movimientos_stock_controlador();
     exit();
 }
 
-if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_movimientos_stock') {
-    $inst_reporte->imprimir_reporte_movimientos_stock_controlador();
-    exit();
-}
-
-
-/* =========================================
-   REPORTE DE TRANSFERENCIAS (PREVIEW)
-========================================= */
-if (isset($_POST['modulo']) && $_POST['modulo'] == "transferencias") {
+if ($modulo === "transferencias") {
     echo $inst_reporte->reporte_transferencias_controlador();
     exit();
 }
 
 /* =========================================
-   REPORTE DE TRANSFERENCIAS (PDF)
+   ACCIONES (PDF Y OTROS)
 ========================================= */
-if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_transferencias') {
-    $inst_reporte->imprimir_reporte_transferencias_controlador();
-    exit();
-}
 
+switch ($accion) {
+
+    /* ===== ARTICULOS ===== */
+    case 'reporte_articulos_simple':
+        echo $inst_reporte->reporte_articulos_simple_controlador();
+        break;
+
+    case 'imprimir_reporte_articulos_simple':
+        $inst_reporte->imprimir_reporte_articulos_simple_controlador();
+        exit();
+
+    case 'imprimir_reporte_articulos':
+        $inst_reporte->imprimir_reporte_articulos_controlador();
+        exit();
+
+
+    /* ===== PROVEEDORES ===== */
+    case 'reporte_proveedores':
+        echo $inst_reporte->reporte_proveedores_controlador();
+        break;
+
+    case 'imprimir_reporte_proveedores':
+        $inst_reporte->imprimir_reporte_proveedores_controlador();
+        exit();
+
+
+    /* ===== CLIENTES ===== */
+    case 'imprimir_reporte_clientes':
+        $inst_reporte->imprimir_reporte_clientes_controlador();
+        exit();
+
+
+    /* ===== EMPLEADOS ===== */
+    case 'imprimir_reporte_empleados':
+        $inst_reporte->imprimir_reporte_empleados_controlador();
+        exit();
+
+
+    /* ===== COMPRAS ===== */
+    case 'imprimir_reporte_pedidos':
+        $inst_reporte->imprimir_reporte_pedidos_controlador();
+        exit();
+
+    case 'imprimir_reporte_presupuestos':
+        $inst_reporte->imprimir_reporte_presupuestos_controlador();
+        exit();
+
+    case 'imprimir_reporte_ordenes_compra':
+        $inst_reporte->imprimir_reporte_ordenes_compra_controlador();
+        exit();
+
+    case 'imprimir_reporte_compras':
+        $inst_reporte->imprimir_reporte_compras_controlador();
+        exit();
+
+    case 'imprimir_reporte_libro_compras':
+        $inst_reporte->imprimir_reporte_libro_compras_controlador();
+        exit();
+
+
+    /* ===== MOVIMIENTOS STOCK ===== */
+    case 'imprimir_reporte_movimientos_stock':
+        $inst_reporte->imprimir_reporte_movimientos_stock_controlador();
+        exit();
+
+
+    /* ===== TRANSFERENCIAS ===== */
+    case 'imprimir_reporte_transferencias':
+        $inst_reporte->imprimir_reporte_transferencias_controlador();
+        exit();
+
+
+    /* ===== SERVICIOS ===== */
+    case 'imprimir_reporte_recepcion_servicios':
+        $inst_reporte->imprimir_reporte_recepcion_servicio_controlador();
+        exit();
+
+    case 'imprimir_reporte_presupuesto_servicio':
+        $inst_reporte->imprimir_reporte_presupuesto_servicio_controlador();
+        exit();
+
+    case 'imprimir_reporte_orden_trabajo':
+        $inst_reporte->imprimir_reporte_orden_trabajo_controlador();
+        exit();
+
+    case 'imprimir_reporte_registro_servicio':
+        $inst_reporte->imprimir_reporte_registro_servicio_controlador();
+        exit();
+}
 
 /* =========================================
-    FIN REPORTE DE COMPRAS
+   FALLBACK (OPCIONAL)
 ========================================= */
-
-/* =========================================
-    REPORTE DE SERVICIOS
-========================================= */
-
-if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_recepcion_servicios') {
-    $inst_reporte->imprimir_reporte_recepcion_servicio_controlador();
-    exit();
-}
-
-if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_presupuesto_servicio') {
-    $inst_reporte->imprimir_reporte_presupuesto_servicio_controlador();
-    exit();
-}
-if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_orden_trabajo') {
-    $inst_reporte->imprimir_reporte_orden_trabajo_controlador();
-    exit();
-}
-if (isset($_POST['accion']) && $_POST['accion'] === 'imprimir_reporte_registro_servicio') {
-    $inst_reporte->imprimir_reporte_registro_servicio_controlador();
-    exit();
-}
+// echo json_encode(["error" => "Acción no válida"]);

@@ -13,7 +13,7 @@ require_once "./controladores/articuloControlador.php";
 $ins_articulo = new articuloControlador();
 
 if ($id != null) {
-    $dat = $ins_articulo->datos_articulos_controlador("Unico", $id);
+    $dat = $ins_articulo->datos_articulo_proveedor_controlador($id);
     if ($dat->rowCount() == 1) {
         $campos = $dat->fetch();
         $editando = true;
@@ -77,7 +77,7 @@ $articlesMAR = $ins_articulo->listar_marca_controlador();
                         class="form-control"
                         placeholder="Precio Compra"
                         name="<?php echo $editando ? 'articulo_priceC_up' : 'articulo_priceC_reg'; ?>"
-                        value="<?php echo $editando ? $campos['precio_compra'] : ''; ?>">
+                        value="<?php echo $editando ? ($campos['precio_compra'] ?? '') : '';  ?>">
                 </div>
             </div>
 
@@ -87,7 +87,7 @@ $articlesMAR = $ins_articulo->listar_marca_controlador();
                         class="form-control"
                         placeholder="Precio Venta"
                         name="<?php echo $editando ? 'articulo_priceV_up' : 'articulo_priceV_reg'; ?>"
-                        value="<?php echo $editando ? $campos['precio_venta'] : ''; ?>">
+                        value="<?php echo $editando ? ($campos['precio_venta'] ?? '') : ''; ?>">
                 </div>
             </div>
 
@@ -170,7 +170,46 @@ $articlesMAR = $ins_articulo->listar_marca_controlador();
                     </select>
                 </div>
             </div>
+            <!-- TIPO -->
+            <div class="col-md-4">
+                <div class="form-group">
+                    <select class="form-control"
+                        name="<?php echo $editando ? 'tipoprodUp' : 'tipoprodReg'; ?>">
 
+                        <option value="" disabled selected>Tipo de producto</option>
+
+                        <option value="producto"
+                            <?php if ($editando && ($campos['tipo'] ?? '') == 'producto') echo 'selected'; ?>>
+                            Producto
+                        </option>
+
+                        <option value="servicio"
+                            <?php if ($editando && ($campos['tipo'] ?? '') == 'servicio') echo 'selected'; ?>>
+                            Servicio
+                        </option>
+
+                        <option value="insumo"
+                            <?php if ($editando && ($campos['tipo'] ?? '') == 'insumo') echo 'selected'; ?>>
+                            Insumo
+                        </option>
+
+                    </select>
+                </div>
+            </div>
+            <?php if ($editando) { ?>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <select class="form-control" name="articulo_estado_up">
+                            <option value="1" <?php if (($campos['estado'] ?? 1) == 1) echo 'selected'; ?>>
+                                Activo
+                            </option>
+                            <option value="0" <?php if (($campos['estado'] ?? 1) == 0) echo 'selected'; ?>>
+                                Inactivo
+                            </option>
+                        </select>
+                    </div>
+                </div>
+            <?php } ?>
         </div>
 
         <p class="text-center mt-4">
@@ -248,7 +287,7 @@ $articlesMAR = $ins_articulo->listar_marca_controlador();
         $pag_actual = (int)$pagina[2];
     }
 
-    echo $ins_articulo->listar_articulos_controlador(
+    $ins_articulo->listar_articulos_controlador(
         $pag_actual,
         15,
         $pagina[0],

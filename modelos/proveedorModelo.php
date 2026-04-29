@@ -59,12 +59,7 @@ class proveedorModelo extends mainModel
 
 
         $check = $pdo->prepare("
-        SELECT 1 FROM (
-            SELECT idproveedores FROM articulos WHERE idproveedores = :id
-            UNION
-            SELECT id_proveedor FROM pedido_cabecera WHERE id_proveedor = :id
-        ) AS t LIMIT 1
-        ");
+        SELECT 1 FROM articulo_proveedor WHERE idproveedores = :id LIMIT 1");
 
         $check->bindParam(":id", $id, PDO::PARAM_INT);
         $check->execute();

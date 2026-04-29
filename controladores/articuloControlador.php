@@ -163,6 +163,16 @@ class articuloControlador extends articuloModelo
         $id = mainModel::limpiar_string($id);
         return articuloModelo::datos_articulos_modelo($tipo, $id);
     }
+
+
+    public function datos_articulo_proveedor_controlador($id)
+    {
+        $id = mainModel::decryption($id);
+        $id = mainModel::limpiar_string($id);
+
+        return articuloModelo::obtener_articulo_con_proveedor_modelo($id);
+    }
+
     /**fin controlador */
     public function listar_iva_controlador()
     {
@@ -230,7 +240,7 @@ class articuloControlador extends articuloModelo
             echo json_encode($alerta);
             exit();
         }
-        if (mainModel::verificarDatos("[0-9]{1,15}", $pricebuy)) {
+        if (mainModel::verificarDatos("[0-9]+(\.[0-9]{1,2})?", $pricebuy)) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
@@ -240,7 +250,7 @@ class articuloControlador extends articuloModelo
             echo json_encode($alerta);
             exit();
         }
-        if (mainModel::verificarDatos("[0-9]{1,15}", $pricesale)) {
+        if (mainModel::verificarDatos("[0-9]+(\.[0-9]{1,2})?", $pricesale)) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
@@ -340,11 +350,10 @@ class articuloControlador extends articuloModelo
         $agregar_articulo = articuloModelo::agregar_articulo_modelo($datos_articulo);
         if ($agregar_articulo->rowCount() == 1) {
             $alerta = [
-                "Alerta" => "redireccionar_confirmado",
+                "Alerta" => "recargar",
                 "Titulo" => "Articulo  Registrado",
                 "Texto" => "Los datos fueron registrados correctamente",
-                "Tipo" => "success",
-                "URL" => SERVERURL . "articulo-lista/"
+                "Tipo" => "success"
             ];
         } else {
             $alerta = [
@@ -461,11 +470,13 @@ class articuloControlador extends articuloModelo
         $id_marcas        = mainModel::limpiar_string($_POST['marca_up'] ?? null);
 
         $desc_articulo = mainModel::limpiar_string($_POST['articulo_nombre_up']);
-        $precio_venta  = mainModel::limpiar_string($_POST['articulo_priceV_up']);
-        $precio_compra = mainModel::limpiar_string($_POST['articulo_priceC_up']);
+        $precio_venta = trim($_POST['articulo_priceV_up']);
+        $precio_venta = str_replace(',', '.', $precio_venta);
+        $precio_compra = trim($_POST['articulo_priceC_up']);
+        $precio_compra = str_replace(',', '.', $precio_compra);
         $codigo        = mainModel::limpiar_string($_POST['articulo_codigo_up']);
-        $estado        = mainModel::limpiar_string($_POST['articuloEstadoReg'] ?? 1);
-        $tipo          = mainModel::limpiar_string($_POST['tipoprodReg'] ?? 1);
+        $estado        = mainModel::limpiar_string($_POST['articulo_estado_up'] ?? 1);
+        $tipo          = mainModel::limpiar_string($_POST['tipoprodUp'] ?? 1);
 
         /* ===== VALIDAR SELECTS ===== */
         mainModel::validarSelect($id_categoria, "una categoría");
@@ -505,7 +516,7 @@ class articuloControlador extends articuloModelo
             exit();
         }
 
-        if (mainModel::verificarDatos("[0-9]{1,15}", $precio_compra)) {
+        if (!is_numeric($precio_compra)) {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Error",
@@ -515,7 +526,7 @@ class articuloControlador extends articuloModelo
             exit();
         }
 
-        if (mainModel::verificarDatos("[0-9]{1,15}", $precio_venta)) {
+        if (!is_numeric($precio_venta)) {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Error",
@@ -582,11 +593,10 @@ class articuloControlador extends articuloModelo
         if (articuloModelo::actualizar_articulo_modelo($datos_articulo_up)) {
 
             echo json_encode([
-                "Alerta" => "redireccionar_confirmado",
+                "Alerta" => "recargar",
                 "Titulo" => "Actualizado",
                 "Texto" => "Artículo actualizado correctamente",
                 "Tipo" => "success",
-                "URL" => SERVERURL . "articulo-nuevo/"
             ]);
         } else {
 

@@ -106,7 +106,6 @@ class clienteModelo extends mainModel
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /** */
     protected static function actualizar_cliente_modelo($datos)
     {
         $sql = mainModel::conectar()->prepare("
