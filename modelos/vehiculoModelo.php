@@ -60,19 +60,6 @@ class vehiculoModelo extends mainModel
         return $sql;
     }
 
-    /** listas referenciales */
-    protected static function obtener_clientes_modelo()
-    {
-        $sql = mainModel::conectar()->prepare(
-            "SELECT id_cliente,
-                    CONCAT(nombre_cliente,' ',apellido_cliente) AS cliente
-             FROM clientes
-             ORDER BY nombre_cliente ASC"
-        );
-        $sql->execute();
-        return $sql->fetchAll(PDO::FETCH_ASSOC);
-    }
-
     protected static function obtener_modelos_modelo()
     {
         $sql = mainModel::conectar()->prepare(

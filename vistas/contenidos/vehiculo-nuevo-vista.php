@@ -25,7 +25,7 @@ $busqueda = $_SESSION['busqueda_vehiculo'] ?? "";
 
 
 /* LISTAS */
-$clientes = $ins_vehiculo->listar_clientes_controlador();
+
 $modelos  = $ins_vehiculo->listar_modelos_controlador();
 ?>
 
@@ -141,7 +141,7 @@ $modelos  = $ins_vehiculo->listar_modelos_controlador();
         <p class="text-center mt-4">
             <button type="submit"
                 class="btn btn-raised <?php echo $editando ? 'btn-success' : 'btn-info'; ?>">
-                <?php echo $editando ? 'ACTUALIZAR' : 'GUARDAR'; ?>
+                <?php echo $editando ? 'GUARDAR' : 'GUARDAR'; ?>
             </button>
 
             <?php if ($editando) { ?>
