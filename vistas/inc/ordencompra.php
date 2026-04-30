@@ -132,4 +132,61 @@
                 Swal.fire("Error", "No se pudo procesar la petición", "error");
             });
     }
+
+    document.addEventListener("click", function(e) {
+        if (e.target.classList.contains("generar-oc-btn")) {
+            let id = e.target.getAttribute("data-id");
+
+            // Guardar el ID global para usarlo en btnGuardarOC
+            window.idPresupuestoActual = id;
+
+            fetch("<?php echo SERVERURL; ?>ajax/presupuestoDetalleAjax.php", {
+                    method: "POST",
+                    body: new URLSearchParams({
+                        idpresupuesto: id
+                    })
+                })
+                .then(res => res.text())
+                .then(html => {
+                    document.querySelector("#tbodyDetallePresupuesto").innerHTML = html;
+                    $('#modalDetallePresupuesto').modal('show');
+                });
+        }
+    });
+
+    document.getElementById("filtroProductos").addEventListener("keyup", function() {
+        let filtro = this.value.toLowerCase();
+        document.querySelectorAll("#tbodyDetallePresupuesto tr").forEach(row => {
+            row.style.display = row.innerText.toLowerCase().includes(filtro) ? "" : "none";
+        });
+    });
+
+    document.getElementById("btnGuardarOC").addEventListener("click", function() {
+
+        let form = document.getElementById("formOcProductos");
+        let datos = new FormData(form);
+
+        // Aquí le pasamos el ID del presupuesto seleccionado
+        datos.append("idpresupuesto", window.idPresupuestoActual);
+
+        // Si quieres, también puedes pasar módulo u otros datos
+        datos.append("modulo", "ordencompra");
+
+        fetch("<?php echo SERVERURL; ?>ajax/ordencompraAjax.php", {
+                method: "POST",
+                body: datos
+            })
+            .then(r => r.text())
+            .then(r => {
+
+                if (r.includes("ok:")) {
+                    let idOC = r.replace("ok:", "");
+                    Swal.fire("OC generada", "N° " + idOC, "success").then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire("Error", r, "error");
+                }
+            });
+    });
 </script>

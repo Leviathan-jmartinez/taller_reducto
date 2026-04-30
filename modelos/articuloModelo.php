@@ -74,16 +74,13 @@ class articuloModelo extends mainModel
 
         $id_articulo = $pdo->lastInsertId();
 
-        // 2Insertar proveedor + precio compra
-        $sql2 = $pdo->prepare("INSERT INTO articulo_proveedor
-        (id_articulo, idproveedores, precio_compra)
-        VALUES(:id_articulo, :idproveedor, :precio)");
-
-        $sql2->execute([
-            ":id_articulo" => $id_articulo,
-            ":idproveedor" => $datos['idproveedores'],
-            ":precio" => $datos['pricebuy']
-        ]);
+        if (!empty($datos['idproveedores']) && $datos['pricebuy'] !== '') {
+            self::registrar_articulo_proveedor_modelo(
+                $id_articulo,
+                $datos['idproveedores'],
+                $datos['pricebuy']
+            );
+        }
 
         return $sql;
     }
@@ -152,16 +149,13 @@ class articuloModelo extends mainModel
             ":id_articulo" => $datos['id_articulo']
         ]);
 
-        // Update proveedor/precio
-        $sql2 = $pdo->prepare("UPDATE articulo_proveedor
-        SET idproveedores=:idproveedor, precio_compra=:precio
-        WHERE id_articulo=:id_articulo");
-
-        $sql2->execute([
-            ":idproveedor" => $datos['idproveedores'],
-            ":precio" => $datos['precio_compra'],
-            ":id_articulo" => $datos['id_articulo']
-        ]);
+        if (!empty($datos['idproveedores']) && $datos['precio_compra'] !== '') {
+            self::registrar_articulo_proveedor_modelo(
+                $datos['id_articulo'],
+                $datos['idproveedores'],
+                $datos['precio_compra']
+            );
+        }
 
         return $sql;
     }
@@ -171,9 +165,17 @@ class articuloModelo extends mainModel
     {
         $conexion = mainModel::conectar();
 
-        $sql = "SELECT SQL_CALC_FOUND_ROWS a.*, ap.precio_compra
+        $sql = "SELECT SQL_CALC_FOUND_ROWS
+                a.*,
+                COALESCE((
+                    SELECT ap.precio_compra
+                    FROM articulo_proveedor ap
+                    WHERE ap.id_articulo = a.id_articulo
+                      AND ap.activo = 1
+                    ORDER BY ap.id ASC
+                    LIMIT 1
+                ), 0) AS precio_compra
             FROM articulos a
-            LEFT JOIN articulo_proveedor ap ON ap.id_articulo = a.id_articulo
             WHERE 1=1 $filtrosSQL
             ORDER BY desc_articulo ASC
             LIMIT :inicio, :registros";
@@ -197,10 +199,25 @@ class articuloModelo extends mainModel
     protected static function obtener_articulo_con_proveedor_modelo($id)
     {
         $sql = mainModel::conectar()->prepare("
-        SELECT a.*, ap.idproveedores, ap.precio_compra
+        SELECT
+            a.*,
+            (
+                SELECT ap.idproveedores
+                FROM articulo_proveedor ap
+                WHERE ap.id_articulo = a.id_articulo
+                  AND ap.activo = 1
+                ORDER BY ap.id ASC
+                LIMIT 1
+            ) AS idproveedores,
+            (
+                SELECT ap.precio_compra
+                FROM articulo_proveedor ap
+                WHERE ap.id_articulo = a.id_articulo
+                  AND ap.activo = 1
+                ORDER BY ap.id ASC
+                LIMIT 1
+            ) AS precio_compra
         FROM articulos a
-        LEFT JOIN articulo_proveedor ap 
-        ON ap.id_articulo = a.id_articulo
         WHERE a.id_articulo = :id
         ");
         $sql->bindParam(":id", $id);

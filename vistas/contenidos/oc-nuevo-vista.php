@@ -22,6 +22,19 @@ if (isset($_POST['tipo_ordencompra'])) {
     $tipo = $_SESSION['tipo_ordencompra'];
 }
 
+if (!in_array($tipo, ["con_presupuesto", "sin_presupuesto"], true)) {
+    $tipo = "con_presupuesto";
+    $_SESSION['tipo_ordencompra'] = $tipo;
+}
+
+if (!isset($pagina)) {
+    $url = $_GET['views'] ?? "oc-nuevo/1";
+    $url = explode("/", $url);
+    $pagina = [$url[0], $url[1] ?? 1];
+}
+
+$busqueda_ordencompra = $_SESSION['busqueda_ordencompra'] ?? '';
+
 
 ?>
 
@@ -96,40 +109,35 @@ if (isset($_POST['tipo_ordencompra'])) {
 
     <?php if ($tipo === 'con_presupuesto') { ?>
         <!-- <form id="formSearch" autocomplete="off">-->
-        <?php if (!isset($_SESSION['busqueda_ordencompra']) && empty($_SESSION['busqueda_ordencompra'])) { ?>
-            <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="default" autocomplete="off">
-                <input type="hidden" name="modulo" value="ordencompra">
-                <!--<input type="hidden" name="modulo" value="presupuesto_compra">-->
+        <?php if (empty($busqueda_ordencompra)) { ?>
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="oc-header">
+                        <form id="formBuscarPresupuestoOC" class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off" style="flex: 1; min-width: 250px;">
+                            <input type="hidden" name="modulo" value="ordencompra">
+                            <label for="inputSearch" class="bmd-label-floating">
+                                Que proveedor estas buscando?
+                            </label>
+                            <input type="text"
+                                class="form-control"
+                                name="busqueda_inicial"
+                                id="inputSearch"
+                                placeholder="Ej: Ejemplo SRL">
+                        </form>
 
-                <div class="card shadow-sm mb-4">
-                    <div class="card-body">
-                        <div class="oc-header">
+                        <div class="oc-actions">
+                            <button type="submit" class="btn btn-dark" form="formBuscarPresupuestoOC">Filtrar</button>
 
-                            <div style="flex: 1; min-width: 250px;">
-                                <label for="inputSearch" class="bmd-label-floating">
-                                    ¿Qué cliente estás buscando?
-                                </label>
-                                <input type="text"
-                                    class="form-control"
-                                    name="busqueda_inicial"
-                                    id="inputSearch"
-                                    placeholder="Ej: Ejemplo SRL…">
-                            </div>
-
-                            <div class="oc-actions">
-                                <button type="submit" class="btn btn-dark">Filtrar</button>
-            </form>
-            <form action="" method="POST" style="display:inline;">
-                <input type="hidden" name="tipo_ordencompra" value="sin_presupuesto">
-                <button class="btn btn-primary btn-lg" type="submit">
-                    + OC sin presupuesto
-                </button>
-            </form>
-</div>
-</div>
-
-</div>
-</div>
+                            <form action="" method="POST" class="d-inline-block">
+                                <input type="hidden" name="tipo_ordencompra" value="sin_presupuesto">
+                                <button class="btn btn-primary btn-lg" type="submit">
+                                    + OC sin presupuesto
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
 
 
@@ -147,7 +155,8 @@ if (isset($_POST['tipo_ordencompra'])) {
                         </label>
                         <input
                             class="form-control"
-                            placeholder="<?php echo $_SESSION['busqueda_ordencompra'] ?>">
+                            value="<?php echo htmlspecialchars($busqueda_ordencompra, ENT_QUOTES, 'UTF-8'); ?>"
+                            readonly>
                     </div>
 
                     <div class="oc-actions">
@@ -163,7 +172,7 @@ if (isset($_POST['tipo_ordencompra'])) {
         <?php
             require_once "./controladores/ordencompraControlador.php";
             $ins_ordencompra = new ordencompraControlador();
-            echo $ins_ordencompra->paginador_presupuestos_controlador($pagina[1], 15, $pagina[0], $_SESSION['busqueda_ordencompra']);
+            $ins_ordencompra->paginador_presupuestos_controlador($pagina[1], 15, $pagina[0], $busqueda_ordencompra);
         ?>
     </div>
 <?php
@@ -208,7 +217,6 @@ if (isset($_POST['tipo_ordencompra'])) {
                             </td>
                         </tr>
                     <?php endforeach; ?>
-                    <tr class="text-center bg-light">
                     <tr class="text-center bg-light total-fila">
                         <td><strong>TOTAL</strong></td>
                         <td colspan="2"></td>
@@ -216,8 +224,6 @@ if (isset($_POST['tipo_ordencompra'])) {
                         <td></td>
                         <td id="total-general"><strong><?php echo number_format($_SESSION['total_oc'], 0, ',', '.'); ?></strong></td>
                         <td></td>
-                    </tr>
-
                     </tr>
                 <?php
                 } else {
@@ -238,9 +244,9 @@ if (isset($_POST['tipo_ordencompra'])) {
 
             <div class="row">
                 <div class="col-12 text-md-left mb-3">
-                    <label for="fecha_entrega">Fecha Entrega: <label>
+                    <label for="fecha_entrega_sin_presupuesto">Fecha Entrega:</label>
                             <input type="date" class="form-control d-inline-block"
-                                name="fecha_entrega" id="fecha_entrega" value="<?php echo date('Y-m-d'); ?>"
+                                name="fecha_entrega" id="fecha_entrega_sin_presupuesto" value="<?php echo date('Y-m-d'); ?>"
                                 style="width: 180px;" required>
 
                 </div>
@@ -286,7 +292,9 @@ if (isset($_POST['tipo_ordencompra'])) {
 
             <div class="modal-header bg-dark text-white">
                 <h5 class="modal-title">ORDEN DE COMPRA</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
 
             <div class="modal-body">
@@ -300,9 +308,9 @@ if (isset($_POST['tipo_ordencompra'])) {
                         </div>
 
                         <div class="col-md-4 mb-3">
-                            <label for="fecha_entrega" class="form-label">Fecha Entrega</label>
+                            <label for="fecha_entrega_presupuesto" class="form-label">Fecha Entrega</label>
                             <input type="date" class="form-control"
-                                name="fecha_entrega" id="fecha_entrega"
+                                name="fecha_entrega" id="fecha_entrega_presupuesto"
                                 value="<?php echo date('Y-m-d'); ?>"
                                 required>
                         </div>
@@ -327,6 +335,7 @@ if (isset($_POST['tipo_ordencompra'])) {
             </div>
 
             <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
                 <button type="button" class="btn btn-success" id="btnGuardarOC">Generar Orden de Compra</button>
             </div>
 
@@ -431,64 +440,4 @@ if (isset($_POST['tipo_ordencompra'])) {
     </div>
 </div>
 
-<?php include_once "./vistas/inc/ordencompra.php";
-include_once "./vistas/inc/scripts.php"; ?>
-
-<script>
-    document.addEventListener("click", function(e) {
-        if (e.target.classList.contains("generar-oc-btn")) {
-            let id = e.target.getAttribute("data-id");
-
-            // Guardar el ID global para usarlo en btnGuardarOC
-            window.idPresupuestoActual = id;
-
-            fetch("<?php echo SERVERURL; ?>ajax/presupuestoDetalleAjax.php", {
-                    method: "POST",
-                    body: new URLSearchParams({
-                        idpresupuesto: id
-                    })
-                })
-                .then(res => res.text())
-                .then(html => {
-                    document.querySelector("#tbodyDetallePresupuesto").innerHTML = html;
-                    new bootstrap.Modal(document.getElementById("modalDetallePresupuesto")).show();
-                });
-        }
-    });
-
-    document.getElementById("filtroProductos").addEventListener("keyup", function() {
-        let filtro = this.value.toLowerCase();
-        document.querySelectorAll("#tbodyDetallePresupuesto tr").forEach(row => {
-            row.style.display = row.innerText.toLowerCase().includes(filtro) ? "" : "none";
-        });
-    });
-
-    document.getElementById("btnGuardarOC").addEventListener("click", function() {
-
-        let form = document.getElementById("formOcProductos");
-        let datos = new FormData(form);
-
-        // Aquí le pasamos el ID del presupuesto seleccionado
-        datos.append("idpresupuesto", window.idPresupuestoActual);
-
-        // Si quieres, también puedes pasar módulo u otros datos
-        datos.append("modulo", "ordencompra");
-
-        fetch("<?php echo SERVERURL; ?>ajax/ordencompraAjax.php", {
-                method: "POST",
-                body: datos
-            })
-            .then(r => r.text())
-            .then(r => {
-
-                if (r.includes("ok:")) {
-                    let idOC = r.replace("ok:", "");
-                    Swal.fire("OC generada", "N° " + idOC, "success").then(() => {
-                        location.reload();
-                    });
-                } else {
-                    Swal.fire("Error", r, "error");
-                }
-            });
-    });
-</script>
+<?php include_once "./vistas/inc/ordencompra.php"; ?>

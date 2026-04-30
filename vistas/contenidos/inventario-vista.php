@@ -12,8 +12,6 @@ if (!isset($_SESSION['inventario_tipo'])) {
     $_SESSION['inventario_tipo'] = "todos"; // todos, críticos, etc.
 }
 
-$tipo = $_SESSION['inventario_tipo'];
-
 ?>
 
 <div class="container-fluid">
@@ -84,21 +82,21 @@ $tipo = $_SESSION['inventario_tipo'];
                     <tbody>
                         <?php if (!empty($_SESSION['Cdatos_articuloINV'])): ?>
                             <?php foreach ($_SESSION['Cdatos_articuloINV'] as $i => $item): ?>
-                                <tr data-index="<?= $i ?>">
-                                    <td><?= htmlspecialchars($item['codigo']); ?></td>
-                                    <td><?= htmlspecialchars($item['descripcion']); ?></td>
+                                <tr data-index="<?= (int)$i ?>">
+                                    <td><?= htmlspecialchars($item['codigo'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                                    <td><?= htmlspecialchars($item['descripcion'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
 
                                     <td class="text-center">
                                         <input type="number"
                                             class="form-control text-center"
-                                            value="<?= $item['costo']; ?>"
+                                            value="<?= htmlspecialchars($item['costo'] ?? 0, ENT_QUOTES, 'UTF-8'); ?>"
                                             readonly>
                                     </td>
 
                                     <td class="text-center">
                                         <input type="number"
                                             class="form-control text-center teorica"
-                                            value="<?= $item['cantidad_teorica']; ?>"
+                                            value="<?= htmlspecialchars($item['cantidad_teorica'] ?? 0, ENT_QUOTES, 'UTF-8'); ?>"
                                             readonly>
                                     </td>
 
@@ -106,14 +104,14 @@ $tipo = $_SESSION['inventario_tipo'];
                                         <input type="number"
                                             name="cantidades_fisicas[]"
                                             class="form-control text-center cantidad"
-                                            value="<?= $item['cantidad_fisica']; ?>"
+                                            value="<?= htmlspecialchars($item['cantidad_fisica'] ?? 0, ENT_QUOTES, 'UTF-8'); ?>"
                                             min="0"
                                             required>
                                     </td>
 
                                     <td class="text-center">
                                         <span class="diferencia">
-                                            <?= $item['diferencia']; ?>
+                                            <?= htmlspecialchars($item['diferencia'] ?? 0, ENT_QUOTES, 'UTF-8'); ?>
                                         </span>
                                     </td>
                                 </tr>
@@ -261,9 +259,5 @@ $tipo = $_SESSION['inventario_tipo'];
         </div>
     </div>
 </div>
-
-<script src="<?= SERVERURL ?>vistas/js/jquery-3.6.0.min.js"></script>
-<script src="<?= SERVERURL ?>vistas/js/popper.min.js"></script>
-<script src="<?= SERVERURL ?>vistas/js/bootstrap.min.js"></script>
 
 <?php include "./vistas/inc/inventario.php"; ?>

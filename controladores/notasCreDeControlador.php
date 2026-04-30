@@ -104,6 +104,7 @@ class notasCreDeControlador extends notasCreDeModelo
                 'id_articulo' => $d['id_articulo'],
                 'descripcion' => $d['desc_articulo'],
                 'cantidad'    => $d['cantidad_recibida'],
+                'cantidad_original' => $d['cantidad_recibida'],
                 'precio'      => $d['precio_unitario'],
                 'iva_tipo'    => $d['tipo_impuesto_descri'],
                 'divisor'     => (int)$d['divisor'],
@@ -133,6 +134,17 @@ class notasCreDeControlador extends notasCreDeModelo
         }
 
         $item = &$_SESSION['NC_DETALLE'][$i];
+
+        if ($cantidad < 0 || $precio < 0) {
+            return ['status' => 'error', 'msg' => 'Cantidad y precio no pueden ser negativos'];
+        }
+
+        if (isset($item['cantidad_original']) && $cantidad > (float)$item['cantidad_original']) {
+            return [
+                'status' => 'error',
+                'msg' => 'La cantidad no puede superar la cantidad comprada: ' . number_format((float)$item['cantidad_original'], 0, ',', '.')
+            ];
+        }
 
         /* ================= SUBTOTAL ÍTEM ================= */
         $monto = round($cantidad * $precio, 2);
@@ -203,6 +215,20 @@ class notasCreDeControlador extends notasCreDeModelo
             return ['status' => 'error', 'msg' => 'No hay detalle'];
         }
 
+        $tipoNota = strtolower(mainModel::limpiar_string($_POST['tipo'] ?? ''));
+        if (!in_array($tipoNota, ['credito', 'debito'], true)) {
+            return ['status' => 'error', 'msg' => 'Debe seleccionar un tipo de nota valido'];
+        }
+
+        $movStock = strtoupper(mainModel::limpiar_string($_POST['movimiento_stock'] ?? 'NINGUNO'));
+        if ($tipoNota === 'debito') {
+            $movStock = 'NINGUNO';
+        }
+
+        if (!in_array($movStock, ['NINGUNO', 'DEVOLUCION'], true)) {
+            return ['status' => 'error', 'msg' => 'Movimiento de stock invalido'];
+        }
+
         $detalle = array_filter($_SESSION['NC_DETALLE'], function ($d) {
             return $d['cantidad'] > 0 && $d['precio'] > 0;
         });
@@ -213,11 +239,16 @@ class notasCreDeControlador extends notasCreDeModelo
 
         $total = 0;
         foreach ($detalle as $d) {
+            if ((float)$d['cantidad'] > (float)($d['cantidad_original'] ?? $d['cantidad'])) {
+                return [
+                    'status' => 'error',
+                    'msg' => 'La cantidad de ' . $d['descripcion'] . ' supera la cantidad comprada'
+                ];
+            }
             $total += round($d['cantidad'] * $d['precio'], 2);
         }
 
         /* ================= VALIDAR DUPLICADO NC/ND ================= */
-        $tipoNota = $_POST['tipo']; // credito | debito
         $timbrado = trim($_POST['timbrado'] ?? '');
         $nroNota  = trim($_POST['nro_nota']);
 
@@ -247,7 +278,7 @@ class notasCreDeControlador extends notasCreDeModelo
         }
 
 
-        if ($_POST['tipo'] === 'credito') {
+        if ($tipoNota === 'credito') {
             $totalFactura = (float)$factura['total'];
             $totalNCPrevias = notasCreDeModelo::totalNCActivasPorFactura($factura['idcompra_cabecera']);
 
@@ -263,14 +294,24 @@ class notasCreDeControlador extends notasCreDeModelo
         }
 
         $montoMovimiento = $total;
-        if ($_POST['tipo'] === 'credito') {
+        if ($tipoNota === 'credito') {
             $montoMovimiento *= -1;
         }
 
-        if ($_POST['tipo'] === 'debito') {
-        $movStock = 'NINGUNO'; 
-        } else {
-        $movStock = $_POST['movimiento_stock'] ?? 'NINGUNO';
+        if ($tipoNota === 'credito' && $movStock === 'DEVOLUCION') {
+            foreach ($detalle as $d) {
+                $stockDisponible = notasCreDeModelo::obtenerStockDisponibleModelo(
+                    $_SESSION['nick_sucursal'],
+                    $d['id_articulo']
+                );
+
+                if ($stockDisponible < (float)$d['cantidad']) {
+                    return [
+                        'status' => 'error',
+                        'msg' => 'Stock insuficiente para devolver ' . $d['descripcion'] . '. Disponible: ' . number_format($stockDisponible, 0, ',', '.')
+                    ];
+                }
+            }
         }
 
         $pdo = mainModel::conectar();
@@ -281,7 +322,7 @@ class notasCreDeControlador extends notasCreDeModelo
             $idNota = notasCreDeModelo::insertarNotaCompraModelo($pdo, [
                 'idproveedor' => (int)$factura['idproveedor'],
                 'id_sucursal' => $_SESSION['nick_sucursal'],
-                'tipo'        => $_POST['tipo'],
+                'tipo'        => $tipoNota,
                 'movimiento_stock' => $movStock,
                 'nro'         => $_POST['nro_nota'],
                 'fecha'       => $_POST['fecha'],
@@ -293,7 +334,7 @@ class notasCreDeControlador extends notasCreDeModelo
             ]);
 
             notasCreDeModelo::insertarDetalleNotaCompraModelo($pdo, $idNota, $detalle);
-            $signo = ($_POST['tipo'] === 'credito') ? -1 : 1;
+            $signo = ($tipoNota === 'credito') ? -1 : 1;
 
             // Totales ya calculados desde $_SESSION['NC_DETALLE']
             $exenta   = 0;
@@ -342,7 +383,7 @@ class notasCreDeControlador extends notasCreDeModelo
                 ':idcompra' => $factura['idcompra_cabecera'],
                 ':suc'      => $_SESSION['nick_sucursal'],
                 ':fecha'    => $_POST['fecha'],
-                ':tipo'     => ($_POST['tipo'] === 'credito') ? 'NC' : 'ND',
+                ':tipo'     => ($tipoNota === 'credito') ? 'NC' : 'ND',
                 ':serie'    => substr($_POST['nro_nota'], 0, 7),
                 ':nro'      => $_POST['nro_nota'],
                 ':prov'     => (int)$factura['idproveedor'],
@@ -356,21 +397,29 @@ class notasCreDeControlador extends notasCreDeModelo
                 ':total'    => $totalLC
             ]);
 
-            if ($_POST['tipo'] === 'credito' && $movStock === 'DEVOLUCION') {
+            if ($tipoNota === 'credito' && $movStock === 'DEVOLUCION') {
                 foreach ($detalle as $d) {
 
-                    $pdo->prepare("
+                    $stockUpdate = $pdo->prepare("
                     UPDATE stock
                     SET stockDisponible = stockDisponible - :cant,
                         stockUltActualizacion = NOW(),
                         stockUsuActualizacion = :usu
                     WHERE id_sucursal = :suc AND id_articulo = :art
-                ")->execute([
+                      AND stockDisponible >= :cant_stock
+                ");
+
+                    $stockUpdate->execute([
                         ':cant' => $d['cantidad'],
+                        ':cant_stock' => $d['cantidad'],
                         ':usu'  => $_SESSION['id_str'],
                         ':suc'  => $_SESSION['nick_sucursal'],
                         ':art'  => $d['id_articulo']
                     ]);
+
+                    if ($stockUpdate->rowCount() < 1) {
+                        throw new Exception("Stock insuficiente para devolver " . $d['descripcion']);
+                    }
 
                     $pdo->prepare("
                     INSERT INTO movimientostock
@@ -397,10 +446,10 @@ class notasCreDeControlador extends notasCreDeModelo
             notasCreDeModelo::impactarNotaCompraModelo($pdo, [
                 'idcompra'   => $factura['idcompra_cabecera'],
                 'id_sucursal' => $_SESSION['nick_sucursal'],
-                'tipo'       => $_POST['tipo'],
+                'tipo'       => $tipoNota,
                 'idnota'     => $idNota,
                 'monto'      => $montoMovimiento,
-                'obs'        => 'Nota ' . $_POST['tipo'] . ' ' . $_POST['nro_nota']
+                'obs'        => 'Nota ' . $tipoNota . ' ' . $_POST['nro_nota']
             ]);
 
             $pdo->commit();
@@ -430,7 +479,7 @@ class notasCreDeControlador extends notasCreDeModelo
         $busqueda1 = mainModel::limpiar_string($busqueda1);
         $busqueda2 = mainModel::limpiar_string($busqueda2);
         $nro_documento = mainModel::limpiar_string($nro_documento);
-        $tipo_nota     = mainModel::limpiar_string($tipo_nota);
+        $tipo_nota     = strtolower(mainModel::limpiar_string($tipo_nota));
 
 
         $url = mainModel::limpiar_string($url);
@@ -438,8 +487,11 @@ class notasCreDeControlador extends notasCreDeModelo
 
         $tabla = "";
 
+        $registros = ((int)$registros > 0) ? (int)$registros : 15;
         $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
+        $reg_inicio = $inicio + 1;
+        $reg_final = $inicio;
 
         $filtros = "";
 
@@ -505,7 +557,9 @@ class notasCreDeControlador extends notasCreDeModelo
                                     <th>TIPO DOCUMENTO</th>
                                     <th>CARGADO POR</th>
                                     <th>ESTADO</th>';
-        if (mainModel::tienePermiso('compra.nota.anular')) {
+        $puedeAnular = mainModel::tienePermiso('compra.nota.anular');
+
+        if ($puedeAnular) {
             $tabla .=           '<th>ANULAR</th>';
         }
         $tabla .= '
@@ -513,8 +567,7 @@ class notasCreDeControlador extends notasCreDeModelo
                             </thead>
                             <tbody>';
         if ($total >= 1 && $pagina <= $Npaginas) {
-            $contador = $inicio + 1;
-            $reg_inicio = $inicio + 1;
+            $contador = $reg_inicio;
             foreach ($datos as $rows) {
                 switch ($rows['estado_nota']) {
                     case 1:
@@ -540,7 +593,7 @@ class notasCreDeControlador extends notasCreDeModelo
                                     <td>' . $rows['tipo_nota'] . '</td>
                                     <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
                                     <td>' . $estadoBadge . '</td>';
-                if (mainModel::tienePermiso('compra.nota.anular')) {
+                if ($puedeAnular) {
                     $tabla .= '<td>
                                         <form class="FormularioAjax" action="' . SERVERURL . 'ajax/notasCreDeAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
                                         <input type="hidden" name="notaCreDe_id_del" value=' . mainModel::encryption($rows['idnota_compra']) . '>
@@ -556,10 +609,11 @@ class notasCreDeControlador extends notasCreDeModelo
             }
             $reg_final = $contador - 1;
         } else {
+            $colspan = $puedeAnular ? 10 : 9;
             if ($total >= 1) {
-                $tabla .= '<tr class="text-center"> <td colspan="6"> <a href="' . $url . '" class="btn btn-reaised btn-primary btn-sm"> Haga click aqui para recargar el listado </a> </td> </tr> ';
+                $tabla .= '<tr class="text-center"> <td colspan="' . $colspan . '"> <a href="' . $url . '" class="btn btn-reaised btn-primary btn-sm"> Haga click aqui para recargar el listado </a> </td> </tr> ';
             } else {
-                $tabla .= '<tr class="text-center"> <td colspan="6"> No hay regitros en el sistema</td> </tr> ';
+                $tabla .= '<tr class="text-center"> <td colspan="' . $colspan . '"> No hay regitros en el sistema</td> </tr> ';
             }
         }
 

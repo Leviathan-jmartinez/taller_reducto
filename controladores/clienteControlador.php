@@ -99,6 +99,8 @@ class clienteControlador extends clienteModelo
 
         $pagina = ($pagina > 0) ? (int)$pagina : 1;
         $inicio = ($pagina - 1) * $registros;
+        $reg_inicio = $inicio + 1;
+        $reg_final = $inicio;
 
         /* ===== FILTRO (OR MANUAL) ===== */
 

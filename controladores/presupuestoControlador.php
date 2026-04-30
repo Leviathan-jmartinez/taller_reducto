@@ -537,6 +537,8 @@ class presupuestoControlador extends presupuestoModelo
 
         $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
+        $reg_inicio = $inicio + 1;
+        $reg_final = $inicio;
 
         if (!empty($busqueda1) && !empty($busqueda2)) {
             $consulta = "SELECT  SQL_CALC_FOUND_ROWS pc.idpresupuesto_compra as idpresupuesto_compra, pc.id_sucursal as id_sucursal,pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPre, 

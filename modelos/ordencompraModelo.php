@@ -119,4 +119,39 @@ class ordencompraModelo extends mainModel
         $sql->execute();
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    protected static function listar_oc_modelo($inicio, $registros, $filtrosSQL)
+    {
+        $conexion = mainModel::conectar();
+
+        $baseSQL = "
+        FROM orden_compra oc
+        INNER JOIN proveedores p ON p.idproveedores = oc.idproveedores
+        INNER JOIN usuarios u ON u.id_usuario = oc.id_usuario
+        WHERE oc.id_sucursal = " . $_SESSION['nick_sucursal'] . "
+        $filtrosSQL
+        ";
+
+        $selectSQL = "
+        SELECT 
+            oc.idorden_compra,
+            oc.fecha,
+            oc.fecha_entrega,
+            oc.estado as estodoOC,
+            p.razon_social,
+            u.usu_nombre,
+            u.usu_apellido
+     ";
+
+        $orderSQL = "ORDER BY oc.idorden_compra DESC";
+
+        return mainModel::ejecutarPaginador(
+            $conexion,
+            $baseSQL,
+            $selectSQL,
+            $orderSQL,
+            $inicio,
+            $registros
+        );
+    }
 }

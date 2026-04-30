@@ -189,7 +189,8 @@ class inventarioControlador extends inventarioModelo
        1️⃣ CABECERA DEL AJUSTE
         ================================================== */
         $sqlCabecera = mainModel::ejecutar_consulta_simple("
-        SELECT ai.idajuste_inventario, ai.sucursal_id,ai.tipo_inv, ai.descripcion, ai.fecha_ajuste, u.usu_nombre, ai.estado
+        SELECT ai.idajuste_inventario, ai.sucursal_id, ai.tipo_inv, ai.descripcion, ai.fecha_ajuste,
+               CONCAT(u.usu_nombre, ' ', u.usu_apellido) AS usuario, ai.estado
         FROM ajuste_inventario ai
         INNER JOIN usuarios u ON u.id_usuario = ai.id_usuario
         WHERE ai.idajuste_inventario = '$idajuste' and ai.sucursal_id = '$idSucursal'");
@@ -329,9 +330,8 @@ class inventarioControlador extends inventarioModelo
                     ":id_articulo"     => (int) $item['ID'],
                     ":sucursal_id"     => $idSucursal
                 ]);
-
                 if ($sqlUpd->rowCount() === 0) {
-                    throw new Exception("No se pudo actualizar un artículo del ajuste");
+                    // MySQL puede devolver 0 cuando los valores enviados son iguales.
                 }
             }
 
@@ -349,7 +349,21 @@ class inventarioControlador extends inventarioModelo
             ]);
 
             if ($updEstado->rowCount() === 0) {
-                throw new Exception("No se pudo actualizar el estado del ajuste");
+                $checkEstadoActual = $conexion->prepare("
+                    SELECT 1
+                    FROM ajuste_inventario
+                    WHERE idajuste_inventario = :idajuste
+                      AND sucursal_id = :sucursal_id
+                    LIMIT 1
+                ");
+                $checkEstadoActual->execute([
+                    ":idajuste"    => $idajuste,
+                    ":sucursal_id" => $idSucursal
+                ]);
+
+                if (!$checkEstadoActual->fetchColumn()) {
+                    throw new Exception("No se pudo actualizar el estado del ajuste");
+                }
             }
             if (isset($_SESSION['datos_ajuste_inv'])) {
                 $_SESSION['datos_ajuste_inv']['ESTADO'] = 2;
@@ -502,6 +516,7 @@ class inventarioControlador extends inventarioModelo
             ajustadoPor = '$usuario',
             fecha_ajuste = NOW()
         WHERE idajuste_inventario = '$idajuste'
+        AND sucursal_id = '$idsucursal'
         ");
 
         /* ================= LIMPIAR SESIÓN ================= */
@@ -536,6 +551,8 @@ class inventarioControlador extends inventarioModelo
 
         $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
+        $reg_inicio = $inicio + 1;
+        $reg_final = $inicio;
 
         if (!empty($busqueda1) && !empty($busqueda2)) {
             $consulta = "SELECT SQL_CALC_FOUND_ROWS ai.idajuste_inventario as idajuste_inventario, ai.sucursal_id as sucursal_id, ai.id_usuario as id_usuario, ai.estado as estadoInv, ai.fecha as fecha, ai.tipo_inv as tipo_inv, 
@@ -676,13 +693,14 @@ class inventarioControlador extends inventarioModelo
                 throw new Exception("El ajuste ya fue anulado");
             }
 
-            /* ===== ESTADO 1: NO APLICADO ===== */
-            if ((int)$ajuste['estado'] === 1) {
+            /* ===== ESTADO 1/2: TODAVIA NO IMPACTO STOCK ===== */
+            if (in_array((int)$ajuste['estado'], [1, 2], true)) {
 
                 $db->exec("
                 UPDATE ajuste_inventario
                 SET estado = 0
                 WHERE idajuste_inventario = $id
+                AND sucursal_id = {$ajuste['sucursal_id']}
             ");
 
                 $db->commit();
@@ -695,8 +713,8 @@ class inventarioControlador extends inventarioModelo
                 ];
             }
 
-            /* ===== ESTADO 2: APLICADO ===== */
-            if ((int)$ajuste['estado'] === 2) {
+            /* ===== ESTADO 3: AJUSTADO, REVERTIR STOCK ===== */
+            if ((int)$ajuste['estado'] === 3) {
 
                 $detalle = $db->query("
                 SELECT id_articulo, diferencia, costo
@@ -757,6 +775,7 @@ class inventarioControlador extends inventarioModelo
                 UPDATE ajuste_inventario
                 SET estado = 0
                 WHERE idajuste_inventario = $id
+                AND sucursal_id = {$ajuste['sucursal_id']}
             ");
             }
 

@@ -21,6 +21,8 @@ class articuloControlador extends articuloModelo
 
         $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
+        $reg_inicio = $inicio + 1;
+        $reg_final = $inicio;
 
         /* ================= FILTROS ================= */
 
@@ -208,18 +210,18 @@ class articuloControlador extends articuloModelo
     public function agregar_articulo_controlador()
     {
         $categoria = mainModel::limpiar_string($_POST['categoria_reg']);
-        $proveedor = mainModel::limpiar_string($_POST['proveedor_reg']);
+        $proveedor = mainModel::limpiar_string($_POST['proveedor_reg'] ?? '');
         $umedida = mainModel::limpiar_string($_POST['um_reg']);
         $iva = mainModel::limpiar_string($_POST['tipo_iva_reg']);
         $imarca = mainModel::limpiar_string($_POST['marca_reg']);
         $descrip = mainModel::limpiar_string($_POST['articulo_nombre_reg']);
         $pricesale = mainModel::limpiar_string($_POST['articulo_priceV_reg']);
-        $pricebuy = mainModel::limpiar_string($_POST['articulo_priceC_reg']);
+        $pricebuy = mainModel::limpiar_string($_POST['articulo_priceC_reg'] ?? '');
         $code = mainModel::limpiar_string($_POST['articulo_codigo_reg']);
         $tipo = mainModel::limpiar_string($_POST['tipoprodReg']);
 
         /** Comprobar campos vacios */
-        if ($code == "" || $descrip == "" || $pricebuy == "" || $pricesale == "") {
+        if ($code == "" || $descrip == "" || $pricesale == "") {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
@@ -240,7 +242,7 @@ class articuloControlador extends articuloModelo
             echo json_encode($alerta);
             exit();
         }
-        if (mainModel::verificarDatos("[0-9]+(\.[0-9]{1,2})?", $pricebuy)) {
+        if ($pricebuy !== "" && mainModel::verificarDatos("[0-9]+(\.[0-9]{1,2})?", $pricebuy)) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
@@ -276,16 +278,6 @@ class articuloControlador extends articuloModelo
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
                 "Texto" => "El tipo de Impuesto seaccionado no corresponde",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
-        }
-        if ($proveedor < 0 || $proveedor == "") {
-            $alerta = [
-                "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "El proveedor seleaccionado no corresponde",
                 "Tipo" => "error"
             ];
             echo json_encode($alerta);
@@ -464,7 +456,7 @@ class articuloControlador extends articuloModelo
 
         /* ===== CAPTURA DE DATOS ===== */
         $id_categoria     = mainModel::limpiar_string($_POST['categoria_up'] ?? null);
-        $idproveedores    = mainModel::limpiar_string($_POST['proveedor_up'] ?? null);
+        $idproveedores    = mainModel::limpiar_string($_POST['proveedor_up'] ?? '');
         $idunidad_medida  = mainModel::limpiar_string($_POST['um_up'] ?? null);
         $idiva            = mainModel::limpiar_string($_POST['tipo_iva_up'] ?? null);
         $id_marcas        = mainModel::limpiar_string($_POST['marca_up'] ?? null);
@@ -472,7 +464,7 @@ class articuloControlador extends articuloModelo
         $desc_articulo = mainModel::limpiar_string($_POST['articulo_nombre_up']);
         $precio_venta = trim($_POST['articulo_priceV_up']);
         $precio_venta = str_replace(',', '.', $precio_venta);
-        $precio_compra = trim($_POST['articulo_priceC_up']);
+        $precio_compra = trim($_POST['articulo_priceC_up'] ?? '');
         $precio_compra = str_replace(',', '.', $precio_compra);
         $codigo        = mainModel::limpiar_string($_POST['articulo_codigo_up']);
         $estado        = mainModel::limpiar_string($_POST['articulo_estado_up'] ?? 1);
@@ -480,7 +472,6 @@ class articuloControlador extends articuloModelo
 
         /* ===== VALIDAR SELECTS ===== */
         mainModel::validarSelect($id_categoria, "una categoría");
-        mainModel::validarSelect($idproveedores, "un proveedor");
         mainModel::validarSelect($idunidad_medida, "una unidad de medida");
         mainModel::validarSelect($idiva, "el tipo de IVA");
         mainModel::validarSelect($id_marcas, "una marca");
@@ -516,7 +507,7 @@ class articuloControlador extends articuloModelo
             exit();
         }
 
-        if (!is_numeric($precio_compra)) {
+        if ($precio_compra !== "" && !is_numeric($precio_compra)) {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Error",

@@ -63,6 +63,8 @@ class usuarioModelo extends mainModel
             $sql->bindParam(":id", $id);
         } elseif ($tipo == "Conteo") {
             $sql = mainModel::conectar()->prepare("SELECT id_usuario FROM usuarios WHERE id_usuario != '1' ");
+        } else {
+            throw new InvalidArgumentException("Tipo de consulta de usuario no valido");
         }
         $sql->execute();
         return $sql;

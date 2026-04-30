@@ -19,7 +19,7 @@ class reportesModelo extends mainModel
         }
 
         if (!empty($f['proveedor']) && $f['proveedor'] != 0) {
-            $where .= " AND a.idproveedores = :proveedor ";
+            $where .= " AND ap.idproveedores = :proveedor ";
             $params[':proveedor'] = $f['proveedor'];
         }
 
@@ -42,7 +42,7 @@ class reportesModelo extends mainModel
             a.codigo,
             a.desc_articulo,
             a.tipo,
-            a.precio_compra,
+            ap.precio_compra,
             a.precio_venta,
             a.estado,
             a.date_created,
@@ -57,7 +57,8 @@ class reportesModelo extends mainModel
 
         INNER JOIN categorias c ON c.id_categoria = a.id_categoria
         INNER JOIN marcas m ON m.id_marcas = a.id_marcas
-        INNER JOIN proveedores p ON p.idproveedores = a.idproveedores
+        LEFT JOIN articulo_proveedor ap ON ap.id_articulo = a.id_articulo AND ap.activo = 1
+        LEFT JOIN proveedores p ON p.idproveedores = ap.idproveedores
         INNER JOIN unidad_medida u ON u.idunidad_medida = a.idunidad_medida
         INNER JOIN tipo_impuesto i ON i.idiva = a.idiva
 
@@ -120,7 +121,7 @@ class reportesModelo extends mainModel
             a.codigo,
             a.desc_articulo,
             a.tipo,
-            a.precio_compra,
+            ap.precio_compra,
             a.precio_venta,
             a.estado,
 
@@ -136,7 +137,8 @@ class reportesModelo extends mainModel
         FROM articulos a
         LEFT JOIN categorias c ON c.id_categoria = a.id_categoria
         LEFT JOIN marcas m ON m.id_marcas = a.id_marcas
-        LEFT JOIN proveedores p ON p.idproveedores = a.idproveedores
+        LEFT JOIN articulo_proveedor ap ON ap.id_articulo = a.id_articulo AND ap.activo = 1
+        LEFT JOIN proveedores p ON p.idproveedores = ap.idproveedores
         LEFT JOIN unidad_medida u ON u.idunidad_medida = a.idunidad_medida
         INNER JOIN stock st ON st.id_articulo = a.id_articulo
         LEFT JOIN sucursales suc ON suc.id_sucursal = st.id_sucursal
@@ -157,20 +159,20 @@ class reportesModelo extends mainModel
         $params = [];
 
         if (!empty($f['categoria']) && $f['categoria'] != 0) {
-            $where .= " AND id_categoria = :categoria ";
+            $where .= " AND a.id_categoria = :categoria ";
             $params[':categoria'] = $f['categoria'];
         }
 
         if (!empty($f['proveedor']) && $f['proveedor'] != 0) {
-            $where .= " AND idproveedores = :proveedor ";
+            $where .= " AND ap.idproveedores = :proveedor ";
             $params[':proveedor'] = $f['proveedor'];
         }
 
         if (!empty($f['estado']) && $f['estado'] != 'T') {
             if ($f['estado'] == 'A') {
-                $where .= " AND estado = 1 ";
+                $where .= " AND a.estado = 1 ";
             } elseif ($f['estado'] == 'I') {
-                $where .= " AND estado = 0 ";
+                $where .= " AND a.estado = 0 ";
             }
         }
 
@@ -179,8 +181,12 @@ class reportesModelo extends mainModel
             COUNT(*) AS total,
             SUM(CASE WHEN estado = 1 THEN 1 ELSE 0 END) AS activos,
             SUM(CASE WHEN estado = 0 THEN 1 ELSE 0 END) AS inactivos
-        FROM articulos
-        $where
+        FROM (
+            SELECT DISTINCT a.id_articulo, a.estado
+            FROM articulos a
+            LEFT JOIN articulo_proveedor ap ON ap.id_articulo = a.id_articulo AND ap.activo = 1
+            $where
+        ) articulos_filtrados
         ");
 
         $sql->execute($params);

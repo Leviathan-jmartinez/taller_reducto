@@ -42,7 +42,7 @@
                             <?php } ?>
 
                             <?php if (mainModel::tienePermiso('compra.oc.ver')) { ?>
-                                <li><a href="<?= SERVERURL; ?>oc-lista/"><i class="fas fa-file-invoice fa-fw"></i> &nbsp; Ordenes de Compra</a></li>
+                                <li><a href="<?= SERVERURL; ?>oc-nuevo/"><i class="fas fa-file-invoice fa-fw"></i> &nbsp; Ordenes de Compra</a></li>
                             <?php } ?>
 
                             <?php if (mainModel::tienePermiso('compra.factura.ver')) { ?>

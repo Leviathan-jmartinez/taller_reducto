@@ -203,11 +203,31 @@ class notasCreDeModelo extends mainModel
         SELECT COALESCE(SUM(total), 0) AS total_nc
         FROM nota_compra
         WHERE idcompra_cabecera = :id
+          AND id_sucursal = :sucursal
           AND tipo = 'credito'
           AND estado = 1
         ");
         $sql->bindValue(':id', $idcompra, PDO::PARAM_INT);
+        $sql->bindValue(':sucursal', $_SESSION['nick_sucursal'], PDO::PARAM_INT);
         $sql->execute();
+        return (float)$sql->fetchColumn();
+    }
+
+    protected static function obtenerStockDisponibleModelo($idSucursal, $idArticulo)
+    {
+        $sql = mainModel::conectar()->prepare("
+        SELECT COALESCE(stockDisponible, 0)
+        FROM stock
+        WHERE id_sucursal = :sucursal
+          AND id_articulo = :articulo
+        LIMIT 1
+        ");
+
+        $sql->execute([
+            ':sucursal' => $idSucursal,
+            ':articulo' => $idArticulo
+        ]);
+
         return (float)$sql->fetchColumn();
     }
 }

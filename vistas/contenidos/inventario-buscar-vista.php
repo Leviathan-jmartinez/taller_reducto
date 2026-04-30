@@ -24,6 +24,12 @@ $fecha_inicio = $_SESSION['fecha_inicio_inventario'] ?? '';
 $fecha_final  = $_SESSION['fecha_final_inventario'] ?? '';
 $fecha_inicio_dt = $fecha_inicio ? $fecha_inicio . ' 00:00:00' : '';
 $fecha_final_dt  = $fecha_final  ? $fecha_final  . ' 23:59:59' : '';
+
+if (!isset($pagina)) {
+    $url = $_GET['views'] ?? "inventario-buscar/1";
+    $url = explode("/", $url);
+    $pagina = [$url[0], $url[1] ?? 1];
+}
 ?>
 
 <?php if (!$fecha_inicio && !$fecha_final) { ?>
@@ -88,7 +94,7 @@ $fecha_final_dt  = $fecha_final  ? $fecha_final  . ' 23:59:59' : '';
         <?php
         require_once "./controladores/inventarioControlador.php";
         $ins_inventario = new inventarioControlador();
-        echo $ins_inventario->paginador_inv_controlador($pagina[1], 15, $pagina[0], $_SESSION['fecha_inicio_inventario'], $_SESSION['fecha_final_inventario']);
+        $ins_inventario->paginador_inv_controlador($pagina[1], 15, $pagina[0], $fecha_inicio, $fecha_final);
         ?>
     </div>
 

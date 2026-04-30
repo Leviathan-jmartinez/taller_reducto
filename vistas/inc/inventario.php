@@ -1,13 +1,10 @@
-<!-- jQuery -->
-<script src="<?= SERVERURL ?>vistas/js/jquery-3.6.0.min.js"></script>
-<!-- Bootstrap JS -->
-<script src="<?= SERVERURL ?>vistas/js/bootstrap.bundle.min.js"></script>
-<!-- Select2 -->
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
 <script>
-    $(document).ready(function() {
+    document.addEventListener("DOMContentLoaded", function() {
+
+        if (typeof window.jQuery === "undefined") {
+            console.error("jQuery no esta disponible para inventario.");
+            return;
+        }
 
         $('#formInventario').on('submit', function(e) {
             e.preventDefault();
@@ -22,6 +19,16 @@
                 data: $(this).serialize(),
                 dataType: 'json',
                 success: function(resp) {
+                    if (resp.status && resp.status !== 'ok') {
+                        Swal.fire({
+                            title: "Error",
+                            text: resp.msg || "No se pudo procesar el inventario",
+                            type: "error",
+                            confirmButtonText: "Aceptar"
+                        });
+                        return;
+                    }
+
                     // Usar alertas.js
                     alertasAjax(resp);
                     // Si el tipo de alerta no recarga, igual limpiar formulario
@@ -234,6 +241,7 @@
     document.addEventListener("DOMContentLoaded", function() {
 
         const botonGuardar = document.getElementById("guardar-ajuste");
+        if (!botonGuardar) return;
 
         botonGuardar.addEventListener("click", function(e) {
             e.preventDefault();

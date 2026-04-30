@@ -81,12 +81,19 @@ class inventarioModelo extends mainModel
                     SELECT 
                         a.id_articulo,
                         COALESCE(s.stockDisponible, 0) AS stockDisponible,
-                        a.precio_compra
+                        COALESCE((
+                            SELECT ap.precio_compra
+                            FROM articulo_proveedor ap
+                            WHERE ap.id_articulo = a.id_articulo
+                              AND ap.activo = 1
+                            ORDER BY ap.id ASC
+                            LIMIT 1
+                        ), 0) AS precio_compra
                     FROM articulos a
                     LEFT JOIN stock s 
                         ON s.id_articulo = a.id_articulo
                        AND s.id_sucursal = :sucursal
-                    WHERE a.estado = 1 and a.tipo='producto' ");
+                    WHERE a.estado = 1 AND a.tipo = 'producto' ");
                     $stmtArt->execute([
                         ':sucursal' => $data['sucursal_id']
                     ]);
@@ -98,13 +105,21 @@ class inventarioModelo extends mainModel
                     SELECT 
                         a.id_articulo,
                         COALESCE(s.stockDisponible, 0) AS stockDisponible,
-                        a.precio_compra
+                        COALESCE((
+                            SELECT ap.precio_compra
+                            FROM articulo_proveedor ap
+                            WHERE ap.id_articulo = a.id_articulo
+                              AND ap.activo = 1
+                            ORDER BY ap.id ASC
+                            LIMIT 1
+                        ), 0) AS precio_compra
                     FROM articulos a
                     LEFT JOIN stock s 
                         ON s.id_articulo = a.id_articulo
                        AND s.id_sucursal = :sucursal
                     WHERE a.id_categoria = :idcat
-                      AND a.estado = 1");
+                      AND a.estado = 1
+                      AND a.tipo = 'producto'");
                     $stmtArt->execute([
                         ':idcat'    => $data['subtipo_categoria'],
                         ':sucursal' => $data['sucursal_id']
@@ -117,13 +132,17 @@ class inventarioModelo extends mainModel
                     SELECT 
                         a.id_articulo,
                         COALESCE(s.stockDisponible, 0) AS stockDisponible,
-                        a.precio_compra
+                        COALESCE(ap.precio_compra, 0) AS precio_compra
                     FROM articulos a
+                    INNER JOIN articulo_proveedor ap
+                        ON ap.id_articulo = a.id_articulo
+                       AND ap.idproveedores = :idprov
+                       AND ap.activo = 1
                     LEFT JOIN stock s 
                         ON s.id_articulo = a.id_articulo
                        AND s.id_sucursal = :sucursal
-                    WHERE a.idproveedores = :idprov
-                      AND a.estado = 1");
+                    WHERE a.estado = 1
+                      AND a.tipo = 'producto'");
                     $stmtArt->execute([
                         ':idprov'   => $data['subtipo_proveedor'],
                         ':sucursal' => $data['sucursal_id']
@@ -142,13 +161,21 @@ class inventarioModelo extends mainModel
                     SELECT 
                         a.id_articulo,
                         COALESCE(s.stockDisponible, 0) AS stockDisponible,
-                        a.precio_compra
+                        COALESCE((
+                            SELECT ap.precio_compra
+                            FROM articulo_proveedor ap
+                            WHERE ap.id_articulo = a.id_articulo
+                              AND ap.activo = 1
+                            ORDER BY ap.id ASC
+                            LIMIT 1
+                        ), 0) AS precio_compra
                     FROM articulos a
                     LEFT JOIN stock s 
                         ON s.id_articulo = a.id_articulo
                        AND s.id_sucursal = :sucursal
                     WHERE a.id_articulo = :id_art
-                      AND a.estado = 1");
+                      AND a.estado = 1
+                      AND a.tipo = 'producto'");
 
                     foreach ($data['subtipo_producto'] as $id_art) {
                         $stmtStock->execute([

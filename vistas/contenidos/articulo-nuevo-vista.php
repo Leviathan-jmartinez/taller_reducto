@@ -70,17 +70,6 @@ $articlesMAR = $ins_articulo->listar_marca_controlador();
                 </div>
             </div>
 
-            <!-- PRECIOS -->
-            <div class="col-md-4">
-                <div class="form-group">
-                    <input type="text"
-                        class="form-control"
-                        placeholder="Precio Compra"
-                        name="<?php echo $editando ? 'articulo_priceC_up' : 'articulo_priceC_reg'; ?>"
-                        value="<?php echo $editando ? ($campos['precio_compra'] ?? '') : '';  ?>">
-                </div>
-            </div>
-
             <div class="col-md-4">
                 <div class="form-group">
                     <input type="text"
@@ -101,22 +90,6 @@ $articlesMAR = $ins_articulo->listar_marca_controlador();
                             <option value="<?php echo $iva['idiva']; ?>"
                                 <?php if ($editando && $campos['idiva'] == $iva['idiva']) echo "selected"; ?>>
                                 <?php echo $iva['tipo_impuesto_descri']; ?>
-                            </option>
-                        <?php } ?>
-                    </select>
-                </div>
-            </div>
-
-            <!-- PROVEEDOR -->
-            <div class="col-md-4">
-                <div class="form-group">
-                    <select class="form-control select2"
-                        name="<?php echo $editando ? 'proveedor_up' : 'proveedor_reg'; ?>">
-                        <option value="" disabled selected>Seleccione proveedor</option>
-                        <?php foreach ($articlesPro as $prov) { ?>
-                            <option value="<?php echo $prov['idproveedores']; ?>"
-                                <?php if ($editando && $campos['idproveedores'] == $prov['idproveedores']) echo "selected"; ?>>
-                                <?php echo $prov['razon_social']; ?>
                             </option>
                         <?php } ?>
                     </select>

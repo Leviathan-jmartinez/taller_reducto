@@ -194,6 +194,8 @@ class pedidoControlador extends pedidoModelo
 
         $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
+        $reg_inicio = $inicio + 1;
+        $reg_final = $inicio;
 
         if (!empty($busqueda1) && !empty($busqueda2)) {
             $consulta = "

@@ -73,7 +73,8 @@ $modulos_con_fecha = [
 
 if (in_array($modulo, $modulos_con_fecha)) {
 
-    if ($modulo == "diagnostico" || $modulo == "presupuesto_servicio" || $modulo == "orden_trabajo" || $modulo == "registro_servicio" || $modulo == "reclamo_servicio") {
+    if ($modulo == "diagnostico" || $modulo == "presupuesto_servicio" || $modulo == "orden_trabajo" || $modulo == "registro_servicio" || $modulo == "reclamo_servicio"
+    || $modulo == "ordencompra2") {
         /* ===== MAPEO DE SESIONES ===== */
         $config = [
             "diagnostico" => [
@@ -90,14 +91,14 @@ if (in_array($modulo, $modulos_con_fecha)) {
                 "extra" => []
             ],
             "orden_trabajo" => [
-                "fecha_inicio" => "fecha_inicio_orden_trabajo", 
+                "fecha_inicio" => "fecha_inicio_orden_trabajo",
                 "fecha_final"  => "fecha_final_orden_trabajo",
                 "extra" => [
                     "estado_ot" => "estado_ot"
                 ]
             ],
             "registro_servicio" => [
-                "fecha_inicio" => "fecha_inicio_registro_servicio", 
+                "fecha_inicio" => "fecha_inicio_registro_servicio",
                 "fecha_final"  => "fecha_final_registro_servicio",
                 "extra" => [
                     "estado_regSer" => "estado_regSer"
@@ -108,6 +109,14 @@ if (in_array($modulo, $modulos_con_fecha)) {
                 "fecha_final"  => "fecha_final_reclamo_servicio",
                 "extra" => [
                     "estado_reclamo_servicio" => "estado_reclamo_servicio"
+                ]
+            ],
+            "ordencompra2" => [
+                "fecha_inicio" => "fecha_inicio_ordencompra2",
+                "fecha_final"  => "fecha_final_ordencompra2",
+                "extra" => [
+                    "proveedor" => "proveedor_oc",
+                    "estado_oc" => "estado_oc"
                 ]
             ]
         ];
@@ -138,7 +147,7 @@ if (in_array($modulo, $modulos_con_fecha)) {
         $fecha_fin = $_POST['fecha_final'] ?? '';
 
         /* ===== VALIDACIÓN FLEXIBLE ===== */
-        if ($fecha_ini != '' && $fecha_fin != ''){
+        if ($fecha_ini != '' && $fecha_fin != '') {
 
             if ($fecha_ini != '' && $fecha_fin != '' && $fecha_ini > $fecha_fin) {
                 echo json_encode([

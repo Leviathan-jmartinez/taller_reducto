@@ -151,6 +151,8 @@ class compraControlador extends compraModelo
         $pdo = mainModel::conectar();
         $pdo->beginTransaction();
 
+        $pdo = null;
+
         try {
 
             $datosCab = [
@@ -322,7 +324,7 @@ class compraControlador extends compraModelo
                 "Tipo" => "success"
             ];
         } catch (Exception $e) {
-            $pdo->rollBack();
+            if ($pdo instanceof PDO && $pdo->inTransaction()) $pdo->rollBack();
             return [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrió un error inesperado!",
@@ -367,10 +369,11 @@ class compraControlador extends compraModelo
         }
         $totalReal = round($totalReal, 2);
 
-        $pdo = mainModel::conectar();
-        $pdo->beginTransaction();
+        $pdo = null;
 
         try {
+            $pdo = mainModel::conectar();
+            $pdo->beginTransaction();
 
             /* ===============================
             CABECERA
@@ -470,6 +473,12 @@ class compraControlador extends compraModelo
                 if ($guardarDet->rowCount() < 1) {
                     throw new Exception("Error al guardar detalle del artículo ID " . $item['ID']);
                 }
+
+                self::registrar_articulo_proveedor_modelo(
+                    $item['ID'],
+                    $_SESSION['datos_proveedorCO']['ID'],
+                    round((float)$item['precio'], 2)
+                );
 
                 /* ===== Movimiento de stock ===== */
                 $mov = [
@@ -581,7 +590,7 @@ class compraControlador extends compraModelo
                 "Tipo"   => "success"
             ];
         } catch (Exception $e) {
-            $pdo->rollBack();
+            if ($pdo instanceof PDO && $pdo->inTransaction()) $pdo->rollBack();
             return [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrió un error inesperado!",
@@ -717,7 +726,18 @@ class compraControlador extends compraModelo
                 exit();
             }
             $id_proveedor = $_SESSION['datos_proveedorCO']['ID'];
-            $datos_articuloPre = mainModel::ejecutar_consulta_simple("SELECT * FROM articulos WHERE (codigo like '%$articulo%' OR desc_articulo like '%$articulo%') AND estado=1 AND idproveedores='$id_proveedor' ORDER BY desc_articulo DESC LIMIT 15");
+            $datos_articuloPre = mainModel::ejecutar_consulta_simple("
+                SELECT a.*, ap.precio_compra
+                FROM articulos a
+                LEFT JOIN articulo_proveedor ap
+                    ON ap.id_articulo = a.id_articulo
+                   AND ap.idproveedores = '$id_proveedor'
+                   AND ap.activo = 1
+                WHERE (a.codigo LIKE '%$articulo%' OR a.desc_articulo LIKE '%$articulo%')
+                  AND a.estado = 1
+                ORDER BY a.desc_articulo DESC
+                LIMIT 15
+            ");
 
             if ($datos_articuloPre->rowCount() >= 1) {
                 $tabla = '<div class="table-responsive"><table class="table table-hover table-bordered table-sm"><thead class="thead-light text-center">
@@ -739,7 +759,7 @@ class compraControlador extends compraModelo
 
                     <!-- Precio -->
                     <td style="width:100px;">
-                        <input type="number" id="precio_' . $rows['id_articulo'] . '" class="form-control form-control-sm" step="0.01" min="0">
+                        <input type="number" id="precio_' . $rows['id_articulo'] . '" class="form-control form-control-sm" step="0.01" min="0" value="' . ($rows['precio_compra'] ?? 0) . '">
                     </td>
 
                     <!-- Botón agregar -->
@@ -879,8 +899,11 @@ class compraControlador extends compraModelo
 
         $tabla = "";
 
+        $registros = ((int)$registros > 0) ? (int)$registros : 15;
         $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
+        $reg_inicio = $inicio + 1;
+        $reg_final = $inicio;
         $filtros = "";
 
         if ($nro_factura != "") {
@@ -958,7 +981,9 @@ class compraControlador extends compraModelo
                                 <th>TOTAL COMPRA</th>
                                 <th>CARGADO POR</th>
                                 <th>ESTADO</th>';
-        if (mainModel::tienePermiso('compra.anular')) {
+        $puedeAnular = mainModel::tienePermiso('compra.anular');
+
+        if ($puedeAnular) {
             $tabla .=           '<th>ANULAR</th>';
         }
         $tabla .= '
@@ -966,8 +991,7 @@ class compraControlador extends compraModelo
 						</thead>
 						<tbody>';
         if ($total >= 1 && $pagina <= $Npaginas) {
-            $contador = $inicio + 1;
-            $reg_inicio = $inicio + 1;
+            $contador = $reg_inicio;
             foreach ($datos as $rows) {
                 switch ($rows['estadoCO']) {
                     case 1:
@@ -991,7 +1015,7 @@ class compraControlador extends compraModelo
 								<td>' . number_format($rows['total_compra'], 0, ',', '.') . '</td>
                                 <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
                                 <td>' . $estadoBadge . '</td>';
-                if (mainModel::tienePermiso('compra.anular')) {
+                if ($puedeAnular) {
                     $tabla .= '<td>
 									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/compraAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
                                     <input type="hidden" name="compra_id_del" value=' . mainModel::encryption($rows['idcompra_cabecera']) . '>
@@ -1007,10 +1031,11 @@ class compraControlador extends compraModelo
             }
             $reg_final = $contador - 1;
         } else {
+            $colspan = $puedeAnular ? 8 : 7;
             if ($total >= 1) {
-                $tabla .= '<tr class="text-center"> <td colspan="6"> <a href="' . $url . '" class="btn btn-reaised btn-primary btn-sm"> Haga click aqui para recargar el listado </a> </td> </tr> ';
+                $tabla .= '<tr class="text-center"> <td colspan="' . $colspan . '"> <a href="' . $url . '" class="btn btn-reaised btn-primary btn-sm"> Haga click aqui para recargar el listado </a> </td> </tr> ';
             } else {
-                $tabla .= '<tr class="text-center"> <td colspan="6"> No hay regitros en el sistema</td> </tr> ';
+                $tabla .= '<tr class="text-center"> <td colspan="' . $colspan . '"> No hay regitros en el sistema</td> </tr> ';
             }
         }
 
@@ -1073,6 +1098,8 @@ class compraControlador extends compraModelo
         $usuario = $_SESSION['id_str'];
         $id_sucursal = $_SESSION['nick_sucursal']; // Ajustar si aplica
 
+        $pdo = null;
+
         try {
             // Iniciar transacción
             $pdo = mainModel::conectar();
@@ -1126,7 +1153,7 @@ class compraControlador extends compraModelo
                 "Tipo" => "success"
             ];
         } catch (Exception $e) {
-            if ($pdo->inTransaction()) $pdo->rollBack();
+            if ($pdo instanceof PDO && $pdo->inTransaction()) $pdo->rollBack();
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",

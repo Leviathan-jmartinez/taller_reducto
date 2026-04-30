@@ -303,4 +303,24 @@ class mainModel
             exit();
         }
     }
+
+    protected static function registrar_articulo_proveedor_modelo($id_articulo, $idproveedores, $precio_compra)
+    {
+        $sql = self::conectar()->prepare("
+            INSERT INTO articulo_proveedor
+            (id_articulo, idproveedores, precio_compra, activo)
+            VALUES (:id_articulo, :idproveedores, :precio_compra, 1)
+            ON DUPLICATE KEY UPDATE
+                precio_compra = VALUES(precio_compra),
+                activo = 1
+        ");
+
+        $sql->execute([
+            ":id_articulo" => $id_articulo,
+            ":idproveedores" => $idproveedores,
+            ":precio_compra" => $precio_compra
+        ]);
+
+        return $sql;
+    }
 }

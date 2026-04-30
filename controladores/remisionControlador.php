@@ -283,6 +283,8 @@ class remisionControlador extends remisionModelo
 
         $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
+        $reg_inicio = $inicio + 1;
+        $reg_final = $inicio;
 
         /* 🔹 CONSULTA */
         if (!empty($busqueda1) && !empty($busqueda2)) {

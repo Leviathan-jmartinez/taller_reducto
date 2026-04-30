@@ -76,6 +76,8 @@ class rolesControlador extends rolesModelo
 
         $pagina = ($pagina > 0) ? $pagina : 1;
         $inicio = ($pagina - 1) * $registros;
+        $reg_inicio = $inicio + 1;
+        $reg_final = $inicio;
 
         /* ===== FILTRO ===== */
         $filtrosSQL = "";

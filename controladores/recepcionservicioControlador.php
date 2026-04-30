@@ -154,8 +154,11 @@ class recepcionservicioControlador extends recepcionservicioModelo
         $registros = (int) mainModel::limpiar_string($registros);
         $url       = SERVERURL . mainModel::limpiar_string($url) . "/";
 
+        $registros = ($registros > 0) ? $registros : 15;
         $pagina = ($pagina > 0) ? $pagina : 1;
         $inicio = ($pagina - 1) * $registros;
+        $reg_inicio = $inicio + 1;
+        $reg_final = $inicio;
 
         $busqueda = mainModel::limpiar_string($busqueda);
 
@@ -212,7 +215,9 @@ class recepcionservicioControlador extends recepcionservicioModelo
                     <th>Usuario</th>
                     <th>Estado</th>';
 
-        if (mainModel::tienePermiso('servicio.recepcion.anular')) {
+        $puedeAnular = mainModel::tienePermiso('servicio.recepcion.anular');
+
+        if ($puedeAnular) {
             $tabla .=           '<th>ANULAR</th>';
         }
 
@@ -224,8 +229,7 @@ class recepcionservicioControlador extends recepcionservicioModelo
 
         if ($total >= 1 && $pagina <= $Npaginas) {
 
-            $contador   = $inicio + 1;
-            $reg_inicio = $inicio + 1;
+            $contador = $reg_inicio;
 
             foreach ($datos as $rows) {
 
@@ -259,7 +263,7 @@ class recepcionservicioControlador extends recepcionservicioModelo
                 <td>' . $rows['usuario'] . '</td>
                 <td>' . $estado . '</td>';
 
-                if (mainModel::tienePermiso('servicio.recepcion.anular')) {
+                if ($puedeAnular) {
                     $tabla .= '
                 
                 <td>
@@ -278,10 +282,11 @@ class recepcionservicioControlador extends recepcionservicioModelo
 
             $reg_final = $contador - 1;
         } else {
+            $colspan = $puedeAnular ? 9 : 8;
             if ($total >= 1) {
                 $tabla .= '
             <tr class="text-center">
-                <td colspan="9">
+                <td colspan="' . $colspan . '">
                     <a href="' . $url . '" class="btn btn-primary btn-sm">
                         Haga click aquí para recargar el listado
                     </a>
@@ -290,7 +295,7 @@ class recepcionservicioControlador extends recepcionservicioModelo
             } else {
                 $tabla .= '
             <tr class="text-center">
-                <td colspan="9">No hay registros en el sistema</td>
+                <td colspan="' . $colspan . '">No hay registros en el sistema</td>
             </tr>';
             }
         }

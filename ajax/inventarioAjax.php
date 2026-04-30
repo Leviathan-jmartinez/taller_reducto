@@ -103,7 +103,7 @@ if (isset($_POST['limpiar_ajuste'])) {
     }
 
     unset($_SESSION['Cdatos_articuloINV']);
-    unset($_SESSION['id_ajuste_seleccionado']);
+    unset($_SESSION['id_inv_seleccionado']);
     unset($_SESSION['datos_ajuste_inv']);
     unset($_SESSION['alerta_inv']);
 

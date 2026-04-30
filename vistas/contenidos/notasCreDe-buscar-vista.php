@@ -27,6 +27,12 @@ $fecha_final_dt  = $fecha_final  ? $fecha_final  . ' 23:59:59' : '';
 $nro_documento = $_SESSION['nro_documento_notasCreDe'] ?? '';
 $tipo_nota     = $_SESSION['tipo_nota_notasCreDe'] ?? '';
 
+if (!isset($pagina)) {
+    $url = $_GET['views'] ?? "notasCreDe-buscar/1";
+    $url = explode("/", $url);
+    $pagina = [$url[0], $url[1] ?? 1];
+}
+
 ?>
 
 <?php if (!$fecha_inicio && !$fecha_final && !$nro_documento && !$tipo_nota) {
@@ -94,13 +100,13 @@ $tipo_nota     = $_SESSION['tipo_nota_notasCreDe'] ?? '';
                     <div class="col-12 col-md-6">
                         <p class="text-center" style="font-size:20px;">
                             <?php if ($fecha_inicio && $fecha_final) { ?>
-                                Fecha: <strong><?= $fecha_inicio ?> a <?= $fecha_final ?></strong>
+                                Fecha: <strong><?= htmlspecialchars($fecha_inicio, ENT_QUOTES, 'UTF-8') ?> a <?= htmlspecialchars($fecha_final, ENT_QUOTES, 'UTF-8') ?></strong>
                             <?php } ?>
                             <?php if ($nro_documento) { ?>
-                                | Documento: <strong><?= $nro_documento ?></strong>
+                                | Documento: <strong><?= htmlspecialchars($nro_documento, ENT_QUOTES, 'UTF-8') ?></strong>
                             <?php } ?>
                             <?php if ($tipo_nota) { ?>
-                                | Tipo: <strong><?= $tipo_nota ?></strong>
+                                | Tipo: <strong><?= htmlspecialchars($tipo_nota, ENT_QUOTES, 'UTF-8') ?></strong>
                             <?php } ?>
                         </p>
 
@@ -119,14 +125,14 @@ $tipo_nota     = $_SESSION['tipo_nota_notasCreDe'] ?? '';
         <?php
         require_once "./controladores/notasCreDeControlador.php";
         $notas = new notasCreDeControlador();
-        echo $notas->paginador_notasCreDe_controlador(
+        $notas->paginador_notasCreDe_controlador(
             $pagina[1],
             15,
             $pagina[0],
-            $_SESSION['fecha_inicio_notasCreDe'] ?? '',
-            $_SESSION['fecha_final_notasCreDe'] ?? '',
-            $_SESSION['nro_documento_notasCreDe'] ?? '',
-            $_SESSION['tipo_nota_notasCreDe'] ?? ''
+            $fecha_inicio,
+            $fecha_final,
+            $nro_documento,
+            $tipo_nota
         );
 
         ?>

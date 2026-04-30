@@ -83,9 +83,18 @@ class transferenciaModelo extends mainModel
             $ids = array_map('intval', array_keys($d['productos']));
 
             $qArt = $pdo->prepare("
-                SELECT id_articulo, precio_compra
-                FROM articulos
-                WHERE id_articulo IN (" . implode(',', $ids) . ")
+                SELECT
+                    a.id_articulo,
+                    COALESCE((
+                        SELECT ap.precio_compra
+                        FROM articulo_proveedor ap
+                        WHERE ap.id_articulo = a.id_articulo
+                          AND ap.activo = 1
+                        ORDER BY ap.id ASC
+                        LIMIT 1
+                    ), 0) AS precio_compra
+                FROM articulos a
+                WHERE a.id_articulo IN (" . implode(',', $ids) . ")
             ");
             $qArt->execute();
 

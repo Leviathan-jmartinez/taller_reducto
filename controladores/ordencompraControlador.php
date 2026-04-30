@@ -47,6 +47,8 @@ class ordencompraControlador extends ordencompraModelo
         $total = (int) $total->fetchColumn();
 
         $Npaginas = ceil($total / $registros);
+        $reg_inicio = $inicio + 1;
+        $reg_final = $inicio;
 
         $tabla .= '<div class="card shadow-sm">
                     <div class="card-body">
@@ -62,11 +64,10 @@ class ordencompraControlador extends ordencompraModelo
                                         <th>Estado</th>
                                         <th>Acción</th>
                                     </tr>
-						        </thead>
+        </thead>
 						    <tbody>';
         if ($total >= 1 && $pagina <= $Npaginas) {
-            $contador = $inicio + 1;
-            $reg_inicio = $inicio + 1;
+            $contador = $reg_inicio;
             foreach ($datos as $rows) {
                 switch ($rows['estadoPre']) {
                     case 1:
@@ -332,6 +333,12 @@ class ordencompraControlador extends ordencompraModelo
 
                 if ($detalleInsert->rowCount() != 1) {
                     $errores_detalles++;
+                } else {
+                    self::registrar_articulo_proveedor_modelo(
+                        $article['ID'],
+                        $_SESSION['Sdatos_proveedorOC']['ID'],
+                        $article['precio']
+                    );
                 }
             }
 
@@ -359,70 +366,100 @@ class ordencompraControlador extends ordencompraModelo
     /**Controlador paginar ordencompra */
     public function paginador_ordencompra_controlador($pagina, $registros, $url, $busqueda1, $busqueda2)
     {
-        $pagina = mainModel::limpiar_string($pagina);
-        $registros = mainModel::limpiar_string($registros);
+        $pagina    = (int) mainModel::limpiar_string($pagina);
+        $registros = (int) mainModel::limpiar_string($registros);
+        $url       = SERVERURL . mainModel::limpiar_string($url) . "/";
         $busqueda1 = mainModel::limpiar_string($busqueda1);
         $busqueda2 = mainModel::limpiar_string($busqueda2);
-        $url = mainModel::limpiar_string($url);
-        $url = SERVERURL . $url . "/";
-        $tabla = "";
 
-        $pagina = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
-        $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
+        $pagina = ($pagina > 0) ? $pagina : 1;
+        $registros = ($registros > 0) ? $registros : 15;
+        $inicio = ($pagina - 1) * $registros;
 
-        if (!empty($busqueda1) && !empty($busqueda2)) {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS oc.idorden_compra as idorden_compra, oc.id_sucursal as id_sucursal, oc.idproveedores as idproveedores, oc.id_usuario as id_usuario, oc.fecha as fecha, oc.estado as estodoOC, 
-            oc.fecha_entrega as fecha_entrega, oc.presupuestoid as presupuestoid, oc.updated as updated, oc.updatedby as updatedby, p.idproveedores as idproveedores, p.id_ciudad as id_ciudad, p.razon_social as razon_social, 
-            p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, p.estado as estadoPro, 
-            u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick
-            from orden_compra oc 
-            INNER JOIN proveedores p on p.idproveedores = oc.idproveedores 
-            INNER JOIN usuarios u on u.id_usuario = oc.id_usuario
-            WHERE date(fecha) >= '$busqueda1' AND date(fecha) <='$busqueda2' AND id_sucursal = " . $_SESSION['nick_sucursal'] . "
-            ORDER BY idorden_compra desc LIMIT $inicio,$registros";
+        /* ================= FILTROS ================= */
+
+        $filtros = [];
+
+        // FECHA
+        $fecha_inicio = $_SESSION['fecha_inicio_ordencompra2'] ?? $busqueda1;
+        $fecha_final  = $_SESSION['fecha_final_ordencompra2'] ?? $busqueda2;
+
+        if (!empty($fecha_inicio) && !empty($fecha_final)) {
+            $filtros[] = [
+                "campo" => "oc.fecha",
+                "tipo"  => "DATE_RANGE",
+                "desde" => $fecha_inicio,
+                "hasta" => $fecha_final
+            ];
+        }
+
+        // PROVEEDOR
+        $proveedor = $_SESSION['proveedor_oc'] ?? '';
+        if (!empty($proveedor)) {
+            $filtros[] = [
+                "campo" => "p.razon_social",
+                "tipo"  => "LIKE",
+                "valor" => $proveedor
+            ];
+        }
+
+        // ESTADO
+        $estado = $_SESSION['estado_oc'] ?? '';
+        if ($estado !== '') {
+            $filtros[] = [
+                "campo" => "oc.estado",
+                "tipo"  => "=",
+                "valor" => $estado
+            ];
         } else {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS oc.idorden_compra as idorden_compra, oc.id_sucursal as id_sucursal, oc.idproveedores as idproveedores, oc.id_usuario as id_usuario, oc.fecha as fecha, oc.estado as estodoOC, 
-            oc.fecha_entrega as fecha_entrega, oc.presupuestoid as presupuestoid, oc.updated as updated, oc.updatedby as updatedby, p.idproveedores as idproveedores, p.id_ciudad as id_ciudad, p.razon_social as razon_social, 
-            p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, p.estado as estadoPro, 
-            u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick
-            from orden_compra oc 
-            INNER JOIN proveedores p on p.idproveedores = oc.idproveedores 
-            INNER JOIN usuarios u on u.id_usuario = oc.id_usuario
-            WHERE oc.estado != 0 AND id_sucursal = " . $_SESSION['nick_sucursal'] . "
-            ORDER BY idorden_compra desc LIMIT $inicio,$registros";
+            $filtros[] = [
+                "campo" => "oc.estado",
+                "tipo"  => "!=",
+                "valor" => 0
+            ];
         }
-        $conexion = mainModel::conectar();
-        $datos = $conexion->query($consulta);
-        $datos = $datos->fetchAll();
 
-        $total = $conexion->query("SELECT FOUND_ROWS()");
-        $total = (int) $total->fetchColumn();
+        $filtrosSQL = mainModel::construirFiltros($filtros);
 
+        /* ================= DATOS ================= */
+
+        $res = ordencompraModelo::listar_oc_modelo($inicio, $registros, $filtrosSQL);
+
+        $datos = $res['datos'];
+        $total = $res['total'];
         $Npaginas = ceil($total / $registros);
+        $reg_inicio = $inicio + 1;
+        $reg_final = $inicio;
 
-        $tabla .= '<div class="table-responsive">
-					<table class="table table-dark table-sm">
-						<thead>
-							<tr class="text-center roboto-medium">
-								<th>#</th>
-								<th>CÓDIGO OC</th>
-                                <th>PROVEEDOR</th>
-                                <th>FECHA CREACION</th>
-                                <th>FECHA ENTREGA</th>
-                                <th>CREADO POR</th>
-                                <th>ESTADO</th>
-                                <th>PDF</th>';
-        if (mainModel::tienePermiso('compra.oc.anular')) {
-            $tabla .=           '<th>ANULAR</th>';
+        /* ================= TABLA ================= */
+
+        $tabla = '<div class="table-responsive">
+        <table class="table table-dark table-sm">
+        <thead>
+            <tr class="text-center roboto-medium">
+                <th>#</th>
+                <th>CÓDIGO OC</th>
+                <th>PROVEEDOR</th>
+                <th>FECHA CREACION</th>
+                <th>FECHA ENTREGA</th>
+                <th>CREADO POR</th>
+                <th>ESTADO</th>
+                <th>PDF</th>';
+
+        $puedeAnular = mainModel::tienePermiso('compra.oc.anular');
+
+        if ($puedeAnular) {
+            $tabla .= '<th>ANULAR</th>';
         }
-        $tabla .= '
-						</tr>
-						</thead>
-						<tbody>';
+
+        $tabla .= '</tr></thead><tbody>';
+
         if ($total >= 1 && $pagina <= $Npaginas) {
-            $contador = $inicio + 1;
-            $reg_inicio = $inicio + 1;
+
+            $contador = $reg_inicio;
+
             foreach ($datos as $rows) {
+
                 switch ($rows['estodoOC']) {
                     case 1:
                         $estadoBadge = '<span class="badge bg-primary">Pendiente</span>';
@@ -434,56 +471,68 @@ class ordencompraControlador extends ordencompraModelo
                         $estadoBadge = '<span class="badge bg-danger">Anulado</span>';
                         break;
                     default:
-                        $estadoBadge = '<span class="badge bg-secondary">Desconocido</span>';
+                        $estadoBadge = '<span class="badge bg-secondary">?</span>';
                 }
+
                 $tabla .= '
-                            <tr class="text-center">
-								<td>' . $contador . '</td>
-								<td>' . $rows['idorden_compra'] . '</td>
-								<td>' . $rows['razon_social'] . '</td>
-								<td>' . date("d-m-Y", strtotime($rows['fecha'])) . '</td>
-								<td>' . date("d-m-Y", strtotime($rows['fecha_entrega'])) . '</td>
-                                <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
-                                <td>' . $estadoBadge . '</td>
-                                <td>
-                                <a href="' . SERVERURL . 'pdf/orden_compra.php?id=' . mainModel::encryption($rows['idorden_compra']) . '"
-                                target="_blank"
-                                class="btn btn-info"
-                                title="Imprimir Orden de Compra">
-                                    <i class="fas fa-file-pdf"></i>
-                                </a>
-                                </td>';
-                if (mainModel::tienePermiso('compra.oc.anular')) {
-                    $tabla .= '<td>
-									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/ordencompraAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
-                                    <input type="hidden" name="ordencompra_id_del" value=' . mainModel::encryption($rows['idorden_compra']) . '>
-										<button type="submit" class="btn btn-warning">
-											<i class="far fa-trash-alt"></i>
-										</button>
-									</form>
-								</td>';
+            <tr class="text-center">
+                <td>' . $contador . '</td>
+                <td>' . $rows['idorden_compra'] . '</td>
+                <td>' . $rows['razon_social'] . '</td>
+                <td>' . date("d-m-Y", strtotime($rows['fecha'])) . '</td>
+                <td>' . date("d-m-Y", strtotime($rows['fecha_entrega'])) . '</td>
+                <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
+                <td>' . $estadoBadge . '</td>
+                <td>
+                    <a href="' . SERVERURL . 'pdf/orden_compra.php?id=' . $this->encryption($rows['idorden_compra']) . '"
+                        target="_blank"
+                        class="btn btn-info">
+                        <i class="fas fa-file-pdf"></i>
+                    </a>
+                </td>';
+
+                if ($puedeAnular) {
+                    $tabla .= '
+                <td>
+                    <form class="FormularioAjax"
+                        action="' . SERVERURL . 'ajax/ordencompraAjax.php"
+                        method="POST"
+                        data-form="delete">
+
+                        <input type="hidden" name="ordencompra_id_del"
+                            value="' . $this->encryption($rows['idorden_compra']) . '">
+
+                        <button type="submit" class="btn btn-warning">
+                            <i class="far fa-trash-alt"></i>
+                        </button>
+                    </form>
+                </td>';
                 }
 
                 $tabla .= '</tr>';
                 $contador++;
             }
+
             $reg_final = $contador - 1;
         } else {
-            if ($total >= 1) {
-                $tabla .= '<tr class="text-center"> <td colspan="6"> <a href="' . $url . '" class="btn btn-reaised btn-primary btn-sm"> Haga click aqui para recargar el listado </a> </td> </tr> ';
-            } else {
-                $tabla .= '<tr class="text-center"> <td colspan="6"> No hay regitros en el sistema</td> </tr> ';
-            }
+            $colspan = $puedeAnular ? 9 : 8;
+            $tabla .= '<tr><td colspan="' . $colspan . '" class="text-center">Sin registros</td></tr>';
         }
 
-        $tabla .= '       </tbody>
-					</table>
-				</div>';
+        $tabla .= '</tbody></table></div>';
+
+        /* ================= PAGINADOR ================= */
+
         if ($total >= 1 && $pagina <= $Npaginas) {
-            $tabla .= '<p class="text-right"> Mostrando registro ' . $reg_inicio . ' al ' . $reg_final . ' de un total de ' . $total . '</p>';
+
+            $tabla .= '<p class="text-right">
+            Mostrando ' . $reg_inicio . ' al ' . $reg_final . ' de ' . $total . '
+        </p>';
+
             $tabla .= mainModel::paginador($pagina, $Npaginas, $url, 10);
         }
-        echo $tabla;
+
+        return $tabla;
     }
     /**fin controlador */
 
@@ -654,7 +703,17 @@ class ordencompraControlador extends ordencompraModelo
                 exit();
             }
             $id_proveedor = $_SESSION['Sdatos_proveedorOC']['ID'];
-            $datos_articuloPre = mainModel::ejecutar_consulta_simple("SELECT * FROM articulos WHERE (codigo like '%$articulo%' OR desc_articulo like '%$articulo%') AND estado=1 AND idproveedores='$id_proveedor' ORDER BY desc_articulo DESC");
+            $datos_articuloPre = mainModel::ejecutar_consulta_simple("
+                SELECT a.*, ap.precio_compra
+                FROM articulos a
+                LEFT JOIN articulo_proveedor ap
+                    ON ap.id_articulo = a.id_articulo
+                   AND ap.idproveedores = '$id_proveedor'
+                   AND ap.activo = 1
+                WHERE (a.codigo LIKE '%$articulo%' OR a.desc_articulo LIKE '%$articulo%')
+                  AND a.estado = 1
+                ORDER BY a.desc_articulo DESC
+            ");
 
             if ($datos_articuloPre->rowCount() >= 1) {
                 $tabla = '<div class="table-responsive"><table class="table table-hover table-bordered table-sm"><tbody>';
@@ -669,7 +728,7 @@ class ordencompraControlador extends ordencompraModelo
 
                     <!-- Precio -->
                     <td style="width:100px;">
-                        <input type="number" id="precio_' . $rows['id_articulo'] . '" class="form-control form-control-sm" step="0.01" min="0">
+                        <input type="number" id="precio_' . $rows['id_articulo'] . '" class="form-control form-control-sm" step="0.01" min="0" value="' . ($rows['precio_compra'] ?? 0) . '">
                     </td>
 
                     <!-- Botón agregar -->
