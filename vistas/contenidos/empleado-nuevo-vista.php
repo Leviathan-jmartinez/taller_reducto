@@ -42,7 +42,7 @@ $busqueda = $_SESSION['busqueda_empleado'] ?? "";
         <?php if ($editando) { ?>
             <input type="hidden" name="empleado_id_up" value="<?php echo $id; ?>">
         <?php } ?>
-
+        <legend><i class="fas fa-info-circle"></i> &nbsp; Información básica</legend>
         <div class="row">
 
             <!-- CARGO -->
@@ -184,7 +184,7 @@ $busqueda = $_SESSION['busqueda_empleado'] ?? "";
         <p class="text-center mt-4">
             <button type="submit"
                 class="btn btn-raised <?php echo $editando ? 'btn-success' : 'btn-info'; ?>">
-                <?php echo $editando ? 'ACTUALIZAR' : 'GUARDAR'; ?>
+                <?php echo $editando ? 'GUARDAR' : 'GUARDAR'; ?>
             </button>
 
             <?php if ($editando) { ?>
@@ -201,7 +201,7 @@ $busqueda = $_SESSION['busqueda_empleado'] ?? "";
 <!-- ================= BUSCADOR ================= -->
 <div class="container-fluid mb-3">
 
-    <form class="FormularioAjax"
+    <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
         method="POST"
         data-form="search"

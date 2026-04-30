@@ -38,7 +38,7 @@ $modelos  = $ins_vehiculo->listar_modelos_controlador();
 <div class="container-fluid">
 
     <form class="form-neon FormularioAjax"
-        action="<?php echo SERVERURL; ?>ajax/vehiculoAjax.php"
+        action="<?php echo SERVERURL; ?>ajax/vehiculoAjax.php"  
         method="POST"
         data-form="<?php echo $editando ? 'update' : 'save'; ?>">
 

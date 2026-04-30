@@ -43,7 +43,7 @@ if ($id != null) {
                 <i class="far fa-address-card"></i> &nbsp;
                 <?php echo $editando ? "Actualizar cargo" : "Información del cargo"; ?>
             </legend>
-
+            <legend><i class="fas fa-info-circle"></i> &nbsp; Información básica</legend>
             <div class="container-fluid">
                 <div class="row">
 
