@@ -136,7 +136,7 @@ $busqueda_activa = !empty($fecha_inicio) || !empty($fecha_final) || !empty($prov
                             Busqueda:
                             <strong>
                                 <?php
-$criterios = [];
+                                $criterios = [];
 
                                 if (!empty($fecha_inicio) || !empty($fecha_final)) {
                                     $criterios[] = "Fecha: " . ($fecha_inicio ?: 'inicio') . " a " . ($fecha_final ?: 'final');
@@ -177,7 +177,7 @@ $criterios = [];
 
     <div class="container-fluid">
         <?php
-require_once "./controladores/ordencompraControlador.php";
+        require_once "./controladores/ordencompraControlador.php";
 
         $ins_ordencompra = new ordencompraControlador();
 

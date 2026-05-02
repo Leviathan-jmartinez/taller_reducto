@@ -146,7 +146,7 @@ $busqueda_ordencompra = $_SESSION['busqueda_ordencompra'] ?? '';
 
 
 <?php } else { ?>
-    <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="default" autocomplete="off">
+    <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
         <input type="hidden" name="modulo" value="ordencompra">
         <input type="hidden" name="eliminar_busqueda" value="eliminar">
         <div class="card shadow-sm mb-4">
@@ -414,36 +414,6 @@ endforeach; ?>
 </div>
 
 
-<!-- MODAL BUSCAR PEDIDO -->
-<div class="modal fade" id="ModalBuscarPedido" tabindex="-1" role="dialog" aria-labelledby="ModalBuscarPedido" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="ModalBuscarPedido">Agregar Pedido</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                    <div class="form-group">
-                        <label for="input_item" class="bmd-label-floating">Código, Proveedor</label>
-                        <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" class="form-control" name="input_pedido" id="input_pedido" maxlength="30">
-                    </div>
-                </div>
-                <br>
-                <div class="container-fluid" id="tabla_pedidosPre">
-                </div>
-
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" onclick="buscar_pedidoPre()"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar</button>
-                &nbsp; &nbsp;
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <?php
 include_once "./vistas/inc/ordencompra.php"; ?>

@@ -139,11 +139,30 @@ class ordencompraControlador extends ordencompraModelo
         // 3) Validaciones iniciales
         // -----------------------------
         if (!$idpresupuesto || $idpresupuesto === "undefined" || !is_numeric($idpresupuesto)) {
-            echo "error:no_id_valido";
+            return "error:no_id_valido";
         }
 
         if (empty($cantidades)) {
-            echo "error:no_cantidades";
+            return "error:no_cantidades";
+        }
+
+        $cantidades_validas = [];
+        foreach ($cantidades as $idArticulo => $cantidad) {
+            $idArticulo = mainModel::limpiar_string($idArticulo);
+            $cantidad = mainModel::limpiar_string($cantidad);
+
+            if ($cantidad === "" || !is_numeric($cantidad)) {
+                continue;
+            }
+
+            $cantidad = (int) $cantidad;
+            if ($cantidad > 0) {
+                $cantidades_validas[$idArticulo] = $cantidad;
+            }
+        }
+
+        if (empty($cantidades_validas)) {
+            return "error:sin_articulos_cantidad";
         }
 
         $conexion = mainModel::conectar();
@@ -159,9 +178,48 @@ class ordencompraControlador extends ordencompraModelo
         $pre = $consultaPre->fetch(PDO::FETCH_ASSOC);
 
         if (!$pre) {
-            echo "error:presupuesto_no_existe";
+            return "error:presupuesto_no_existe";
         }
 
+        // -----------------------------
+        // 6) Obtener detalle del presupuesto
+        // -----------------------------
+        $consultaDet = $conexion->prepare("
+            SELECT d.id_articulo, d.precio
+            FROM presupuesto_detalle d
+            INNER JOIN presupuesto_compra c 
+                ON c.idpresupuesto_compra = d.idpresupuesto_compra
+            WHERE d.idpresupuesto_compra = :id
+            AND c.id_sucursal = :sucursal");
+        $consultaDet->execute([":id" => $idpresupuesto, ":sucursal" => $_SESSION['nick_sucursal']]);
+        $detallePre = $consultaDet->fetchAll(PDO::FETCH_ASSOC);
+        if (empty($detallePre)) {
+            return "error:detalle_vacio";
+        }
+
+        $articulos_presupuesto = array_column($detallePre, null, "id_articulo");
+        $detalles_validos = [];
+
+        foreach ($cantidades_validas as $idArt => $cantidad) {
+            if (!isset($articulos_presupuesto[$idArt])) {
+                continue;
+            }
+
+            $item = $articulos_presupuesto[$idArt];
+            if (!isset($item["precio"]) || !is_numeric($item["precio"]) || (float) $item["precio"] <= 0) {
+                return "error:precio_invalido";
+            }
+
+            $detalles_validos[] = [
+                "id_articulo" => $idArt,
+                "cantidad" => $cantidad,
+                "precio" => (float) $item["precio"]
+            ];
+        }
+
+        if (empty($detalles_validos)) {
+            return "error:sin_articulos_cantidad";
+        }
 
         // -----------------------------
         // 5) Crear cabecera de OC
@@ -177,51 +235,21 @@ class ordencompraControlador extends ordencompraModelo
         $idOC = ordenCompraModelo::agregar_ocC_modelo1($datos_oc_cab);
 
         if ($idOC <= 0) {
-            echo "error:oc_cabecera";
-            exit();
-        }
-
-
-        // -----------------------------
-        // 6) Obtener detalle del presupuesto
-        // -----------------------------
-        $consultaDet = $conexion->prepare("
-            SELECT d.id_articulo, d.precio
-            FROM presupuesto_detalle d
-            INNER JOIN presupuesto_compra c 
-                ON c.idpresupuesto_compra = d.idpresupuesto_compra
-            WHERE d.idpresupuesto_compra = :id
-            AND c.id_sucursal = :sucursal");
-        $consultaDet->execute([":id" => $idpresupuesto, ":sucursal" => $_SESSION['nick_sucursal']]);
-        $detallePre = $consultaDet->fetchAll(PDO::FETCH_ASSOC);
-        if (empty($detallePre)) {
-            echo "error:detalle_vacio";
-            exit();
+            return "error:oc_cabecera";
         }
         // -----------------------------
         // 7) Insertar detalle de OC
         // -----------------------------
         $errores = 0;
 
-        foreach ($detallePre as $item) {
-            $idArt = $item["id_articulo"];
-
-            if (!isset($cantidades[$idArt]) || $cantidades[$idArt] <= 0) {
-                continue; // No insertar si no hay cantidad
-            }
-
+        foreach ($detalles_validos as $item) {
             $datos_det = [
                 "ocid"     => $idOC,
-                "articulo" => $idArt,
-                "cantidad" => $cantidades[$idArt],
+                "articulo" => $item["id_articulo"],
+                "cantidad" => $item["cantidad"],
                 "precio"   => $item["precio"],
-                "pendiente" => $cantidades[$idArt]
+                "pendiente" => $item["cantidad"]
             ];
-
-            if (!isset($item["precio"])) {
-                var_dump("ERROR: precio no existe en item", $item);
-                exit();
-            }
 
             $insert = ordenCompraModelo::agregar_ocD_modelo($datos_det);
 
@@ -249,12 +277,70 @@ class ordencompraControlador extends ordencompraModelo
         // 9) Respuesta final al AJAX
         // -----------------------------
         if ($errores > 0) {
-            echo "warning:" . $idOC;
+            return "warning:" . $idOC;
         } else {
-            echo "ok:" . $idOC;
+            return "ok:" . $idOC;
         }
     }
     /**fin controlador */
+
+    public function obtener_detalle_presupuesto_controlador()
+    {
+        $idpresupuesto = $_POST['idpresupuesto'] ?? null;
+
+        if (is_array($idpresupuesto)) {
+            $idpresupuesto = $idpresupuesto[0] ?? null;
+        }
+
+        $idpresupuesto = mainModel::limpiar_string((string) $idpresupuesto);
+
+        if ($idpresupuesto === "" || !is_numeric($idpresupuesto)) {
+            return '<tr><td colspan="4" class="text-center">Presupuesto invalido</td></tr>';
+        }
+
+        $conexion = mainModel::conectar();
+        $consulta = $conexion->prepare("
+            SELECT d.id_articulo, a.codigo, a.desc_articulo, d.precio
+            FROM presupuesto_detalle d
+            INNER JOIN presupuesto_compra c
+                ON c.idpresupuesto_compra = d.idpresupuesto_compra
+            INNER JOIN articulos a
+                ON a.id_articulo = d.id_articulo
+            WHERE d.idpresupuesto_compra = :id
+            AND c.id_sucursal = :sucursal
+        ");
+        $consulta->execute([
+            ":id" => $idpresupuesto,
+            ":sucursal" => $_SESSION['nick_sucursal']
+        ]);
+
+        $datos = $consulta->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($datos)) {
+            return '<tr><td colspan="4" class="text-center">No se encontraron articulos para este presupuesto</td></tr>';
+        }
+
+        $html = "";
+
+        foreach ($datos as $row) {
+            $idArticulo = htmlspecialchars($row['id_articulo'], ENT_QUOTES, 'UTF-8');
+            $codigo = htmlspecialchars($row['codigo'], ENT_QUOTES, 'UTF-8');
+            $descripcion = htmlspecialchars($row['desc_articulo'], ENT_QUOTES, 'UTF-8');
+            $precio = htmlspecialchars($row['precio'], ENT_QUOTES, 'UTF-8');
+
+            $html .= '
+                <tr>
+                    <td>' . $codigo . '</td>
+                    <td>' . $descripcion . '</td>
+                    <td>' . $precio . '</td>
+                    <td>
+                        <input type="number" name="cantidades[' . $idArticulo . ']" min="1" class="form-control">
+                    </td>
+                </tr>';
+        }
+
+        return $html;
+    }
 
     /**controlador agregar orden de compra */
     public function agregar_oc_controlador()
@@ -270,8 +356,7 @@ class ordencompraControlador extends ordencompraModelo
                     "Texto" => "No has seleccionado ningun proveedor",
                     "Tipo" => "error"
                 ];
-                echo json_encode($alerta);
-                exit();
+                return json_encode($alerta);
             }
             if (empty($_SESSION['Sdatos_articuloOC'])) {
                 $alerta = [
@@ -280,8 +365,7 @@ class ordencompraControlador extends ordencompraModelo
                     "Texto" => "No has seleccionado ningun artículo para la orden de compra",
                     "Tipo" => "error"
                 ];
-                echo json_encode($alerta);
-                exit();
+                return json_encode($alerta);
             }
 
             if (empty($fecha_entrega) || $fecha_entrega == null) {
@@ -291,8 +375,32 @@ class ordencompraControlador extends ordencompraModelo
                     "Texto" => "Debes seleccionar la fecha de entrega",
                     "Tipo" => "error"
                 ];
-                echo json_encode($alerta);
-                exit();
+                return json_encode($alerta);
+            }
+
+            foreach ($_SESSION['Sdatos_articuloOC'] as $article) {
+                $cantidad = $article['cantidad'] ?? 0;
+                $precio = $article['precio'] ?? 0;
+
+                if (!is_numeric($cantidad) || (int) $cantidad <= 0) {
+                    $alerta = [
+                        "Alerta" => "simple",
+                        "Titulo" => "Error!",
+                        "Texto" => "Todos los articulos deben tener cantidad mayor a 0",
+                        "Tipo" => "error"
+                    ];
+                    return json_encode($alerta);
+                }
+
+                if (!is_numeric($precio) || (float) $precio <= 0) {
+                    $alerta = [
+                        "Alerta" => "simple",
+                        "Titulo" => "Error!",
+                        "Texto" => "Todos los articulos deben tener precio mayor a 0",
+                        "Tipo" => "error"
+                    ];
+                    return json_encode($alerta);
+                }
             }
 
 
@@ -313,8 +421,7 @@ class ordencompraControlador extends ordencompraModelo
                     "Texto" => "No pudimos registrar la cabecera del pedido",
                     "Tipo" => "error"
                 ];
-                echo json_encode($alerta);
-                exit();
+                return json_encode($alerta);
             }
 
             /** Insertar detalles */
@@ -359,8 +466,10 @@ class ordencompraControlador extends ordencompraModelo
                 $_SESSION['tipo_ordencompra'] = "con_presupuesto";
                 unset($_SESSION['Sdatos_proveedorOC'], $_SESSION['Sdatos_articuloOC']);
             }
-            echo json_encode($alerta);
+            return json_encode($alerta);
         }
+
+        return "";
     }
 
     /**Controlador paginar ordencompra */
@@ -551,8 +660,7 @@ class ordencompraControlador extends ordencompraModelo
                 "Texto" => "La ORDEN DE COMPRA que intenta anular no existe en el sistema",
                 "Tipo" => "error"
             ];
-            echo json_encode($alerta);
-            exit();
+            return json_encode($alerta);
         }
         $check_presupuestoestado = mainModel::ejecutar_consulta_simple("SELECT idorden_compra FROM orden_compra WHERE idorden_compra = '$id' AND estado = 2 AND id_sucursal = " . $_SESSION['nick_sucursal'] . "");
         if ($check_presupuestoestado->rowCount() > 0) {
@@ -562,8 +670,7 @@ class ordencompraControlador extends ordencompraModelo
                 "Texto" => "La ORDEN DE COMPRA que intenta anular se encuentra procesado",
                 "Tipo" => "error"
             ];
-            echo json_encode($alerta);
-            exit();
+            return json_encode($alerta);
         }
 
 
@@ -596,7 +703,7 @@ class ordencompraControlador extends ordencompraModelo
                 "Tipo" => "error"
             ];
         }
-        echo json_encode($alerta);
+        return json_encode($alerta);
     }
     /**fin controlador */
 
@@ -656,8 +763,7 @@ class ordencompraControlador extends ordencompraModelo
                 "Texto" => "No hemos podido encontrar el proveedor en el sistema",
                 "Tipo" => "error"
             ];
-            echo json_encode($alerta);
-            exit();
+            return json_encode($alerta);
         } else {
             $campos = $check_proveedor->fetch();
         }
@@ -676,7 +782,7 @@ class ordencompraControlador extends ordencompraModelo
                 "Texto" => "Proveedor agregado correctamente al pedido",
                 "Tipo" => "success"
             ];
-            echo json_encode($alerta);
+            return json_encode($alerta);
         } else {
             $alerta = [
                 "Alerta" => "simple",
@@ -684,7 +790,7 @@ class ordencompraControlador extends ordencompraModelo
                 "Texto" => "No hemos podido agregar el proveedor al pedido",
                 "Tipo" => "error"
             ];
-            echo json_encode($alerta);
+            return json_encode($alerta);
         }
     }
     /**fin controlador */
@@ -728,7 +834,7 @@ class ordencompraControlador extends ordencompraModelo
 
                     <!-- Precio -->
                     <td style="width:100px;">
-                        <input type="number" id="precio_' . $rows['id_articulo'] . '" class="form-control form-control-sm" step="0.01" min="0" value="' . ($rows['precio_compra'] ?? 0) . '">
+                        <input type="number" id="precio_' . $rows['id_articulo'] . '" class="form-control form-control-sm" step="0.01" min="0.01" value="' . ($rows['precio_compra'] ?? 0) . '">
                     </td>
 
                     <!-- Botón agregar -->
@@ -760,15 +866,15 @@ class ordencompraControlador extends ordencompraModelo
             // Validaciones
             $check_articulo = mainModel::ejecutar_consulta_simple("SELECT * FROM articulos WHERE id_articulo='$id' AND estado=1");
             if ($check_articulo->rowCount() <= 0)
-                die(json_encode(["Alerta" => "simple", "Titulo" => "Error!", "Texto" => "No se encontró el artículo", "Tipo" => "error"]));
+                return json_encode(["Alerta" => "simple", "Titulo" => "Error!", "Texto" => "No se encontró el artículo", "Tipo" => "error"]);
 
             $campos = $check_articulo->fetch();
 
             if ($cantidad == "" || !is_numeric($cantidad) || intval($cantidad) <= 0)
-                die(json_encode(["Alerta" => "simple", "Titulo" => "Error!", "Texto" => "Cantidad inválida", "Tipo" => "error"]));
+                return json_encode(["Alerta" => "simple", "Titulo" => "Error!", "Texto" => "Cantidad inválida", "Tipo" => "error"]);
 
-            if ($precio == "" || !is_numeric($precio) || floatval($precio) < 0)
-                die(json_encode(["Alerta" => "simple", "Titulo" => "Error!", "Texto" => "Precio inválido", "Tipo" => "error"]));
+            if ($precio == "" || !is_numeric($precio) || floatval($precio) <= 0)
+                return json_encode(["Alerta" => "simple", "Titulo" => "Error!", "Texto" => "El precio debe ser mayor a 0", "Tipo" => "error"]);
 
             $cantidad = intval($cantidad);
             $precio = floatval($precio);
@@ -797,9 +903,10 @@ class ordencompraControlador extends ordencompraModelo
                     "Tipo" => "success"
                 ];
             }
-            echo json_encode($alerta);
-            exit();
+            return json_encode($alerta);
         }
+
+        return "";
     }
     /**fin controlador */
     public function decrypt($valor)
@@ -850,3 +957,4 @@ class ordencompraControlador extends ordencompraModelo
         }
     }
 }
+

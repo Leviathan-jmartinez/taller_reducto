@@ -104,6 +104,18 @@
         let cantidad = document.querySelector('#cantidad_' + id).value.trim();
         let precio = document.querySelector('#precio_' + id).value.trim();
 
+        if (cantidad === "" || isNaN(cantidad) || parseInt(cantidad, 10) <= 0) {
+            Swal.fire("Error", "La cantidad debe ser mayor a 0", "error");
+            $('#ModalArticuloOC').modal('show');
+            return;
+        }
+
+        if (precio === "" || isNaN(precio) || parseFloat(precio) <= 0) {
+            Swal.fire("Error", "El precio debe ser mayor a 0", "error");
+            $('#ModalArticuloOC').modal('show');
+            return;
+        }
+
         let datos = new FormData();
         datos.append('id_agregar_articuloOC', id);
         datos.append('detalle_cantidad', cantidad);
@@ -140,9 +152,10 @@
             // Guardar el ID global para usarlo en btnGuardarOC
             window.idPresupuestoActual = id;
 
-            fetch("<?php echo SERVERURL; ?>ajax/presupuestoDetalleAjax.php", {
+            fetch("<?php echo SERVERURL; ?>ajax/ordencompraAjax.php", {
                     method: "POST",
                     body: new URLSearchParams({
+                        accion: "detalle_presupuesto_oc",
                         idpresupuesto: id
                     })
                 })
@@ -165,6 +178,19 @@
 
         let form = document.getElementById("formOcProductos");
         let datos = new FormData(form);
+        let tieneCantidad = false;
+
+        form.querySelectorAll('input[name^="cantidades["]').forEach(input => {
+            let cantidad = input.value.trim();
+            if (cantidad !== "" && !isNaN(cantidad) && parseInt(cantidad, 10) > 0) {
+                tieneCantidad = true;
+            }
+        });
+
+        if (!tieneCantidad) {
+            Swal.fire("Error", "Debe cargar al menos un articulo con cantidad mayor a 0", "error");
+            return;
+        }
 
         // Aquí le pasamos el ID del presupuesto seleccionado
         datos.append("idpresupuesto", window.idPresupuestoActual);
@@ -184,6 +210,15 @@
                     Swal.fire("OC generada", "N° " + idOC, "success").then(() => {
                         location.reload();
                     });
+                } else if (r.includes("warning:")) {
+                    let idOC = r.replace("warning:", "");
+                    Swal.fire("OC generada con advertencia", "Nro " + idOC + ". Algunos articulos no se guardaron.", "warning").then(() => {
+                        location.reload();
+                    });
+                } else if (r === "error:sin_articulos_cantidad" || r === "error:no_cantidades") {
+                    Swal.fire("Error", "Debe cargar al menos un articulo con cantidad mayor a 0", "error");
+                } else if (r === "error:precio_invalido") {
+                    Swal.fire("Error", "El presupuesto contiene articulos con precio invalido", "error");
                 } else {
                     Swal.fire("Error", r, "error");
                 }

@@ -7,7 +7,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 session_start(['name' => 'STR']);
 if (
-    isset($_POST['idpresupuesto']) || isset($_POST['ordencompra_id_del']) || isset($_POST['buscar_proveedorOC']) || isset($_POST['id_agregar_proveedorOC'])
+    isset($_POST['accion']) || isset($_POST['idpresupuesto']) || isset($_POST['ordencompra_id_del']) || isset($_POST['buscar_proveedorOC']) || isset($_POST['id_agregar_proveedorOC'])
     || isset($_POST['buscar_articuloOC']) || isset($_POST['id_agregar_articuloOC']) || isset($_POST['agregar_ordencompra']) || isset($_POST['limpiar_ordencompra'])
     || isset($_POST['id_eliminar_proveedorOC']) || isset($_POST['id_eliminar_articuloOC'])
 ) {
@@ -15,7 +15,9 @@ if (
     require_once "../controladores/ordencompraControlador.php";
     $inst_ocompra = new ordencompraControlador();
 
-    if (isset($_POST['idpresupuesto'])) {
+    if (isset($_POST['accion']) && $_POST['accion'] === 'detalle_presupuesto_oc') {
+        echo $inst_ocompra->obtener_detalle_presupuesto_controlador();
+    } elseif (isset($_POST['idpresupuesto'])) {
         echo $inst_ocompra->generar_oc_controlador();
     }
     if (isset($_POST['ordencompra_id_del'])) {
