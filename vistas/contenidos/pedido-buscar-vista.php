@@ -1,4 +1,5 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('compra.pedido.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
@@ -25,7 +26,7 @@ if (!mainModel::tienePermiso('compra.pedido.ver')) {
 </div>
 <?php if (!isset($_SESSION['fecha_inicio_pedido']) && !isset($_SESSION['fecha_final_pedido'])) { ?>
     <div class="container-fluid">
-        <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="default" autocomplete="off">
+        <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
             <input type="hidden" name="modulo" value="pedido">
             <div class="container-fluid">
                 <div class="row justify-content-md-center">
@@ -77,7 +78,7 @@ if (!mainModel::tienePermiso('compra.pedido.ver')) {
         <?php
         require_once "./controladores/pedidoControlador.php";
         $ins_pedido = new pedidoControlador();
-        echo $ins_pedido->paginador_pedidos_controlador($pagina[1], 15, $pagina[0], $_SESSION['fecha_inicio_pedido'], $_SESSION['fecha_final_pedido']);
+        $ins_pedido->paginador_pedidos_controlador($pagina[1], 15, $pagina[0], $_SESSION['fecha_inicio_pedido'], $_SESSION['fecha_final_pedido']);
         ?>
     </div>
 

@@ -206,7 +206,7 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
             <button type="button"
                 class="btn btn-secondary btn-raised"
                 onclick="limpiarDiagnostico()">
-                <i class="fas fa-times"></i> Limpiar
+                <i class="fas fa-times"></i> Cancelar
             </button>
         </div>
 

@@ -1,5 +1,5 @@
 <?php
-
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('empleado.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
@@ -109,7 +109,7 @@ if (!mainModel::tienePermiso('empleado.ver')) {
     <!-- RESULTADOS -->
     <div class="container-fluid">
         <?php
-        require_once "./controladores/empleadoControlador.php";
+require_once "./controladores/empleadoControlador.php";
         $ins_empleado = new empleadoControlador();
 
         echo $ins_empleado->paginador_empleados_controlador(
@@ -121,4 +121,5 @@ if (!mainModel::tienePermiso('empleado.ver')) {
         ?>
     </div>
 
-<?php } ?>
+<?php
+} ?>

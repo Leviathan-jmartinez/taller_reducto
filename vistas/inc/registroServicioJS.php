@@ -198,6 +198,32 @@
         renderInsumos();
     }
 
+    function limpiarRegistroServicio() {
+        detalleInsumos = [];
+
+        document.getElementById('idorden_trabajo').value = '';
+        document.getElementById('insumos_json').value = '';
+        document.getElementById('ot_numero').value = '';
+        document.getElementById('ot_cliente').value = '';
+        document.getElementById('ot_vehiculo').value = '';
+        document.getElementById('resultado_ot').innerHTML = '';
+        document.getElementById('resultado_insumos').innerHTML = '';
+        document.getElementById('detalle_insumos').innerHTML = '';
+        document.getElementById('detalle_ot').innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center text-muted">
+                    Seleccione una orden de trabajo
+                </td>
+            </tr>`;
+
+        const buscarInsumoInput = document.getElementById('buscar_insumo');
+        if (buscarInsumoInput) buscarInsumoInput.value = '';
+
+        document.querySelector('[name="fecha_ejecucion"]').disabled = true;
+        document.querySelector('[name="observacion"]').value = '';
+        document.querySelector('[name="observacion"]').disabled = true;
+    }
+
     document.querySelector('.FormularioAjax')
         .addEventListener('submit', function() {
 

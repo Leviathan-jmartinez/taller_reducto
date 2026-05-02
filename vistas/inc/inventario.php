@@ -328,7 +328,7 @@
         const btnLimpiar = document.getElementById("btn-limpiar-todo");
         if (btnLimpiar) {
             btnLimpiar.addEventListener("click", function() {
-                if (!confirm("¿Desea limpiar todo el ajuste y la tabla?")) return;
+                if (!confirm("¿Desea cancelar el ajuste y limpiar la tabla?")) return;
 
                 fetch("<?= SERVERURL ?>ajax/inventarioAjax.php", {
                         method: "POST",
@@ -344,7 +344,7 @@
                         if (data.status === "ok") {
                             Swal.fire({
                                 type: 'success',
-                                title: 'Todo limpiado',
+                                title: 'Ajuste cancelado',
                                 text: data.msg
                             }).then(() => location.reload());
                         }

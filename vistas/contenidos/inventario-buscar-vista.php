@@ -1,5 +1,5 @@
 <?php
-
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('inventario.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
@@ -92,7 +92,7 @@ if (!isset($pagina)) {
 
     <div class="container-fluid">
         <?php
-        require_once "./controladores/inventarioControlador.php";
+require_once "./controladores/inventarioControlador.php";
         $ins_inventario = new inventarioControlador();
         $ins_inventario->paginador_inv_controlador($pagina[1], 15, $pagina[0], $fecha_inicio, $fecha_final);
         ?>

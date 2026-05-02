@@ -1,4 +1,5 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('servicio.presupuesto.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
@@ -23,7 +24,7 @@ if (!mainModel::tienePermiso('servicio.presupuesto.ver')) {
 
 <div class="container-fluid">
     <?php
-    require_once "./controladores/presupuestoservicioControlador.php";
+require_once "./controladores/presupuestoservicioControlador.php";
     $ins_presupuestoservi = new presupuestoservicioControlador();
     echo $ins_presupuestoservi->paginador_presupuestoservi_controlador($pagina[1], 15, $pagina[0], "", "");
     ?>

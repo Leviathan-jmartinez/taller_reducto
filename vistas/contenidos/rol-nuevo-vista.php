@@ -1,10 +1,10 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('roles.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
 
-$pagina = explode("/", $_GET['vista']);
 $id = $pagina[1] ?? null;
 
 $editando = false;
@@ -41,7 +41,8 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
                     <i class="fas fa-key fa-fw"></i> &nbsp; Roles
                 </a>
             </li>
-        <?php } ?>
+        <?php
+} ?>
 
         <?php if (mainModel::tienePermiso('usuarios.permisos_por_roles')) { ?>
             <li>
@@ -49,7 +50,8 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
                     <i class="fas fa-key fa-fw"></i> &nbsp; PERMISOS
                 </a>
             </li>
-        <?php } ?>
+        <?php
+} ?>
 
     </ul>
 </div>
@@ -63,7 +65,8 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
 
         <?php if ($editando) { ?>
             <input type="hidden" name="rol_id_up" value="<?php echo $id; ?>">
-        <?php } ?>
+        <?php
+} ?>
 
         <div class="row">
 
@@ -106,7 +109,8 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
                         </select>
                     </div>
                 </div>
-            <?php } ?>
+            <?php
+} ?>
 
         </div>
 
@@ -121,7 +125,8 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
                     class="btn btn-raised btn-secondary">
                     CANCELAR
                 </a>
-            <?php } ?>
+            <?php
+} ?>
         </p>
 
     </form>
@@ -160,10 +165,11 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
                         <input type="hidden" name="eliminar_busqueda" value="1">
 
                         <button type="submit" class="btn btn-danger">
-                            Limpiar
+                            Cancelar
                         </button>
                     </form>
-                <?php } ?>
+                <?php
+} ?>
 
             </div>
         </div>
@@ -174,8 +180,7 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
 <!-- ================= LISTA ================= -->
 <div class="container-fluid mt-4">
     <?php
-
-    $pag_actual = 1;
+$pag_actual = 1;
 
     if (isset($pagina[1]) && is_numeric($pagina[1])) {
         $pag_actual = (int)$pagina[1];

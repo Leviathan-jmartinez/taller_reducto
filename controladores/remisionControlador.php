@@ -254,7 +254,9 @@ class remisionControlador extends remisionModelo
         remisionModelo::guardar_remision_detalle_modelo($idnota, $detalle);
 
         // Limpiar variables de sesión
+        unset($_SESSION['datos_dactura']);
         unset($_SESSION['datos_articulofactura']);
+        unset($_SESSION['idfacturaseleccionado']);
 
         // ✅ Respuesta de éxito
         $alerta = [

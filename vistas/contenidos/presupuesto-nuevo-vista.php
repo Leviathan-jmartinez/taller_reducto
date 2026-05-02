@@ -286,15 +286,11 @@ if (isset($_POST['tipo_presupuesto'])) {
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="ModalproveedorPre">Agregar Proovedor</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <div class="form-group">
-                        <label for="input_proveedor" class="bmd-label-floating">RUC, RAZON SOCIAL</label>
-                        <input type="text" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" class="form-control" name="input_proveedor" id="input_proveedor" maxlength="30">
+                        <input type="text" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" placeholder="Ingrese RUC o Razón Social" class="form-control" name="input_proveedor" id="input_proveedor" maxlength="30">
                     </div>
                 </div>
                 <br>
@@ -344,15 +340,11 @@ if (isset($_POST['tipo_presupuesto'])) {
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="ModalBuscarPedido">Agregar Pedido</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <div class="form-group">
-                        <label for="input_item" class="bmd-label-floating">Código, Proveedor</label>
-                        <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" class="form-control" name="input_pedido" id="input_pedido" maxlength="30">
+                        <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" placeholder="Ingrese código de pedido" class="form-control" name="input_pedido" id="input_pedido" maxlength="30">
                     </div>
                 </div>
                 <br>

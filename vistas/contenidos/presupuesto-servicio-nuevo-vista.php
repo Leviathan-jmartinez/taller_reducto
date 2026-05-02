@@ -98,7 +98,7 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
 
                 <button type="button" class="btn btn-warning"
                     onclick="limpiarFormularioPresupuesto()">
-                    <i class="fas fa-undo"></i> Limpiar
+                    <i class="fas fa-times"></i> Cancelar
                 </button>
             </div>
         </fieldset>
@@ -208,8 +208,13 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
                 <i class="fas fa-save"></i> &nbsp; Guardar
             </button>
 
+            <button type="button" class="btn btn-secondary btn-raised"
+                onclick="limpiarFormularioPresupuesto()">
+                <i class="fas fa-times"></i> &nbsp; Cancelar
+            </button>
+
             <a href="<?= SERVERURL; ?>presupuesto-servicio-lista/"
-                class="btn btn-secondary">
+                class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left"></i> Volver
             </a>
         </div>

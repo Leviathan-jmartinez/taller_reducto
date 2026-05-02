@@ -1,10 +1,10 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('sucursal.crear')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
 
-$pagina = explode("/", $_GET['vista']);
 $id = $pagina[1] ?? null;
 
 $editando = false;
@@ -40,7 +40,8 @@ $empresas = $ins->listar_empresas_controlador();
 
         <?php if ($editando) { ?>
             <input type="hidden" name="sucursal_id_up" value="<?php echo $id; ?>">
-        <?php } ?>
+        <?php
+} ?>
         <legend><i class="fas fa-info-circle"></i> &nbsp; Información básica</legend>   
         <div class="row">
 
@@ -48,12 +49,14 @@ $empresas = $ins->listar_empresas_controlador();
                 <select class="form-control select2"
                     name="<?php echo $editando ? 'empresa_up' : 'empresa_reg'; ?>">
                     <option value="">Seleccione empresa</option>
-                    <?php foreach ($empresas as $e) { ?>
+                    <?php
+foreach ($empresas as $e) { ?>
                         <option value="<?php echo $e['id_empresa']; ?>"
                             <?php if ($editando && $campos['id_empresa'] == $e['id_empresa']) echo "selected"; ?>>
                             <?php echo $e['razon_social']; ?>
                         </option>
-                    <?php } ?>
+                    <?php
+} ?>
                 </select>
             </div>
 
@@ -108,7 +111,8 @@ $empresas = $ins->listar_empresas_controlador();
             <a href="<?php echo SERVERURL; ?>sucursal-nuevo/" class="btn btn-secondary">
                 Cancelar
             </a>
-        <?php } ?>
+        <?php
+} ?>
 
     </form>
 </div>
@@ -147,10 +151,11 @@ $empresas = $ins->listar_empresas_controlador();
                         <input type="hidden" name="eliminar_busqueda" value="1">
 
                         <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-times"></i> Limpiar
+                            <i class="fas fa-times"></i> Cancelar
                         </button>
                     </form>
-                <?php } ?>
+                <?php
+} ?>
             </div>
         </div>
 
@@ -161,8 +166,7 @@ $empresas = $ins->listar_empresas_controlador();
 <!-- LISTA -->
 <div class="container-fluid mt-4">
     <?php
-
-    $pag_actual = 1;
+$pag_actual = 1;
     if (isset($pagina[1]) && is_numeric($pagina[1])) {
         $pag_actual = (int)$pagina[1];
     }

@@ -181,6 +181,10 @@ if (!mainModel::tienePermiso('servicio.registro.crear')) {
             <button class="btn btn-info btn-raised " id="btnRegistrar">
                 <i class="fas fa-save"></i> &nbsp; Registrar Servicio
             </button>
+            <button type="button" class="btn btn-secondary btn-raised"
+                onclick="limpiarRegistroServicio()">
+                <i class="fas fa-times"></i> &nbsp; Cancelar
+            </button>
         </div>
 
     </form>

@@ -1,4 +1,5 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('servicio.reclamo.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
@@ -70,7 +71,7 @@ $estado   = $_SESSION['estado_reclamo_servicio'] ?? '';
 
                 <button type="button"
                     class="btn btn-raised btn-danger btn-limpiar-busqueda">
-                    <i class="far fa-trash-alt"></i> &nbsp; LIMPIAR
+                    <i class="fas fa-times"></i> &nbsp; Cancelar
                 </button>
 
             </div>
@@ -89,7 +90,7 @@ $estado   = $_SESSION['estado_reclamo_servicio'] ?? '';
             Estado:
             <strong>
                 <?php
-                switch ($estado) {
+switch ($estado) {
                     case "1": echo "Activo"; break;
                     case "2": echo "En proceso"; break;
                     case "3": echo "Resuelto"; break;
@@ -100,12 +101,13 @@ $estado   = $_SESSION['estado_reclamo_servicio'] ?? '';
             </strong>
         </p>
     </div>
-<?php } ?>
+<?php
+} ?>
 
 <!-- 📋 LISTADO -->
 <div class="container-fluid mt-3">
     <?php
-    require_once "./controladores/reclamoServicioControlador.php";
+require_once "./controladores/reclamoServicioControlador.php";
 
     $reclamo = new reclamoServicioControlador();
 

@@ -155,6 +155,10 @@ if (!mainModel::tienePermiso('servicio.reclamo.crear')) {
             <button class="btn btn-info btn-raised">
                 <i class="fas fa-save"></i> &nbsp; Registrar reclamo
             </button>
+            <button type="button" class="btn btn-secondary btn-raised"
+                onclick="limpiarReclamoServicio()">
+                <i class="fas fa-times"></i> &nbsp; Cancelar
+            </button>
         </div>
 
     </form>

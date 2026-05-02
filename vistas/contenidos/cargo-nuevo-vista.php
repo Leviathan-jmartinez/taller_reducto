@@ -1,9 +1,9 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('cargo.crear')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
-$pagina = explode("/", $_GET['vista']);
 $id = $pagina[1] ?? null;
 
 $editando = false;
@@ -36,7 +36,8 @@ if ($id != null) {
         <!-- ID OCULTO -->
         <?php if ($editando) { ?>
             <input type="hidden" name="cargo_id_up" value="<?php echo $id; ?>">
-        <?php } ?>
+        <?php
+} ?>
 
         <fieldset>
             <legend>
@@ -114,7 +115,8 @@ if ($id != null) {
                     class="btn btn-raised btn-secondary btn-sm">
                     <i class="fas fa-times"></i> &nbsp; CANCELAR
                 </button>
-            <?php } ?>
+            <?php
+} ?>
 
             &nbsp;&nbsp;
 
@@ -165,10 +167,11 @@ if ($id != null) {
                         <input type="hidden" name="eliminar_busqueda" value="1">
 
                         <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-times"></i> Limpiar
+                            <i class="fas fa-times"></i> Cancelar
                         </button>
                     </form>
-                <?php } ?>
+                <?php
+} ?>
             </div>
         </div>
 
@@ -177,7 +180,7 @@ if ($id != null) {
 </div>
 <div class="container-fluid">
     <?php
-    require_once "./controladores/cargosControlador.php";
+require_once "./controladores/cargosControlador.php";
     $ins_cargo = new cargosControlador();
     $busqueda = isset($_GET['busqueda']) ? $_GET['busqueda'] : "";
     echo $ins_cargo->listar_cargos_controlador($pagina[1], 10, $pagina[0]);

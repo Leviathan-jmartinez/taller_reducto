@@ -1,10 +1,10 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('cliente.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
 
-$pagina = explode("/", $_GET['vista']);
 $id = $pagina[1] ?? null;
 
 $editando = false;
@@ -38,7 +38,8 @@ $busqueda = $_SESSION['busqueda_cliente'] ?? "";
 
         <?php if ($editando) { ?>
             <input type="hidden" name="cliente_id_up" value="<?php echo $id; ?>">
-        <?php } ?>
+        <?php
+} ?>
         <legend><i class="fas fa-user"></i> &nbsp; Información básica</legend>
         <div class="row">
 
@@ -108,7 +109,7 @@ $busqueda = $_SESSION['busqueda_cliente'] ?? "";
             <div class="col-md-4">
 
                 <?php
-                $ciudades = $ins_cliente->listar_ciudades_controlador_up();
+$ciudades = $ins_cliente->listar_ciudades_controlador_up();
                 ?>
 
                 <select class="form-control select2"
@@ -116,25 +117,27 @@ $busqueda = $_SESSION['busqueda_cliente'] ?? "";
 
                     <option value="">Seleccione ciudad</option>
 
-                    <?php foreach ($ciudades as $ciu) { ?>
+                    <?php
+foreach ($ciudades as $ciu) { ?>
 
                         <option value="<?php echo $ciu['id_ciudad']; ?>"
-                            <?php
-                            if ($editando && $campos['id_ciudad'] == $ciu['id_ciudad']) {
+                            <?php if ($editando && $campos['id_ciudad'] == $ciu['id_ciudad']) {
                                 echo "selected";
                             }
                             ?>>
                             <?php echo $ciu['ciu_descri']; ?>
                         </option>
 
-                    <?php } ?>
+                    <?php
+} ?>
 
                 </select>
 
             </div>
             <br><br>
             <div class="col-md-4">
-                <?php $estadoCivil = $editando ? trim($campos['estado_civil']) : ""; ?>
+                <?php
+$estadoCivil = $editando ? trim($campos['estado_civil']) : ""; ?>
 
                 <select class="form-control select2"
                     name="<?php echo $editando ? 'cliente_estadoC_up' : 'cliente_estadoC_reg'; ?>">
@@ -172,7 +175,8 @@ $busqueda = $_SESSION['busqueda_cliente'] ?? "";
                     class="btn btn-raised btn-secondary">
                     CANCELAR
                 </a>
-            <?php } ?>
+            <?php
+} ?>
         </p>
 
     </form>
@@ -212,10 +216,11 @@ $busqueda = $_SESSION['busqueda_cliente'] ?? "";
                         <input type="hidden" name="eliminar_busqueda" value="1">
 
                         <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-times"></i> Limpiar
+                            <i class="fas fa-times"></i> Cancelar
                         </button>
                     </form>
-                <?php } ?>
+                <?php
+} ?>
             </div>
         </div>
 
@@ -226,8 +231,7 @@ $busqueda = $_SESSION['busqueda_cliente'] ?? "";
 <!-- ================= LISTA ================= -->
 <div class="container-fluid mt-4">
     <?php
-
-    $pag_actual = 1;
+$pag_actual = 1;
 
     if (isset($pagina[1]) && is_numeric($pagina[1])) {
         $pag_actual = (int)$pagina[1];

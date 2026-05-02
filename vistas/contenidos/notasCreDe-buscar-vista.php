@@ -1,4 +1,5 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('compra.nota.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
@@ -101,13 +102,16 @@ if (!isset($pagina)) {
                         <p class="text-center" style="font-size:20px;">
                             <?php if ($fecha_inicio && $fecha_final) { ?>
                                 Fecha: <strong><?= htmlspecialchars($fecha_inicio, ENT_QUOTES, 'UTF-8') ?> a <?= htmlspecialchars($fecha_final, ENT_QUOTES, 'UTF-8') ?></strong>
-                            <?php } ?>
+                            <?php
+} ?>
                             <?php if ($nro_documento) { ?>
                                 | Documento: <strong><?= htmlspecialchars($nro_documento, ENT_QUOTES, 'UTF-8') ?></strong>
-                            <?php } ?>
+                            <?php
+} ?>
                             <?php if ($tipo_nota) { ?>
                                 | Tipo: <strong><?= htmlspecialchars($tipo_nota, ENT_QUOTES, 'UTF-8') ?></strong>
-                            <?php } ?>
+                            <?php
+} ?>
                         </p>
 
                     </div>
@@ -123,7 +127,7 @@ if (!isset($pagina)) {
 
     <div class="container-fluid">
         <?php
-        require_once "./controladores/notasCreDeControlador.php";
+require_once "./controladores/notasCreDeControlador.php";
         $notas = new notasCreDeControlador();
         $notas->paginador_notasCreDe_controlador(
             $pagina[1],

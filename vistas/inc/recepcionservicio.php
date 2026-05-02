@@ -161,12 +161,20 @@
 
         document.getElementById('id_vehiculo').value = '';
         document.getElementById('vehiculo_desc').value = '';
+        document.getElementById('origen').value = 'NORMAL';
+        document.getElementById('idreclamo_servicio').value = '';
+        document.getElementById('btnBuscarCliente').disabled = false;
+        document.getElementById('btnBuscarVehiculo').disabled = false;
+        document.getElementById('alerta_reclamo').style.display = 'none';
 
         const tablaClientes = document.getElementById('tabla_clientes');
         if (tablaClientes) tablaClientes.innerHTML = '';
 
         const tablaVehiculos = document.getElementById('tabla_vehiculos');
         if (tablaVehiculos) tablaVehiculos.innerHTML = '';
+
+        const tablaReclamos = document.getElementById('tabla_reclamos');
+        if (tablaReclamos) tablaReclamos.innerHTML = '';
 
     }
 </script>

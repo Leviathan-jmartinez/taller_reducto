@@ -1,4 +1,5 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('servicio.ot.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
@@ -30,7 +31,8 @@ $fecha_final  = $_SESSION['fecha_final_orden_trabajo'] ?? '';
 ?>
 
 
-<?php $estado = $_SESSION['estado_ot'] ?? ''; ?>
+<?php
+$estado = $_SESSION['estado_ot'] ?? ''; ?>
 
 <!-- SIEMPRE MOSTRAR FORMULARIO -->
 <div class="container-fluid">
@@ -73,7 +75,7 @@ $fecha_final  = $_SESSION['fecha_final_orden_trabajo'] ?? '';
 
                 <button type="button"
                     class="btn btn-raised btn-danger btn-limpiar-busqueda">
-                    <i class="far fa-trash-alt"></i> &nbsp; LIMPIAR
+                    <i class="fas fa-times"></i> &nbsp; Cancelar
                 </button>
 
             </div>
@@ -84,7 +86,7 @@ $fecha_final  = $_SESSION['fecha_final_orden_trabajo'] ?? '';
 
 <div class="container-fluid">
     <?php
-    require_once "./controladores/ordenTrabajoControlador.php";
+require_once "./controladores/ordenTrabajoControlador.php";
 
     $ot = new ordenTrabajoControlador();
 
@@ -98,4 +100,5 @@ $fecha_final  = $_SESSION['fecha_final_orden_trabajo'] ?? '';
     ?>
 </div>
 
-<?php include_once "./vistas/inc/ordenTrabajoJS.php"; ?>
+<?php
+include_once "./vistas/inc/ordenTrabajoJS.php"; ?>

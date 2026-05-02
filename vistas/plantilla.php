@@ -20,7 +20,7 @@
     } else {
         session_start(['name' => 'STR']);
 
-        $pagina = explode("/", $_GET['vista']);
+        $pagina = require "./vistas/inc/pagina.php";
 
         require_once "./controladores/loginControlador.php";
         $lc = new loginControlador();

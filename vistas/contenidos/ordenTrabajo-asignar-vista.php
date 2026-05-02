@@ -1,4 +1,5 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 require_once "./controladores/ordenTrabajoControlador.php";
 $insOT = new ordenTrabajoControlador();
 
@@ -32,7 +33,8 @@ if (!$ot) {
 
             <?php if ($ot['origen'] == 'RECLAMO'): ?>
                 <span class="badge bg-danger">Reclamo</span>
-            <?php endif; ?>
+            <?php
+endif; ?>
         </div>
 
     </div>
@@ -84,8 +86,7 @@ if (!$ot) {
 
                 <div class="col-md-4">
                     <strong>Prioridad:</strong><br>
-                    <?php
-                    echo $ot['prioridad'] == 1 ? 'Alta' : ($ot['prioridad'] == 2 ? 'Media' : 'Baja');
+                    <?php echo $ot['prioridad'] == 1 ? 'Alta' : ($ot['prioridad'] == 2 ? 'Media' : 'Baja');
                     ?>
                 </div>
 
@@ -105,7 +106,8 @@ if (!$ot) {
 
         </div>
     </div>
-<?php endif; ?>
+<?php
+endif; ?>
 
 <!-- ================= FORM OT ================= -->
 <div class="card">
@@ -220,4 +222,5 @@ if (!$ot) {
     </div>
 </div>
 
-<?php include_once "./vistas/inc/ordenTrabajoJS.php"; ?>
+<?php
+include_once "./vistas/inc/ordenTrabajoJS.php"; ?>

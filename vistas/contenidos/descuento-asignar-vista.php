@@ -1,5 +1,5 @@
 <?php
-
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('servicio.descuento.asignarClientes')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
@@ -65,7 +65,8 @@ if (!$descuento) {
                 <ul class="list-group" id="clientes_asignados">
 
                     <?php if (!empty($clientesAsignados)): ?>
-                        <?php foreach ($clientesAsignados as $cli): ?>
+                        <?php
+foreach ($clientesAsignados as $cli): ?>
                             <li class="list-group-item d-flex justify-content-between align-items-center">
 
                                 <div>
@@ -86,12 +87,15 @@ if (!$descuento) {
                                 </button>
 
                             </li>
-                        <?php endforeach; ?>
-                    <?php else: ?>
+                        <?php
+endforeach; ?>
+                    <?php
+else: ?>
                         <li class="list-group-item text-muted">
                             No hay clientes asignados
                         </li>
-                    <?php endif; ?>
+                    <?php
+endif; ?>
 
                 </ul>
 
@@ -106,4 +110,5 @@ if (!$descuento) {
 
     </form>
 </div>
-<?php include_once "./vistas/inc/descuentos.php"; ?>
+<?php
+include_once "./vistas/inc/descuentos.php"; ?>

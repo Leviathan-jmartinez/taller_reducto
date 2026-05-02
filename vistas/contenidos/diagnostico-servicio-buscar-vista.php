@@ -1,4 +1,5 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('servicio.diagnostico.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
@@ -65,7 +66,7 @@ if (!mainModel::tienePermiso('servicio.diagnostico.ver')) {
 
                 <button type="button"
                     class="btn btn-secondary btn-limpiar-busqueda">
-                    <i class="fas fa-eraser"></i> Limpiar
+                    <i class="fas fa-times"></i> Cancelar
                 </button>
             </div>
         </div>
@@ -74,7 +75,7 @@ if (!mainModel::tienePermiso('servicio.diagnostico.ver')) {
 
 <div class="container-fluid mt-4">
     <?php
-    require_once "./controladores/diagnosticoControlador.php";
+require_once "./controladores/diagnosticoControlador.php";
     $diag = new diagnosticoControlador();
 
     echo $diag->paginador_diagnostico_controlador(
@@ -89,4 +90,5 @@ if (!mainModel::tienePermiso('servicio.diagnostico.ver')) {
     ?>
 </div>
 
-<?php include "./vistas/inc/diagnosticoJS.php"; ?>
+<?php
+include "./vistas/inc/diagnosticoJS.php"; ?>

@@ -1,4 +1,5 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('servicio.promocion.editar')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
@@ -155,7 +156,8 @@ if (!$promo) {
                 <div class="col-md-6">
                     <h6>Artículos seleccionados</h6>
                     <ul class="list-group" id="articulos_seleccionados">
-                        <?php foreach ($articulos as $a): ?>
+                        <?php
+foreach ($articulos as $a): ?>
                             <li class="list-group-item d-flex justify-content-between align-items-center"
                                 id="articulo_<?= $a['id_articulo'] ?>">
                                 <?= $a['desc_articulo'] ?>
@@ -166,7 +168,8 @@ if (!$promo) {
                                     <i class="fas fa-times"></i>
                                 </button>
                             </li>
-                        <?php endforeach; ?>
+                        <?php
+endforeach; ?>
                     </ul>
                 </div>
             </div>
@@ -186,4 +189,5 @@ if (!$promo) {
 
     </form>
 </div>
-<?php include_once "./vistas/inc/promocion.php"; ?>
+<?php
+include_once "./vistas/inc/promocion.php"; ?>

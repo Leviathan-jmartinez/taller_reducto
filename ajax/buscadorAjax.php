@@ -73,7 +73,7 @@ $modulos_con_fecha = [
 
 if (in_array($modulo, $modulos_con_fecha)) {
 
-    if ($modulo == "diagnostico" || $modulo == "presupuesto_servicio" || $modulo == "orden_trabajo" || $modulo == "registro_servicio" || $modulo == "reclamo_servicio"
+    if ($modulo == "diagnostico" || $modulo == "presupuesto" || $modulo == "presupuesto_servicio" || $modulo == "orden_trabajo" || $modulo == "registro_servicio" || $modulo == "reclamo_servicio"
     || $modulo == "ordencompra2") {
         /* ===== MAPEO DE SESIONES ===== */
         $config = [
@@ -89,6 +89,14 @@ if (in_array($modulo, $modulos_con_fecha)) {
                 "fecha_inicio" => "fecha_inicio_presupuesto_servicio",
                 "fecha_final"  => "fecha_final_presupuesto_servicio",
                 "extra" => []
+            ],
+            "presupuesto" => [
+                "fecha_inicio" => "fecha_inicio_presupuesto",
+                "fecha_final"  => "fecha_final_presupuesto",
+                "extra" => [
+                    "nro_presupuesto" => "nro_presupuesto",
+                    "proveedor_presupuesto" => "proveedor_presupuesto"
+                ]
             ],
             "orden_trabajo" => [
                 "fecha_inicio" => "fecha_inicio_orden_trabajo",
@@ -161,6 +169,14 @@ if (in_array($modulo, $modulos_con_fecha)) {
 
             $_SESSION[$cfg['fecha_inicio']] = $fecha_ini;
             $_SESSION[$cfg['fecha_final']]  = $fecha_fin;
+        } elseif ($modulo == "presupuesto" && ($fecha_ini != '' || $fecha_fin != '')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error en fechas",
+                "Texto" => "Debe ingresar fecha de inicio y final",
+                "Tipo" => "error"
+            ]);
+            exit();
         } else {
             unset($_SESSION[$cfg['fecha_inicio']]);
             unset($_SESSION[$cfg['fecha_final']]);
@@ -169,6 +185,22 @@ if (in_array($modulo, $modulos_con_fecha)) {
         /* ===== CAMPOS EXTRA (solo diagnóstico) ===== */
         foreach ($cfg['extra'] as $postKey => $sessionKey) {
             $_SESSION[$sessionKey] = $_POST[$postKey] ?? '';
+        }
+
+        if (
+            $modulo == "presupuesto" &&
+            $fecha_ini == '' &&
+            $fecha_fin == '' &&
+            ($_SESSION['nro_presupuesto'] ?? '') == '' &&
+            ($_SESSION['proveedor_presupuesto'] ?? '') == ''
+        ) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Busqueda invalida",
+                "Texto" => "Debe ingresar al menos un criterio de busqueda",
+                "Tipo" => "error"
+            ]);
+            exit();
         }
 
         echo json_encode([
@@ -190,6 +222,11 @@ if (in_array($modulo, $modulos_con_fecha)) {
         if ($modulo == "compra") {
             unset($_SESSION['nro_factura_compra']);
             unset($_SESSION['razon_social_compra']);
+        }
+
+        if ($modulo == "presupuesto") {
+            unset($_SESSION['nro_presupuesto']);
+            unset($_SESSION['proveedor_presupuesto']);
         }
 
         if ($modulo == "notasCreDe") {

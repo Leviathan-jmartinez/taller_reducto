@@ -1,4 +1,5 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('servicio.registro.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
@@ -26,7 +27,6 @@ if (!mainModel::tienePermiso('servicio.registro.ver')) {
 </div>
 
 <?php
-
 $fecha_inicio = $_SESSION['fecha_inicio_registro_servicio'] ?? '';
 $fecha_final  = $_SESSION['fecha_final_registro_servicio'] ?? '';
 $estado = $_SESSION['estado_regSer'] ?? '';
@@ -78,7 +78,7 @@ $estado = $_SESSION['estado_regSer'] ?? '';
 
                 <button type="button"
                     class="btn btn-raised btn-danger btn-limpiar-busqueda">
-                    <i class="far fa-trash-alt"></i> &nbsp; LIMPIAR
+                    <i class="fas fa-times"></i> &nbsp; Cancelar
                 </button>
 
             </div>
@@ -89,7 +89,7 @@ $estado = $_SESSION['estado_regSer'] ?? '';
 
 <div class="container-fluid mt-3">
     <?php
-    require_once "./controladores/registroServicioControlador.php";
+require_once "./controladores/registroServicioControlador.php";
 
     $reg = new registroServicioControlador();
 
@@ -104,4 +104,5 @@ $estado = $_SESSION['estado_regSer'] ?? '';
 </div>
 
 
-<?php include_once "./vistas/inc/registroServicioJS.php"; ?>
+<?php
+include_once "./vistas/inc/registroServicioJS.php"; ?>

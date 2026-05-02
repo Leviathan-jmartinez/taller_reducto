@@ -1,4 +1,5 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('compra.remision.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
@@ -123,7 +124,7 @@ $fecha_final_dt  = $fecha_final  ? $fecha_final  . ' 23:59:59' : '';
     <!-- 🔹 RESULTADOS -->
     <div class="container-fluid">
         <?php
-        require_once "./controladores/remisionControlador.php";
+require_once "./controladores/remisionControlador.php";
         $remision = new remisionControlador();
 
         echo $remision->paginador_remision_controlador(
@@ -136,4 +137,5 @@ $fecha_final_dt  = $fecha_final  ? $fecha_final  . ' 23:59:59' : '';
         ?>
     </div>
 
-<?php } ?>
+<?php
+} ?>

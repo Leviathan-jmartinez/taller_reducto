@@ -494,7 +494,7 @@ class reportesModelo extends mainModel
             pc.estado,
 
             CONCAT(u.usu_nombre, ' ', u.usu_apellido) AS usuario,
-            p.razon_social AS proveedor,
+            '' AS proveedor,
             s.suc_descri AS sucursal,
 
             COUNT(pd.id_articulo) AS cantidad_items
@@ -503,9 +503,6 @@ class reportesModelo extends mainModel
 
         INNER JOIN usuarios u
             ON u.id_usuario = pc.id_usuario
-
-        LEFT JOIN proveedores p
-            ON p.idproveedores = pc.id_proveedor
 
         LEFT JOIN sucursales s
             ON s.id_sucursal = pc.id_sucursal

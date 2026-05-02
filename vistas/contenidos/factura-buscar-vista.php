@@ -1,5 +1,5 @@
 <?php
-
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('compra.factura.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
@@ -95,13 +95,16 @@ $razon_social = $_SESSION['razon_social_compra'] ?? '';
                             <?php if ($fecha_inicio && $fecha_final) { ?>
                                 Fecha de búsqueda:
                                 <strong><?php echo $fecha_inicio ?> &nbsp; a &nbsp; <?php echo $fecha_final ?></strong>
-                            <?php } elseif ($nro_factura) { ?>
+                            <?php
+} elseif ($nro_factura) { ?>
                                 Búsqueda por N° Factura:
                                 <strong><?php echo $nro_factura; ?></strong>
-                            <?php } elseif ($razon_social) { ?>
+                            <?php
+} elseif ($razon_social) { ?>
                                 Búsqueda por Proveedor:
                                 <strong><?php echo $razon_social; ?></strong>
-                            <?php } ?>
+                            <?php
+} ?>
                         </p>
 
                     </div>
@@ -117,7 +120,7 @@ $razon_social = $_SESSION['razon_social_compra'] ?? '';
 
     <div class="container-fluid">
         <?php
-        require_once "./controladores/compraControlador.php";
+require_once "./controladores/compraControlador.php";
         $compra = new compraControlador();
         echo $compra->paginador_compra_controlador(
             $pagina[1],

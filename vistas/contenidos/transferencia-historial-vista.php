@@ -74,7 +74,7 @@ $filtroId     = $resultado['filtroId'];
 
             <button type="button" class="btn btn-secondary"
                 onclick="limpiarFiltros()">
-                Limpiar
+                Cancelar
             </button>
 
         </form>

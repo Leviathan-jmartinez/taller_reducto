@@ -441,7 +441,7 @@ class presupuestoControlador extends presupuestoModelo
         }
         /**seleccionar proveedor */
         $datosPedido = mainModel::ejecutar_consulta_simple("select pc.idpedido_cabecera as idpedido_cabecera, pc.id_sucursal as id_sucursal,pc.id_usuario as id_usuario, 
-        pc.fecha as fecha, pc.estado as estadoPe, pc.id_proveedor as id_proveedor, pc.updated as updated, pc.updatedby as updatedby
+        pc.fecha as fecha, pc.estado as estadoPe, pc.updated as updated, pc.updatedby as updatedby
         from pedido_cabecera pc 
         where (idpedido_cabecera like '%$pedidoCompra%') and pc.estado = '1'
         and pc.id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
@@ -523,12 +523,14 @@ class presupuestoControlador extends presupuestoModelo
     /**fin controlador */
 
     /**Controlador paginar presupuestos */
-    public function paginador_presupuestos_controlador($pagina, $registros,  $url, $busqueda1, $busqueda2)
+    public function paginador_presupuestos_controlador($pagina, $registros,  $url, $busqueda1, $busqueda2, $nro_presupuesto = '', $proveedor = '')
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
         $busqueda1 = mainModel::limpiar_string($busqueda1);
         $busqueda2 = mainModel::limpiar_string($busqueda2);
+        $nro_presupuesto = mainModel::limpiar_string($nro_presupuesto);
+        $proveedor = mainModel::limpiar_string($proveedor);
 
         $url = mainModel::limpiar_string($url);
         $url = SERVERURL . $url . "/";
@@ -540,6 +542,14 @@ class presupuestoControlador extends presupuestoModelo
         $reg_inicio = $inicio + 1;
         $reg_final = $inicio;
 
+        $filtros = "";
+        if ($nro_presupuesto != "") {
+            $filtros .= " AND pc.idpresupuesto_compra = '$nro_presupuesto'";
+        }
+        if ($proveedor != "") {
+            $filtros .= " AND p.razon_social LIKE '%$proveedor%'";
+        }
+
         if (!empty($busqueda1) && !empty($busqueda2)) {
             $consulta = "SELECT  SQL_CALC_FOUND_ROWS pc.idpresupuesto_compra as idpresupuesto_compra, pc.id_sucursal as id_sucursal,pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPre, 
             pc.idproveedores as idproveedores, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
@@ -548,7 +558,8 @@ class presupuestoControlador extends presupuestoModelo
             FROM presupuesto_compra pc
             INNER JOIN proveedores p on p.idproveedores = pc.idproveedores
             INNER JOIN usuarios u on u.id_usuario = pc.id_usuario
-            WHERE date(fecha) >= '$busqueda1' AND date(fecha) <='$busqueda2' and id_sucursal = '" . $_SESSION['nick_sucursal'] . "' AND pc.estado != 0 
+            WHERE date(fecha) >= '$busqueda1' AND date(fecha) <='$busqueda2' and pc.id_sucursal = '" . $_SESSION['nick_sucursal'] . "' 
+            $filtros 
             ORDER BY fecha ASC LIMIT $inicio,$registros";
         } else {
             $consulta = "SELECT  SQL_CALC_FOUND_ROWS pc.idpresupuesto_compra as idpresupuesto_compra, pc.id_sucursal as id_sucursal, pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPre, 
@@ -558,7 +569,8 @@ class presupuestoControlador extends presupuestoModelo
             FROM presupuesto_compra pc
             INNER JOIN proveedores p on p.idproveedores = pc.idproveedores
             INNER JOIN usuarios u on u.id_usuario = pc.id_usuario
-            WHERE pc.estado != 0 and id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
+            WHERE pc.id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
+            $filtros
             ORDER BY pc.idpresupuesto_compra ASC LIMIT $inicio,$registros";
         }
         $conexion = mainModel::conectar();
@@ -653,7 +665,7 @@ class presupuestoControlador extends presupuestoModelo
         $id = mainModel::limpiar_string($id);
         session_start(['name' => 'STR']);
         $check_presupuesto = mainModel::ejecutar_consulta_simple("SELECT idpresupuesto_compra FROM presupuesto_compra WHERE idpresupuesto_compra = '$id' AND id_sucursal = '" . $_SESSION['nick_sucursal'] . "'");
-        if ($check_presupuesto->rowCount() < 0) {
+        if ($check_presupuesto->rowCount() <= 0) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",

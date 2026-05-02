@@ -78,14 +78,66 @@ class presupuestoModelo extends mainModel
     /**modelo anular presupuesto */
     protected static function anular_presupuesto_modelo($datos)
     {
-        $sql = mainModel::conectar()->prepare("UPDATE presupuesto_compra
-        SET estado=0, updatedby=:updatedby, updated=now()
-        WHERE idpresupuesto_compra=:idpresupuesto_compra and id_sucursal = :sucursal");
-        $sql->bindParam(":updatedby", $datos['updatedby']);
-        $sql->bindParam(":idpresupuesto_compra", $datos['idpresupuesto_compra']);
-        $sql->bindParam(":sucursal", $datos['sucursal']);
-        $sql->execute();
-        return $sql;
+        $conexion = mainModel::conectar();
+
+        try {
+            $conexion->beginTransaction();
+
+            // 1. Anular presupuesto
+            $sql = $conexion->prepare("
+            UPDATE presupuesto_compra
+            SET estado = 0,
+                updatedby = :updatedby,
+                updated = NOW()
+            WHERE idpresupuesto_compra = :idpresupuesto_compra
+            AND id_sucursal = :sucursal
+        ");
+
+            $sql->bindParam(":updatedby", $datos['updatedby']);
+            $sql->bindParam(":idpresupuesto_compra", $datos['idpresupuesto_compra']);
+            $sql->bindParam(":sucursal", $datos['sucursal']);
+            $sql->execute();
+
+            if ($sql->rowCount() <= 0) {
+                $conexion->rollBack();
+                return false;
+            }
+
+            // 2. Obtener el idPedido correcto
+            $buscar_pedido = $conexion->prepare("
+            SELECT idPedido
+            FROM presupuesto_compra
+            WHERE idpresupuesto_compra = :idpresupuesto_compra
+            AND id_sucursal = :sucursal
+            LIMIT 1
+        ");
+
+            $buscar_pedido->bindParam(":idpresupuesto_compra", $datos['idpresupuesto_compra']);
+            $buscar_pedido->bindParam(":sucursal", $datos['sucursal']);
+            $buscar_pedido->execute();
+
+            $pedido = $buscar_pedido->fetch(PDO::FETCH_ASSOC);
+
+            // 3. Actualizar pedido si existe
+            if ($pedido && !empty($pedido['idPedido'])) {
+
+                $sql_pedido = $conexion->prepare("
+                UPDATE pedido_cabecera
+                SET estado = 1
+                WHERE idpedido_cabecera = :idpedido
+            ");
+
+                $sql_pedido->bindParam(":idpedido", $pedido['idPedido']);
+                $sql_pedido->execute();
+            }
+
+            $conexion->commit();
+            return $sql;
+        } catch (Exception $e) {
+            $conexion->rollBack();
+            echo $e->getMessage(); 
+            return false;
+        }
     }
     /**fin modelo */
 

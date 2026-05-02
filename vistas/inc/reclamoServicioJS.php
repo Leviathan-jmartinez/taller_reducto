@@ -47,4 +47,16 @@
 
         $('#modalRegistro').modal('hide');
     }
+
+    function limpiarReclamoServicio() {
+        const form = document.querySelector('.FormularioAjax');
+        if (form) form.reset();
+
+        document.getElementById('idregistro_servicio').value = '';
+        document.getElementById('registro_numero').value = '';
+        document.getElementById('cliente').value = '';
+        document.getElementById('vehiculo').value = '';
+        document.getElementById('trabajos_realizados').innerHTML = '';
+        document.getElementById('resultado_registro').innerHTML = '';
+    }
 </script>

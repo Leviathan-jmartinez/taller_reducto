@@ -1,4 +1,5 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('servicio.registro.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
@@ -30,7 +31,7 @@ if (!mainModel::tienePermiso('servicio.registro.ver')) {
 
 <div class="container-fluid">
     <?php
-    require_once "./controladores/registroServicioControlador.php";
+require_once "./controladores/registroServicioControlador.php";
 
     $insRS = new registroServicioControlador();
 
@@ -44,4 +45,5 @@ if (!mainModel::tienePermiso('servicio.registro.ver')) {
     ?>
 </div>
 
-<?php include_once "./vistas/inc/registroServicioJS.php"; ?>
+<?php
+include_once "./vistas/inc/registroServicioJS.php"; ?>

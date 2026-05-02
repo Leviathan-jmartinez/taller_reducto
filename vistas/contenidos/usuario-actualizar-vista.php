@@ -1,4 +1,5 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('usuarios.editar')) {
 	echo '<div class="alert alert-danger">Acceso no autorizado</div>';
 	return;
@@ -23,7 +24,8 @@ if (!mainModel::tienePermiso('usuarios.editar')) {
 					<i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO USUARIO
 				</a>
 			</li>
-		<?php } ?>
+		<?php
+} ?>
 
 		<?php if (mainModel::tienePermiso('usuarios.ver')) { ?>
 			<li>
@@ -37,7 +39,8 @@ if (!mainModel::tienePermiso('usuarios.editar')) {
 					<i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR USUARIO
 				</a>
 			</li>
-		<?php } ?>
+		<?php
+} ?>
 
 		<?php if (mainModel::tienePermiso('usuarios.asignarrol')) { ?>
 			<li>
@@ -45,7 +48,8 @@ if (!mainModel::tienePermiso('usuarios.editar')) {
 					<i class="fas fa-user-tag fa-fw"></i> &nbsp; ASIGNAR ROL
 				</a>
 			</li>
-		<?php } ?>
+		<?php
+} ?>
 
 		<?php if (mainModel::tienePermiso('usuarios.asignarlocal')) { ?>
 			<li>
@@ -53,7 +57,8 @@ if (!mainModel::tienePermiso('usuarios.editar')) {
 					<i class="fas fa-store-alt fa-fw"></i> &nbsp; ASIGNAR SUCURSAL
 				</a>
 			</li>
-		<?php } ?>
+		<?php
+} ?>
 
 		<?php if (mainModel::tienePermiso('usuarios.permisos_por_roles')) { ?>
 			<li>
@@ -61,14 +66,15 @@ if (!mainModel::tienePermiso('usuarios.editar')) {
 					<i class="fas fa-key fa-fw"></i> &nbsp; PERMISOS POR ROL
 				</a>
 			</li>
-		<?php } ?>
+		<?php
+} ?>
 
 	</ul>
 </div>
 <!-- Content -->
 <div class="container-fluid">
 	<?php
-	require_once "./controladores/usuarioControlador.php";
+require_once "./controladores/usuarioControlador.php";
 	$ins_user = new usuarioControlador();
 
 	$datos_usuario = $ins_user->datos_usuario_controlador("Unico", $pagina[1]);
@@ -127,8 +133,7 @@ if (!mainModel::tienePermiso('usuarios.editar')) {
 							</div>
 						</div>
 						<div class="col-12">
-							<?php
-							if (mainModel::tienePermiso('usuarios.editar')) { ?>
+							<?php if (mainModel::tienePermiso('usuarios.editar')) { ?>
 								<div class="form-group">
 									<span>Estado de la cuenta &nbsp; <?php if ($campos['usu_estado'] == 1) {
 																			echo '<span class="badge badge-success">Activa</span>';
@@ -144,7 +149,8 @@ if (!mainModel::tienePermiso('usuarios.editar')) {
 															} ?>>Inactiva</option>
 									</select>
 								</div>
-							<?php } ?>
+							<?php
+} ?>
 						</div>
 					</div>
 				</div>
@@ -194,7 +200,8 @@ if (!mainModel::tienePermiso('usuarios.editar')) {
 				<input type="hidden" name="tipo_cuenta" value="impropia">
 			<?php } else { ?>
 				<input type="hidden" name="tipo_cuenta" value="propia">
-			<?php } ?>
+			<?php
+} ?>
 			<p class="text-center" style="margin-top: 40px;">
 				<button type="submit" class="btn btn-raised btn-success btn-sm"><i class="fas fa-sync-alt"></i> &nbsp; ACTUALIZAR</button>
 			</p>
@@ -205,5 +212,6 @@ if (!mainModel::tienePermiso('usuarios.editar')) {
 			<h4 class="alert-heading">¡Ocurrió un error inesperado!</h4>
 			<p class="mb-0">Lo sentimos, no podemos mostrar la información solicitada debido a un error.</p>
 		</div>
-	<?php } ?>
+	<?php
+} ?>
 </div>

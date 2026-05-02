@@ -1,10 +1,10 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('empleado.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
 
-$pagina = explode("/", $_GET['vista']);
 $id = $pagina[1] ?? null;
 
 $editando = false;
@@ -41,7 +41,8 @@ $busqueda = $_SESSION['busqueda_empleado'] ?? "";
 
         <?php if ($editando) { ?>
             <input type="hidden" name="empleado_id_up" value="<?php echo $id; ?>">
-        <?php } ?>
+        <?php
+} ?>
         <legend><i class="fas fa-info-circle"></i> &nbsp; Información básica</legend>
         <div class="row">
 
@@ -54,12 +55,14 @@ $busqueda = $_SESSION['busqueda_empleado'] ?? "";
 
                         <option value=""></option>
 
-                        <?php foreach ($cargos as $c) { ?>
+                        <?php
+foreach ($cargos as $c) { ?>
                             <option value="<?= $c['idcargos']; ?>"
                                 <?php if ($editando && $campos['idcargos'] == $c['idcargos']) echo "selected"; ?>>
                                 <?= $c['descripcion']; ?>
                             </option>
-                        <?php } ?>
+                        <?php
+} ?>
 
                     </select>
                 </div>
@@ -74,12 +77,14 @@ $busqueda = $_SESSION['busqueda_empleado'] ?? "";
 
                         <option value=""></option>
 
-                        <?php foreach ($sucursales as $s) { ?>
+                        <?php
+foreach ($sucursales as $s) { ?>
                             <option value="<?= $s['id_sucursal']; ?>"
                                 <?php if ($editando && $campos['id_sucursal'] == $s['id_sucursal']) echo "selected"; ?>>
                                 <?= $s['suc_descri']; ?>
                             </option>
-                        <?php } ?>
+                        <?php
+} ?>
 
                     </select>
                 </div>
@@ -145,13 +150,14 @@ $busqueda = $_SESSION['busqueda_empleado'] ?? "";
                         <option value=""></option>
 
                         <?php
-                        $estados = ["Soltero/a", "Casado/a", "Viudo/a", "Divorciado/a"];
+$estados = ["Soltero/a", "Casado/a", "Viudo/a", "Divorciado/a"];
                         foreach ($estados as $e) { ?>
                             <option value="<?= $e ?>"
                                 <?php if ($editando && $campos['estado_civil'] == $e) echo "selected"; ?>>
                                 <?= $e ?>
                             </option>
-                        <?php } ?>
+                        <?php
+} ?>
 
                     </select>
                 </div>
@@ -177,7 +183,8 @@ $busqueda = $_SESSION['busqueda_empleado'] ?? "";
                         </select>
                     </div>
                 </div>
-            <?php } ?>
+            <?php
+} ?>
 
         </div>
 
@@ -192,7 +199,8 @@ $busqueda = $_SESSION['busqueda_empleado'] ?? "";
                     class="btn btn-raised btn-secondary">
                     CANCELAR
                 </a>
-            <?php } ?>
+            <?php
+} ?>
         </p>
 
     </form>
@@ -232,10 +240,11 @@ $busqueda = $_SESSION['busqueda_empleado'] ?? "";
                         <input type="hidden" name="eliminar_busqueda" value="1">
 
                         <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-times"></i> Limpiar
+                            <i class="fas fa-times"></i> Cancelar
                         </button>
                     </form>
-                <?php } ?>
+                <?php
+} ?>
             </div>
         </div>
 
@@ -245,8 +254,7 @@ $busqueda = $_SESSION['busqueda_empleado'] ?? "";
 <!-- ================= LISTA ================= -->
 <div class="container-fluid mt-4">
     <?php
-
-    $pag_actual = 1;
+$pag_actual = 1;
 
     if (isset($pagina[1]) && is_numeric($pagina[1])) {
         $pag_actual = (int)$pagina[1];

@@ -205,7 +205,6 @@ class pedidoControlador extends pedidoModelo
                 pc.id_usuario,
                 pc.fecha,
                 pc.estado AS estadoPe,
-                pc.id_proveedor,
                 pc.updated,
                 pc.updatedby,
 
@@ -230,7 +229,6 @@ class pedidoControlador extends pedidoModelo
                 pc.id_usuario,
                 pc.fecha,
                 pc.estado AS estadoPe,
-                pc.id_proveedor,
                 pc.updated,
                 pc.updatedby,
 

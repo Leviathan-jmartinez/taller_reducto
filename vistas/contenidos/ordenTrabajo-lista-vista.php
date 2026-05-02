@@ -1,4 +1,5 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('servicio.ot.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
@@ -29,7 +30,7 @@ if (!mainModel::tienePermiso('servicio.ot.ver')) {
 </div>
 <div class="container-fluid">
     <?php
-    require_once "./controladores/ordenTrabajoControlador.php";
+require_once "./controladores/ordenTrabajoControlador.php";
     $insOT = new ordenTrabajoControlador();
     echo $insOT->listar_ot_controlador(
         $pagina[1],
@@ -89,4 +90,5 @@ if (!mainModel::tienePermiso('servicio.ot.ver')) {
 </div>
 
 
-<?php include_once "./vistas/inc/ordenTrabajoJS.php"; ?>
+<?php
+include_once "./vistas/inc/ordenTrabajoJS.php"; ?>

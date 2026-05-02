@@ -33,6 +33,20 @@ if (isset($_POST['nro_remision'])) {
     exit();
 }
 
+if (isset($_POST['limpiar_remision'])) {
+    unset($_SESSION['datos_dactura']);
+    unset($_SESSION['datos_articulofactura']);
+    unset($_SESSION['idfacturaseleccionado']);
+
+    echo json_encode([
+        "Alerta" => "recargar",
+        "Titulo" => "Operacion cancelada",
+        "Texto" => "La remision en proceso fue cancelada correctamente",
+        "Tipo" => "success"
+    ]);
+    exit();
+}
+
 /* ===============================
    ANULAR REMISIÓN  
 ================================ */

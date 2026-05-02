@@ -164,7 +164,7 @@
         // feedback inmediato (no bloquea)
         Swal.fire({
             title: 'Cancelando...',
-            text: 'Limpiando datos',
+            text: 'Cancelando datos',
             allowOutsideClick: false,
             didOpen: () => {
                 Swal.showLoading();

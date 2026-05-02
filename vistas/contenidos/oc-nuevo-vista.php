@@ -1,4 +1,5 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('compra.oc.crear')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
@@ -70,7 +71,8 @@ $busqueda_ordencompra = $_SESSION['busqueda_ordencompra'] ?? '';
             <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalproveedorOC">
                 <i class="fas fa-user-plus"></i> &nbsp; Agregar Proveedor
             </button>
-        <?php } ?>
+        <?php
+} ?>
         <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalArticuloOC">
             <i class="fas fa-box-open"></i> &nbsp; Agregar artículo
         </button>
@@ -87,9 +89,11 @@ $busqueda_ordencompra = $_SESSION['busqueda_ordencompra'] ?? '';
                 <?php echo $_SESSION['Sdatos_proveedorOC']['RAZON'] . " (" . $_SESSION['Sdatos_proveedorOC']['RUC'] . ")"; ?>
                 <button type="submit" class="btn btn-danger"><i class="fas fa-user-times"></i></button>
             </form>
-        <?php } ?>
+        <?php
+} ?>
     </div>
-<?php } ?>
+<?php
+} ?>
 
 
 
@@ -170,13 +174,13 @@ $busqueda_ordencompra = $_SESSION['busqueda_ordencompra'] ?? '';
 
     <div class="container-fluid">
         <?php
-            require_once "./controladores/ordencompraControlador.php";
+require_once "./controladores/ordencompraControlador.php";
             $ins_ordencompra = new ordencompraControlador();
             $ins_ordencompra->paginador_presupuestos_controlador($pagina[1], 15, $pagina[0], $busqueda_ordencompra);
         ?>
     </div>
 <?php
-        }
+}
 ?>
 <?php } else { ?>
     <div class="table-responsive mt-3">
@@ -193,8 +197,7 @@ $busqueda_ordencompra = $_SESSION['busqueda_ordencompra'] ?? '';
                 </tr>
             </thead>
             <tbody>
-                <?php
-                if (isset($_SESSION['Sdatos_articuloOC']) && count($_SESSION['Sdatos_articuloOC']) >= 1) {
+                <?php if (isset($_SESSION['Sdatos_articuloOC']) && count($_SESSION['Sdatos_articuloOC']) >= 1) {
                     $_SESSION['oc_articulo'] = 0;
                     $_SESSION['total_oc'] = 0;
                     $contador = 1;
@@ -216,7 +219,8 @@ $busqueda_ordencompra = $_SESSION['busqueda_ordencompra'] ?? '';
                                 </form>
                             </td>
                         </tr>
-                    <?php endforeach; ?>
+                    <?php
+endforeach; ?>
                     <tr class="text-center bg-light total-fila">
                         <td><strong>TOTAL</strong></td>
                         <td colspan="2"></td>
@@ -226,13 +230,14 @@ $busqueda_ordencompra = $_SESSION['busqueda_ordencompra'] ?? '';
                         <td></td>
                     </tr>
                 <?php
-                } else {
+} else {
                     $_SESSION['oc_articulo'] = 0;
                 ?>
                     <tr class="text-center bg-light">
                         <td colspan="8">No has seleccionado articulos</td>
                     </tr>
-                <?php } ?>
+                <?php
+} ?>
             </tbody>
         </table>
     </div>
@@ -263,20 +268,20 @@ $busqueda_ordencompra = $_SESSION['busqueda_ordencompra'] ?? '';
 
         </form>
 
-        <!-- BOTÓN LIMPIAR (separado, como en tu versión original) -->
+        <!-- BOTON CANCELAR (separado, como en tu version original) -->
         <div class="text-center mt-3">
             <form action="<?php echo SERVERURL ?>ajax/ordencompraAjax.php" method="POST"
                 data-form="loans" autocomplete="off">
                 <input type="hidden" name="limpiar_ordencompra" value="1">
                 <button type="submit" class="btn btn-raised btn-secondary btn-sm">
-                    <i class="fas fa-paint-roller"></i> &nbsp; LIMPIAR
+                    <i class="fas fa-times"></i> &nbsp; Cancelar
                 </button>
             </form>
         </div>
 
     </div>
 <?php
-    }
+}
 ?>
 </div>
 
@@ -440,4 +445,5 @@ $busqueda_ordencompra = $_SESSION['busqueda_ordencompra'] ?? '';
     </div>
 </div>
 
-<?php include_once "./vistas/inc/ordencompra.php"; ?>
+<?php
+include_once "./vistas/inc/ordencompra.php"; ?>

@@ -1,4 +1,5 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('cliente.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
@@ -30,7 +31,7 @@ if (!mainModel::tienePermiso('cliente.ver')) {
 <!-- Content -->
 <div class="container-fluid">
     <?php
-    require_once "./controladores/clienteControlador.php";
+require_once "./controladores/clienteControlador.php";
     $ins_cliente = new clienteControlador();
     echo $ins_cliente->paginador_cliente_controlador($pagina[1], 15, $pagina[0], "");
     ?>

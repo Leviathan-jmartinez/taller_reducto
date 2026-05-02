@@ -1,10 +1,10 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('proveedor.crear')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
 
-$pagina = explode("/", $_GET['vista']);
 $id = $pagina[1] ?? null;
 
 $editando = false;
@@ -41,7 +41,8 @@ $ciudades = $ins_proveedor->listar_ciudades_controlador();
 
         <?php if ($editando) { ?>
             <input type="hidden" name="proveedor_id_up" value="<?php echo $id; ?>">
-        <?php } ?>
+        <?php
+} ?>
 
         <fieldset>
             <legend>Información del proveedor</legend>
@@ -84,12 +85,14 @@ $ciudades = $ins_proveedor->listar_ciudades_controlador();
 
                         <option value=""></option>
 
-                        <?php foreach ($ciudades as $c) { ?>
+                        <?php
+foreach ($ciudades as $c) { ?>
                             <option value="<?php echo $c['id_ciudad']; ?>"
                                 <?php if ($editando && $campos['id_ciudad'] == $c['id_ciudad']) echo "selected"; ?>>
                                 <?php echo $c['ciu_descri']; ?>
                             </option>
-                        <?php } ?>
+                        <?php
+} ?>
                     </select>
                 </div>
 
@@ -128,7 +131,8 @@ $ciudades = $ins_proveedor->listar_ciudades_controlador();
             <a href="<?php echo SERVERURL; ?>proveedor-nuevo/" class="btn btn-secondary">
                 Cancelar
             </a>
-        <?php } ?>
+        <?php
+} ?>
 
     </form>
 </div>
@@ -167,10 +171,11 @@ $ciudades = $ins_proveedor->listar_ciudades_controlador();
                         <input type="hidden" name="eliminar_busqueda" value="1">
 
                         <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-times"></i> Limpiar
+                            <i class="fas fa-times"></i> Cancelar
                         </button>
                     </form>
-                <?php } ?>
+                <?php
+} ?>
             </div>
         </div>
 
@@ -181,8 +186,7 @@ $ciudades = $ins_proveedor->listar_ciudades_controlador();
 <!-- LISTA -->
 <div class="container-fluid mt-4">
     <?php
-
-    $pag_actual = 1;
+$pag_actual = 1;
 
     if (isset($pagina[1]) && is_numeric($pagina[1])) {
         $pag_actual = (int)$pagina[1];

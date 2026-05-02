@@ -1,4 +1,5 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('servicio.presupuesto.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
@@ -61,7 +62,8 @@ $fecha_final  = $_SESSION['fecha_final_presupuesto_servicio'] ?? '';
                         value="<?php echo $fecha_final; ?>">
                 </div>
             </div>
-            <?php $estado = $_SESSION['estado_presupuesto'] ?? ''; ?>
+            <?php
+$estado = $_SESSION['estado_presupuesto'] ?? ''; ?>
 
             <select name="estado_presupuesto" class="form-control">
                 <option value="">Todos</option>
@@ -79,7 +81,7 @@ $fecha_final  = $_SESSION['fecha_final_presupuesto_servicio'] ?? '';
 
                 <button type="button"
                     class="btn btn-raised btn-danger btn-limpiar-busqueda">
-                    <i class="far fa-trash-alt"></i> &nbsp; LIMPIAR
+                    <i class="fas fa-times"></i> &nbsp; Cancelar
                 </button>
 
             </div>
@@ -97,20 +99,23 @@ $fecha_final  = $_SESSION['fecha_final_presupuesto_servicio'] ?? '';
             Mostrando resultados
             <?php if ($fecha_inicio) { ?>
                 desde <strong><?php echo $fecha_inicio; ?></strong>
-            <?php } ?>
+            <?php
+} ?>
             <?php if ($fecha_final) { ?>
                 hasta <strong><?php echo $fecha_final; ?></strong>
-            <?php } ?>
+            <?php
+} ?>
         </p>
     </div>
 
-<?php } ?>
+<?php
+} ?>
 
 <!-- ================= RESULTADOS ================= -->
 
 <div class="container-fluid mt-3">
     <?php
-    require_once "./controladores/presupuestoServicioControlador.php";
+require_once "./controladores/presupuestoServicioControlador.php";
     $presupuesto = new presupuestoServicioControlador();
 
     echo $presupuesto->paginador_presupuestoservi_controlador(

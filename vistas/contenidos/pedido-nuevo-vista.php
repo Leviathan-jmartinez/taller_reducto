@@ -115,15 +115,12 @@ if (!mainModel::tienePermiso('compra.pedido.crear')) {
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="ModalArticulo">Agregar Articulo</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <div class="form-group">
-                        <label for="input_item" class="bmd-label-floating">Código, descripción</label>
-                        <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" class="form-control" name="input_articulo" id="input_articulo" maxlength="30">
+                        
+                        <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" placeholder="Código o descripción del artículo" class="form-control" name="input_articulo" id="input_articulo" maxlength="30">
 
                     </div>
                 </div>

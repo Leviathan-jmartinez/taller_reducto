@@ -120,7 +120,7 @@ if (!mainModel::tienePermiso('servicio.promocion.crear')) {
             </button>
 
             <button type="reset" class="btn btn-secondary btn-raised">
-                <i class="fas fa-times"></i> &nbsp; Limpiar
+                <i class="fas fa-times"></i> &nbsp; Cancelar
             </button>
         </div>
 

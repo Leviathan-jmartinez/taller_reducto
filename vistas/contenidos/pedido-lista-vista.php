@@ -1,4 +1,5 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('compra.pedido.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
@@ -27,8 +28,8 @@ if (!mainModel::tienePermiso('compra.pedido.ver')) {
 
 <div class="container-fluid">
     <?php
-    require_once "./controladores/pedidoControlador.php";
+require_once "./controladores/pedidoControlador.php";
     $ins_pedido = new pedidoControlador();
-    echo $ins_pedido->paginador_pedidos_controlador($pagina[1], 15, $pagina[0], "", "");
+    $ins_pedido->paginador_pedidos_controlador($pagina[1], 15, $pagina[0], "", "");
     ?>
 </div>

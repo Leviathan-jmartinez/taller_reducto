@@ -1,5 +1,5 @@
 <?php
-
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('empleado.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
@@ -22,7 +22,7 @@ if (!mainModel::tienePermiso('empleado.ver')) {
 
 <div class="container-fluid">
     <?php
-    require_once "./controladores/equipoControlador.php";
+require_once "./controladores/equipoControlador.php";
     $ins_equipo = new equipoControlador();
 
     $miembros = $ins_equipo->miembros_equipo_controlador($pagina[1]);
@@ -43,7 +43,7 @@ if (!mainModel::tienePermiso('empleado.ver')) {
             <tbody>
 
                 <?php
-                $cont = 1;
+$cont = 1;
                 if (count($miembros) > 0):
                     foreach ($miembros as $m):
                 ?>
@@ -72,15 +72,18 @@ if (!mainModel::tienePermiso('empleado.ver')) {
                                             <i class="fas fa-user-minus"></i>
                                         </button>
                                     </form>
-                                <?php endif; ?>
+                                <?php
+endif; ?>
                             </td>
                         </tr>
-                    <?php endforeach;
+                    <?php
+endforeach;
                 else: ?>
                     <tr class="text-center">
                         <td colspan="4">No hay empleados asignados</td>
                     </tr>
-                <?php endif; ?>
+                <?php
+endif; ?>
 
             </tbody>
         </table>

@@ -1,4 +1,5 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('servicio.recepcion.ver')) {
 	echo '<div class="alert alert-danger">Acceso no autorizado</div>';
 	return;
@@ -63,7 +64,7 @@ if (!mainModel::tienePermiso('servicio.recepcion.ver')) {
 
 	<div class="container-fluid">
 		<?php
-		require_once "./controladores/recepcionservicioControlador.php";
+require_once "./controladores/recepcionservicioControlador.php";
 		$ins_recepcion = new recepcionservicioControlador();
 		echo $ins_recepcion->listar_recepcion_controlador(
 			$pagina[1],

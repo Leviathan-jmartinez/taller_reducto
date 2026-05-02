@@ -1,4 +1,5 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('compra.oc.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
@@ -135,7 +136,7 @@ $busqueda_activa = !empty($fecha_inicio) || !empty($fecha_final) || !empty($prov
                             Busqueda:
                             <strong>
                                 <?php
-                                $criterios = [];
+$criterios = [];
 
                                 if (!empty($fecha_inicio) || !empty($fecha_final)) {
                                     $criterios[] = "Fecha: " . ($fecha_inicio ?: 'inicio') . " a " . ($fecha_final ?: 'final');
@@ -176,7 +177,7 @@ $busqueda_activa = !empty($fecha_inicio) || !empty($fecha_final) || !empty($prov
 
     <div class="container-fluid">
         <?php
-        require_once "./controladores/ordencompraControlador.php";
+require_once "./controladores/ordencompraControlador.php";
 
         $ins_ordencompra = new ordencompraControlador();
 
@@ -190,4 +191,5 @@ $busqueda_activa = !empty($fecha_inicio) || !empty($fecha_final) || !empty($prov
         ?>
     </div>
 
-<?php } ?>
+<?php
+} ?>

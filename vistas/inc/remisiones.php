@@ -43,4 +43,45 @@
         form.submit(); // envía y recarga la página
     }
     
+    document.addEventListener('DOMContentLoaded', function() {
+        const btnCancelar = document.getElementById('btnCancelarRemision');
+        if (!btnCancelar) return;
+
+        btnCancelar.addEventListener('click', function() {
+            Swal.fire({
+                title: 'Cancelar remision',
+                text: 'Se cancelara la factura y el detalle cargados en esta remision.',
+                type: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Si, cancelar',
+                cancelButtonText: 'Volver'
+            }).then(function(result) {
+                const confirmado = result.isConfirmed !== undefined ? result.isConfirmed : result.value;
+                if (!confirmado) return;
+
+                fetch("<?php echo SERVERURL ?>ajax/remisionAjax.php", {
+                        method: 'POST',
+                        body: new URLSearchParams({
+                            limpiar_remision: true
+                        })
+                    })
+                    .then(respuesta => respuesta.json())
+                    .then(respuesta => {
+                        Swal.fire({
+                            title: respuesta.Titulo,
+                            text: respuesta.Texto,
+                            type: respuesta.Tipo,
+                            confirmButtonText: 'Aceptar'
+                        }).then(() => {
+                            if (respuesta.Alerta === 'recargar') {
+                                location.reload();
+                            }
+                        });
+                    })
+                    .catch(() => {
+                        Swal.fire('Error', 'No se pudo cancelar la remision', 'error');
+                    });
+            });
+        });
+    });
 </script>

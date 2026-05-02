@@ -1,4 +1,5 @@
 <?php
+$pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('usuarios.crear')) {
 	echo '<div class="alert alert-danger">Acceso no autorizado</div>';
 	return;
@@ -7,7 +8,6 @@ if (!mainModel::tienePermiso('usuarios.crear')) {
 require_once "./controladores/usuarioControlador.php";
 $ins = new usuarioControlador();
 
-$pagina = explode("/", $_GET['vista']);
 $busqueda = $_SESSION['busqueda_usuario'] ?? "";
 ?>
 
@@ -90,7 +90,7 @@ $busqueda = $_SESSION['busqueda_usuario'] ?? "";
 		</fieldset>
 		<br>
 		<p class="text-center" style="margin-top: 40px;">
-			<button type="reset" class="btn btn-raised btn-secondary btn-sm"><i class="fas fa-paint-roller"></i> &nbsp; LIMPIAR</button>
+			<button type="reset" class="btn btn-raised btn-secondary btn-sm"><i class="fas fa-times"></i> &nbsp; Cancelar</button>
 			&nbsp; &nbsp;
 			<button type="submit" class="btn btn-raised btn-info btn-sm"><i class="far fa-save"></i> &nbsp; GUARDAR</button>
 		</p>
@@ -131,10 +131,11 @@ $busqueda = $_SESSION['busqueda_usuario'] ?? "";
 						<input type="hidden" name="eliminar_busqueda" value="1">
 
 						<button type="submit" class="btn btn-danger">
-							Limpiar
+							Cancelar
 						</button>
 					</form>
-				<?php } ?>
+				<?php
+} ?>
 
 			</div>
 		</div>
@@ -223,8 +224,7 @@ $busqueda = $_SESSION['busqueda_usuario'] ?? "";
 <!-- ================= LISTA ================= -->
 <div class="container-fluid mt-4">
 	<?php
-
-	$pag_actual = 1;
+$pag_actual = 1;
 
 	if (isset($pagina[1]) && is_numeric($pagina[1])) {
 		$pag_actual = (int)$pagina[1];
@@ -245,4 +245,5 @@ $busqueda = $_SESSION['busqueda_usuario'] ?? "";
 </div>
 
 
-<?php include_once "./vistas/inc/usuarioJS.php"; ?>
+<?php
+include_once "./vistas/inc/usuarioJS.php"; ?>
