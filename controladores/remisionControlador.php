@@ -10,6 +10,10 @@ class remisionControlador extends remisionModelo
     /**controlador buscar factura */
     public function buscar_factura_controlador()
     {
+        if (!mainModel::tienePermiso('compra.remision.crear')) {
+            return '<div class="alert alert-danger">Acceso no autorizado</div>';
+        }
+
         $facturacompra  = mainModel::limpiar_string($_POST['buscar_factura']);
 
         if ($facturacompra == "") {
@@ -22,13 +26,12 @@ class remisionControlador extends remisionModelo
             exit();
         }
         /**seleccionar proveedor */
-        $datoscompra = mainModel::ejecutar_consulta_simple("SELECT SQL_CALC_FOUND_ROWS co.idcompra_cabecera as idcompra_cabecera, co.id_usuario as id_usuario, co.id_sucursal as id_sucursal, co.fecha_creacion as fecha_creacion, co.estado as estadoCO, co.nro_factura AS nro_factura, co.condicion as condicion,
-        co.fecha_factura as fecha_factura, total_compra AS total_compra, co.idproveedores as idproveedores, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
-        p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick, co.updated as updated,
-        co.updatedby as updatedby
+        $datoscompra = mainModel::ejecutar_consulta_simple("SELECT SQL_CALC_FOUND_ROWS
+        co.idcompra_cabecera,
+        co.nro_factura,
+        p.razon_social
         FROM compra_cabecera co
         INNER JOIN proveedores p on p.idproveedores = co.idproveedores
-        INNER JOIN usuarios u on u.id_usuario = co.id_usuario
         where (co.nro_factura like '%$facturacompra%') and co.estado = '1'  and co.id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
         order by idcompra_cabecera desc");
 
@@ -66,6 +69,15 @@ class remisionControlador extends remisionModelo
     /**controlador cargar factura */
     public function cargar_factura_controlador()
     {
+        if (!mainModel::tienePermiso('compra.remision.crear')) {
+            $_SESSION['alerta_oc'] = [
+                "tipo" => "error",
+                "mensaje" => "No posee permisos para cargar facturas en remisiones"
+            ];
+            header("Location: " . SERVERURL . "remision-nuevo/");
+            exit();
+        }
+
         $idcompra = mainModel::limpiar_string($_POST['idfacturaseleccionado'] ?? '');
         if (empty($idcompra)) {
             $_SESSION['alerta_oc'] = [
@@ -103,11 +115,10 @@ class remisionControlador extends remisionModelo
         $conexion = mainModel::conectar();
 
         $sqlDetalle = $conexion->prepare("
-        SELECT cd.id_articulo,cd.cantidad_recibida,a.desc_articulo,a.codigo,cd.precio_unitario,cd.subtotal,cd.ivaPro,ti.tipo_impuesto_descri,ti.ratevalueiva,ti.divisor
+        SELECT cd.id_articulo, cd.cantidad_recibida, a.desc_articulo, a.codigo, cd.precio_unitario
         FROM compra_detalle cd
         INNER JOIN compra_cabecera cc ON cc.idcompra_cabecera = cd.idcompra_cabecera
         INNER JOIN articulos a ON a.id_articulo = cd.id_articulo
-        INNER JOIN tipo_impuesto ti ON ti.idiva = a.idiva
         WHERE cd.idcompra_cabecera = :idcompra AND cc.id_sucursal = :id_sucursal");
 
         $sqlDetalle->bindParam(":idcompra", $idcompra, PDO::PARAM_INT);
@@ -125,20 +136,13 @@ class remisionControlador extends remisionModelo
             $precio   = $_SESSION['datos_articulofactura'][$i]['precio'] ?? $row['precio_unitario'];
             $subtotal = $cantidad * $precio;
 
-            // IVA: si divisor = 0, IVA = 0, sino se calcula como subtotal / divisor
-            $iva = ($row['divisor'] == 0) ? 0 : $subtotal / $row['divisor'];
-
             $_SESSION['datos_articulofactura'][$i] = [
                 "ID" => $row['id_articulo'],
                 "codigo" => $row['codigo'],
                 "descripcion" => $row['desc_articulo'],
                 "cantidad" => $cantidad,
                 "precio" => $precio,
-                "subtotal" => $subtotal,
-                "iva_descri" => $row['tipo_impuesto_descri'],
-                "iva" => $iva,
-                "ratevalueiva" => $row['ratevalueiva'],
-                "divisor" => $row['divisor']
+                "subtotal" => $subtotal
             ];
         }
 
@@ -151,6 +155,16 @@ class remisionControlador extends remisionModelo
     /**controlador guardar remision */
     public function guardar_remision_controlador()
     {
+        if (!mainModel::tienePermiso('compra.remision.crear')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso no autorizado",
+                "Texto" => "No posee permisos para crear remisiones",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $alerta = [
                 "Alerta" => "simple",
@@ -182,6 +196,7 @@ class remisionControlador extends remisionModelo
         $nro_remision = mainModel::limpiar_string($_POST['nro_remision'] ?? '');
         $fecha_emision = mainModel::limpiar_string($_POST['fecha_emision'] ?? '');
         $nombre_transpo = mainModel::limpiar_string($_POST['nombre_transpo'] ?? '');
+        $transportista = mainModel::limpiar_string($_POST['transportista'] ?? $nombre_transpo);
         $fechaenvio = mainModel::limpiar_string($_POST['fechaenvio'] ?? '');
         $fechallegada = mainModel::limpiar_string($_POST['fechallegada'] ?? '');
         $motivo_remision = mainModel::limpiar_string($_POST['motivo_remision'] ?? '');
@@ -208,7 +223,7 @@ class remisionControlador extends remisionModelo
             "nombre_transpo" => $nombre_transpo,
             "ci_transpo" => mainModel::limpiar_string($_POST['ci_transpo'] ?? ''),
             "cel_transpo" => mainModel::limpiar_string($_POST['cel_transpo'] ?? ''),
-            "transportista" => $nombre_transpo,
+            "transportista" => $transportista,
             "ruc_transport" => mainModel::limpiar_string($_POST['ruc_transport'] ?? ''),
             "vehimarca" => mainModel::limpiar_string($_POST['vehimarca'] ?? ''),
             "vehimodelo" => mainModel::limpiar_string($_POST['vehimodelo'] ?? ''),
@@ -271,12 +286,19 @@ class remisionControlador extends remisionModelo
     /**fin controlador */
 
     /**controlador paginador remision */
-    public function paginador_remision_controlador($pagina, $registros, $url, $busqueda1, $busqueda2)
+    public function paginador_remision_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $nro_factura = '', $estado = '')
     {
+        if (!mainModel::tienePermiso('compra.remision.ver')) {
+            echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+            return;
+        }
+
         $pagina     = mainModel::limpiar_string($pagina);
         $registros  = mainModel::limpiar_string($registros);
         $busqueda1  = mainModel::limpiar_string($busqueda1);
         $busqueda2  = mainModel::limpiar_string($busqueda2);
+        $nro_factura = mainModel::limpiar_string($nro_factura);
+        $estado      = mainModel::limpiar_string($estado);
 
         $url = mainModel::limpiar_string($url);
         $url = SERVERURL . $url . "/";
@@ -288,54 +310,44 @@ class remisionControlador extends remisionModelo
         $reg_inicio = $inicio + 1;
         $reg_final = $inicio;
 
-        /* 🔹 CONSULTA */
+        /* ================= FILTROS ================= */
+        $filtros = [];
+
         if (!empty($busqueda1) && !empty($busqueda2)) {
-
-            $consulta = "
-        SELECT SQL_CALC_FOUND_ROWS
-            r.idnota_remision,
-            r.id_sucursal,
-            r.id_usuario,
-            r.fecha_emision,
-            r.nro_remision,
-            r.nombre_transpo,
-            r.motivo_remision,
-            r.estado,
-            u.usu_nombre,
-            u.usu_apellido
-        FROM nota_remision r
-        INNER JOIN usuarios u ON u.id_usuario = r.id_usuario
-        WHERE DATE(r.fecha_emision) >= '$busqueda1'
-        AND DATE(r.fecha_emision) <= '$busqueda2' AND r.id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
-        ORDER BY r.fecha_emision ASC
-        LIMIT $inicio, $registros
-        ";
-        } else {
-
-            $consulta = "
-        SELECT SQL_CALC_FOUND_ROWS
-            r.idnota_remision,
-            r.id_sucursal,
-            r.id_usuario,
-            r.fecha_emision,
-            r.nro_remision,
-            r.nombre_transpo,
-            r.motivo_remision,
-            r.estado,
-            u.usu_nombre,
-            u.usu_apellido
-        FROM nota_remision r
-        INNER JOIN usuarios u ON u.id_usuario = r.id_usuario
-        WHERE r.estado != 0 AND r.id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
-        ORDER BY r.idnota_remision DESC
-        LIMIT $inicio, $registros
-        ";
+            $filtros[] = [
+                "campo" => "r.fecha_emision",
+                "tipo"  => "DATE_RANGE",
+                "desde" => $busqueda1,
+                "hasta" => $busqueda2
+            ];
         }
 
-        $conexion = mainModel::conectar();
-        $datos = $conexion->query($consulta)->fetchAll();
+        if ($nro_factura !== '') {
+            $filtros[] = [
+                "campo" => "cc.nro_factura",
+                "tipo"  => "LIKE",
+                "valor" => $nro_factura
+            ];
+        }
 
-        $total = (int)$conexion->query("SELECT FOUND_ROWS()")->fetchColumn();
+        if ($estado !== '') {
+            $filtros[] = [
+                "campo" => "r.estado",
+                "tipo"  => "=",
+                "valor" => $estado
+            ];
+        } else {
+            $filtros[] = [
+                "campo" => "r.estado",
+                "tipo"  => "!=",
+                "valor" => 0
+            ];
+        }
+
+        $filtrosSQL = mainModel::construirFiltros($filtros);
+        $res = remisionModelo::listar_remisiones_modelo($inicio, $registros, $filtrosSQL);
+        $datos = $res['datos'];
+        $total = $res['total'];
         $Npaginas = ceil($total / $registros);
 
         /* 🔹 TABLA */
@@ -345,6 +357,7 @@ class remisionControlador extends remisionModelo
                 <tr class="text-center roboto-medium">
                     <th>#</th>
                     <th>N° REMISIÓN</th>
+                    <th>FACTURA</th>
                     <th>FECHA</th>
                     <th>TRANSPORTISTA</th>
                     <th>MOTIVO</th>
@@ -386,6 +399,7 @@ class remisionControlador extends remisionModelo
             <tr class="text-center">
                 <td>' . $contador . '</td>
                 <td>' . $rows['nro_remision'] . '</td>
+                <td>' . ($rows['nro_factura'] ?? '-') . '</td>
                 <td>' . date("d-m-Y", strtotime($rows['fecha_emision'])) . '</td>
                 <td>' . $rows['nombre_transpo'] . '</td>
                 <td>' . $rows['motivo_remision'] . '</td>
@@ -458,6 +472,16 @@ class remisionControlador extends remisionModelo
     /**controlador anular remision */
     public function anular_remision_controlador()
     {
+        if (!mainModel::tienePermiso('compra.remision.anular')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso no autorizado",
+                "Texto" => "No posee permisos para anular remisiones",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         $id = mainModel::decryption($_POST['remision_id_del'] ?? '');
 
         if (!$id || !is_numeric($id)) {

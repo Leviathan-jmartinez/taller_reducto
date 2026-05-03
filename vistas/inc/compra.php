@@ -120,10 +120,36 @@
             document.getElementById("input-iva10").value = iva10.toFixed(0);
         }
 
+        function actualizarCondicionVenta() {
+            const condicion = document.getElementById("condicion");
+            const intervalo = document.getElementById("intervalo");
+            const cuotas = document.getElementById("cuotas");
+
+            if (!condicion || !intervalo || !cuotas) return;
+
+            if (condicion.value === "contado") {
+                intervalo.value = 0;
+                cuotas.value = 1;
+                intervalo.readOnly = true;
+                cuotas.readOnly = true;
+            } else {
+                intervalo.readOnly = false;
+                cuotas.readOnly = false;
+
+                if (condicion.value === "credito") {
+                    if (parseInt(intervalo.value, 10) <= 0 || intervalo.value === "") intervalo.value = 30;
+                    if (parseInt(cuotas.value, 10) <= 0 || cuotas.value === "") cuotas.value = 1;
+                }
+            }
+        }
+
         // Inicializar totales al cargar
         document.querySelectorAll("#tabla-detalle tbody tr").forEach(fila => {
             recalcularTotalesGenerales();
         });
+
+        actualizarCondicionVenta();
+        document.getElementById("condicion")?.addEventListener("change", actualizarCondicionVenta);
 
         // Detectar cambios en inputs con debounce
         document.addEventListener("input", function(e) {
@@ -201,6 +227,37 @@
                     });
             } else {
                 $('#ModalproveedorCO').modal('show');
+            }
+        });
+    }
+
+    function eliminar_proveedorCO(id) {
+        Swal.fire({
+            title: 'Estas seguro?',
+            text: 'Desea remover los datos seleccionados',
+            type: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#008000',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Aceptar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.value) {
+                let datos = new FormData();
+                datos.append("id_eliminar_proveedorCO", id);
+
+                fetch("<?php echo SERVERURL ?>ajax/compraAjax.php", {
+                        method: 'POST',
+                        body: datos
+                    })
+                    .then(respuesta => respuesta.json())
+                    .then(respuesta => {
+                        return alertasAjax(respuesta);
+                    })
+                    .catch(err => {
+                        console.error("Error:", err);
+                        Swal.fire("Error", "No se pudo procesar la peticion", "error");
+                    });
             }
         });
     }

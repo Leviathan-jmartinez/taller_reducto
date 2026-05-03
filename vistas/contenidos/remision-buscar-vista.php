@@ -27,19 +27,22 @@ if (!mainModel::tienePermiso('compra.remision.ver')) {
 /* 🔹 Fechas desde sesión (REMISIÓN) */
 $fecha_inicio = $_SESSION['fecha_inicio_remision'] ?? '';
 $fecha_final  = $_SESSION['fecha_final_remision'] ?? '';
+$nro_factura  = $_SESSION['nro_factura_remision'] ?? '';
+$estado       = $_SESSION['estado_remision'] ?? '';
 
 $fecha_inicio_dt = $fecha_inicio ? $fecha_inicio . ' 00:00:00' : '';
 $fecha_final_dt  = $fecha_final  ? $fecha_final  . ' 23:59:59' : '';
+$busqueda_activa = isset($_SESSION['filtro_remision_activo']) || $fecha_inicio || $fecha_final || $nro_factura || $estado !== '';
 ?>
 
-<?php if (!$fecha_inicio && !$fecha_final) { ?>
+<?php if (!$busqueda_activa) { ?>
 
     <!-- 🔹 FORMULARIO DE BÚSQUEDA -->
     <div class="container-fluid">
         <form class="form-neon FormularioAjax"
             action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
             method="POST"
-            data-form="default"
+            data-form="search"
             autocomplete="off">
 
             <input type="hidden" name="modulo" value="remision">
@@ -68,6 +71,28 @@ $fecha_final_dt  = $fecha_final  ? $fecha_final  . ' 23:59:59' : '';
                                 class="form-control"
                                 name="fecha_final"
                                 id="fecha_final">
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <div class="form-group">
+                            <label>Nro Factura</label>
+                            <input type="text"
+                                class="form-control"
+                                name="nro_factura"
+                                id="nro_factura">
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <div class="form-group">
+                            <label>Estado</label>
+                            <select class="form-control" name="estado_remision" id="estado_remision">
+                                <option value="">Todos</option>
+                                <option value="1">Activo</option>
+                                <option value="2">Procesado</option>
+                                <option value="0">Anulado</option>
+                            </select>
                         </div>
                     </div>
 
@@ -103,9 +128,31 @@ $fecha_final_dt  = $fecha_final  ? $fecha_final  . ' 23:59:59' : '';
 
                     <div class="col-12 col-md-6">
                         <p class="text-center" style="font-size: 20px;">
-                            Fecha de búsqueda:
+                            Búsqueda:
                             <strong>
-                                <?php echo $fecha_inicio; ?> &nbsp; a &nbsp; <?php echo $fecha_final; ?>
+                                <?php
+                                $criterios = [];
+
+                                if ($fecha_inicio || $fecha_final) {
+                                    $criterios[] = "Fecha: " . ($fecha_inicio ?: 'inicio') . " a " . ($fecha_final ?: 'final');
+                                }
+
+                                if ($nro_factura) {
+                                    $criterios[] = "Factura: " . htmlspecialchars($nro_factura, ENT_QUOTES, 'UTF-8');
+                                }
+
+                                if (isset($_SESSION['filtro_remision_activo'])) {
+                                    $estados = [
+                                        ""  => "Todos",
+                                        "0" => "Anulado",
+                                        "1" => "Activo",
+                                        "2" => "Procesado"
+                                    ];
+                                    $criterios[] = "Estado: " . ($estados[(string)$estado] ?? $estado);
+                                }
+
+                                echo implode(" | ", $criterios);
+                                ?>
                             </strong>
                         </p>
                     </div>
@@ -127,12 +174,14 @@ $fecha_final_dt  = $fecha_final  ? $fecha_final  . ' 23:59:59' : '';
 require_once "./controladores/remisionControlador.php";
         $remision = new remisionControlador();
 
-        echo $remision->paginador_remision_controlador(
+        $remision->paginador_remision_controlador(
             $pagina[1],
             15,
             $pagina[0],
-            $_SESSION['fecha_inicio_remision'],
-            $_SESSION['fecha_final_remision']
+            $_SESSION['fecha_inicio_remision'] ?? '',
+            $_SESSION['fecha_final_remision'] ?? '',
+            $_SESSION['nro_factura_remision'] ?? '',
+            $_SESSION['estado_remision'] ?? ''
         );
         ?>
     </div>

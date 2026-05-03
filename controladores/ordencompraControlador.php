@@ -120,8 +120,6 @@ class ordencompraControlador extends ordencompraModelo
     public function generar_oc_controlador()
     {
 
-
-
         // -----------------------------
         // 2) Obtener y sanear POST
         // -----------------------------
@@ -653,7 +651,7 @@ class ordencompraControlador extends ordencompraModelo
         $id = mainModel::limpiar_string($id);
 
         $check_presupuesto = mainModel::ejecutar_consulta_simple("SELECT idorden_compra FROM orden_compra WHERE idorden_compra = '$id' AND id_sucursal = " . $_SESSION['nick_sucursal'] . "");
-        if ($check_presupuesto->rowCount() < 0) {
+        if ($check_presupuesto->rowCount() <= 0) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",

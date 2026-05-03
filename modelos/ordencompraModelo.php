@@ -59,17 +59,214 @@ class ordencompraModelo extends mainModel
     }
     /**fin modelo */
 
+    /**modelo generar ordencompra desde presupuesto */
+    protected static function generar_oc_desde_presupuesto_modelo($datos)
+    {
+        $conexion = mainModel::conectar();
+
+        try {
+            $conexion->beginTransaction();
+
+            $consultaPre = $conexion->prepare("
+                SELECT idpresupuesto_compra, idproveedores, id_usuario
+                FROM presupuesto_compra
+                WHERE idpresupuesto_compra = :id
+                AND id_sucursal = :sucursal
+                AND estado != 0
+                LIMIT 1
+            ");
+            $consultaPre->execute([
+                ":id" => $datos['idpresupuesto'],
+                ":sucursal" => $datos['sucursal']
+            ]);
+            $pre = $consultaPre->fetch(PDO::FETCH_ASSOC);
+
+            if (!$pre) {
+                $conexion->rollBack();
+                return ["estado" => false, "codigo" => "presupuesto_no_existe"];
+            }
+
+            $consultaDet = $conexion->prepare("
+                SELECT d.id_articulo, d.precio
+                FROM presupuesto_detalle d
+                INNER JOIN presupuesto_compra c
+                    ON c.idpresupuesto_compra = d.idpresupuesto_compra
+                WHERE d.idpresupuesto_compra = :id
+                AND c.id_sucursal = :sucursal
+            ");
+            $consultaDet->execute([
+                ":id" => $datos['idpresupuesto'],
+                ":sucursal" => $datos['sucursal']
+            ]);
+            $detallePre = $consultaDet->fetchAll(PDO::FETCH_ASSOC);
+
+            if (empty($detallePre)) {
+                $conexion->rollBack();
+                return ["estado" => false, "codigo" => "detalle_vacio"];
+            }
+
+            $articulos_presupuesto = array_column($detallePre, null, "id_articulo");
+            $detalles_validos = [];
+
+            foreach ($datos['cantidades'] as $idArt => $cantidad) {
+                if (!isset($articulos_presupuesto[$idArt])) {
+                    continue;
+                }
+
+                $item = $articulos_presupuesto[$idArt];
+                if (!isset($item["precio"]) || !is_numeric($item["precio"]) || (float) $item["precio"] <= 0) {
+                    $conexion->rollBack();
+                    return ["estado" => false, "codigo" => "precio_invalido"];
+                }
+
+                $detalles_validos[] = [
+                    "id_articulo" => $idArt,
+                    "cantidad" => $cantidad,
+                    "precio" => (float) $item["precio"]
+                ];
+            }
+
+            if (empty($detalles_validos)) {
+                $conexion->rollBack();
+                return ["estado" => false, "codigo" => "sin_articulos_cantidad"];
+            }
+
+            $insertCabecera = $conexion->prepare("
+                INSERT INTO orden_compra
+                (idproveedores, presupuestoid, id_sucursal, id_usuario, fecha, estado, fecha_entrega)
+                VALUES (:proveedor, :presupuestoid, :sucursal, :usuario, NOW(), 1, :fecha_entrega)
+            ");
+            $insertCabecera->execute([
+                ":proveedor" => $pre['idproveedores'],
+                ":presupuestoid" => $pre['idpresupuesto_compra'],
+                ":sucursal" => $datos['sucursal'],
+                ":usuario" => $datos['usuario'],
+                ":fecha_entrega" => $datos['fecha_entrega']
+            ]);
+
+            if ($insertCabecera->rowCount() != 1) {
+                $conexion->rollBack();
+                return ["estado" => false, "codigo" => "oc_cabecera"];
+            }
+
+            $idOC = $conexion->lastInsertId();
+
+            $insertDetalle = $conexion->prepare("
+                INSERT INTO orden_compra_detalle
+                (idorden_compra, id_articulo, cantidad, precio_unitario, cantidad_pendiente)
+                VALUES (:ocid, :articulo, :cantidad, :precio, :pendiente)
+            ");
+
+            foreach ($detalles_validos as $item) {
+                $insertDetalle->execute([
+                    ":ocid" => $idOC,
+                    ":articulo" => $item["id_articulo"],
+                    ":cantidad" => $item["cantidad"],
+                    ":precio" => $item["precio"],
+                    ":pendiente" => $item["cantidad"]
+                ]);
+
+                if ($insertDetalle->rowCount() != 1) {
+                    $conexion->rollBack();
+                    return ["estado" => false, "codigo" => "oc_detalle"];
+                }
+            }
+
+            $actualizarPresupuesto = $conexion->prepare("
+                UPDATE presupuesto_compra
+                SET estado = 2,
+                    updatedby = :updatedby,
+                    updated = NOW()
+                WHERE idpresupuesto_compra = :id
+                AND id_sucursal = :sucursal
+            ");
+            $actualizarPresupuesto->execute([
+                ":updatedby" => $datos['usuario'],
+                ":id" => $datos['idpresupuesto'],
+                ":sucursal" => $datos['sucursal']
+            ]);
+
+            $conexion->commit();
+            return ["estado" => true, "idoc" => $idOC];
+        } catch (Exception $e) {
+            $conexion->rollBack();
+            return ["estado" => false, "codigo" => "transaccion"];
+        }
+    }
+    /**fin modelo */
+
     /**modelo anular ordencompra */
     protected static function anular_ordencompra_modelo($datos)
     {
-        $sql = mainModel::conectar()->prepare("UPDATE orden_compra
-        SET estado=0, updatedby=:updatedby, updated=now()
-        WHERE idorden_compra=:idorden_compra and id_sucursal=:idsucursal");
-        $sql->bindParam(":updatedby", $datos['updatedby']);
-        $sql->bindParam(":idorden_compra", $datos['idorden_compra']);
-        $sql->bindParam(":idsucursal", $datos['idsucursal']);
-        $sql->execute();
-        return $sql;
+        $conexion = mainModel::conectar();
+
+        try {
+            $conexion->beginTransaction();
+
+            $buscar_oc = $conexion->prepare("
+                SELECT presupuestoid
+                FROM orden_compra
+                WHERE idorden_compra = :idorden_compra
+                AND id_sucursal = :idsucursal
+                LIMIT 1
+            ");
+            $buscar_oc->bindParam(":idorden_compra", $datos['idorden_compra']);
+            $buscar_oc->bindParam(":idsucursal", $datos['idsucursal']);
+            $buscar_oc->execute();
+            $oc = $buscar_oc->fetch(PDO::FETCH_ASSOC);
+
+            if (!$oc) {
+                $conexion->rollBack();
+                return false;
+            }
+
+            $sql = $conexion->prepare("
+                UPDATE orden_compra
+                SET estado = 0,
+                    updatedby = :updatedby,
+                    updated = NOW()
+                WHERE idorden_compra = :idorden_compra
+                AND id_sucursal = :idsucursal
+            ");
+            $sql->bindParam(":updatedby", $datos['updatedby']);
+            $sql->bindParam(":idorden_compra", $datos['idorden_compra']);
+            $sql->bindParam(":idsucursal", $datos['idsucursal']);
+            $sql->execute();
+
+            if ($sql->rowCount() <= 0) {
+                $conexion->rollBack();
+                return false;
+            }
+
+            if (!empty($oc['presupuestoid'])) {
+                $actualizar_presupuesto = $conexion->prepare("
+                    UPDATE presupuesto_compra
+                    SET estado = 1,
+                        updatedby = :updatedby,
+                        updated = NOW()
+                    WHERE idpresupuesto_compra = :idpresupuesto_compra
+                    AND id_sucursal = :idsucursal
+                    AND estado = 2
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM orden_compra oc
+                        WHERE oc.presupuestoid = presupuesto_compra.idpresupuesto_compra
+                        AND oc.id_sucursal = presupuesto_compra.id_sucursal
+                        AND oc.estado != 0
+                    )
+                ");
+                $actualizar_presupuesto->bindParam(":updatedby", $datos['updatedby']);
+                $actualizar_presupuesto->bindParam(":idpresupuesto_compra", $oc['presupuestoid']);
+                $actualizar_presupuesto->bindParam(":idsucursal", $datos['idsucursal']);
+                $actualizar_presupuesto->execute();
+            }
+
+            $conexion->commit();
+            return $sql;
+        } catch (Exception $e) {
+            $conexion->rollBack();
+            return false;
+        }
     }
     /**fin modelo */
     /* ================= CABECERA ================= */

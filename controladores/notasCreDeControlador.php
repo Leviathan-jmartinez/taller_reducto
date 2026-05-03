@@ -42,7 +42,7 @@ class notasCreDeControlador extends notasCreDeModelo
                         type="button"
                         class="btn btn-success btn-sm"
                         onclick="seleccionarFactura(' . (int)$f['idcompra_cabecera'] . ')">
-                        Seleccionar
+                        Agregar
                     </button>
                 </td>
             </tr>
@@ -106,6 +106,7 @@ class notasCreDeControlador extends notasCreDeModelo
                 'cantidad'    => $d['cantidad_recibida'],
                 'cantidad_original' => $d['cantidad_recibida'],
                 'precio'      => $d['precio_unitario'],
+                'precio_original' => $d['precio_unitario'],
                 'iva_tipo'    => $d['tipo_impuesto_descri'],
                 'divisor'     => (int)$d['divisor'],
 
@@ -128,6 +129,7 @@ class notasCreDeControlador extends notasCreDeModelo
         $i        = (int)$data['index'];
         $cantidad = (float)$data['cantidad'];
         $precio   = (float)$data['precio'];
+        $tipoNota = strtolower(mainModel::limpiar_string($data['tipo'] ?? ''));
 
         if (!isset($_SESSION['NC_DETALLE'][$i])) {
             return ['status' => 'error', 'msg' => 'Ítem no encontrado'];
@@ -143,6 +145,13 @@ class notasCreDeControlador extends notasCreDeModelo
             return [
                 'status' => 'error',
                 'msg' => 'La cantidad no puede superar la cantidad comprada: ' . number_format((float)$item['cantidad_original'], 0, ',', '.')
+            ];
+        }
+
+        if ($tipoNota === 'credito' && isset($item['precio_original']) && $precio > (float)$item['precio_original']) {
+            return [
+                'status' => 'error',
+                'msg' => 'El precio no puede superar el precio facturado: ' . number_format((float)$item['precio_original'], 0, ',', '.')
             ];
         }
 
@@ -205,6 +214,15 @@ class notasCreDeControlador extends notasCreDeModelo
             session_start(['name' => 'STR']);
         }
 
+        if (!mainModel::tienePermiso('compra.nota.crear')) {
+            return [
+                "Alerta" => "simple",
+                "Titulo" => "Acceso no autorizado",
+                "Texto"  => "No tiene permiso para realizar esta acción",
+                "Tipo"   => "error"
+            ];
+        }
+
         $factura = $_SESSION['NC_FACTURA'] ?? null;
 
         if (!isset($_SESSION['NC_FACTURA']) || empty($_SESSION['NC_FACTURA']['idcompra_cabecera'])) {
@@ -245,6 +263,14 @@ class notasCreDeControlador extends notasCreDeModelo
                     'msg' => 'La cantidad de ' . $d['descripcion'] . ' supera la cantidad comprada'
                 ];
             }
+
+            if ($tipoNota === 'credito' && (float)$d['precio'] > (float)($d['precio_original'] ?? $d['precio'])) {
+                return [
+                    'status' => 'error',
+                    'msg' => 'El precio de ' . $d['descripcion'] . ' supera el precio facturado'
+                ];
+            }
+
             $total += round($d['cantidad'] * $d['precio'], 2);
         }
 

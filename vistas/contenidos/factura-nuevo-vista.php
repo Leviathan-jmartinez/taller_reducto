@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermiso('compra.factura.crear')) {
+if (!mainModel::tienePermiso('compra.crear')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
@@ -116,13 +116,14 @@ $tipo = $_SESSION['factura_tipo'];
                             </div>
                         <?php } else { ?>
                             <div class="d-flex align-items-center mt-3">
-                                <form class="FormularioAjax d-inline-block" action="<?php echo SERVERURL ?>ajax/presupuestoAjax.php" method="POST" data-form="loans">
-                                    <input type="hidden" name="id_eliminar_proveedorOC" value="<?php echo $_SESSION['datos_proveedorCO']['ID']; ?>">
+                                <span>
                                     <?php echo $_SESSION['datos_proveedorCO']['RAZON'] . " (" . $_SESSION['datos_proveedorCO']['RUC'] . ")"; ?>
-                                    <?php if ($tipo === 'sin_oc') { ?>
-                                        <button type="submit" class="btn btn-danger"><i class="fas fa-user-times"></i></button>
-                                    <?php } ?>
-                                </form>
+                                </span>
+                                <?php if ($tipo === 'sin_oc') { ?>
+                                    <button type="button" class="btn btn-danger ml-2" onclick="eliminar_proveedorCO('<?php echo $_SESSION['datos_proveedorCO']['ID']; ?>')">
+                                        <i class="fas fa-user-times"></i>
+                                    </button>
+                                <?php } ?>
                             </div>
                         <?php } ?>
                     </div>
@@ -132,21 +133,21 @@ $tipo = $_SESSION['factura_tipo'];
                         <label for="condicion" class="bmd-label-floating">Condición de Venta</label>
                         <select class="form-control" name="condicion" id="condicion" required>
                             <option value="" selected disabled>Seleccione condición</option>
-                            <option value="contado" selected>Contado</option>
-                            <option value="credito" selected>Crédito</option>
+                            <option value="contado">Contado</option>
+                            <option value="credito">Crédito</option>
                         </select>
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
                         <label for="intervalo" class="bmd-label-floating">Intervalo</label>
-                        <input type="text" class="form-control" name="intervalo" id="intervalo" required>
+                        <input type="number" min="0" step="1" class="form-control" name="intervalo" id="intervalo" required>
                     </div>
                 </div>
                 <div class="col-md-1">
                     <div class="form-group">
                         <label for="cuotas" class="bmd-label-floating">Cuotas</label>
-                        <input type="number" class="form-control" name="cuotas" id="cuotas" required>
+                        <input type="number" min="1" step="1" class="form-control" name="cuotas" id="cuotas" required>
                     </div>
                 </div>
             </div>
@@ -258,15 +259,11 @@ $tipo = $_SESSION['factura_tipo'];
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="ModalBuscarOC">Agregar OC</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <div class="form-group">
-                        <label for="input_item" class="bmd-label-floating">Código, Proveedor, Número OC</label>
-                        <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" class="form-control" name="input_oc" id="input_oc" maxlength="30">
+                        <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" class="form-control" placeholder="Código, Proveedor, Número OC" name="input_oc" id="input_oc" maxlength="30">
                     </div>
                 </div>
                 <br>

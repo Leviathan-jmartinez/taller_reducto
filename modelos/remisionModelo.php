@@ -93,6 +93,47 @@ class remisionModelo extends mainModel
         return $sql->execute();
     }
 
+    protected static function listar_remisiones_modelo($inicio, $registros, $filtrosSQL)
+    {
+        $conexion = mainModel::conectar();
+        $id_sucursal = mainModel::limpiar_string($_SESSION['nick_sucursal']);
+
+        $baseSQL = "
+        FROM nota_remision r
+        INNER JOIN usuarios u ON u.id_usuario = r.id_usuario
+        LEFT JOIN compra_cabecera cc ON cc.idcompra_cabecera = r.idcompra_cabecera
+        WHERE r.id_sucursal = '$id_sucursal'
+        $filtrosSQL";
+
+        $datos = $conexion->query("
+        SELECT
+            r.idnota_remision,
+            r.id_sucursal,
+            r.id_usuario,
+            r.fecha_emision,
+            r.nro_remision,
+            r.nombre_transpo,
+            r.motivo_remision,
+            r.estado,
+            cc.nro_factura,
+            u.usu_nombre,
+            u.usu_apellido
+        $baseSQL
+        ORDER BY r.idnota_remision DESC
+        LIMIT $inicio, $registros
+        ")->fetchAll(PDO::FETCH_ASSOC);
+
+        $total = (int)$conexion->query("
+        SELECT COUNT(*)
+        $baseSQL
+        ")->fetchColumn();
+
+        return [
+            "datos" => $datos,
+            "total" => $total
+        ];
+    }
+
 
     protected static function obtener_remision_modelo($idnota, $id_sucursal)
     {
@@ -107,29 +148,5 @@ class remisionModelo extends mainModel
 
         return $sql->fetch(PDO::FETCH_ASSOC);
     }
-
-
-    protected static function obtener_remision_detalle_modelo($idnota_remision, $id_sucursal)
-    {
-        $conexion = mainModel::conectar();
-
-        $sql = $conexion->prepare("
-        SELECT 
-            d.*,
-            a.nombre AS nombre_articulo
-        FROM nota_remision_detalle d
-        INNER JOIN nota_remision c 
-            ON c.idnota_remision = d.idnota_remision
-        INNER JOIN articulos a 
-            ON a.id_articulo = d.id_articulo
-        WHERE d.idnota_remision = :idnota_remision
-          AND c.id_sucursal = :id_sucursal");
-
-        $sql->bindParam(":idnota_remision", $idnota_remision, PDO::PARAM_INT);
-        $sql->bindParam(":id_sucursal", $id_sucursal, PDO::PARAM_INT);
-
-        $sql->execute();
-
-        return $sql->fetchAll(PDO::FETCH_ASSOC);
-    }
+    
 }

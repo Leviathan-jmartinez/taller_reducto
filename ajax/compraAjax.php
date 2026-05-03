@@ -54,6 +54,14 @@ if (isset($_POST['id_agregar_proveedorCO'])) {
     echo $inst_compra->agregar_proveedor_controlador();
     exit();
 }
+
+/* ===============================
+   ELIMINAR PROVEEDOR
+================================ */
+if (isset($_POST['id_eliminar_proveedorCO'])) {
+    echo $inst_compra->eliminar_proveedor_controlador();
+    exit();
+}
 /* ===============================
    Buscar ARTÍCULO
 ================================ */

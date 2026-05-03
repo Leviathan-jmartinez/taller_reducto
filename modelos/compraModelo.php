@@ -59,7 +59,7 @@
         /* ==============================
         Insertar o actualizar stock
         ============================== */
-        protected function upsert_stock_modelo($datos)
+        protected static function upsert_stock_modelo($datos)
         {
 
             $sql = "INSERT INTO stock (
@@ -76,13 +76,13 @@
                 :id_articulo,
                 200,
                 15,
-                :stockDisponible,
+                :cantidadIngreso,
                 :stockUltActualizacion,
                 :stockUsuActualizacion,
                 :stockultimoIdActualizacion
             )
             ON DUPLICATE KEY UPDATE
-                stockDisponible = VALUES(stockDisponible),
+                stockDisponible = stockDisponible + :cantidadIngresoUpdate,
                 stockUltActualizacion = VALUES(stockUltActualizacion),
                 stockUsuActualizacion = VALUES(stockUsuActualizacion),
                 stockultimoIdActualizacion = VALUES(stockultimoIdActualizacion),
@@ -94,7 +94,8 @@
 
             $stmt->bindParam(":id_sucursal", $datos['id_sucursal'], PDO::PARAM_INT);
             $stmt->bindParam(":id_articulo", $datos['id_articulo'], PDO::PARAM_INT);
-            $stmt->bindParam(":stockDisponible", $datos['stockDisponible']);
+            $stmt->bindParam(":cantidadIngreso", $datos['cantidadIngreso']);
+            $stmt->bindParam(":cantidadIngresoUpdate", $datos['cantidadIngreso']);
             $stmt->bindParam(":stockUltActualizacion", $datos['stockUltActualizacion']);
             $stmt->bindParam(":stockUsuActualizacion", $datos['stockUsuActualizacion'], PDO::PARAM_INT);
             $stmt->bindParam(":stockultimoIdActualizacion", $datos['stockultimoIdActualizacion'], PDO::PARAM_INT);
@@ -286,7 +287,8 @@
         /** modelo anular compra */
         protected static function anular_compra_modelo($datos)
         {
-            $sql = mainModel::conectar()->prepare("
+            $conexion = $datos['conexion'] ?? mainModel::conectar();
+            $sql = $conexion->prepare("
             UPDATE compra_cabecera
             SET estado = 0,
                 updatedby = :updatedby,
@@ -299,10 +301,57 @@
             return $sql;
         }
         /** fin modelo */
-        /** modelo obtener detalles de compra (multisucursal) */
-        protected static function datos_detalle_compra_modelo($idcompra_cabecera, $id_sucursal)
+
+        /** modelo revertir OC al anular compra */
+        protected static function revertir_oc_compra_modelo($datos)
         {
-            $conexion = mainModel::conectar();
+            $pdo = $datos['conexion'] ?? mainModel::conectar();
+            $detalles = compraModelo::datos_detalle_compra_modelo($datos['idcompra_cabecera'], $datos['id_sucursal'], $pdo)->fetchAll(PDO::FETCH_ASSOC);
+
+            foreach ($detalles as $d) {
+                $sql_det = $pdo->prepare("
+                    UPDATE orden_compra_detalle d
+                    INNER JOIN orden_compra c
+                        ON c.idorden_compra = d.idorden_compra
+                    SET d.cantidad_pendiente = LEAST(d.cantidad, d.cantidad_pendiente + :cantidad_recibida)
+                    WHERE d.idorden_compra = :idorden_compra
+                    AND d.id_articulo = :id_articulo
+                    AND c.id_sucursal = :id_sucursal
+                    AND c.estado <> 0");
+
+                $sql_det->bindParam(":cantidad_recibida", $d['cantidad_recibida'], PDO::PARAM_STR);
+                $sql_det->bindParam(":idorden_compra", $datos['idorden_compra'], PDO::PARAM_INT);
+                $sql_det->bindParam(":id_articulo", $d['id_articulo'], PDO::PARAM_INT);
+                $sql_det->bindParam(":id_sucursal", $datos['id_sucursal'], PDO::PARAM_INT);
+                $sql_det->execute();
+
+                if ($sql_det->rowCount() === 0) {
+                    throw new Exception("No se pudo revertir el detalle de la OC para el articulo " . $d['id_articulo']);
+                }
+            }
+
+            $sql_oc = $pdo->prepare("
+                UPDATE orden_compra
+                SET estado = 1,
+                    updatedby = :updatedby,
+                    updated = NOW()
+                WHERE idorden_compra = :idorden_compra
+                AND id_sucursal = :id_sucursal
+                AND estado <> 0");
+
+            $sql_oc->bindParam(":updatedby", $datos['updatedby'], PDO::PARAM_INT);
+            $sql_oc->bindParam(":idorden_compra", $datos['idorden_compra'], PDO::PARAM_INT);
+            $sql_oc->bindParam(":id_sucursal", $datos['id_sucursal'], PDO::PARAM_INT);
+            $sql_oc->execute();
+
+            return true;
+        }
+        /** fin modelo */
+
+        /** modelo obtener detalles de compra (multisucursal) */
+        protected static function datos_detalle_compra_modelo($idcompra_cabecera, $id_sucursal, $conexion = null)
+        {
+            $conexion = $conexion ?? mainModel::conectar();
 
             $sql = $conexion->prepare("
             SELECT d.id_articulo,
@@ -325,15 +374,18 @@
         /** modelo descontar stock */
         protected static function descontar_stock_modelo($datos)
         {
-            $sql = mainModel::conectar()->prepare("
+            $conexion = $datos['conexion'] ?? mainModel::conectar();
+            $sql = $conexion->prepare("
             UPDATE stock
             SET stockDisponible = stockDisponible - :cantidad,
                 stockUltActualizacion = NOW(),
                 stockUsuActualizacion = :usuario,
                 stockultimoIdActualizacion = :referencia
             WHERE id_sucursal = :id_sucursal
-            AND id_articulo = :id_articulo");
+            AND id_articulo = :id_articulo
+            AND stockDisponible >= :cantidad_check");
             $sql->bindParam(":cantidad", $datos['cantidad']);
+            $sql->bindParam(":cantidad_check", $datos['cantidad']);
             $sql->bindParam(":usuario", $datos['usuario']);
             $sql->bindParam(":referencia", $datos['referencia']);
             $sql->bindParam(":id_sucursal", $datos['id_sucursal']);
@@ -345,7 +397,8 @@
         /** modelo movimiento stock anulacion */
         protected static function movimiento_stock_anulacion_modelo($datos)
         {
-            $sql = mainModel::conectar()->prepare("
+            $conexion = $datos['conexion'] ?? mainModel::conectar();
+            $sql = $conexion->prepare("
             INSERT INTO movimientostock
             (id_sucursal, TipoMovStockId, MovStockArticuloId, MovStockCantidad,
             MovStockPrecioVenta, MovStockCosto, MovStockFechaHora,
@@ -368,9 +421,9 @@
         }
         /** fin modelo */
         /** modelo anular cuentas a pagar (multisucursal) */
-        protected static function anular_cuentas_pagar_modelo($idcompra_cabecera, $id_sucursal)
+        protected static function anular_cuentas_pagar_modelo($idcompra_cabecera, $id_sucursal, $conexion = null)
         {
-            $conexion = mainModel::conectar();
+            $conexion = $conexion ?? mainModel::conectar();
 
             $sql = $conexion->prepare("
                 UPDATE cuentas_a_pagar cap
@@ -399,7 +452,7 @@
             return $sql->execute($d) ? $sql : $sql;
         }
 
-        public static function anular_libro_compra_modelo($idcompra, $idsucursal)
+        public static function anular_libro_compra_modelo($idcompra, $idsucursal, $conexion = null)
         {
             $sql = "
             UPDATE libro_compra
@@ -409,7 +462,8 @@
             AND estado = 1
             ";
 
-            $stmt = mainModel::conectar()->prepare($sql);
+            $conexion = $conexion ?? mainModel::conectar();
+            $stmt = $conexion->prepare($sql);
             $stmt->bindParam(":idcompra", $idcompra, PDO::PARAM_INT);
             $stmt->bindParam(":idsucursal", $idsucursal, PDO::PARAM_INT);
             $stmt->execute();

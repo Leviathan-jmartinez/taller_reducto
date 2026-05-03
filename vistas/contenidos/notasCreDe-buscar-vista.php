@@ -50,28 +50,24 @@ if (!isset($pagina)) {
                 <div class="row justify-content-md-center">
                     <div class="col-12 col-md-4">
                         <div class="form-group">
-                            <label for="busqueda_inicio_notasCreDe">Fecha inicial (día/mes/año)</label>
-                            <input type="date" class="form-control" name="fecha_inicio" id="fecha_inicio" maxlength="30">
+                            <input type="date" class="form-control" placeholder="Fecha inicial (día/mes/año)" name="fecha_inicio" id="fecha_inicio" maxlength="30">
                         </div>
                     </div>
                     <div class="col-12 col-md-4">
                         <div class="form-group">
-                            <label for="busqueda_final_notasCreDe">Fecha final (día/mes/año)</label>
-                            <input type="date" class="form-control" name="fecha_final" id="fecha_final" maxlength="30">
+                            <input type="date" class="form-control" placeholder="Fecha final (día/mes/año)" name="fecha_final" id="fecha_final" maxlength="30">
                         </div>
                     </div>
                     <div class="col-12 col-md-4">
-                        <div class="form-group">
-                            <label>N° Documento</label>
-                            <input type="text" class="form-control" name="nro_documento">
+                        <div class="form-group">                            
+                            <input type="text" class="form-control" placeholder="Número de documento" name="nro_documento">
                         </div>
                     </div>
 
                     <div class="col-12 col-md-4">
                         <div class="form-group">
-                            <label>Tipo</label>
                             <select name="tipo_nota" class="form-control">
-                                <option value="">Seleccione</option>
+                                <option value="">Seleccione Tipo de Documento</option>
                                 <option value="CREDITO">Crédito</option>
                                 <option value="DEBITO">Débito</option>
                             </select>

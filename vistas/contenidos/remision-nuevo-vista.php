@@ -104,7 +104,7 @@ $id_usuario = $_SESSION['id_usuario'] ?? null;
                 <div class="col-md-4">
                     <div class="form-group">
                         <label>Razon Social transportista</label>
-                        <input type="text" class="form-control" name="nombre_transpo" required>
+                        <input type="text" class="form-control" name="transportista">
                     </div>
                 </div>
             </div>

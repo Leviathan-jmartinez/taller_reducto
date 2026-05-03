@@ -34,6 +34,16 @@ if (isset($_POST['nro_remision'])) {
 }
 
 if (isset($_POST['limpiar_remision'])) {
+    if (!mainModel::tienePermiso('compra.remision.crear')) {
+        echo json_encode([
+            "Alerta" => "simple",
+            "Titulo" => "Acceso no autorizado",
+            "Texto" => "No posee permisos para cancelar remisiones en proceso",
+            "Tipo" => "error"
+        ]);
+        exit();
+    }
+
     unset($_SESSION['datos_dactura']);
     unset($_SESSION['datos_articulofactura']);
     unset($_SESSION['idfacturaseleccionado']);

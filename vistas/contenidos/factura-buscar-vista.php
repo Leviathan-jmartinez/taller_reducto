@@ -1,6 +1,6 @@
 <?php
 $pagina = require __DIR__ . '/../inc/pagina.php';
-if (!mainModel::tienePermiso('compra.factura.ver')) {
+if (!mainModel::tienePermiso('compra.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }

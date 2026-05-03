@@ -57,6 +57,7 @@
         data.append('index', index);
         data.append('cantidad', cantidad);
         data.append('precio', precio);
+        data.append('tipo', document.querySelector('[name="tipo"]')?.value || '');
 
         fetch('<?php echo SERVERURL ?>ajax/notasCreDeAjax.php', {
                 method: 'POST',

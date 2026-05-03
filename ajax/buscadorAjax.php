@@ -224,6 +224,12 @@ if (in_array($modulo, $modulos_con_fecha)) {
             unset($_SESSION['razon_social_compra']);
         }
 
+        if ($modulo == "remision") {
+            unset($_SESSION['nro_factura_remision']);
+            unset($_SESSION['estado_remision']);
+            unset($_SESSION['filtro_remision_activo']);
+        }
+
         if ($modulo == "presupuesto") {
             unset($_SESSION['nro_presupuesto']);
             unset($_SESSION['proveedor_presupuesto']);
@@ -264,6 +270,52 @@ if (in_array($modulo, $modulos_con_fecha)) {
                 $fecha_fin == '' &&
                 $_SESSION['nro_factura_compra'] == '' &&
                 $_SESSION['razon_social_compra'] == ''
+            ) {
+                echo json_encode([
+                    "Alerta" => "simple",
+                    "Titulo" => "Búsqueda inválida",
+                    "Texto" => "Debe ingresar al menos un criterio de búsqueda",
+                    "Tipo" => "error"
+                ]);
+                exit();
+            }
+
+            if ($fecha_ini != '' && $fecha_fin != '') {
+                $_SESSION[$fecha_inicio_key] = $fecha_ini;
+                $_SESSION[$fecha_final_key]  = $fecha_fin;
+            } else {
+                unset($_SESSION[$fecha_inicio_key]);
+                unset($_SESSION[$fecha_final_key]);
+            }
+        }
+
+        /* ===============================
+           REMISION (FECHA OPCIONAL)
+           =============================== */ elseif ($modulo == "remision") {
+
+            $fecha_ini = $_POST['fecha_inicio'] ?? '';
+            $fecha_fin = $_POST['fecha_final'] ?? '';
+
+            if ($fecha_ini != '' && $fecha_fin != '' && $fecha_ini > $fecha_fin) {
+                echo json_encode([
+                    "Alerta" => "simple",
+                    "Titulo" => "Error en fechas",
+                    "Texto" => "La fecha de inicio no puede ser mayor a la fecha final",
+                    "Tipo" => "error"
+                ]);
+                exit();
+            }
+
+            $_SESSION['nro_factura_remision'] = $_POST['nro_factura'] ?? '';
+            $_SESSION['estado_remision']      = $_POST['estado_remision'] ?? '';
+            $_SESSION['filtro_remision_activo'] = true;
+
+            if (
+                $fecha_ini == '' &&
+                $fecha_fin == '' &&
+                $_SESSION['nro_factura_remision'] == '' &&
+                $_SESSION['estado_remision'] == '' &&
+                !isset($_POST['estado_remision'])
             ) {
                 echo json_encode([
                     "Alerta" => "simple",
