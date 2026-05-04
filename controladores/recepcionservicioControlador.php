@@ -148,7 +148,7 @@ class recepcionservicioControlador extends recepcionservicioModelo
         ]);
     }
 
-    public function listar_recepcion_controlador($pagina, $registros, $url, $busqueda)
+    public function listar_recepcion_controlador($pagina, $registros, $url, $busqueda = '', $fecha_inicio = '', $fecha_final = '', $nro_recepcion = '', $cliente = '', $documento = '', $placa = '', $estado_recepcion = '', $origen = '', $usuario = '', $tipo_servicio = '', $prioridad = '')
     {
         $pagina    = (int) mainModel::limpiar_string($pagina);
         $registros = (int) mainModel::limpiar_string($registros);
@@ -161,6 +161,17 @@ class recepcionservicioControlador extends recepcionservicioModelo
         $reg_final = $inicio;
 
         $busqueda = mainModel::limpiar_string($busqueda);
+        $fecha_inicio = mainModel::limpiar_string($fecha_inicio);
+        $fecha_final = mainModel::limpiar_string($fecha_final);
+        $nro_recepcion = mainModel::limpiar_string($nro_recepcion);
+        $cliente = mainModel::limpiar_string($cliente);
+        $documento = mainModel::limpiar_string($documento);
+        $placa = mainModel::limpiar_string($placa);
+        $estado_recepcion = mainModel::limpiar_string($estado_recepcion);
+        $origen = mainModel::limpiar_string($origen);
+        $usuario = mainModel::limpiar_string($usuario);
+        $tipo_servicio = mainModel::limpiar_string($tipo_servicio);
+        $prioridad = mainModel::limpiar_string($prioridad);
 
         /* ================= FILTROS ================= */
 
@@ -172,18 +183,82 @@ class recepcionservicioControlador extends recepcionservicioModelo
             ]
         ];
 
+        $filtros[] = [
+            "campo" => "rs.fecha_ingreso",
+            "tipo"  => "DATE_RANGE",
+            "desde" => $fecha_inicio,
+            "hasta" => $fecha_final
+        ];
+
+        if ($nro_recepcion !== '') {
+            $filtros[] = [
+                "campo" => "rs.idrecepcion",
+                "tipo"  => "=",
+                "valor" => $nro_recepcion
+            ];
+        }
+
         if ($busqueda != "") {
             $filtros[] = [
-                "campo" => "CONCAT(c.nombre_cliente,' ',c.apellido_cliente, ' ', c.doc_number, ' ', v.placa)",
+                "campo" => "CONCAT(rs.idrecepcion, ' ', c.nombre_cliente,' ',c.apellido_cliente, ' ', c.doc_number, ' ', v.placa, ' ', ma.mar_descri, ' ', m.mod_descri, ' ', u.usu_nombre, ' ', u.usu_apellido, ' ', IFNULL(rs.tipo_servicio,''), ' ', IFNULL(rs.prioridad,''), ' ', IFNULL(rs.observacion,''))",
                 "tipo"  => "LIKE",
                 "valor" => $busqueda
             ];
         }
-        if (!empty($_SESSION['estado_recepcion'])) {
+        if ($cliente !== '') {
+            $filtros[] = [
+                "campo" => "CONCAT(c.nombre_cliente,' ',c.apellido_cliente)",
+                "tipo"  => "LIKE",
+                "valor" => $cliente
+            ];
+        }
+        if ($documento !== '') {
+            $filtros[] = [
+                "campo" => "c.doc_number",
+                "tipo"  => "LIKE",
+                "valor" => $documento
+            ];
+        }
+        if ($placa !== '') {
+            $filtros[] = [
+                "campo" => "v.placa",
+                "tipo"  => "LIKE",
+                "valor" => $placa
+            ];
+        }
+        if ($estado_recepcion !== '') {
             $filtros[] = [
                 "campo" => "rs.estado",
                 "tipo"  => "=",
-                "valor" => $_SESSION['estado_recepcion']
+                "valor" => $estado_recepcion
+            ];
+        }
+        if ($origen !== '') {
+            $filtros[] = [
+                "campo" => "rs.origen",
+                "tipo"  => "=",
+                "valor" => $origen
+            ];
+        }
+        if ($usuario !== '') {
+            $filtros[] = [
+                "campo" => "CONCAT(u.usu_nombre, ' ', u.usu_apellido)",
+                "tipo"  => "LIKE",
+                "valor" => $usuario
+            ];
+        }
+        if ($tipo_servicio !== '') {
+            $filtros[] = [
+                "campo" => "rs.tipo_servicio",
+                "tipo"  => "=",
+                "valor" => $tipo_servicio
+            ];
+        }
+        if ($prioridad !== '') {
+            $filtros[] = [
+                "campo" => "rs.prioridad",
+                "tipo"  => "=",
+                "valor" => $prioridad
             ];
         }
 
@@ -212,6 +287,9 @@ class recepcionservicioControlador extends recepcionservicioModelo
                     <th>CI/RUC</th>
                     <th>Vehículo</th>
                     <th>KM</th>
+                    <th>Servicio</th>
+                    <th>Origen</th>
+                    <th>Prioridad</th>
                     <th>Usuario</th>
                     <th>Estado</th>';
 
@@ -244,23 +322,41 @@ class recepcionservicioControlador extends recepcionservicioModelo
                     case 3:
                         $estado = '<span class="badge badge-success">Finalizado</span>';
                         break;
-                        if ($rows['origen'] == 'RECLAMO') {
-                            $estado .= '<br><span class="badge badge-danger">Reclamo</span>';
-                        }
                     default:
                         $estado = '<span class="badge badge-secondary">Anulado</span>';
                         break;
+                }
+
+                $origenBadge = ($rows['origen'] == 'RECLAMO')
+                    ? '<span class="badge badge-danger">Reclamo</span>'
+                    : '<span class="badge badge-light">Normal</span>';
+
+                $prioridadBadge = '-';
+                if (!empty($rows['prioridad'])) {
+                    switch (strtolower($rows['prioridad'])) {
+                        case 'urgente':
+                            $prioridadBadge = '<span class="badge badge-danger">Urgente</span>';
+                            break;
+                        case 'normal':
+                            $prioridadBadge = '<span class="badge badge-info">Normal</span>';
+                            break;
+                        default:
+                            $prioridadBadge = htmlspecialchars($rows['prioridad'], ENT_QUOTES, 'UTF-8');
+                    }
                 }
 
                 $tabla .= '
             <tr class="text-center">
                 <td>' . $contador . '</td>
                 <td>' . date("d/m/Y H:i", strtotime($rows['fecha_ingreso'])) . '</td>
-                <td>' . $rows['cliente'] . '</td>
-                <td>' . $rows['doc_number'] . '</td>
-                <td>' . $rows['placa'] . ' (' . $rows['anho'] . ')</td>
-                <td>' . $rows['kilometraje'] . '</td>
-                <td>' . $rows['usuario'] . '</td>
+                <td>' . htmlspecialchars($rows['cliente'], ENT_QUOTES, 'UTF-8') . '</td>
+                <td>' . htmlspecialchars($rows['doc_number'], ENT_QUOTES, 'UTF-8') . '</td>
+                <td>' . htmlspecialchars($rows['vehiculo'], ENT_QUOTES, 'UTF-8') . '</td>
+                <td>' . htmlspecialchars($rows['kilometraje'], ENT_QUOTES, 'UTF-8') . '</td>
+                <td>' . htmlspecialchars($rows['tipo_servicio'] ?: '-', ENT_QUOTES, 'UTF-8') . '</td>
+                <td>' . $origenBadge . '</td>
+                <td>' . $prioridadBadge . '</td>
+                <td>' . htmlspecialchars($rows['usuario'], ENT_QUOTES, 'UTF-8') . '</td>
                 <td>' . $estado . '</td>';
 
                 if ($puedeAnular) {
@@ -282,7 +378,7 @@ class recepcionservicioControlador extends recepcionservicioModelo
 
             $reg_final = $contador - 1;
         } else {
-            $colspan = $puedeAnular ? 9 : 8;
+            $colspan = $puedeAnular ? 12 : 11;
             if ($total >= 1) {
                 $tabla .= '
             <tr class="text-center">

@@ -1,79 +1,196 @@
 <?php
 $pagina = require __DIR__ . '/../inc/pagina.php';
 if (!mainModel::tienePermiso('servicio.recepcion.ver')) {
-	echo '<div class="alert alert-danger">Acceso no autorizado</div>';
-	return;
-} ?>
+    echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+    return;
+}
 
-<div class="container-fluid">
-	<h3 class="text-left">
-		<i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR RECEPCIONES
-	</h3>
-	<ul class="full-box list-unstyled page-nav-tabs">
-		<li>
-			<a href="<?php echo SERVERURL; ?>recepcionServicio-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVA RECEPCION</a>
-		</li>
-		<li>
-			<a class="active" href="<?php echo SERVERURL; ?>recepcionServicio-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR RECEPCION</a>
-		</li>
-	</ul>
-</div>
-<?php if (!isset($_SESSION['busqueda_recepcion']) && empty($_SESSION['busqueda_recepcion'])) { ?>
-	<!-- Content here-->
-	<div class="container-fluid">
-		<form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="default" autocomplete="off">
-			<input type="hidden" name="modulo" value="recepcion">
-			<div class="container-fluid">
-				<div class="row justify-content-md-center">
-					<div class="col-12 col-md-6">
-						<div class="form-group">
-							<label for="inputSearch" class="bmd-label-floating">¿Qué recepcion estas buscando?</label>
-							<input type="text" class="form-control" name="busqueda_inicial" id="inputSearch" maxlength="30">
-						</div>
-					</div>
-					<div class="col-12">
-						<p class="text-center" style="margin-top: 40px;">
-							<button type="submit" class="btn btn-raised btn-info"><i class="fas fa-search"></i> &nbsp; BUSCAR</button>
-						</p>
-					</div>
-				</div>
-			</div>
-		</form>
-	</div>
-<?php } else { ?>
-	<div class="container-fluid">
-		<form class="FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
-			<input type="hidden" name="modulo" value="recepcion">
-			<input type="hidden" name="eliminar_busqueda" value="eliminar">
-			<div class="container-fluid">
-				<div class="row justify-content-md-center">
-					<div class="col-12 col-md-6">
-						<p class="text-center" style="font-size: 20px;">
-							Resultados de la busqueda <strong>“<?php echo $_SESSION['busqueda_recepcion'] ?>”</strong>
-						</p>
-					</div>
-					<div class="col-12">
-						<p class="text-center" style="margin-top: 20px;">
-							<button type="submit" class="btn btn-raised btn-danger"><i class="far fa-trash-alt"></i> &nbsp; ELIMINAR BÚSQUEDA</button>
-						</p>
-					</div>
-				</div>
-			</div>
-		</form>
-	</div>
+$fecha_inicio = $_SESSION['fecha_inicio_recepcion'] ?? '';
+$fecha_final = $_SESSION['fecha_final_recepcion'] ?? '';
+$nro_recepcion = $_SESSION['nro_recepcion'] ?? '';
+$cliente = $_SESSION['cliente_recepcion'] ?? '';
+$documento = $_SESSION['documento_recepcion'] ?? '';
+$placa = $_SESSION['placa_recepcion'] ?? '';
+$estado_recepcion = $_SESSION['estado_recepcion'] ?? '';
+$origen_recepcion = $_SESSION['origen_recepcion'] ?? '';
+$usuario = $_SESSION['usuario_recepcion'] ?? '';
+$tipo_servicio = $_SESSION['tipo_servicio_recepcion'] ?? '';
+$prioridad = $_SESSION['prioridad_recepcion'] ?? '';
+$filtro_activo = $_SESSION['filtro_recepcion_activo'] ?? '';
+$busqueda_general = $_SESSION['busqueda_recepcion'] ?? '';
 
-	<div class="container-fluid">
-		<?php
-require_once "./controladores/recepcionservicioControlador.php";
-		$ins_recepcion = new recepcionservicioControlador();
-		echo $ins_recepcion->listar_recepcion_controlador(
-			$pagina[1],
-			15,
-			$pagina[0],
-			$_SESSION['busqueda_recepcion'] ?? ''
-		);
-		?>
-	</div>
-<?php
+$hayFiltros = $filtro_activo || $fecha_inicio || $fecha_final || $nro_recepcion || $cliente || $documento || $placa || $estado_recepcion !== '' || $origen_recepcion || $usuario || $tipo_servicio || $prioridad || $busqueda_general;
+
+if (!isset($pagina)) {
+    $url = $_GET['views'] ?? "recepcionServicio-buscar/1";
+    $url = explode("/", $url);
+    $pagina = [$url[0], $url[1] ?? 1];
 }
 ?>
+
+<div class="container-fluid">
+    <h3 class="text-left">
+        <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR RECEPCIONES
+    </h3>
+    <ul class="full-box list-unstyled page-nav-tabs">
+        <li>
+            <a href="<?php echo SERVERURL; ?>recepcionServicio-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVA RECEPCION</a>
+        </li>
+        <li>
+            <a class="active" href="<?php echo SERVERURL; ?>recepcionServicio-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR RECEPCION</a>
+        </li>
+    </ul>
+</div>
+
+<div class="container-fluid">
+    <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
+        <input type="hidden" name="modulo" value="recepcion">
+
+        <div class="row">
+            <div class="col-12 col-md-3">
+                <div class="form-group">
+                    <label for="fecha_inicio">Fecha desde</label>
+                    <input type="date" class="form-control" name="fecha_inicio" id="fecha_inicio" value="<?php echo htmlspecialchars($fecha_inicio, ENT_QUOTES, 'UTF-8'); ?>">
+                </div>
+            </div>
+
+            <div class="col-12 col-md-3">
+                <div class="form-group">
+                    <label for="fecha_final">Fecha hasta</label>
+                    <input type="date" class="form-control" name="fecha_final" id="fecha_final" value="<?php echo htmlspecialchars($fecha_final, ENT_QUOTES, 'UTF-8'); ?>">
+                </div>
+            </div>
+
+            <div class="col-12 col-md-2">
+                <div class="form-group">
+                    <label for="nro_recepcion">Numero</label>
+                    <input type="number" class="form-control" name="nro_recepcion" id="nro_recepcion" min="1" value="<?php echo htmlspecialchars($nro_recepcion, ENT_QUOTES, 'UTF-8'); ?>">
+                </div>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <div class="form-group">
+                    <label for="cliente">Cliente</label>
+                    <input type="text" class="form-control" name="cliente" id="cliente" maxlength="80" value="<?php echo htmlspecialchars($cliente, ENT_QUOTES, 'UTF-8'); ?>">
+                </div>
+            </div>
+
+            <div class="col-12 col-md-3">
+                <div class="form-group">
+                    <label for="documento">CI/RUC</label>
+                    <input type="text" class="form-control" name="documento" id="documento" maxlength="30" value="<?php echo htmlspecialchars($documento, ENT_QUOTES, 'UTF-8'); ?>">
+                </div>
+            </div>
+
+            <div class="col-12 col-md-3">
+                <div class="form-group">
+                    <label for="placa">Placa</label>
+                    <input type="text" class="form-control" name="placa" id="placa" maxlength="20" value="<?php echo htmlspecialchars($placa, ENT_QUOTES, 'UTF-8'); ?>">
+                </div>
+            </div>
+
+            <div class="col-12 col-md-3">
+                <div class="form-group">
+                    <label for="estado_recepcion">Estado</label>
+                    <select name="estado_recepcion" id="estado_recepcion" class="form-control">
+                        <option value="">Todos</option>
+                        <option value="1" <?php echo $estado_recepcion === '1' ? 'selected' : ''; ?>>Recepcionado</option>
+                        <option value="2" <?php echo $estado_recepcion === '2' ? 'selected' : ''; ?>>En proceso</option>
+                        <option value="3" <?php echo $estado_recepcion === '3' ? 'selected' : ''; ?>>Finalizado</option>
+                        <option value="0" <?php echo $estado_recepcion === '0' ? 'selected' : ''; ?>>Anulado</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-3">
+                <div class="form-group">
+                    <label for="origen_recepcion">Origen</label>
+                    <select name="origen_recepcion" id="origen_recepcion" class="form-control">
+                        <option value="">Todos</option>
+                        <option value="NORMAL" <?php echo $origen_recepcion === 'NORMAL' ? 'selected' : ''; ?>>Normal</option>
+                        <option value="RECLAMO" <?php echo $origen_recepcion === 'RECLAMO' ? 'selected' : ''; ?>>Reclamo</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-3">
+                <div class="form-group">
+                    <label for="tipo_servicio">Tipo de servicio</label>
+                    <select name="tipo_servicio" id="tipo_servicio" class="form-control">
+                        <option value="">Todos</option>
+                        <option value="diagnostico" <?php echo $tipo_servicio === 'diagnostico' ? 'selected' : ''; ?>>Diagnostico</option>
+                        <option value="mantenimiento" <?php echo $tipo_servicio === 'mantenimiento' ? 'selected' : ''; ?>>Mantenimiento</option>
+                        <option value="reparacion" <?php echo $tipo_servicio === 'reparacion' ? 'selected' : ''; ?>>Reparacion</option>
+                        <option value="garantia" <?php echo $tipo_servicio === 'garantia' ? 'selected' : ''; ?>>Garantia</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-3">
+                <div class="form-group">
+                    <label for="prioridad">Prioridad</label>
+                    <select name="prioridad" id="prioridad" class="form-control">
+                        <option value="">Todas</option>
+                        <option value="normal" <?php echo $prioridad === 'normal' ? 'selected' : ''; ?>>Normal</option>
+                        <option value="urgente" <?php echo $prioridad === 'urgente' ? 'selected' : ''; ?>>Urgente</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-3">
+                <div class="form-group">
+                    <label for="usuario">Usuario</label>
+                    <input type="text" class="form-control" name="usuario" id="usuario" maxlength="80" value="<?php echo htmlspecialchars($usuario, ENT_QUOTES, 'UTF-8'); ?>">
+                </div>
+            </div>
+
+            <div class="col-12 col-md-3 d-flex align-items-end">
+                <div class="form-group w-100">
+                    <button type="submit" class="btn btn-raised btn-info btn-block">
+                        <i class="fas fa-search"></i> &nbsp; Buscar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <?php if ($hayFiltros) { ?>
+        <form class="FormularioAjax text-center mb-3" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
+            <input type="hidden" name="modulo" value="recepcion">
+            <input type="hidden" name="eliminar_busqueda" value="eliminar">
+            <button type="submit" class="btn btn-raised btn-danger">
+                <i class="far fa-trash-alt"></i> &nbsp; Limpiar filtros
+            </button>
+        </form>
+    <?php } ?>
+</div>
+
+<div class="container-fluid">
+    <?php
+    if ($hayFiltros) {
+        require_once "./controladores/recepcionservicioControlador.php";
+        $ins_recepcion = new recepcionservicioControlador();
+        $ins_recepcion->listar_recepcion_controlador(
+            $pagina[1],
+            15,
+            $pagina[0],
+            $busqueda_general,
+            $fecha_inicio,
+            $fecha_final,
+            $nro_recepcion,
+            $cliente,
+            $documento,
+            $placa,
+            $estado_recepcion,
+            $origen_recepcion,
+            $usuario,
+            $tipo_servicio,
+            $prioridad
+        );
+    } else {
+        echo '<div class="alert alert-info text-center" role="alert">
+                Use al menos un filtro para ver las recepciones.
+              </div>';
+    }
+    ?>
+</div>

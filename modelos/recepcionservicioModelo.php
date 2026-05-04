@@ -215,14 +215,19 @@ class recepcionservicioModelo extends mainModel
             rs.kilometraje,
             rs.estado,
             rs.origen,
+            rs.tipo_servicio,
+            rs.prioridad,
             c.doc_number,
             CONCAT(c.nombre_cliente,' ',c.apellido_cliente) AS cliente,
             v.placa,
             v.anho,
+            CONCAT(ma.mar_descri, ' ', m.mod_descri, ' ', v.placa, ' (', v.anho, ')') AS vehiculo,
             CONCAT(u.usu_nombre,' ',u.usu_apellido) AS usuario
         FROM recepcion_servicio rs
         INNER JOIN clientes c ON c.id_cliente = rs.id_cliente
         INNER JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
+        INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
+        INNER JOIN marcas ma ON ma.id_marcas = m.id_marcas
         INNER JOIN usuarios u ON u.id_usuario = rs.id_usuario
         WHERE 1=1 $filtrosSQL
         ORDER BY rs.fecha_ingreso DESC
@@ -238,6 +243,9 @@ class recepcionservicioModelo extends mainModel
         FROM recepcion_servicio rs
         INNER JOIN clientes c ON c.id_cliente = rs.id_cliente
         INNER JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
+        INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
+        INNER JOIN marcas ma ON ma.id_marcas = m.id_marcas
+        INNER JOIN usuarios u ON u.id_usuario = rs.id_usuario
         WHERE 1=1 $filtrosSQL
         ")->fetchColumn();
 

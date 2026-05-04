@@ -62,6 +62,7 @@ $modulos_con_fecha = [
     "ordencompra2",
     "compra",
     "inventario",
+    "recepcion",
     "remision",
     "notasCreDe",
     "presupuesto_servicio",
@@ -248,6 +249,20 @@ if (in_array($modulo, $modulos_con_fecha)) {
             unset($_SESSION['usuario_inv']);
             unset($_SESSION['filtro_inventario_activo']);
         }
+
+        if ($modulo == "recepcion") {
+            unset($_SESSION['nro_recepcion']);
+            unset($_SESSION['cliente_recepcion']);
+            unset($_SESSION['documento_recepcion']);
+            unset($_SESSION['placa_recepcion']);
+            unset($_SESSION['estado_recepcion']);
+            unset($_SESSION['origen_recepcion']);
+            unset($_SESSION['usuario_recepcion']);
+            unset($_SESSION['tipo_servicio_recepcion']);
+            unset($_SESSION['prioridad_recepcion']);
+            unset($_SESSION['filtro_recepcion_activo']);
+            unset($_SESSION['busqueda_recepcion']);
+        }
     } else {
 
         /* ===============================
@@ -274,6 +289,48 @@ if (in_array($modulo, $modulos_con_fecha)) {
             $_SESSION['observacion_inv'] = $_POST['observacion'] ?? '';
             $_SESSION['usuario_inv']     = $_POST['usuario'] ?? '';
             $_SESSION['filtro_inventario_activo'] = '1';
+
+            if ($fecha_ini != '') {
+                $_SESSION[$fecha_inicio_key] = $fecha_ini;
+            } else {
+                unset($_SESSION[$fecha_inicio_key]);
+            }
+
+            if ($fecha_fin != '') {
+                $_SESSION[$fecha_final_key] = $fecha_fin;
+            } else {
+                unset($_SESSION[$fecha_final_key]);
+            }
+        }
+
+        /* ===============================
+           RECEPCION (FILTROS OPCIONALES)
+           =============================== */
+        elseif ($modulo == "recepcion") {
+
+            $fecha_ini = $_POST['fecha_inicio'] ?? '';
+            $fecha_fin = $_POST['fecha_final'] ?? '';
+
+            if ($fecha_ini != '' && $fecha_fin != '' && $fecha_ini > $fecha_fin) {
+                echo json_encode([
+                    "Alerta" => "simple",
+                    "Titulo" => "Error en fechas",
+                    "Texto" => "La fecha de inicio no puede ser mayor a la fecha final",
+                    "Tipo" => "error"
+                ]);
+                exit();
+            }
+
+            $_SESSION['nro_recepcion']           = $_POST['nro_recepcion'] ?? '';
+            $_SESSION['cliente_recepcion']       = $_POST['cliente'] ?? '';
+            $_SESSION['documento_recepcion']     = $_POST['documento'] ?? '';
+            $_SESSION['placa_recepcion']         = $_POST['placa'] ?? '';
+            $_SESSION['estado_recepcion']        = $_POST['estado_recepcion'] ?? '';
+            $_SESSION['origen_recepcion']        = $_POST['origen_recepcion'] ?? '';
+            $_SESSION['usuario_recepcion']       = $_POST['usuario'] ?? '';
+            $_SESSION['tipo_servicio_recepcion'] = $_POST['tipo_servicio'] ?? '';
+            $_SESSION['prioridad_recepcion']     = $_POST['prioridad'] ?? '';
+            $_SESSION['filtro_recepcion_activo'] = '1';
 
             if ($fecha_ini != '') {
                 $_SESSION[$fecha_inicio_key] = $fecha_ini;
