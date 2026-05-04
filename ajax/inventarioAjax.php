@@ -19,9 +19,10 @@ if (isset($_POST['cargar_proveedores'])) {
     exit();
 }
 
-// Productos para Select2
+// Artículos para Select2
 if (isset($_POST['buscar_producto'])) {
-    $inst_inventario->cargarArticulosControlador($_POST['buscar_producto']);
+    $tipoArticulo = $_POST['tipo_articulo_buscar'] ?? 'producto';
+    $inst_inventario->cargarArticulosControlador($_POST['buscar_producto'], $tipoArticulo);
     exit();
 }
 
@@ -39,6 +40,12 @@ if (isset($_POST['buscar_inv'])) {
 // Buscar inventario
 if (isset($_POST['id_inv_seleccionado'])) {
     echo $inst_inventario->cargar_inv_controlador();
+    exit();
+}
+// Ver detalle de inventario
+if (isset($_POST['detalle_inventario'])) {
+    header('Content-Type: application/json; charset=utf-8');
+    echo $inst_inventario->detalle_inv_controlador();
     exit();
 }
 // Actualizar cantidad física

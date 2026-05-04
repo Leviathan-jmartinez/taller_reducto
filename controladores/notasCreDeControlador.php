@@ -284,6 +284,7 @@ class notasCreDeControlador extends notasCreDeModelo
             WHERE tipo = :tipo
             AND nro_documento = :nro
             AND timbrado = :timbrado
+            AND idproveedor = :proveedor
             AND id_sucursal = :suc
             AND estado = 1
         ");
@@ -291,6 +292,7 @@ class notasCreDeControlador extends notasCreDeModelo
             ':tipo'     => $tipoNota,
             ':nro'      => $nroNota,
             ':timbrado' => $timbrado,
+            ':proveedor' => (int)$factura['idproveedor'],
             ':suc'      => $_SESSION['nick_sucursal']
         ]);
 
@@ -496,7 +498,6 @@ class notasCreDeControlador extends notasCreDeModelo
         }
     }
 
-
     /** Controlador paginar compras */
     public function paginador_notasCreDe_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $nro_documento = '', $tipo_nota = '')
     {
@@ -519,54 +520,16 @@ class notasCreDeControlador extends notasCreDeModelo
         $reg_inicio = $inicio + 1;
         $reg_final = $inicio;
 
-        $filtros = "";
+        $resultado = notasCreDeModelo::paginarNotasCompraModelo($inicio, $registros, [
+            'id_sucursal'   => $_SESSION['nick_sucursal'],
+            'fecha_inicio'  => $busqueda1,
+            'fecha_final'   => $busqueda2,
+            'nro_documento' => $nro_documento,
+            'tipo_nota'     => $tipo_nota
+        ]);
 
-        if ($nro_documento != "") {
-            $filtros .= " AND nc.nro_documento LIKE '%$nro_documento%'";
-        }
-
-        if ($tipo_nota != "") {
-            $filtros .= " AND nc.tipo = '$tipo_nota'";
-        }
-
-
-        $condicion_fechas = "";
-
-        if (!empty($busqueda1) && !empty($busqueda2)) {
-            $condicion_fechas = " AND DATE(nc.fecha_creacion) BETWEEN '$busqueda1' AND '$busqueda2'";
-        }
-
-        $consulta = "
-        SELECT SQL_CALC_FOUND_ROWS
-            nc.idnota_compra,
-            nc.id_sucursal,
-            nc.tipo AS tipo_nota,
-            nc.nro_documento,
-            nc.fecha AS fecha_nota,
-            nc.total AS total_nota,
-            nc.estado AS estado_nota,
-            nc.fecha_creacion,
-            co.nro_factura,
-            p.razon_social,
-            u.usu_nombre,
-            u.usu_apellido
-        FROM nota_compra nc
-        INNER JOIN proveedores p ON p.idproveedores = nc.idproveedor
-        INNER JOIN usuarios u ON u.id_usuario = nc.idusuario
-        INNER JOIN compra_cabecera co ON co.idcompra_cabecera = nc.idcompra_cabecera
-        WHERE nc.id_sucursal = '{$_SESSION['nick_sucursal']}'
-        $condicion_fechas
-        $filtros
-        ORDER BY nc.fecha_creacion ASC
-        LIMIT $inicio,$registros
-        ";
-
-        $conexion = mainModel::conectar();
-        $datos = $conexion->query($consulta);
-        $datos = $datos->fetchAll();
-
-        $total = $conexion->query("SELECT FOUND_ROWS()");
-        $total = (int) $total->fetchColumn();
+        $datos = $resultado['datos'];
+        $total = $resultado['total'];
 
         $Npaginas = ceil($total / $registros);
 
@@ -658,6 +621,14 @@ class notasCreDeControlador extends notasCreDeModelo
     {
         if (session_status() === PHP_SESSION_NONE) {
             session_start(['name' => 'STR']);
+        }
+        if (!mainModel::tienePermiso('compra.nota.anular')) {
+            return [
+                "Alerta" => "simple",
+                "Titulo" => "Acceso no autorizado",
+                "Texto"  => "No tiene permiso para realizar esta acción",
+                "Tipo"   => "error"
+            ];
         }
 
         if (!isset($_POST['notaCreDe_id_del'])) {

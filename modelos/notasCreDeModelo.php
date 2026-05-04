@@ -3,11 +3,17 @@ require_once "mainModel.php";
 
 class notasCreDeModelo extends mainModel
 {
+    private static function iniciarSesionSiHaceFalta()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start(['name' => 'STR']);
+        }
+    }
 
     protected static function buscarFacturas($texto)
     {
         $conexion = mainModel::conectar();
-        session_start(['name' => 'STR']);
+        self::iniciarSesionSiHaceFalta();
         $sql = $conexion->prepare("
         SELECT 
             idcompra_cabecera,
@@ -32,7 +38,7 @@ class notasCreDeModelo extends mainModel
 
     protected static function obtenerFactura($id)
     {
-        session_start(['name' => 'STR']);
+        self::iniciarSesionSiHaceFalta();
         $sql = mainModel::conectar()->prepare("
             SELECT 
             *
@@ -50,7 +56,7 @@ class notasCreDeModelo extends mainModel
 
     protected static function obtenerDetalleCompra($idcompra)
     {
-        session_start(['name' => 'STR']);
+        self::iniciarSesionSiHaceFalta();
         $conexion = mainModel::conectar();
         $sql = $conexion->prepare("
         SELECT 
@@ -195,6 +201,79 @@ class notasCreDeModelo extends mainModel
             ':monto'    => $d['monto'],
             ':obs'      => $d['obs']
         ]);
+    }
+
+    protected static function paginarNotasCompraModelo($inicio, $registros, $filtros)
+    {
+        $where = ["nc.id_sucursal = :sucursal"];
+        $params = [
+            ':sucursal' => (int)$filtros['id_sucursal']
+        ];
+
+        if ($filtros['nro_documento'] !== '') {
+            $where[] = "nc.nro_documento LIKE :nro_documento";
+            $params[':nro_documento'] = '%' . $filtros['nro_documento'] . '%';
+        }
+
+        if ($filtros['tipo_nota'] !== '') {
+            $where[] = "nc.tipo = :tipo_nota";
+            $params[':tipo_nota'] = $filtros['tipo_nota'];
+        }
+
+        if ($filtros['fecha_inicio'] !== '' && $filtros['fecha_final'] !== '') {
+            $where[] = "DATE(nc.fecha_creacion) BETWEEN :fecha_inicio AND :fecha_final";
+            $params[':fecha_inicio'] = $filtros['fecha_inicio'];
+            $params[':fecha_final'] = $filtros['fecha_final'];
+        }
+
+        $whereSql = implode(" AND ", $where);
+        $fromSql = "
+        FROM nota_compra nc
+        INNER JOIN proveedores p ON p.idproveedores = nc.idproveedor
+        INNER JOIN usuarios u ON u.id_usuario = nc.idusuario
+        INNER JOIN compra_cabecera co ON co.idcompra_cabecera = nc.idcompra_cabecera
+        WHERE $whereSql
+        ";
+
+        $conexion = mainModel::conectar();
+
+        $consulta = "
+        SELECT
+            nc.idnota_compra,
+            nc.id_sucursal,
+            nc.tipo AS tipo_nota,
+            nc.nro_documento,
+            nc.fecha AS fecha_nota,
+            nc.total AS total_nota,
+            nc.estado AS estado_nota,
+            nc.fecha_creacion,
+            co.nro_factura,
+            p.razon_social,
+            u.usu_nombre,
+            u.usu_apellido
+        $fromSql
+        ORDER BY nc.fecha_creacion ASC
+        LIMIT :inicio, :registros
+        ";
+
+        $datos = $conexion->prepare($consulta);
+        foreach ($params as $param => $valor) {
+            $datos->bindValue($param, $valor);
+        }
+        $datos->bindValue(':inicio', (int)$inicio, PDO::PARAM_INT);
+        $datos->bindValue(':registros', (int)$registros, PDO::PARAM_INT);
+        $datos->execute();
+
+        $total = $conexion->prepare("SELECT COUNT(*) $fromSql");
+        foreach ($params as $param => $valor) {
+            $total->bindValue($param, $valor);
+        }
+        $total->execute();
+
+        return [
+            'datos' => $datos->fetchAll(PDO::FETCH_ASSOC),
+            'total' => (int)$total->fetchColumn()
+        ];
     }
 
     protected static function totalNCActivasPorFactura($idcompra)

@@ -28,7 +28,7 @@ $filtroId     = $resultado['filtroId'];
     <div class="card-header">
         <h3 class="mb-0">
             <i class="fas fa-exchange-alt"></i>
-            Historial de Transferencias entre Sucursales
+            Transferencias entre Sucursales
         </h3>
 
         <ul class="full-box list-unstyled page-nav-tabs">
@@ -39,7 +39,7 @@ $filtroId     = $resultado['filtroId'];
             </li>
             <li>
                 <a class="active" href="<?php echo SERVERURL; ?>/transferencia-historial/">
-                    <i class="fas fa-search fa-fw"></i> &nbsp; HISTORIAL DE TRANSFERENCIAS
+                    <i class="fas fa-search fa-fw"></i> &nbsp; LISTADO DE TRANSFERENCIAS
                 </a>
             </li>
         </ul>
@@ -53,7 +53,7 @@ $filtroId     = $resultado['filtroId'];
                 <option value="en_transito">Pendientes</option>
                 <option value="recibido">Recibidas</option>
                 <option value="recibido_parcial">Recibidas parciales</option>
-                <option value="devolucion">Devoluciones</option>
+                <option value="devolucion">Envios por faltante</option>
             </select>
 
             <!-- Fecha -->
@@ -86,11 +86,12 @@ $filtroId     = $resultado['filtroId'];
             <table class="table table-bordered table-sm">
                 <thead class="thead-light">
                     <tr>
-                        <th>#</th>
-                        <th>Fecha</th>
-                        <th>Origen</th>
-                        <th>Destino</th>
-                        <th>Estado</th>
+                            <th>#</th>
+                            <th>Nro. Documento</th>
+                            <th>Fecha</th>
+                            <th>Origen</th>
+                            <th>Destino</th>
+                            <th>Estado</th>
                         <th width="220">Acciones</th>
                     </tr>
                 </thead>
@@ -103,6 +104,21 @@ $filtroId     = $resultado['filtroId'];
                         $miSucursal,
                         $idTransferenciaOrigen = null
                     ) {
+                        if (
+                            $estado === 'en_transito' &&
+                            !empty($idTransferenciaOrigen)
+                        ) {
+                            if ($miSucursal == $destino) {
+                                return '<span class="badge badge-warning">Faltante pendiente</span>';
+                            }
+
+                            if ($miSucursal == $origen) {
+                                return '<span class="badge badge-primary">Envio por faltante</span>';
+                            }
+
+                            return '<span class="badge badge-secondary">Faltante en transito</span>';
+                        }
+
                         // Anulada
                         if ($estado === 'anulado') {
                             return '<span class="badge badge-danger">Anulada</span>';
@@ -158,6 +174,7 @@ $filtroId     = $resultado['filtroId'];
 
                         <tr>
                             <td><?= $t['idtransferencia'] ?></td>
+                            <td><?= !empty($t['nro_remision']) ? $t['nro_remision'] : '<span class="text-muted">Sin remisión</span>' ?></td>
                             <td><?= date('d/m/Y H:i', strtotime($t['fecha'])) ?></td>
                             <td><?= $t['suc_origen'] ?></td>
                             <td><?= $t['suc_destino'] ?></td>
@@ -166,7 +183,8 @@ $filtroId     = $resultado['filtroId'];
                                     $t['estado'],
                                     $t['sucursal_origen'],
                                     $t['sucursal_destino'],
-                                    $_SESSION['nick_sucursal']
+                                    $_SESSION['nick_sucursal'],
+                                    $t['idtransferencia_origen']
                                 ); ?>
                             </td>
 

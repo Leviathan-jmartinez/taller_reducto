@@ -88,7 +88,7 @@
             if (tipo === 'Producto') {
                 $('#grupo_producto').show();
                 $('#subtipo_producto').select2({
-                    placeholder: 'Buscar productos...',
+                    placeholder: 'Buscar artículos...',
                     ajax: {
                         url: '<?= SERVERURL ?>ajax/inventarioAjax.php',
                         type: 'POST',
@@ -96,7 +96,8 @@
                         delay: 250,
                         data: function(params) {
                             return {
-                                buscar_producto: params.term
+                                buscar_producto: params.term,
+                                tipo_articulo_buscar: $('#tipo_articulo').val() || 'producto'
                             };
                         },
                         processResults: function(data) {
@@ -109,6 +110,10 @@
                     minimumInputLength: 2
                 });
             }
+        });
+
+        $('#tipo_articulo').on('change', function() {
+            $('#subtipo_producto').val(null).trigger('change');
         });
 
     });
@@ -171,9 +176,15 @@
         function recalcularYActualizar(fila) {
 
             let index = fila.dataset.index;
+            let inputCantidad = fila.querySelector(".cantidad");
 
             let teorica = parseFloat(fila.querySelector(".teorica").value) || 0;
-            let fisica = parseFloat(fila.querySelector(".cantidad").value) || 0;
+            let fisica = parseFloat(inputCantidad.value) || 0;
+
+            if (fisica < 0) {
+                fisica = 0;
+                inputCantidad.value = 0;
+            }
 
             let diferencia = fisica - teorica;
 
@@ -206,8 +217,22 @@
         // Detectar cambios SOLO en cantidad física
         document.addEventListener("input", function(e) {
             if (e.target.classList.contains("cantidad")) {
+                if (parseFloat(e.target.value) < 0) {
+                    e.target.value = 0;
+                }
                 let fila = e.target.closest("tr");
                 recalcularYActualizar(fila);
+            }
+        });
+
+        document.addEventListener("paste", function(e) {
+            if (!e.target.classList.contains("cantidad")) return;
+
+            const texto = (e.clipboardData || window.clipboardData).getData("text");
+            if (parseFloat(texto) < 0 || texto.includes("-")) {
+                e.preventDefault();
+                e.target.value = 0;
+                recalcularYActualizar(e.target.closest("tr"));
             }
         });
 
@@ -218,6 +243,8 @@
 
         const filtro = document.getElementById("filtro-productos");
         const filas = document.querySelectorAll("#tabla-detalle tbody tr");
+
+        if (!filtro) return;
 
         filtro.addEventListener("keyup", function() {
 
@@ -246,34 +273,60 @@
         botonGuardar.addEventListener("click", function(e) {
             e.preventDefault();
 
-            fetch("<?= SERVERURL ?>ajax/inventarioAjax.php", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded"
-                    },
-                    body: new URLSearchParams({
-                        guardar_ajuste: true
+            const cantidades = document.querySelectorAll("#tabla-detalle .cantidad");
+            for (const input of cantidades) {
+                const valor = parseFloat(input.value) || 0;
+                if (valor < 0) {
+                    input.value = 0;
+                    Swal.fire({
+                        type: 'error',
+                        title: 'Cantidad inválida',
+                        text: 'No se puede guardar el ajuste con cantidades negativas.'
+                    });
+                    return;
+                }
+            }
+
+            Swal.fire({
+                title: '¿Desea guardar este ajuste?',
+                text: 'Se guardarán las cantidades inventariadas y el ajuste quedará listo para aplicar al stock.',
+                type: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, guardar',
+                cancelButtonText: 'No, cancelar'
+            }).then(function(result) {
+                const confirmado = result.isConfirmed !== undefined ? result.isConfirmed : result.value;
+                if (!confirmado) return;
+
+                fetch("<?= SERVERURL ?>ajax/inventarioAjax.php", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded"
+                        },
+                        body: new URLSearchParams({
+                            guardar_ajuste: true
+                        })
                     })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === "ok") {
-                        Swal.fire({
-                            type: 'success',
-                            title: 'Ajuste guardado correctamente!',
-                            text: data.msg
-                        }).then(() => {
-                            location.reload();
-                        });
-                    } else {
-                        Swal.fire({
-                            type: 'error',
-                            title: 'Error',
-                            text: data.msg
-                        });
-                    }
-                })
-                .catch(err => console.error("Error AJAX:", err));
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.status === "ok") {
+                            Swal.fire({
+                                type: 'success',
+                                title: 'Ajuste guardado correctamente!',
+                                text: data.msg
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                type: 'error',
+                                title: 'Error',
+                                text: data.msg
+                            });
+                        }
+                    })
+                    .catch(err => console.error("Error AJAX:", err));
+            });
         });
 
     });
@@ -286,10 +339,11 @@
             btnAjustar.addEventListener("click", function() {
                 Swal.fire({
                     title: '¿Desea aplicar este ajuste al stock?',
+                    text: 'Esta acción actualizará el stock según las diferencias del inventario.',
                     type: 'question',
                     showCancelButton: true,
                     confirmButtonText: 'Sí, aplicar',
-                    cancelButtonText: 'Cancelar'
+                    cancelButtonText: 'No, cancelar'
                 }).then(function(result) {
 
                     const confirmado = result.isConfirmed !== undefined ? result.isConfirmed : result.value;
@@ -382,4 +436,99 @@
 
             });
     }
+
+    let inventarioDetalleActual = null;
+    let inventarioDetalleTimer = null;
+
+    function verDetalleInventario(id) {
+        inventarioDetalleActual = id;
+        const buscar = document.getElementById("detalleInventarioBuscar");
+        const filtro = document.getElementById("detalleInventarioFiltro");
+        const registros = document.getElementById("detalleInventarioRegistros");
+
+        if (buscar) buscar.value = "";
+        if (filtro) filtro.value = "todos";
+        if (registros) registros.value = "100";
+
+        $("#modalDetalleInventario").modal("show");
+        cargarDetalleInventario(1);
+    }
+
+    function cargarDetalleInventario(pagina = 1) {
+        const contenedor = document.getElementById("detalleInventarioBody");
+        const cabecera = document.getElementById("detalleInventarioCabecera");
+        const paginacion = document.getElementById("detalleInventarioPaginacion");
+
+        if (!contenedor || !inventarioDetalleActual) return;
+
+        contenedor.innerHTML = `
+            <div class="text-center p-4">
+                <div class="spinner-border text-info" role="status"></div>
+                <p class="mt-2 mb-0">Cargando detalle...</p>
+            </div>
+        `;
+
+        if (paginacion) paginacion.innerHTML = "";
+
+        fetch("<?= SERVERURL ?>ajax/inventarioAjax.php", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: new URLSearchParams({
+                    detalle_inventario: inventarioDetalleActual,
+                    detalle_pagina: pagina,
+                    detalle_buscar: document.getElementById("detalleInventarioBuscar")?.value || "",
+                    detalle_filtro: document.getElementById("detalleInventarioFiltro")?.value || "todos",
+                    detalle_registros: document.getElementById("detalleInventarioRegistros")?.value || "100"
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status !== "ok") {
+                    contenedor.innerHTML = `
+                        <div class="alert alert-danger mb-0">
+                            ${data.msg || "No se pudo cargar el detalle del inventario."}
+                        </div>
+                    `;
+                    return;
+                }
+
+                if (cabecera) cabecera.innerHTML = data.cabecera;
+                contenedor.innerHTML = data.tabla;
+                if (paginacion) paginacion.innerHTML = data.paginacion;
+            })
+            .catch(() => {
+                contenedor.innerHTML = `
+                    <div class="alert alert-danger mb-0">
+                        No se pudo cargar el detalle del inventario.
+                    </div>
+                `;
+            });
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const buscar = document.getElementById("detalleInventarioBuscar");
+        const filtro = document.getElementById("detalleInventarioFiltro");
+        const registros = document.getElementById("detalleInventarioRegistros");
+
+        if (buscar) {
+            buscar.addEventListener("input", function() {
+                clearTimeout(inventarioDetalleTimer);
+                inventarioDetalleTimer = setTimeout(() => cargarDetalleInventario(1), 350);
+            });
+        }
+
+        if (filtro) {
+            filtro.addEventListener("change", function() {
+                cargarDetalleInventario(1);
+            });
+        }
+
+        if (registros) {
+            registros.addEventListener("change", function() {
+                cargarDetalleInventario(1);
+            });
+        }
+    });
 </script>

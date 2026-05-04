@@ -12,6 +12,8 @@ if (!isset($_SESSION['inventario_tipo'])) {
     $_SESSION['inventario_tipo'] = "todos"; // todos, críticos, etc.
 }
 
+$inventarioCargado = !empty($_SESSION['id_inv_seleccionado']) || !empty($_SESSION['datos_ajuste_inv']);
+
 ?>
 
 <div class="container-fluid">
@@ -23,7 +25,7 @@ if (!isset($_SESSION['inventario_tipo'])) {
             <a class="active" href="<?php echo SERVERURL; ?>inventario/"><i class="fas fa-list fa-fw"></i> &nbsp; Inventario</a>
         </li>
         <li>
-            <a href="<?php echo SERVERURL; ?>inventario-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar por fecha</a>
+            <a href="<?php echo SERVERURL; ?>inventario-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar Inventario</a>
         </li>
     </ul>
 </div>
@@ -37,6 +39,7 @@ if (!isset($_SESSION['inventario_tipo'])) {
 
 
 
+            <?php if (!$inventarioCargado) { ?>
             <div style="display: flex; justify-content: flex-end; margin-bottom: 15px; gap: 10px;">
                 <?php
                 if (mainModel::tienePermiso('inventario.crear')) { ?>
@@ -51,6 +54,7 @@ if (!isset($_SESSION['inventario_tipo'])) {
                     </button>
                 <?php } ?>
             </div>
+            <?php } ?>
         </div>
 
 
@@ -60,19 +64,19 @@ if (!isset($_SESSION['inventario_tipo'])) {
                 <input type="text"
                     id="filtro-productos"
                     class="form-control"
-                    placeholder="🔎 Buscar producto...">
+                    placeholder="Buscar artículo...">
             </div>
         </div>
 
-        <!-- TABLA DETALLE DE PRODUCTOS -->
+        <!-- TABLA DETALLE DE ARTÍCULOS -->
         <div class="row" style="margin-top:20px;">
             <div class="col-12">
-                <h5>Detalle de productos</h5>
+                <h5>Detalle de artículos</h5>
                 <table class="table table-dark table-sm" id="tabla-detalle">
                     <thead>
                         <tr>
                             <th style="width:20%;">Código</th>
-                            <th style="width:20%;">Producto</th>
+                            <th style="width:20%;">Artículo</th>
                             <th class="text-center" style="width:10%;">Costo</th>
                             <th class="text-center" style="width:20%;">Cantidad en stock</th>
                             <th class="text-center" style="width:20%;">Cantidad inventariada</th>
@@ -106,6 +110,8 @@ if (!isset($_SESSION['inventario_tipo'])) {
                                             class="form-control text-center cantidad"
                                             value="<?= htmlspecialchars($item['cantidad_fisica'] ?? 0, ENT_QUOTES, 'UTF-8'); ?>"
                                             min="0"
+                                            step="0.01"
+                                            onkeydown="return event.key !== '-' && event.key !== 'e' && event.key !== 'E' && event.key !== '+';"
                                             required>
                                     </td>
 
@@ -178,7 +184,17 @@ if (!isset($_SESSION['inventario_tipo'])) {
                             <option value="General">Inventario General</option>
                             <option value="Categoria">Inventario por Categoría</option>
                             <option value="Proveedor">Inventario por Proveedor</option>
-                            <option value="Producto">Inventario por Producto</option>
+                            <option value="Producto">Inventario por Artículo</option>
+                        </select>
+                    </div>
+
+                    <!-- Tipo de artículo -->
+                    <div class="form-group">
+                        <label for="tipo_articulo">Tipo de Artículo</label>
+                        <select name="tipo_articulo" id="tipo_articulo" class="form-control" required>
+                            <option value="producto">Productos</option>
+                            <option value="insumo">Insumos</option>
+                            <option value="todos">Productos e insumos</option>
                         </select>
                     </div>
 
@@ -198,9 +214,9 @@ if (!isset($_SESSION['inventario_tipo'])) {
                         </select>
                     </div>
 
-                    <!-- Subtipo Producto -->
+                    <!-- Subtipo Artículo -->
                     <div class="form-group" id="grupo_producto" style="display:none;">
-                        <label for="subtipo_producto">Seleccione Productos</label>
+                        <label for="subtipo_producto">Seleccione Artículos</label>
                         <select name="subtipo_producto[]" id="subtipo_producto" class="form-control" multiple="multiple"></select>
                     </div>
 

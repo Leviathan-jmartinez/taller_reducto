@@ -153,8 +153,65 @@
     document.getElementById('buscar_sucursal')
         ?.addEventListener('keyup', buscarSucursalDestino);
 
+    const formTransferencia = document.querySelector('.FormularioAjax');
+    const btnCancelarTransferencia = document.getElementById('btnCancelarTransferencia');
+
+    function limpiarTransferencia(form) {
+        form.reset();
+        document.getElementById('detalle_productos').innerHTML = '';
+        document.getElementById('resultado_busqueda').innerHTML = '';
+        document.getElementById('resultado_sucursal').innerHTML = '';
+    }
+
+    function obtenerEstadoTransferencia(form) {
+        const datos = new FormData(form);
+        const estado = new URLSearchParams();
+
+        for (const [campo, valor] of datos.entries()) {
+            if (campo === 'accion') continue;
+            estado.append(campo, String(valor).trim());
+        }
+
+        return estado.toString();
+    }
+
+    const estadoInicialTransferencia = formTransferencia ?
+        obtenerEstadoTransferencia(formTransferencia) :
+        '';
+
+    if (btnCancelarTransferencia) {
+        btnCancelarTransferencia.addEventListener('click', function(e) {
+            const form = this.closest('form');
+
+            if (!form) return;
+
+            e.preventDefault();
+
+            const hayDetalle = document.querySelectorAll('#detalle_productos tr').length > 0;
+            const hayCambios = hayDetalle || obtenerEstadoTransferencia(form) !== estadoInicialTransferencia;
+
+            if (!hayCambios) {
+                limpiarTransferencia(form);
+                return;
+            }
+
+            Swal.fire({
+                title: 'Cancelar transferencia',
+                text: 'Se perderan los datos cargados en esta transferencia.',
+                type: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Si, cancelar',
+                cancelButtonText: 'Continuar editando'
+            }).then(result => {
+                if (result.value) {
+                    limpiarTransferencia(form);
+                }
+            });
+        });
+    }
+
     /* ================= SUBMIT CREAR ================= */
-    document.querySelector('.FormularioAjax')
+    formTransferencia
         ?.addEventListener('submit', function(e) {
 
             e.preventDefault();
@@ -179,11 +236,7 @@
                             SERVERURL + 'pdf/remision.php?id=' + resp.idnota_remision;
 
                         Swal.fire(resp.Titulo, resp.Texto, 'success');
-                        this.reset();
-
-                        document.getElementById('detalle_productos').innerHTML = '';
-                        document.getElementById('resultado_busqueda').innerHTML = '';
-                        document.getElementById('resultado_sucursal').innerHTML = '';
+                        limpiarTransferencia(this);
 
                     } else {
                         pdfWindow.close();

@@ -39,7 +39,7 @@ if (!isset($pagina)) {
 <?php if (!$fecha_inicio && !$fecha_final && !$nro_documento && !$tipo_nota) {
 ?>
     <div class="container-fluid">
-        <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="default" autocomplete="off">
+        <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
             <input type="hidden" name="modulo" value="notasCreDe">
 
             <!-- Inputs ocultos para enviar datetime completo -->

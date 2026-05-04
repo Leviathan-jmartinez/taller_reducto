@@ -239,12 +239,59 @@ if (in_array($modulo, $modulos_con_fecha)) {
             unset($_SESSION['nro_documento_notasCreDe']);
             unset($_SESSION['tipo_nota_notasCreDe']);
         }
+
+        if ($modulo == "inventario") {
+            unset($_SESSION['nro_inventario']);
+            unset($_SESSION['tipo_inv']);
+            unset($_SESSION['estado_inv']);
+            unset($_SESSION['observacion_inv']);
+            unset($_SESSION['usuario_inv']);
+            unset($_SESSION['filtro_inventario_activo']);
+        }
     } else {
+
+        /* ===============================
+           INVENTARIO (FILTROS OPCIONALES)
+           =============================== */
+        if ($modulo == "inventario") {
+
+            $fecha_ini = $_POST['fecha_inicio'] ?? '';
+            $fecha_fin = $_POST['fecha_final'] ?? '';
+
+            if ($fecha_ini != '' && $fecha_fin != '' && $fecha_ini > $fecha_fin) {
+                echo json_encode([
+                    "Alerta" => "simple",
+                    "Titulo" => "Error en fechas",
+                    "Texto" => "La fecha de inicio no puede ser mayor a la fecha final",
+                    "Tipo" => "error"
+                ]);
+                exit();
+            }
+
+            $_SESSION['nro_inventario']  = $_POST['nro_inventario'] ?? '';
+            $_SESSION['tipo_inv']        = $_POST['tipo_inv'] ?? '';
+            $_SESSION['estado_inv']      = $_POST['estado_inv'] ?? '';
+            $_SESSION['observacion_inv'] = $_POST['observacion'] ?? '';
+            $_SESSION['usuario_inv']     = $_POST['usuario'] ?? '';
+            $_SESSION['filtro_inventario_activo'] = '1';
+
+            if ($fecha_ini != '') {
+                $_SESSION[$fecha_inicio_key] = $fecha_ini;
+            } else {
+                unset($_SESSION[$fecha_inicio_key]);
+            }
+
+            if ($fecha_fin != '') {
+                $_SESSION[$fecha_final_key] = $fecha_fin;
+            } else {
+                unset($_SESSION[$fecha_final_key]);
+            }
+        }
 
         /* ===============================
            COMPRA (FECHA OPCIONAL)
            =============================== */
-        if ($modulo == "compra") {
+        elseif ($modulo == "compra") {
 
             $fecha_ini = $_POST['fecha_inicio'] ?? '';
             $fecha_fin = $_POST['fecha_final'] ?? '';
