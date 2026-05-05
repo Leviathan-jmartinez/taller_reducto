@@ -14,14 +14,21 @@ class diagnosticoModelo extends mainModel
             rs.fecha_ingreso,
             rs.kilometraje,
             rs.id_sucursal,
+            rs.tipo_servicio,
+            rs.prioridad,
             CONCAT(c.nombre_cliente,' ',c.apellido_cliente) AS cliente,
+            c.doc_number,
             v.placa,
             v.anho,
+            ma.mar_descri AS marca,
+            m.mod_descri AS modelo,
             rs.origen,
             rs.idreclamo_servicio
         FROM recepcion_servicio rs
         INNER JOIN clientes c ON c.id_cliente = rs.id_cliente
         INNER JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
+        INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
+        INNER JOIN marcas ma ON ma.id_marcas = m.id_marcas
         LEFT JOIN reclamo_servicio rc ON rc.idregistro_servicio = rs.idrecepcion
         WHERE rs.estado = 1 
           AND (
@@ -29,6 +36,8 @@ class diagnosticoModelo extends mainModel
              OR c.apellido_cliente LIKE :b 
              OR c.doc_number LIKE :b
              OR v.placa LIKE :b
+             OR ma.mar_descri LIKE :b
+             OR m.mod_descri LIKE :b
           )
         ORDER BY rs.fecha_ingreso DESC
         LIMIT 20
@@ -38,6 +47,48 @@ class diagnosticoModelo extends mainModel
         $sql->execute();
 
         return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    protected static function obtener_recepcion_detalle_modelo($id, $sucursal)
+    {
+        $sql = mainModel::conectar()->prepare("
+        SELECT
+            rs.idrecepcion,
+            DATE_FORMAT(rs.fecha_ingreso, '%d/%m/%Y %H:%i') AS fecha_ingreso,
+            rs.kilometraje,
+            rs.nivel_combustible,
+            rs.estado_exterior,
+            rs.objetos_vehiculo,
+            rs.tipo_servicio,
+            rs.area_problema,
+            rs.prioridad,
+            rs.accesorios,
+            rs.observacion,
+            rs.origen,
+            rs.id_sucursal,
+            rs.idreclamo_servicio,
+            c.doc_number,
+            c.celular_cliente,
+            CONCAT(c.nombre_cliente,' ',c.apellido_cliente) AS cliente,
+            v.placa,
+            v.anho,
+            v.color,
+            CONCAT(ma.mar_descri, ' ', m.mod_descri, ' ', v.placa, ' (', v.anho, ')') AS vehiculo
+        FROM recepcion_servicio rs
+        INNER JOIN clientes c ON c.id_cliente = rs.id_cliente
+        INNER JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
+        INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
+        INNER JOIN marcas ma ON ma.id_marcas = m.id_marcas
+        WHERE rs.idrecepcion = :id
+          AND rs.id_sucursal = :sucursal
+        LIMIT 1
+        ");
+
+        $sql->bindParam(":id", $id, PDO::PARAM_INT);
+        $sql->bindParam(":sucursal", $sucursal, PDO::PARAM_INT);
+        $sql->execute();
+
+        return $sql->fetch(PDO::FETCH_ASSOC);
     }
 
     protected static function guardar_diagnostico_modelo($d)
@@ -131,6 +182,35 @@ class diagnosticoModelo extends mainModel
                 }
             }
 
+            $sql_recepcion = $pdo->prepare("
+                UPDATE recepcion_servicio
+                SET estado = 2,
+                    fecha_actualizacion = NOW()
+                WHERE idrecepcion = :recepcion
+                  AND id_sucursal = :sucursal
+                  AND estado = 1
+            ");
+
+            if (!$sql_recepcion->execute([
+                ':recepcion' => $d['idrecepcion'],
+                ':sucursal' => $d['id_sucursal']
+            ])) {
+                $error = $sql_recepcion->errorInfo();
+                $pdo->rollBack();
+                return [
+                    "error" => true,
+                    "msg" => "Error actualizando recepcion: " . ($error[2] ?? "SQL desconocido")
+                ];
+            }
+
+            if ($sql_recepcion->rowCount() < 1) {
+                $pdo->rollBack();
+                return [
+                    "error" => true,
+                    "msg" => "La recepcion no esta disponible para diagnostico"
+                ];
+            }
+
             $pdo->commit();
 
             return [
@@ -157,7 +237,10 @@ class diagnosticoModelo extends mainModel
         INNER JOIN recepcion_servicio rs ON rs.idrecepcion = d.idrecepcion
         INNER JOIN clientes c ON c.id_cliente = rs.id_cliente
         INNER JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
+        INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
+        INNER JOIN marcas ma ON ma.id_marcas = m.id_marcas
         INNER JOIN usuarios u ON u.id_usuario = d.id_usuario
+        INNER JOIN equipo_trabajo et ON et.id_equipo = d.id_equipo
         WHERE rs.id_sucursal = '{$_SESSION['nick_sucursal']}'
         $filtrosSQL
         ";
@@ -165,6 +248,7 @@ class diagnosticoModelo extends mainModel
         $selectSQL = "
         SELECT 
             d.id_diagnostico,
+            rs.idrecepcion,
             d.fecha_diagnostico,
             d.estado,
 
@@ -177,6 +261,9 @@ class diagnosticoModelo extends mainModel
 
             CONCAT(c.nombre_cliente,' ',c.apellido_cliente) AS cliente,
             v.placa,
+            CONCAT(ma.mar_descri, ' ', m.mod_descri, ' ', v.placa) AS vehiculo,
+            rs.tipo_servicio,
+            et.nombre AS equipo,
             u.usu_nombre,
             u.usu_apellido
         ";
@@ -191,6 +278,72 @@ class diagnosticoModelo extends mainModel
             $inicio,
             $registros
         );
+    }
+
+    protected static function obtener_diagnostico_detalle_modelo($id, $sucursal)
+    {
+        $pdo = mainModel::conectar();
+
+        $sql = $pdo->prepare("
+        SELECT
+            d.id_diagnostico,
+            rs.idrecepcion,
+            DATE_FORMAT(d.fecha_diagnostico, '%d/%m/%Y %H:%i') AS fecha_diagnostico,
+            d.estado,
+            d.observaciones,
+            d.es_reclamo_valido,
+            d.es_garantia,
+            d.requiere_cobro,
+            rs.origen,
+            rs.tipo_servicio,
+            rs.observacion AS recepcion_observacion,
+            CONCAT(c.nombre_cliente,' ',c.apellido_cliente) AS cliente,
+            c.doc_number,
+            CONCAT(ma.mar_descri, ' ', m.mod_descri, ' ', v.placa) AS vehiculo,
+            v.placa,
+            et.nombre AS equipo,
+            CONCAT(u.usu_nombre, ' ', u.usu_apellido) AS usuario
+        FROM diagnostico_servicio d
+        INNER JOIN recepcion_servicio rs ON rs.idrecepcion = d.idrecepcion
+        INNER JOIN clientes c ON c.id_cliente = rs.id_cliente
+        INNER JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
+        INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
+        INNER JOIN marcas ma ON ma.id_marcas = m.id_marcas
+        INNER JOIN equipo_trabajo et ON et.id_equipo = d.id_equipo
+        INNER JOIN usuarios u ON u.id_usuario = d.id_usuario
+        WHERE d.id_diagnostico = :id
+          AND rs.id_sucursal = :sucursal
+        LIMIT 1
+        ");
+
+        $sql->bindParam(":id", $id, PDO::PARAM_INT);
+        $sql->bindParam(":sucursal", $sucursal, PDO::PARAM_INT);
+        $sql->execute();
+        $cabecera = $sql->fetch(PDO::FETCH_ASSOC);
+
+        if (!$cabecera) {
+            return [];
+        }
+
+        $sqlDetalle = $pdo->prepare("
+        SELECT
+            sistema,
+            problema,
+            gravedad,
+            solucion_propuesta,
+            requiere_repuesto,
+            requiere_mano_obra
+        FROM diagnostico_detalle
+        WHERE id_diagnostico = :id
+        ORDER BY id_diagnostico_detalle ASC
+        ");
+        $sqlDetalle->bindParam(":id", $id, PDO::PARAM_INT);
+        $sqlDetalle->execute();
+
+        return [
+            "cabecera" => $cabecera,
+            "detalles" => $sqlDetalle->fetchAll(PDO::FETCH_ASSOC)
+        ];
     }
 
     protected static function anular_diagnostico_modelo($id)
@@ -227,7 +380,7 @@ class diagnosticoModelo extends mainModel
             $sql = $pdo->prepare("
             SELECT COUNT(*) 
             FROM presupuesto_servicio 
-            WHERE id_diagnostico = :id
+            WHERE id_diagnostico = :id and estado !=0
         ");
             $sql->execute([':id' => $id]);
 

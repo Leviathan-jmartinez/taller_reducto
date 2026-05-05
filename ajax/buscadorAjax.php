@@ -82,8 +82,13 @@ if (in_array($modulo, $modulos_con_fecha)) {
                 "fecha_inicio" => "fecha_inicio_diag",
                 "fecha_final"  => "fecha_final_diag",
                 "extra" => [
-                    "cliente" => "cliente_diag",
-                    "placa"   => "placa_diag"
+                    "nro_diagnostico" => "nro_diagnostico_diag",
+                    "nro_recepcion"   => "nro_recepcion_diag",
+                    "cliente"         => "cliente_diag",
+                    "placa"           => "placa_diag",
+                    "estado"          => "estado_diag",
+                    "origen"          => "origen_diag",
+                    "busqueda_general" => "busqueda_general_diag"
                 ]
             ],
             "presupuesto_servicio" => [
@@ -170,6 +175,18 @@ if (in_array($modulo, $modulos_con_fecha)) {
 
             $_SESSION[$cfg['fecha_inicio']] = $fecha_ini;
             $_SESSION[$cfg['fecha_final']]  = $fecha_fin;
+        } elseif ($modulo == "diagnostico" && ($fecha_ini != '' || $fecha_fin != '')) {
+            if ($fecha_ini != '') {
+                $_SESSION[$cfg['fecha_inicio']] = $fecha_ini;
+            } else {
+                unset($_SESSION[$cfg['fecha_inicio']]);
+            }
+
+            if ($fecha_fin != '') {
+                $_SESSION[$cfg['fecha_final']] = $fecha_fin;
+            } else {
+                unset($_SESSION[$cfg['fecha_final']]);
+            }
         } elseif ($modulo == "presupuesto" && ($fecha_ini != '' || $fecha_fin != '')) {
             echo json_encode([
                 "Alerta" => "simple",

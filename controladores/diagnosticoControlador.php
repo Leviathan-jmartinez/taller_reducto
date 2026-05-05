@@ -67,6 +67,89 @@ class diagnosticoControlador extends diagnosticoModelo
         return $tabla;
     }
 
+    public function buscar_recepcion_inline_controlador()
+    {
+        $busqueda = trim($_POST['buscar_recepcion'] ?? '');
+
+        if (strlen($busqueda) < 3) {
+            return '<div class="diagnostico-autocomplete-empty">
+                Escriba al menos 3 caracteres
+            </div>';
+        }
+
+        $datos = diagnosticoModelo::buscar_recepcion_modelo($busqueda);
+
+        if (!$datos) {
+            return '<div class="diagnostico-autocomplete-empty">
+                No se encontraron recepciones
+            </div>';
+        }
+
+        $html = '';
+
+        foreach ($datos as $r) {
+            $cliente = trim($r['cliente']);
+            $vehiculo = trim(($r['marca'] ?? '') . ' ' . ($r['modelo'] ?? '') . ' ' . ($r['placa'] ?? ''));
+            $fecha = date("d/m/Y H:i", strtotime($r['fecha_ingreso']));
+            $servicio = $r['tipo_servicio'] ?: 'sin servicio';
+            $prioridad = $r['prioridad'] ?: 'normal';
+            $desc = $cliente . ' - ' . $r['placa'];
+            $idReclamo = $r['idreclamo_servicio'] !== null ? (int) $r['idreclamo_servicio'] : 'null';
+
+            $html .= '
+            <button type="button"
+                class="diagnostico-autocomplete-item"
+                data-id="' . (int) $r['idrecepcion'] . '"
+                data-desc="' . htmlspecialchars($desc, ENT_QUOTES, 'UTF-8') . '"
+                data-sucursal="' . (int) $r['id_sucursal'] . '"
+                data-origen="' . htmlspecialchars($r['origen'] ?: 'NORMAL', ENT_QUOTES, 'UTF-8') . '"
+                data-reclamo="' . htmlspecialchars((string) $idReclamo, ENT_QUOTES, 'UTF-8') . '">
+                <span class="diagnostico-autocomplete-main">
+                    <span class="diagnostico-autocomplete-title">' . htmlspecialchars($cliente, ENT_QUOTES, 'UTF-8') . '</span>
+                    <span class="diagnostico-autocomplete-meta">
+                        ' . htmlspecialchars($vehiculo, ENT_QUOTES, 'UTF-8') . ' | Doc: ' . htmlspecialchars($r['doc_number'] ?: '-', ENT_QUOTES, 'UTF-8') . ' | KM: ' . htmlspecialchars($r['kilometraje'] ?: '-', ENT_QUOTES, 'UTF-8') . '
+                    </span>
+                    <span class="diagnostico-autocomplete-meta">
+                        Ingreso: ' . htmlspecialchars($fecha, ENT_QUOTES, 'UTF-8') . ' | Solicitado: ' . htmlspecialchars($servicio, ENT_QUOTES, 'UTF-8') . '
+                    </span>
+                </span>
+                <span class="diagnostico-autocomplete-badge">' . htmlspecialchars($prioridad, ENT_QUOTES, 'UTF-8') . '</span>
+            </button>';
+        }
+
+        return $html;
+    }
+
+    public function obtener_recepcion_detalle_controlador()
+    {
+        session_start(['name' => 'STR']);
+
+        if (empty($_POST['idrecepcion']) || empty($_SESSION['nick_sucursal'])) {
+            return json_encode([]);
+        }
+
+        $id = (int) mainModel::limpiar_string($_POST['idrecepcion']);
+        $sucursal = (int) $_SESSION['nick_sucursal'];
+        $data = diagnosticoModelo::obtener_recepcion_detalle_modelo($id, $sucursal);
+
+        return json_encode($data ?: []);
+    }
+
+    public function obtener_diagnostico_detalle_controlador()
+    {
+        session_start(['name' => 'STR']);
+
+        if (empty($_POST['id_diagnostico']) || empty($_SESSION['nick_sucursal'])) {
+            return json_encode([]);
+        }
+
+        $id = (int) mainModel::limpiar_string($_POST['id_diagnostico']);
+        $sucursal = (int) $_SESSION['nick_sucursal'];
+        $data = diagnosticoModelo::obtener_diagnostico_detalle_modelo($id, $sucursal);
+
+        return json_encode($data ?: []);
+    }
+
     public function listar_equipos_controlador()
     {
         session_start(['name' => 'STR']);
@@ -89,6 +172,14 @@ class diagnosticoControlador extends diagnosticoModelo
     {
         session_start(['name' => 'STR']);
 
+        if (mainModel::tienePermiso('servicio.diagnostico.crear') === false) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Permiso denegado",
+                "Texto"  => "No tienes permiso para registrar diagnósticos",
+                "Tipo"   => "error"
+            ]);
+        }
         if (empty($_POST['idrecepcion']) || empty($_POST['fecha'])) {
             return json_encode([
                 "Alerta" => "simple",
@@ -172,12 +263,17 @@ class diagnosticoControlador extends diagnosticoModelo
         ]);
     }
 
-    public function paginador_diagnostico_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $cliente = '', $placa = '')
+    public function paginador_diagnostico_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $cliente = '', $placa = '', $nro_diagnostico = '', $nro_recepcion = '', $estado_filtro = '', $origen = '', $busqueda_general = '')
     {
         $pagina    = (int) mainModel::limpiar_string($pagina);
         $registros = (int) mainModel::limpiar_string($registros);
         $cliente   = mainModel::limpiar_string($cliente);
         $placa     = mainModel::limpiar_string($placa);
+        $nro_diagnostico = mainModel::limpiar_string($nro_diagnostico);
+        $nro_recepcion = mainModel::limpiar_string($nro_recepcion);
+        $estado_filtro = mainModel::limpiar_string($estado_filtro);
+        $origen = mainModel::limpiar_string($origen);
+        $busqueda_general = mainModel::limpiar_string($busqueda_general);
 
         $url = SERVERURL . $url . "/";
         $tabla = "";
@@ -190,6 +286,16 @@ class diagnosticoControlador extends diagnosticoModelo
         /* ================= FILTROS ================= */
 
         $filtros = [
+            [
+                "campo" => "d.id_diagnostico",
+                "tipo"  => "=",
+                "valor" => $nro_diagnostico
+            ],
+            [
+                "campo" => "rs.idrecepcion",
+                "tipo"  => "=",
+                "valor" => $nro_recepcion
+            ],
             [
                 "campo" => "CONCAT(c.nombre_cliente,' ',c.apellido_cliente)",
                 "tipo"  => "LIKE",
@@ -205,8 +311,31 @@ class diagnosticoControlador extends diagnosticoModelo
                 "tipo"  => "DATE_RANGE",
                 "desde" => $busqueda1,
                 "hasta" => $busqueda2
+            ],
+            [
+                "campo" => "d.estado",
+                "tipo"  => "=",
+                "valor" => $estado_filtro
+            ],
+            [
+                "campo" => "rs.origen",
+                "tipo"  => "=",
+                "valor" => $origen
+            ],
+            [
+                "campo" => "CONCAT(d.id_diagnostico, ' ', rs.idrecepcion, ' ', c.nombre_cliente, ' ', c.apellido_cliente, ' ', c.doc_number, ' ', v.placa, ' ', IFNULL(ma.mar_descri,''), ' ', IFNULL(m.mod_descri,''), ' ', IFNULL(rs.tipo_servicio,''), ' ', IFNULL(rs.observacion,''), ' ', IFNULL(d.observaciones,''), ' ', IFNULL(et.nombre,''), ' ', u.usu_nombre, ' ', u.usu_apellido)",
+                "tipo"  => "LIKE",
+                "valor" => $busqueda_general
             ]
         ];
+
+        $filtros = array_filter($filtros, function ($f) {
+            if (($f['tipo'] ?? '') === 'DATE_RANGE') {
+                return !empty($f['desde']) || !empty($f['hasta']);
+            }
+
+            return isset($f['valor']) && $f['valor'] !== '';
+        });
 
         $filtrosSQL = mainModel::construirFiltros($filtros);
 
@@ -229,11 +358,14 @@ class diagnosticoControlador extends diagnosticoModelo
         <table class="table table-dark table-sm">
         <thead>
         <tr class="text-center">
-            <th>#</th>
+            <th>Diag.</th>
+            <th>Recep.</th>
             <th>Fecha</th>
             <th>Cliente</th>
-            <th>Vehículo</th>
-            <th>Usuario</th>
+            <th>Vehiculo</th>
+            <th>Servicio</th>
+            <th>Origen</th>
+            <th>Equipo</th>
             <th>Estado</th>
             <th>Acciones</th>
         </tr></thead><tbody>';
@@ -251,18 +383,29 @@ class diagnosticoControlador extends diagnosticoModelo
 
                 $estado = $estadoMap[$rows['estado']] ?? ['Pendiente', 'secondary'];
 
+                $origenBadge = ($rows['origen'] ?? '') === 'RECLAMO'
+                    ? '<span class="badge badge-warning">Reclamo</span>'
+                    : '<span class="badge badge-secondary">Normal</span>';
+
                 $tabla .= '<tr class="text-center">
-            <td>' . $contador . '</td>
+            <td>' . (int) $rows['id_diagnostico'] . '</td>
+            <td>' . (int) $rows['idrecepcion'] . '</td>
             <td>' . date("d/m/Y H:i", strtotime($rows['fecha_diagnostico'])) . '</td>
-            <td>' . $rows['cliente'] . '</td>
-            <td>' . $rows['placa'] . '</td>
-            <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
+            <td>' . htmlspecialchars($rows['cliente'], ENT_QUOTES, 'UTF-8') . '</td>
+            <td>' . htmlspecialchars($rows['vehiculo'] ?: $rows['placa'], ENT_QUOTES, 'UTF-8') . '</td>
+            <td>' . htmlspecialchars($rows['tipo_servicio'] ?: '-', ENT_QUOTES, 'UTF-8') . '</td>
+            <td>' . $origenBadge . '</td>
+            <td>' . htmlspecialchars($rows['equipo'] ?: '-', ENT_QUOTES, 'UTF-8') . '</td>
             <td><span class="badge bg-' . $estado[1] . '">' . $estado[0] . '</span></td>
             <td>';
 
                 /* ================= BOTÓN INTELIGENTE ================= */
 
                 $tabla .= '
+                    <button type="button" class="btn btn-secondary btn-sm mr-1 btn-ver-diagnostico"
+                        data-id="' . (int) $rows['id_diagnostico'] . '">
+                        <i class="fas fa-eye"></i>
+                    </button>
                     <button class="btn btn-info btn-sm mr-1"
                     onclick="evaluarDiagnostico(
                         ' . $rows['id_diagnostico'] . ',
@@ -307,7 +450,7 @@ class diagnosticoControlador extends diagnosticoModelo
             $reg_final = $contador - 1;
         } else {
             $tabla .= '<tr class="text-center">
-        <td colspan="7">No hay registros en el sistema</td>
+        <td colspan="10">No hay registros en el sistema</td>
         </tr>';
         }
 
@@ -328,6 +471,14 @@ class diagnosticoControlador extends diagnosticoModelo
 
     public function anular_diagnostico_controlador()
     {
+        if (!mainModel::tienePermiso('servicio.diagnostico.anular')) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Permiso denegado",
+                "Texto"  => "No tienes permiso para anular diagnósticos",
+                "Tipo"   => "error"
+            ]);
+        }
         if (empty($_POST['id_diagnostico'])) {
             return json_encode([
                 "Alerta" => "simple",

@@ -3,6 +3,302 @@ require_once "mainModel.php";
 
 class recepcionservicioModelo extends mainModel
 {
+    protected static function listar_ciudades_modelo()
+    {
+        $sql = mainModel::conectar()->prepare("
+            SELECT id_ciudad, ciu_descri
+            FROM ciudades
+            ORDER BY ciu_descri ASC
+        ");
+        $sql->execute();
+
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    protected static function listar_modelos_modelo()
+    {
+        $sql = mainModel::conectar()->prepare("
+            SELECT id_modeloauto, mod_descri
+            FROM modelo_auto
+            WHERE estado = 1
+            ORDER BY mod_descri ASC
+        ");
+        $sql->execute();
+
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    protected static function existe_cliente_documento_modelo($doc)
+    {
+        $sql = mainModel::conectar()->prepare("
+            SELECT id_cliente
+            FROM clientes
+            WHERE doc_number = :doc
+            LIMIT 1
+        ");
+        $sql->bindParam(":doc", $doc);
+        $sql->execute();
+
+        return $sql->rowCount() > 0;
+    }
+
+    protected static function existe_vehiculo_placa_modelo($placa)
+    {
+        $sql = mainModel::conectar()->prepare("
+            SELECT id_vehiculo
+            FROM vehiculos
+            WHERE placa = :placa
+            LIMIT 1
+        ");
+        $sql->bindParam(":placa", $placa);
+        $sql->execute();
+
+        return $sql->rowCount() > 0;
+    }
+
+    protected static function guardar_cliente_rapido_modelo($datos)
+    {
+        $pdo = mainModel::conectar();
+
+        try {
+            $sql = $pdo->prepare("
+                INSERT INTO clientes (
+                    doc_number,
+                    nombre_cliente,
+                    apellido_cliente,
+                    celular_cliente,
+                    email_cliente,
+                    direccion_cliente,
+                    id_ciudad,
+                    doc_type,
+                    digito_v,
+                    estado_civil,
+                    estado_cliente
+                ) VALUES (
+                    :doc_number,
+                    :nombre_cliente,
+                    :apellido_cliente,
+                    :celular_cliente,
+                    :email_cliente,
+                    :direccion_cliente,
+                    :id_ciudad,
+                    :doc_type,
+                    :digito_v,
+                    :estado_civil,
+                    :estado_cliente
+                )
+            ");
+
+            $sql->bindValue(":doc_number", $datos['doc_number']);
+            $sql->bindValue(":nombre_cliente", $datos['nombre_cliente']);
+            $sql->bindValue(":apellido_cliente", $datos['apellido_cliente']);
+            $sql->bindValue(":celular_cliente", $datos['celular_cliente']);
+            $sql->bindValue(":email_cliente", $datos['email_cliente']);
+            $sql->bindValue(":direccion_cliente", $datos['direccion_cliente']);
+            $sql->bindValue(":id_ciudad", (int) $datos['id_ciudad'], PDO::PARAM_INT);
+            $sql->bindValue(":doc_type", $datos['doc_type']);
+            $sql->bindValue(":digito_v", $datos['digito_v']);
+            $sql->bindValue(":estado_civil", $datos['estado_civil']);
+            $sql->bindValue(":estado_cliente", (int) $datos['estado_cliente'], PDO::PARAM_INT);
+
+            if (!$sql->execute()) {
+                $error = $sql->errorInfo();
+                return [
+                    "error" => true,
+                    "msg" => $error[2] ?? 'Error SQL desconocido'
+                ];
+            }
+
+            return [
+                "success" => true,
+                "id_cliente" => $pdo->lastInsertId()
+            ];
+        } catch (Exception $e) {
+            return [
+                "error" => true,
+                "msg" => $e->getMessage()
+            ];
+        }
+    }
+
+    protected static function guardar_vehiculo_rapido_modelo($datos)
+    {
+        $pdo = mainModel::conectar();
+
+        try {
+            $sql = $pdo->prepare("
+                INSERT INTO vehiculos
+                (id_cliente,id_modeloauto,color,nro_serie,placa,anho,estado)
+                VALUES
+                (:cliente,:modelo,:color,:serie,:placa,:anho,:estado)
+            ");
+
+            $sql->bindValue(":cliente", (int) $datos['id_cliente'], PDO::PARAM_INT);
+            $sql->bindValue(":modelo", (int) $datos['id_modeloauto'], PDO::PARAM_INT);
+            $sql->bindValue(":color", $datos['color']);
+            $sql->bindValue(":serie", $datos['nro_serie']);
+            $sql->bindValue(":placa", $datos['placa']);
+            $sql->bindValue(":anho", $datos['anho']);
+            $sql->bindValue(":estado", (int) $datos['estado'], PDO::PARAM_INT);
+
+            if (!$sql->execute()) {
+                $error = $sql->errorInfo();
+                return [
+                    "error" => true,
+                    "msg" => $error[2] ?? 'Error SQL desconocido'
+                ];
+            }
+
+            $idVehiculo = $pdo->lastInsertId();
+            $descripcion = self::descripcion_vehiculo_modelo($idVehiculo);
+
+            return [
+                "success" => true,
+                "id_vehiculo" => $idVehiculo,
+                "descripcion" => $descripcion
+            ];
+        } catch (Exception $e) {
+            return [
+                "error" => true,
+                "msg" => $e->getMessage()
+            ];
+        }
+    }
+
+    protected static function descripcion_vehiculo_modelo($idVehiculo)
+    {
+        $sql = mainModel::conectar()->prepare("
+            SELECT
+                v.placa,
+                ma.mar_descri AS marca,
+                m.mod_descri AS modelo
+            FROM vehiculos v
+            INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
+            INNER JOIN marcas ma ON ma.id_marcas = m.id_marcas
+            WHERE v.id_vehiculo = :id
+            LIMIT 1
+        ");
+        $sql->bindParam(":id", $idVehiculo, PDO::PARAM_INT);
+        $sql->execute();
+        $vehiculo = $sql->fetch(PDO::FETCH_ASSOC);
+
+        if (!$vehiculo) {
+            return '';
+        }
+
+        return $vehiculo['marca'] . ' ' . $vehiculo['modelo'] . ' (' . $vehiculo['placa'] . ')';
+    }
+
+    protected static function buscar_cliente_autocomplete_modelo($busqueda)
+    {
+        $pdo = mainModel::conectar();
+        $busqueda = trim($busqueda);
+        $soloNumeros = preg_replace('/\D+/', '', $busqueda);
+
+        if ($soloNumeros !== '' && strlen($soloNumeros) >= 4) {
+            $sql = $pdo->prepare("
+                SELECT
+                    id_cliente,
+                    CONCAT(nombre_cliente, ' ', apellido_cliente) AS cliente,
+                    doc_number,
+                    celular_cliente
+                FROM clientes
+                WHERE estado_cliente = 1
+                  AND doc_number LIKE :doc
+                ORDER BY doc_number ASC
+                LIMIT 20
+            ");
+            $sql->bindValue(":doc", $soloNumeros . '%');
+            $sql->execute();
+
+            return $sql->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        $partes = preg_split('/\s+/', $busqueda, -1, PREG_SPLIT_NO_EMPTY);
+        $primero = $partes[0] ?? '';
+        $segundo = $partes[1] ?? '';
+
+        if ($segundo !== '') {
+            $sql = $pdo->prepare("
+                SELECT
+                    id_cliente,
+                    CONCAT(nombre_cliente, ' ', apellido_cliente) AS cliente,
+                    doc_number,
+                    celular_cliente
+                FROM clientes
+                WHERE estado_cliente = 1
+                  AND (
+                       (nombre_cliente LIKE :primero AND apellido_cliente LIKE :segundo)
+                    OR (nombre_cliente LIKE :segundo AND apellido_cliente LIKE :primero)
+                  )
+                ORDER BY nombre_cliente ASC, apellido_cliente ASC
+                LIMIT 20
+            ");
+            $sql->bindValue(":primero", $primero . '%');
+            $sql->bindValue(":segundo", $segundo . '%');
+            $sql->execute();
+
+            return $sql->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        $sql = $pdo->prepare("
+            SELECT
+                id_cliente,
+                CONCAT(nombre_cliente, ' ', apellido_cliente) AS cliente,
+                doc_number,
+                celular_cliente
+            FROM clientes
+            WHERE estado_cliente = 1
+              AND (
+                   nombre_cliente LIKE :termino
+                OR apellido_cliente LIKE :termino
+              )
+            ORDER BY nombre_cliente ASC, apellido_cliente ASC
+            LIMIT 20
+        ");
+        $sql->bindValue(":termino", $primero . '%');
+        $sql->execute();
+
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    protected static function buscar_vehiculo_autocomplete_modelo($busqueda, $idCliente)
+    {
+        $busqueda = trim($busqueda);
+
+        $sql = mainModel::conectar()->prepare("
+            SELECT
+                v.id_vehiculo,
+                v.placa,
+                v.anho,
+                COALESCE(v.color, '-') AS color,
+                ma.mar_descri AS marca,
+                m.mod_descri AS modelo
+            FROM vehiculos v
+            INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
+            INNER JOIN marcas ma ON ma.id_marcas = m.id_marcas
+            WHERE v.id_cliente = :cliente
+              AND v.estado = 1
+              AND (
+                   v.placa LIKE :termino
+                OR m.mod_descri LIKE :termino
+              )
+            ORDER BY v.placa ASC
+            LIMIT 20
+        ");
+        $sql->bindValue(":cliente", (int) $idCliente, PDO::PARAM_INT);
+        $sql->bindValue(":termino", $busqueda . '%');
+        $sql->execute();
+
+        $vehiculos = $sql->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($vehiculos as &$vehiculo) {
+            $vehiculo['descripcion'] = $vehiculo['marca'] . ' ' . $vehiculo['modelo'] . ' (' . $vehiculo['placa'] . ')';
+        }
+
+        return $vehiculos;
+    }
+
     protected static function buscar_cliente_modelo($busqueda)
     {
         $busqueda = "%$busqueda%";
@@ -81,11 +377,10 @@ class recepcionservicioModelo extends mainModel
                 v.anho,
                 ma.mar_descri AS marca,
                 m.mod_descri AS modelo,
-                c.col_descripcion AS color
+                COALESCE(v.color, '-') AS color
             FROM vehiculos v
             INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
             INNER JOIN marcas ma ON ma.id_marcas= m.id_marcas
-            INNER JOIN colores c ON c.id_color = v.id_color
             WHERE v.id_cliente = :cliente
               AND v.estado = 1
               AND (
@@ -222,7 +517,12 @@ class recepcionservicioModelo extends mainModel
             v.placa,
             v.anho,
             CONCAT(ma.mar_descri, ' ', m.mod_descri, ' ', v.placa, ' (', v.anho, ')') AS vehiculo,
-            CONCAT(u.usu_nombre,' ',u.usu_apellido) AS usuario
+            CONCAT(u.usu_nombre,' ',u.usu_apellido) AS usuario,
+            (
+                SELECT COUNT(*)
+                FROM recepcion_fotos rf
+                WHERE rf.id_recepcion = rs.idrecepcion
+            ) AS total_fotos
         FROM recepcion_servicio rs
         INNER JOIN clientes c ON c.id_cliente = rs.id_cliente
         INNER JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
@@ -253,6 +553,23 @@ class recepcionservicioModelo extends mainModel
             "datos" => $datos,
             "total" => $total
         ];
+    }
+
+    protected static function fotos_recepcion_modelo($idRecepcion, $idSucursal)
+    {
+        $sql = mainModel::conectar()->prepare("
+            SELECT rf.ruta_foto
+            FROM recepcion_fotos rf
+            INNER JOIN recepcion_servicio rs ON rs.idrecepcion = rf.id_recepcion
+            WHERE rf.id_recepcion = :id
+              AND rs.id_sucursal = :sucursal
+            ORDER BY rf.id_foto ASC
+        ");
+        $sql->bindParam(":id", $idRecepcion, PDO::PARAM_INT);
+        $sql->bindParam(":sucursal", $idSucursal, PDO::PARAM_INT);
+        $sql->execute();
+
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 
     protected static function anular_recepcion_modelo($id, $sucursal)

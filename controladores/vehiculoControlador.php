@@ -216,7 +216,7 @@ class vehiculoControlador extends vehiculoModelo
             "id_vehiculo" => $id,
             "id_cliente" => mainModel::limpiar_string($_POST['cliente_up']),
             "id_modeloauto" => mainModel::limpiar_string($_POST['modelo_up']),
-            "id_color" => mainModel::limpiar_string($_POST['color_up']),
+            "color" => mainModel::limpiar_string($_POST['color_up']),
             "placa" => mainModel::limpiar_string($_POST['placa_up']),
             "anho" => mainModel::limpiar_string($_POST['anho_up']),
             "nro_serie" => mainModel::limpiar_string($_POST['serie_up']),

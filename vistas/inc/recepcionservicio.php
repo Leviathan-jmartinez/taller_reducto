@@ -27,6 +27,162 @@
         $('#modalCliente').modal('hide');
     }
 
+    function abrirNuevoClienteRecepcion() {
+        $('#modalCliente').modal('hide');
+        $('#modalNuevoClienteRecepcion').modal('show');
+    }
+
+    function abrirNuevoVehiculoRecepcion() {
+        let idCliente = document.getElementById('id_cliente').value;
+        let clienteNombre = document.getElementById('cliente_nombre').value;
+
+        if (!idCliente) {
+            Swal.fire({
+                icon: 'warning',
+                text: 'Debe seleccionar o cargar un cliente primero'
+            });
+            return;
+        }
+
+        document.getElementById('vehiculo_rapido_cliente').value = idCliente;
+        document.getElementById('vehiculo_rapido_cliente_nombre').innerHTML =
+            '<strong>Cliente:</strong> ' + clienteNombre;
+
+        $('#modalVehiculo').modal('hide');
+        $('#modalNuevoVehiculoRecepcion').modal('show');
+    }
+
+    function manejarRespuestaRapida(data) {
+        Swal.fire({
+            icon: data.Tipo || 'info',
+            title: data.Titulo || '',
+            text: data.Texto || ''
+        });
+    }
+
+    function debounceRecepcion(fn, delay) {
+        let timer = null;
+        return function(...args) {
+            clearTimeout(timer);
+            timer = setTimeout(() => fn.apply(this, args), delay);
+        };
+    }
+
+    function ocultarAutocomplete(id) {
+        const contenedor = document.getElementById(id);
+        if (contenedor) {
+            contenedor.innerHTML = '';
+            contenedor.style.display = 'none';
+        }
+    }
+
+    function textoSeguro(valor) {
+        const div = document.createElement('div');
+        div.textContent = valor || '';
+        return div.innerHTML;
+    }
+
+    function valorJsSeguro(valor) {
+        return String(valor || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
+    function buscarClienteAutocomplete() {
+        const input = document.getElementById('cliente_nombre');
+        const contenedor = document.getElementById('resultado_clientes_autocomplete');
+        const termino = input.value.trim();
+
+        document.getElementById('id_cliente').value = '';
+        document.getElementById('id_vehiculo').value = '';
+        document.getElementById('vehiculo_desc').value = '';
+        ocultarAutocomplete('resultado_vehiculos_autocomplete');
+
+        if (termino.length < 4) {
+            ocultarAutocomplete('resultado_clientes_autocomplete');
+            return;
+        }
+
+        const datos = new FormData();
+        datos.append('accion', 'buscar_cliente_autocomplete');
+        datos.append('termino', termino);
+
+        contenedor.innerHTML = '<div class="recepcion-autocomplete-empty">Buscando...</div>';
+        contenedor.style.display = 'block';
+
+        fetch("<?php echo SERVERURL ?>ajax/recepcionservicioAjax.php", {
+                method: "POST",
+                body: datos
+            })
+            .then(r => r.json())
+            .then(clientes => {
+                if (!Array.isArray(clientes) || clientes.length === 0) {
+                    contenedor.innerHTML = '<div class="recepcion-autocomplete-empty">Sin resultados</div>';
+                    contenedor.style.display = 'block';
+                    return;
+                }
+
+                contenedor.innerHTML = clientes.map(c => `
+                    <button type="button" class="recepcion-autocomplete-item"
+                        onclick="seleccionarCliente(${Number(c.id_cliente)}, '${valorJsSeguro(c.cliente)}', '${valorJsSeguro(c.doc_number)}')">
+                        <span class="recepcion-autocomplete-main">
+                            <span class="recepcion-autocomplete-title">${textoSeguro(c.cliente)}</span>
+                            <span class="recepcion-autocomplete-meta">${textoSeguro(c.celular_cliente || 'Sin telefono')}</span>
+                        </span>
+                        <span class="recepcion-autocomplete-badge">${textoSeguro(c.doc_number)}</span>
+                    </button>
+                `).join('');
+                contenedor.style.display = 'block';
+            })
+            .catch(() => ocultarAutocomplete('resultado_clientes_autocomplete'));
+    }
+
+    function buscarVehiculoAutocomplete() {
+        const idCliente = document.getElementById('id_cliente').value;
+        const input = document.getElementById('vehiculo_desc');
+        const contenedor = document.getElementById('resultado_vehiculos_autocomplete');
+        const termino = input.value.trim();
+
+        document.getElementById('id_vehiculo').value = '';
+
+        if (!idCliente || termino.length < 4) {
+            ocultarAutocomplete('resultado_vehiculos_autocomplete');
+            return;
+        }
+
+        const datos = new FormData();
+        datos.append('accion', 'buscar_vehiculo_autocomplete');
+        datos.append('termino', termino);
+        datos.append('id_cliente', idCliente);
+
+        contenedor.innerHTML = '<div class="recepcion-autocomplete-empty">Buscando...</div>';
+        contenedor.style.display = 'block';
+
+        fetch("<?php echo SERVERURL ?>ajax/recepcionservicioAjax.php", {
+                method: "POST",
+                body: datos
+            })
+            .then(r => r.json())
+            .then(vehiculos => {
+                if (!Array.isArray(vehiculos) || vehiculos.length === 0) {
+                    contenedor.innerHTML = '<div class="recepcion-autocomplete-empty">Sin resultados</div>';
+                    contenedor.style.display = 'block';
+                    return;
+                }
+
+                contenedor.innerHTML = vehiculos.map(v => `
+                    <button type="button" class="recepcion-autocomplete-item"
+                        onclick="seleccionarVehiculo(${Number(v.id_vehiculo)}, '${valorJsSeguro(v.descripcion)}')">
+                        <span class="recepcion-autocomplete-main">
+                            <span class="recepcion-autocomplete-title">${textoSeguro(v.marca)} ${textoSeguro(v.modelo)}</span>
+                            <span class="recepcion-autocomplete-meta">${textoSeguro(v.color)} ${v.anho ? '- ' + textoSeguro(v.anho) : ''}</span>
+                        </span>
+                        <span class="recepcion-autocomplete-badge">${textoSeguro(v.placa)}</span>
+                    </button>
+                `).join('');
+                contenedor.style.display = 'block';
+            })
+            .catch(() => ocultarAutocomplete('resultado_vehiculos_autocomplete'));
+    }
+
     function validarClienteVehiculo() {
         let idCliente = document.getElementById('id_cliente').value;
 
@@ -72,6 +228,7 @@
     function seleccionarVehiculo(id, desc) {
         document.getElementById('id_vehiculo').value = id;
         document.getElementById('vehiculo_desc').value = desc;
+        ocultarAutocomplete('resultado_vehiculos_autocomplete');
 
         //guardarEstadoRecepcion();
 
@@ -107,8 +264,18 @@
         document.getElementById('vehiculo_desc').value = data.vehiculo;
 
         // BLOQUEAR EDICIÓN
-        document.getElementById('btnBuscarCliente').disabled = true;
-        document.getElementById('btnBuscarVehiculo').disabled = true;
+        if (document.getElementById('btnBuscarCliente')) {
+            document.getElementById('btnBuscarCliente').disabled = true;
+        }
+        if (document.getElementById('btnBuscarVehiculo')) {
+            document.getElementById('btnBuscarVehiculo').disabled = true;
+        }
+        if (document.getElementById('btnNuevoCliente')) {
+            document.getElementById('btnNuevoCliente').disabled = true;
+        }
+        if (document.getElementById('btnNuevoVehiculo')) {
+            document.getElementById('btnNuevoVehiculo').disabled = true;
+        }
 
         // mostrar alerta
         document.getElementById('alerta_reclamo').style.display = 'block';
@@ -161,10 +328,22 @@
 
         document.getElementById('id_vehiculo').value = '';
         document.getElementById('vehiculo_desc').value = '';
+        ocultarAutocomplete('resultado_clientes_autocomplete');
+        ocultarAutocomplete('resultado_vehiculos_autocomplete');
         document.getElementById('origen').value = 'NORMAL';
         document.getElementById('idreclamo_servicio').value = '';
-        document.getElementById('btnBuscarCliente').disabled = false;
-        document.getElementById('btnBuscarVehiculo').disabled = false;
+        if (document.getElementById('btnBuscarCliente')) {
+            document.getElementById('btnBuscarCliente').disabled = false;
+        }
+        if (document.getElementById('btnBuscarVehiculo')) {
+            document.getElementById('btnBuscarVehiculo').disabled = false;
+        }
+        if (document.getElementById('btnNuevoCliente')) {
+            document.getElementById('btnNuevoCliente').disabled = false;
+        }
+        if (document.getElementById('btnNuevoVehiculo')) {
+            document.getElementById('btnNuevoVehiculo').disabled = false;
+        }
         document.getElementById('alerta_reclamo').style.display = 'none';
 
         const tablaClientes = document.getElementById('tabla_clientes');
@@ -176,5 +355,102 @@
         const tablaReclamos = document.getElementById('tabla_reclamos');
         if (tablaReclamos) tablaReclamos.innerHTML = '';
 
+        ocultarAutocomplete('resultado_clientes_autocomplete');
+        ocultarAutocomplete('resultado_vehiculos_autocomplete');
+
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const formClienteRapido = document.getElementById('formNuevoClienteRecepcion');
+        const formVehiculoRapido = document.getElementById('formNuevoVehiculoRecepcion');
+        const inputCliente = document.getElementById('cliente_nombre');
+        const inputVehiculo = document.getElementById('vehiculo_desc');
+
+        if (inputCliente) {
+            inputCliente.addEventListener('input', debounceRecepcion(buscarClienteAutocomplete, 350));
+        }
+
+        if (inputVehiculo) {
+            inputVehiculo.addEventListener('input', debounceRecepcion(buscarVehiculoAutocomplete, 350));
+            inputVehiculo.addEventListener('focus', function() {
+                if (!document.getElementById('id_cliente').value) {
+                    Swal.fire({
+                        icon: 'warning',
+                        text: 'Debe seleccionar un cliente primero'
+                    });
+                    inputCliente.focus();
+                }
+            });
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('#cliente_nombre') && !e.target.closest('#resultado_clientes_autocomplete')) {
+                ocultarAutocomplete('resultado_clientes_autocomplete');
+            }
+            if (!e.target.closest('#vehiculo_desc') && !e.target.closest('#resultado_vehiculos_autocomplete')) {
+                ocultarAutocomplete('resultado_vehiculos_autocomplete');
+            }
+        });
+
+        if (formClienteRapido) {
+            formClienteRapido.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                fetch("<?php echo SERVERURL ?>ajax/recepcionservicioAjax.php", {
+                        method: "POST",
+                        body: new FormData(formClienteRapido)
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        manejarRespuestaRapida(data);
+
+                        if (data.Alerta === 'seleccionar_cliente' && data.cliente) {
+                            seleccionarCliente(
+                                data.cliente.id_cliente,
+                                data.cliente.nombre,
+                                data.cliente.doc
+                            );
+                            formClienteRapido.reset();
+                            $('#modalNuevoClienteRecepcion').modal('hide');
+                        }
+                    })
+                    .catch(() => {
+                        Swal.fire({
+                            icon: 'error',
+                            text: 'No se pudo registrar el cliente'
+                        });
+                    });
+            });
+        }
+
+        if (formVehiculoRapido) {
+            formVehiculoRapido.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                fetch("<?php echo SERVERURL ?>ajax/recepcionservicioAjax.php", {
+                        method: "POST",
+                        body: new FormData(formVehiculoRapido)
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        manejarRespuestaRapida(data);
+
+                        if (data.Alerta === 'seleccionar_vehiculo' && data.vehiculo) {
+                            seleccionarVehiculo(
+                                data.vehiculo.id_vehiculo,
+                                data.vehiculo.descripcion
+                            );
+                            formVehiculoRapido.reset();
+                            $('#modalNuevoVehiculoRecepcion').modal('hide');
+                        }
+                    })
+                    .catch(() => {
+                        Swal.fire({
+                            icon: 'error',
+                            text: 'No se pudo registrar el vehiculo'
+                        });
+                    });
+            });
+        }
+    });
 </script>

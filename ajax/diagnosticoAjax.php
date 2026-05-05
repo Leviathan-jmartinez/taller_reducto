@@ -6,7 +6,7 @@ require_once "../controladores/diagnosticoControlador.php";
 $inst_diag = new diagnosticoControlador();
 
 if (isset($_POST['buscar_recepcion'])) {
-    echo $inst_diag->buscar_recepcion_controlador();
+    echo $inst_diag->buscar_recepcion_inline_controlador();
     exit();
 }
 
@@ -19,6 +19,16 @@ if (isset($_POST['accion'])) {
 
     if ($_POST['accion'] == "guardar_diagnostico") {
         echo $inst_diag->guardar_diagnostico_controlador();
+        exit();
+    }
+
+    if ($_POST['accion'] == "obtener_recepcion_detalle") {
+        echo $inst_diag->obtener_recepcion_detalle_controlador();
+        exit();
+    }
+
+    if ($_POST['accion'] == "obtener_diagnostico_detalle") {
+        echo $inst_diag->obtener_diagnostico_detalle_controlador();
         exit();
     }
 

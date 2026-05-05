@@ -194,3 +194,70 @@ if (!isset($pagina)) {
     }
     ?>
 </div>
+
+<div class="modal fade" id="modalFotosRecepcion" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="far fa-images"></i> Fotos de la recepcion
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="galeria_fotos_recepcion" class="row"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function escaparTextoRecepcion(valor) {
+        const div = document.createElement('div');
+        div.textContent = valor || '';
+        return div.innerHTML;
+    }
+
+    function verFotosRecepcion(idRecepcion) {
+        const contenedor = document.getElementById('galeria_fotos_recepcion');
+        contenedor.innerHTML = '<div class="col-12 text-center text-muted py-4">Cargando fotos...</div>';
+
+        const datos = new FormData();
+        datos.append('accion', 'fotos_recepcion');
+        datos.append('recepcion_id_fotos', idRecepcion);
+
+        fetch('<?php echo SERVERURL; ?>ajax/recepcionservicioAjax.php', {
+                method: 'POST',
+                body: datos
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success || !Array.isArray(data.fotos) || data.fotos.length === 0) {
+                    contenedor.innerHTML = '<div class="col-12 text-center text-muted py-4">Esta recepcion no tiene fotos cargadas.</div>';
+                    return;
+                }
+
+                contenedor.innerHTML = data.fotos.map((foto, index) => {
+                    const ruta = escaparTextoRecepcion(foto.ruta_foto);
+                    const url = '<?php echo SERVERURL; ?>' + ruta;
+
+                    return `
+                        <div class="col-12 col-sm-6 col-lg-4 mb-3">
+                            <a href="${url}" target="_blank" class="d-block border rounded bg-light p-2">
+                                <img src="${url}"
+                                    alt="Foto ${index + 1}"
+                                    loading="lazy"
+                                    class="img-fluid rounded"
+                                    style="width:100%; height:220px; object-fit:cover;">
+                            </a>
+                        </div>
+                    `;
+                }).join('');
+            })
+            .catch(() => {
+                contenedor.innerHTML = '<div class="col-12 text-center text-danger py-4">No se pudieron cargar las fotos.</div>';
+            });
+
+        $('#modalFotosRecepcion').modal('show');
+    }
+</script>

@@ -63,7 +63,7 @@ class vehiculoModelo extends mainModel
     protected static function obtener_modelos_modelo()
     {
         $sql = mainModel::conectar()->prepare(
-            "SELECT id_modeloauto, mod_descri FROM modelo_auto ORDER BY mod_descri ASC"
+            "SELECT id_modeloauto, mod_descri FROM modelo_auto WHERE estado = 1 ORDER BY mod_descri ASC"
         );
         $sql->execute();
         return $sql->fetchAll(PDO::FETCH_ASSOC);
@@ -98,7 +98,7 @@ class vehiculoModelo extends mainModel
             "UPDATE vehiculos SET
                 id_cliente=:cliente,
                 id_modeloauto=:modelo,
-                id_color=:color,
+                color=:color,
                 nro_serie=:serie,
                 placa=:placa,
                 anho=:anho,
@@ -108,7 +108,7 @@ class vehiculoModelo extends mainModel
 
         $sql->bindParam(":cliente", $datos['id_cliente']);
         $sql->bindParam(":modelo", $datos['id_modeloauto']);
-        $sql->bindParam(":color", $datos['id_color']);
+        $sql->bindParam(":color", $datos['color']);
         $sql->bindParam(":serie", $datos['nro_serie']);
         $sql->bindParam(":placa", $datos['placa']);
         $sql->bindParam(":anho", $datos['anho']);

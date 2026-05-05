@@ -5,20 +5,131 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
 }
 ?>
 
+<style>
+    .diagnostico-recepcion-wrap {
+        position: relative;
+    }
+
+    .diagnostico-autocomplete {
+        background: #fff;
+        border: 1px solid #dfe3e8;
+        border-radius: 6px;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, .14);
+        display: none;
+        left: 15px;
+        max-height: 320px;
+        overflow-y: auto;
+        position: absolute;
+        right: 15px;
+        top: calc(100% + 4px);
+        z-index: 1050;
+    }
+
+    .diagnostico-autocomplete-item {
+        align-items: center;
+        background: #fff;
+        border: 0;
+        border-bottom: 1px solid #edf0f2;
+        color: #263238;
+        cursor: pointer;
+        display: flex;
+        gap: 12px;
+        padding: 10px 12px;
+        text-align: left;
+        width: 100%;
+    }
+
+    .diagnostico-autocomplete-item:hover,
+    .diagnostico-autocomplete-item:focus {
+        background: #f4f8fb;
+        outline: none;
+    }
+
+    .diagnostico-autocomplete-main {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .diagnostico-autocomplete-title {
+        display: block;
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .diagnostico-autocomplete-meta {
+        color: #6c757d;
+        display: block;
+        font-size: 12px;
+        margin-top: 2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .diagnostico-autocomplete-badge {
+        background: #e8f4f8;
+        border-radius: 999px;
+        color: #0b7189;
+        flex: 0 0 auto;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 9px;
+    }
+
+    .diagnostico-autocomplete-empty {
+        color: #6c757d;
+        padding: 12px;
+        text-align: center;
+    }
+
+    .diagnostico-recepcion-resumen {
+        background: #f8fafc;
+        border: 1px solid #e3e8ef;
+        border-radius: 6px;
+        display: none;
+        margin-top: 14px;
+        padding: 14px;
+    }
+
+    .diagnostico-recepcion-resumen dt {
+        color: #6c757d;
+        font-size: 12px;
+        margin-bottom: 2px;
+        text-transform: uppercase;
+    }
+
+    .diagnostico-recepcion-resumen dd {
+        color: #263238;
+        font-weight: 600;
+        margin-bottom: 12px;
+    }
+
+    .diagnostico-recepcion-observacion {
+        background: #fff;
+        border-left: 3px solid #17a2b8;
+        color: #263238;
+        margin: 0;
+        min-height: 44px;
+        padding: 10px 12px;
+    }
+</style>
+
 <div class="container-fluid">
     <h3>
-        <i class="fas fa-tools"></i> &nbsp; DIAGNÓSTICO DE SERVICIO
+        <i class="fas fa-tools"></i> &nbsp; DIAGNOSTICO DE SERVICIO
     </h3>
 
     <ul class="full-box list-unstyled page-nav-tabs">
         <li>
             <a class="active" href="<?php echo SERVERURL; ?>/diagnostico-servicio-nuevo/">
-                <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO DIAGNÓSTICO
+                <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO DIAGNOSTICO
             </a>
         </li>
         <li>
             <a href="<?php echo SERVERURL; ?>/diagnostico-servicio-buscar/">
-                <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR DIAGNÓSTICOS
+                <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR DIAGNOSTICOS
             </a>
         </li>
     </ul>
@@ -26,7 +137,7 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
 
 <div id="alerta_reclamo" class="alert alert-warning" style="display:none;">
     <i class="fas fa-exclamation-triangle"></i>
-    Recepción generada desde reclamo
+    Recepcion generada desde reclamo
 </div>
 
 <div id="card_reclamo" style="display:none;">
@@ -36,10 +147,9 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
         </div>
 
         <div class="card-body">
-
             <div class="row">
                 <div class="col-md-6">
-                    <strong>Descripción:</strong><br>
+                    <strong>Descripcion:</strong><br>
                     <span id="rec_desc"></span>
                 </div>
 
@@ -58,16 +168,11 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
                     <span id="rec_fecha"></span>
                 </div>
             </div>
-
         </div>
     </div>
 </div>
 
 <div class="container-fluid">
-
-
-
-
     <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/diagnosticoAjax.php"
         method="POST"
@@ -76,24 +181,86 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
 
         <input type="hidden" name="accion" value="guardar_diagnostico">
         <input type="hidden" name="id_sucursal" id="id_sucursal">
-        <!-- RECEPCIÓN -->
+
         <fieldset class="border p-3 mb-3">
-            <legend class="w-auto px-2">Recepción</legend>
+            <legend class="w-auto px-2">Recepcion</legend>
 
             <div class="row">
-                <div class="col-md-10">
+                <div class="col-md-12 diagnostico-recepcion-wrap">
                     <input type="hidden" name="idrecepcion" id="idrecepcion">
-                    <input type="text" class="form-control" id="recepcion_info"
-                        placeholder="Seleccione una recepción" readonly>
+                    <div class="input-group">
+                        <input type="text"
+                            class="form-control"
+                            id="buscar_recepcion"
+                            placeholder="Escriba al menos 3 caracteres: cliente, documento o placa"
+                            onkeyup="buscarRecepcionAjax()">
+                        <div class="input-group-append">
+                            <button type="button"
+                                class="btn btn-secondary"
+                                title="Limpiar recepcion"
+                                onclick="limpiarRecepcionDiagnostico()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <input type="hidden" id="recepcion_info">
+                    <div id="resultado_recepciones" class="diagnostico-autocomplete"></div>
                 </div>
+            </div>
 
-                <div class="col-md-2">
-                    <button type="button"
-                        class="btn btn-info btn-block"
-                        onclick="abrirModalRecepcion()">
-                        <i class="fas fa-search"></i>
-                    </button>
+            <div id="detalle_recepcion_seleccionada" class="diagnostico-recepcion-resumen">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0">
+                        <i class="fas fa-clipboard-list"></i> Detalle de la recepcion
+                    </h6>
+                    <span id="det_recepcion_origen" class="badge badge-secondary">NORMAL</span>
                 </div>
+                <dl class="row mb-0">
+                    <div class="col-md-4">
+                        <dt>Cliente</dt>
+                        <dd id="det_recepcion_cliente">-</dd>
+                    </div>
+                    <div class="col-md-4">
+                        <dt>Vehiculo</dt>
+                        <dd id="det_recepcion_vehiculo">-</dd>
+                    </div>
+                    <div class="col-md-4">
+                        <dt>Ingreso</dt>
+                        <dd id="det_recepcion_fecha">-</dd>
+                    </div>
+                    <div class="col-md-3">
+                        <dt>Kilometraje</dt>
+                        <dd id="det_recepcion_km">-</dd>
+                    </div>
+                    <div class="col-md-3">
+                        <dt>Combustible</dt>
+                        <dd id="det_recepcion_combustible">-</dd>
+                    </div>
+                    <div class="col-md-3">
+                        <dt>Servicio solicitado</dt>
+                        <dd id="det_recepcion_servicio">-</dd>
+                    </div>
+                    <div class="col-md-3">
+                        <dt>Prioridad</dt>
+                        <dd id="det_recepcion_prioridad">-</dd>
+                    </div>
+                    <div class="col-md-4">
+                        <dt>Area del problema</dt>
+                        <dd id="det_recepcion_area">-</dd>
+                    </div>
+                    <div class="col-md-4">
+                        <dt>Estado exterior</dt>
+                        <dd id="det_recepcion_exterior">-</dd>
+                    </div>
+                    <div class="col-md-4">
+                        <dt>Accesorios</dt>
+                        <dd id="det_recepcion_accesorios">-</dd>
+                    </div>
+                    <div class="col-md-12">
+                        <dt>Lo solicitado / observacion del cliente</dt>
+                        <dd class="diagnostico-recepcion-observacion" id="det_recepcion_observacion">-</dd>
+                    </div>
+                </dl>
             </div>
         </fieldset>
 
@@ -101,40 +268,36 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
             <legend>Resultado del Reclamo</legend>
 
             <div class="row">
-
                 <div class="col-md-4">
-                    <label>¿Es reclamo válido?</label>
+                    <label>Es reclamo valido?</label>
                     <select name="es_reclamo_valido" class="form-control">
-                        <option value="1">Sí</option>
+                        <option value="1">Si</option>
                         <option value="0">No</option>
                     </select>
                 </div>
 
                 <div class="col-md-4">
-                    <label>¿Es garantía?</label>
+                    <label>Es garantia?</label>
                     <select name="es_garantia" class="form-control">
-                        <option value="1">Sí</option>
+                        <option value="1">Si</option>
                         <option value="0">No</option>
                     </select>
                 </div>
 
                 <div class="col-md-4">
-                    <label>¿Requiere cobro?</label>
+                    <label>Requiere cobro?</label>
                     <select name="requiere_cobro" class="form-control">
                         <option value="0">No</option>
-                        <option value="1">Sí</option>
+                        <option value="1">Si</option>
                     </select>
                 </div>
-
             </div>
         </fieldset>
 
-        <!-- DATOS DIAGNÓSTICO -->
         <fieldset class="border p-3 mb-3">
-            <legend class="w-auto px-2">Datos del Diagnóstico</legend>
+            <legend class="w-auto px-2">Datos del Diagnostico</legend>
 
             <div class="row">
-
                 <div class="col-md-4">
                     <label>Fecha</label>
                     <input type="datetime-local" name="fecha"
@@ -144,7 +307,6 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
                     <label>Equipo de trabajo</label>
                     <select name="id_equipo" id="id_equipo" class="form-control" required>
                         <option value="">Seleccione equipo</option>
-                        <!-- cargar vía PHP o AJAX -->
                     </select>
                 </div>
                 <div class="col-md-4">
@@ -155,24 +317,20 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
                         <option value="2">Finalizado</option>
                     </select>
                 </div>
-
             </div>
 
             <div class="row mt-3">
                 <div class="col-md-12">
-                    <label>Observación general</label>
+                    <label>Observacion general</label>
                     <textarea name="observacion"
                         class="form-control"
                         rows="3"></textarea>
                 </div>
             </div>
-
-
         </fieldset>
 
-        <!-- DETALLES -->
         <fieldset class="border p-3 mb-3">
-            <legend class="w-auto px-2">Detalle del Diagnóstico</legend>
+            <legend class="w-auto px-2">Detalle del Diagnostico</legend>
 
             <table class="table table-dark table-sm">
                 <thead>
@@ -180,10 +338,10 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
                         <th>Sistema</th>
                         <th>Problema</th>
                         <th>Gravedad</th>
-                        <th>Solución</th>
+                        <th>Solucion</th>
                         <th>Repuesto</th>
                         <th>Mano de obra</th>
-                        <th width="50">Acción</th>
+                        <th width="50">Accion</th>
                     </tr>
                 </thead>
 
@@ -194,10 +352,8 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
                 onclick="agregarDetalleDiagnostico()">
                 <i class="fas fa-plus"></i> Agregar
             </button>
-
         </fieldset>
 
-        <!-- BOTONES -->
         <div class="text-center">
             <button type="submit" class="btn btn-info btn-raised">
                 <i class="fas fa-save"></i> Guardar
@@ -209,36 +365,7 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
                 <i class="fas fa-times"></i> Cancelar
             </button>
         </div>
-
     </form>
-    <div class="modal fade" id="modalRecepcion" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-
-                <div class="modal-header bg-info text-white">
-                    <h5 class="modal-title">
-                        <i class="fas fa-search"></i> Buscar Recepción
-                    </h5>
-                    <button type="button" class="close text-white" data-dismiss="modal">
-                        &times;
-                    </button>
-                </div>
-
-                <div class="modal-body">
-
-                    <input type="text"
-                        id="buscar_recepcion"
-                        class="form-control mb-3"
-                        placeholder="Buscar cliente o placa"
-                        onkeyup="buscarRecepcionAjax()">
-
-                    <div id="tabla_recepciones"></div>
-
-                </div>
-
-            </div>
-        </div>
-    </div>
 </div>
 
 <?php include "./vistas/inc/diagnosticoJS.php"; ?>

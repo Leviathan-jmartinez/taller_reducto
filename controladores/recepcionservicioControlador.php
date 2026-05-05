@@ -7,6 +7,15 @@ if ($peticionAjax) {
 
 class recepcionservicioControlador extends recepcionservicioModelo
 {
+    public function listar_ciudades_controlador()
+    {
+        return recepcionservicioModelo::listar_ciudades_modelo();
+    }
+
+    public function listar_modelos_controlador()
+    {
+        return recepcionservicioModelo::listar_modelos_modelo();
+    }
 
     public function buscar_cliente_controlador()
     {
@@ -34,6 +43,187 @@ class recepcionservicioControlador extends recepcionservicioModelo
         }
 
         return recepcionservicioModelo::buscar_vehiculo_modelo($busqueda, $idCliente);
+    }
+
+    public function buscar_cliente_autocomplete_controlador()
+    {
+        $busqueda = mainModel::limpiar_string($_POST['termino'] ?? '');
+
+        if (strlen($busqueda) < 4) {
+            return json_encode([]);
+        }
+
+        return json_encode(
+            recepcionservicioModelo::buscar_cliente_autocomplete_modelo($busqueda),
+            JSON_UNESCAPED_UNICODE
+        );
+    }
+
+    public function buscar_vehiculo_autocomplete_controlador()
+    {
+        $busqueda = mainModel::limpiar_string($_POST['termino'] ?? '');
+        $idCliente = intval($_POST['id_cliente'] ?? 0);
+
+        if ($idCliente <= 0 || strlen($busqueda) < 4) {
+            return json_encode([]);
+        }
+
+        return json_encode(
+            recepcionservicioModelo::buscar_vehiculo_autocomplete_modelo($busqueda, $idCliente),
+            JSON_UNESCAPED_UNICODE
+        );
+    }
+
+    public function guardar_cliente_rapido_controlador()
+    {
+        session_start(['name' => 'STR']);
+
+        if (!mainModel::tienePermiso('cliente.crear')) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso no autorizado",
+                "Texto"  => "No posee permiso para registrar clientes",
+                "Tipo"   => "error"
+            ]);
+        }
+
+        $doc = mainModel::limpiar_string($_POST['cliente_doc_reg'] ?? '');
+        $nombre = mainModel::limpiar_string($_POST['cliente_nombre_reg'] ?? '');
+        $apellido = mainModel::limpiar_string($_POST['cliente_apellido_reg'] ?? '');
+        $telefono = mainModel::limpiar_string($_POST['cliente_telefono_reg'] ?? '');
+        $email = mainModel::limpiar_string($_POST['cliente_email_reg'] ?? '');
+        $direccion = mainModel::limpiar_string($_POST['cliente_direccion_reg'] ?? '');
+        $ciudad = (int) ($_POST['ciudad_reg'] ?? 0);
+        $tipoDocumento = mainModel::limpiar_string($_POST['tipo_documento_reg'] ?? 'CI');
+        $dv = mainModel::limpiar_string($_POST['cliente_dv_reg'] ?? '');
+
+        if ($doc === '' || $nombre === '' || $direccion === '' || $ciudad <= 0) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Datos incompletos",
+                "Texto"  => "Complete documento, nombre, direccion y ciudad",
+                "Tipo"   => "warning"
+            ]);
+        }
+
+        if (recepcionservicioModelo::existe_cliente_documento_modelo($doc)) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Cliente existente",
+                "Texto"  => "El documento ya se encuentra registrado",
+                "Tipo"   => "warning"
+            ]);
+        }
+
+        $datos = [
+            "doc_number" => $doc,
+            "nombre_cliente" => $nombre,
+            "apellido_cliente" => $apellido,
+            "celular_cliente" => $telefono,
+            "email_cliente" => $email,
+            "direccion_cliente" => $direccion,
+            "id_ciudad" => $ciudad,
+            "doc_type" => $tipoDocumento,
+            "digito_v" => $dv,
+            "estado_civil" => "",
+            "estado_cliente" => 1
+        ];
+
+        $guardar = recepcionservicioModelo::guardar_cliente_rapido_modelo($datos);
+
+        if (!empty($guardar['success'])) {
+            $cliente = trim($nombre . ' ' . $apellido);
+
+            return json_encode([
+                "Alerta" => "seleccionar_cliente",
+                "Titulo" => "Cliente registrado",
+                "Texto"  => "El cliente fue agregado y seleccionado",
+                "Tipo"   => "success",
+                "cliente" => [
+                    "id_cliente" => $guardar['id_cliente'],
+                    "nombre" => $cliente,
+                    "doc" => $doc
+                ]
+            ]);
+        }
+
+        return json_encode([
+            "Alerta" => "simple",
+            "Titulo" => "Error",
+            "Texto"  => $guardar['msg'] ?? 'No se pudo registrar el cliente',
+            "Tipo"   => "error"
+        ]);
+    }
+
+    public function guardar_vehiculo_rapido_controlador()
+    {
+        session_start(['name' => 'STR']);
+
+        if (!mainModel::tienePermiso('vehiculo.crear')) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso no autorizado",
+                "Texto"  => "No posee permiso para registrar vehiculos",
+                "Tipo"   => "error"
+            ]);
+        }
+
+        $cliente = (int) ($_POST['cliente_reg'] ?? 0);
+        $modelo = (int) ($_POST['modelo_reg'] ?? 0);
+        $color = mainModel::limpiar_string($_POST['color_reg'] ?? '');
+        $placa = mainModel::limpiar_string($_POST['placa_reg'] ?? '');
+        $anho = mainModel::limpiar_string($_POST['anho_reg'] ?? '');
+        $serie = mainModel::limpiar_string($_POST['serie_reg'] ?? '');
+
+        if ($cliente <= 0 || $modelo <= 0 || $color === '' || $placa === '') {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Datos incompletos",
+                "Texto"  => "Complete cliente, modelo, color y placa",
+                "Tipo"   => "warning"
+            ]);
+        }
+
+        if (recepcionservicioModelo::existe_vehiculo_placa_modelo($placa)) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Vehiculo existente",
+                "Texto"  => "La placa ya se encuentra registrada",
+                "Tipo"   => "warning"
+            ]);
+        }
+
+        $datos = [
+            "id_cliente" => $cliente,
+            "id_modeloauto" => $modelo,
+            "color" => $color,
+            "placa" => $placa,
+            "anho" => $anho,
+            "nro_serie" => $serie,
+            "estado" => 1
+        ];
+
+        $guardar = recepcionservicioModelo::guardar_vehiculo_rapido_modelo($datos);
+
+        if (!empty($guardar['success'])) {
+            return json_encode([
+                "Alerta" => "seleccionar_vehiculo",
+                "Titulo" => "Vehiculo registrado",
+                "Texto"  => "El vehiculo fue agregado y seleccionado",
+                "Tipo"   => "success",
+                "vehiculo" => [
+                    "id_vehiculo" => $guardar['id_vehiculo'],
+                    "descripcion" => $guardar['descripcion']
+                ]
+            ]);
+        }
+
+        return json_encode([
+            "Alerta" => "simple",
+            "Titulo" => "Error",
+            "Texto"  => $guardar['msg'] ?? 'No se pudo registrar el vehiculo',
+            "Tipo"   => "error"
+        ]);
     }
 
     public function guardar_recepcion_controlador()
@@ -290,6 +480,7 @@ class recepcionservicioControlador extends recepcionservicioModelo
                     <th>Servicio</th>
                     <th>Origen</th>
                     <th>Prioridad</th>
+                    <th>Fotos</th>
                     <th>Usuario</th>
                     <th>Estado</th>';
 
@@ -345,6 +536,16 @@ class recepcionservicioControlador extends recepcionservicioModelo
                     }
                 }
 
+                $fotosBtn = '<span class="text-muted">-</span>';
+                if ((int) $rows['total_fotos'] > 0) {
+                    $fotosBtn = '
+                    <button type="button"
+                        class="btn btn-info btn-sm"
+                        onclick="verFotosRecepcion(\'' . mainModel::encryption($rows['idrecepcion']) . '\')">
+                        <i class="far fa-images"></i> ' . (int) $rows['total_fotos'] . '
+                    </button>';
+                }
+
                 $tabla .= '
             <tr class="text-center">
                 <td>' . $contador . '</td>
@@ -356,6 +557,7 @@ class recepcionservicioControlador extends recepcionservicioModelo
                 <td>' . htmlspecialchars($rows['tipo_servicio'] ?: '-', ENT_QUOTES, 'UTF-8') . '</td>
                 <td>' . $origenBadge . '</td>
                 <td>' . $prioridadBadge . '</td>
+                <td>' . $fotosBtn . '</td>
                 <td>' . htmlspecialchars($rows['usuario'], ENT_QUOTES, 'UTF-8') . '</td>
                 <td>' . $estado . '</td>';
 
@@ -378,7 +580,7 @@ class recepcionservicioControlador extends recepcionservicioModelo
 
             $reg_final = $contador - 1;
         } else {
-            $colspan = $puedeAnular ? 12 : 11;
+            $colspan = $puedeAnular ? 13 : 12;
             if ($total >= 1) {
                 $tabla .= '
             <tr class="text-center">
@@ -415,6 +617,40 @@ class recepcionservicioControlador extends recepcionservicioModelo
     }
 
     /**fin controlador */
+
+    public function fotos_recepcion_controlador()
+    {
+        if (!mainModel::tienePermiso('servicio.recepcion.ver')) {
+            return json_encode([
+                "success" => false,
+                "msg" => "Acceso no autorizado"
+            ]);
+        }
+
+        if (empty($_POST['recepcion_id_fotos'])) {
+            return json_encode([
+                "success" => false,
+                "msg" => "Recepcion no valida"
+            ]);
+        }
+
+        $id = mainModel::decryption($_POST['recepcion_id_fotos']);
+        $id = (int) mainModel::limpiar_string($id);
+
+        if ($id <= 0) {
+            return json_encode([
+                "success" => false,
+                "msg" => "Recepcion no valida"
+            ]);
+        }
+
+        $fotos = recepcionservicioModelo::fotos_recepcion_modelo($id, (int) $_SESSION['nick_sucursal']);
+
+        return json_encode([
+            "success" => true,
+            "fotos" => $fotos
+        ], JSON_UNESCAPED_UNICODE);
+    }
 
     public function anular_recepcion_controlador()
     {
