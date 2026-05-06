@@ -88,10 +88,13 @@ class presupuestoservicioModelo extends mainModel
         WHERE pp.id_articulo = :id
           AND p.estado = 1
           AND CURDATE() BETWEEN p.fecha_inicio AND p.fecha_fin
+          AND (p.id_sucursal IS NULL OR p.id_sucursal = :sucursal)
+        ORDER BY p.valor DESC, p.id_promocion DESC
         LIMIT 1
         ");
 
         $sql->bindParam(':id', $id, PDO::PARAM_INT);
+        $sql->bindValue(':sucursal', $_SESSION['nick_sucursal'] ?? 0, PDO::PARAM_INT);
         $sql->execute();
 
         $promo = $sql->fetch(PDO::FETCH_ASSOC);
@@ -112,9 +115,13 @@ class presupuestoservicioModelo extends mainModel
         INNER JOIN descuento_cliente dc
             ON dc.id_descuento = d.id_descuento
         WHERE dc.id_cliente = :cliente
-          AND d.estado = 1");
+          AND d.estado = 1
+          AND (d.fecha_inicio IS NULL OR d.fecha_inicio <= CURDATE())
+          AND (d.fecha_fin IS NULL OR d.fecha_fin >= CURDATE())
+          AND (d.id_sucursal IS NULL OR d.id_sucursal = :sucursal)");
 
         $sql->bindParam(':cliente', $idCliente, PDO::PARAM_INT);
+        $sql->bindValue(':sucursal', $_SESSION['nick_sucursal'] ?? 0, PDO::PARAM_INT);
         $sql->execute();
 
         return json_encode($sql->fetchAll(PDO::FETCH_ASSOC));
@@ -129,7 +136,7 @@ class presupuestoservicioModelo extends mainModel
 
             /* ================= OBTENER SUCURSAL DESDE DIAGNÓSTICO ================= */
             $sqlSuc = $pdo->prepare("
-                SELECT r.id_sucursal
+                SELECT r.id_sucursal, r.id_cliente
                 FROM diagnostico_servicio d
                 INNER JOIN recepcion_servicio r 
                     ON r.idrecepcion = d.idrecepcion
@@ -140,7 +147,9 @@ class presupuestoservicioModelo extends mainModel
                 ':id' => $d['id_diagnostico']
             ]);
 
-            $idSucursal = $sqlSuc->fetchColumn();
+            $diag = $sqlSuc->fetch(PDO::FETCH_ASSOC);
+            $idSucursal = $diag['id_sucursal'] ?? null;
+            $idCliente = $diag['id_cliente'] ?? null;
 
             if (!$idSucursal) {
                 $pdo->rollBack();
@@ -159,20 +168,64 @@ class presupuestoservicioModelo extends mainModel
                 ];
             }
 
-            /* ================= VALIDAR STOCK ================= */
+            $detalleCalculado = [];
+            $promocionesAplicadas = [];
+            $subtotalServicios = 0;
+
+            $sqlArticulo = $pdo->prepare("
+                SELECT id_articulo, desc_articulo, precio_venta, tipo
+                FROM articulos
+                WHERE id_articulo = :articulo
+                  AND estado = 1
+                LIMIT 1
+            ");
+
+            $sqlStock = $pdo->prepare("
+                SELECT stockDisponible
+                FROM stock
+                WHERE id_articulo = :articulo
+                  AND id_sucursal = :sucursal
+            ");
+
+            $sqlPromo = $pdo->prepare("
+                SELECT p.id_promocion, p.tipo, p.valor
+                FROM promociones p
+                INNER JOIN promocion_producto pp ON pp.id_promocion = p.id_promocion
+                WHERE pp.id_articulo = :articulo
+                  AND p.estado = 1
+                  AND CURDATE() BETWEEN p.fecha_inicio AND p.fecha_fin
+                  AND (p.id_sucursal IS NULL OR p.id_sucursal = :sucursal)
+                ORDER BY p.valor DESC, p.id_promocion DESC
+                LIMIT 1
+            ");
+
+            /* ================= VALIDAR Y RECALCULAR DETALLE ================= */
             foreach ($d['detalle'] as $it) {
+                $idArticulo = (int)($it['id_articulo'] ?? 0);
+                $cantidad = (float)($it['cantidad'] ?? 0);
 
-                if (!empty($it['tipo']) && $it['tipo'] === 'ARTICULO') {
+                if ($idArticulo <= 0 || $cantidad <= 0) {
+                    $pdo->rollBack();
+                    return [
+                        'error' => true,
+                        'msg' => 'Detalle de presupuesto invalido'
+                    ];
+                }
 
-                    $sqlStock = $pdo->prepare("
-                    SELECT stockDisponible
-                    FROM stock
-                    WHERE id_articulo = :articulo
-                    AND id_sucursal = :sucursal
-                ");
+                $sqlArticulo->execute([':articulo' => $idArticulo]);
+                $articulo = $sqlArticulo->fetch(PDO::FETCH_ASSOC);
 
+                if (!$articulo) {
+                    $pdo->rollBack();
+                    return [
+                        'error' => true,
+                        'msg' => 'Articulo invalido en el detalle'
+                    ];
+                }
+
+                if ($articulo['tipo'] === 'producto') {
                     $sqlStock->execute([
-                        ':articulo' => $it['id_articulo'],
+                        ':articulo' => $idArticulo,
                         ':sucursal' => $idSucursal
                     ]);
 
@@ -182,19 +235,109 @@ class presupuestoservicioModelo extends mainModel
                         $pdo->rollBack();
                         return [
                             'error' => true,
-                            'msg' => "No existe stock para {$it['descripcion']}"
+                            'msg' => "No existe stock para {$articulo['desc_articulo']}"
                         ];
                     }
 
-                    if ($it['cantidad'] > $stockActual) {
+                    if ($cantidad > $stockActual) {
                         $pdo->rollBack();
                         return [
                             'error' => true,
-                            'msg' => "Stock insuficiente para {$it['descripcion']}"
+                            'msg' => "Stock insuficiente para {$articulo['desc_articulo']}"
                         ];
                     }
                 }
+
+                $precioBase = (float)$articulo['precio_venta'];
+                $precioFinal = $precioBase;
+                $montoPromoUnitario = 0;
+
+                $sqlPromo->execute([
+                    ':articulo' => $idArticulo,
+                    ':sucursal' => $idSucursal
+                ]);
+                $promo = $sqlPromo->fetch(PDO::FETCH_ASSOC);
+
+                if ($promo) {
+                    if ($promo['tipo'] === 'PORCENTAJE') {
+                        $montoPromoUnitario = $precioBase * ((float)$promo['valor'] / 100);
+                    } elseif ($promo['tipo'] === 'MONTO_FIJO') {
+                        $montoPromoUnitario = min($precioBase, (float)$promo['valor']);
+                    } elseif ($promo['tipo'] === 'PRECIO_FIJO') {
+                        $montoPromoUnitario = max(0, $precioBase - (float)$promo['valor']);
+                    }
+
+                    $precioFinal = max(0, $precioBase - $montoPromoUnitario);
+                    $idPromo = (int)$promo['id_promocion'];
+                    $promocionesAplicadas[$idPromo] = ($promocionesAplicadas[$idPromo] ?? 0) + ($montoPromoUnitario * $cantidad);
+                }
+
+                $subtotalLinea = $precioFinal * $cantidad;
+                $subtotalServicios += $subtotalLinea;
+
+                $detalleCalculado[] = [
+                    'id_articulo' => $idArticulo,
+                    'cantidad' => $cantidad,
+                    'precio_final' => $precioFinal,
+                    'subtotal' => $subtotalLinea
+                ];
             }
+
+            $descuentosAplicados = [];
+            $totalDescuento = 0;
+            $idsDescuentos = [];
+
+            foreach (($d['descuentos'] ?? []) as $desc) {
+                $idDesc = (int)($desc['id_descuento'] ?? 0);
+                if ($idDesc > 0) {
+                    $idsDescuentos[$idDesc] = true;
+                }
+            }
+
+            if ($idsDescuentos) {
+                $sqlDesc = $pdo->prepare("
+                    SELECT d.id_descuento, d.nombre, d.tipo, d.valor
+                    FROM descuentos d
+                    INNER JOIN descuento_cliente dc ON dc.id_descuento = d.id_descuento
+                    WHERE d.id_descuento = :descuento
+                      AND dc.id_cliente = :cliente
+                      AND d.estado = 1
+                      AND (d.fecha_inicio IS NULL OR d.fecha_inicio <= CURDATE())
+                      AND (d.fecha_fin IS NULL OR d.fecha_fin >= CURDATE())
+                      AND (d.id_sucursal IS NULL OR d.id_sucursal = :sucursal)
+                    LIMIT 1
+                ");
+
+                foreach (array_keys($idsDescuentos) as $idDesc) {
+                    $sqlDesc->execute([
+                        ':descuento' => $idDesc,
+                        ':cliente' => $idCliente,
+                        ':sucursal' => $idSucursal
+                    ]);
+                    $desc = $sqlDesc->fetch(PDO::FETCH_ASSOC);
+
+                    if (!$desc) {
+                        continue;
+                    }
+
+                    $monto = $desc['tipo'] === 'PORCENTAJE'
+                        ? $subtotalServicios * ((float)$desc['valor'] / 100)
+                        : (float)$desc['valor'];
+
+                    $monto = min($monto, max(0, $subtotalServicios - $totalDescuento));
+                    $totalDescuento += $monto;
+
+                    $descuentosAplicados[] = [
+                        'id_descuento' => (int)$desc['id_descuento'],
+                        'tipo' => $desc['tipo'],
+                        'valor' => (float)$desc['valor'],
+                        'monto' => $monto,
+                        'motivo' => $desc['nombre']
+                    ];
+                }
+            }
+
+            $totalFinal = max(0, $subtotalServicios - $totalDescuento);
 
             /* ================= INSERT PRESUPUESTO ================= */
             $sql = $pdo->prepare("
@@ -210,9 +353,9 @@ class presupuestoservicioModelo extends mainModel
                 ':usuario'       => $d['usuario'],
                 ':sucursal'      => $idSucursal,
                 ':fecha_venc'    => $d['fecha_venc'],
-                ':subtotal'      => $d['subtotal'],
-                ':total_desc'    => $d['total_descuento'],
-                ':total_final'   => $d['total_final'],
+                ':subtotal'      => $subtotalServicios,
+                ':total_desc'    => $totalDescuento,
+                ':total_final'   => $totalFinal,
                 ':id_diagnostico' => $d['id_diagnostico']
             ]);
 
@@ -226,7 +369,7 @@ class presupuestoservicioModelo extends mainModel
             (:articulo, :presupuesto, :cantidad, :precio, :subtotal)
             ");
 
-            foreach ($d['detalle'] as $it) {
+            foreach ($detalleCalculado as $it) {
                 $sqlDet->execute([
                     ':articulo'    => $it['id_articulo'],
                     ':presupuesto' => $idPresupuesto,
@@ -237,6 +380,48 @@ class presupuestoservicioModelo extends mainModel
             }
 
             /* ================= ACTUALIZAR DIAGNÓSTICO ================= */
+            if ($promocionesAplicadas) {
+                $sqlPresPromo = $pdo->prepare("
+                    INSERT INTO presupuesto_promocion
+                    (idpresupuesto_servicio, id_promocion, monto_aplicado, fecha_aplicacion)
+                    VALUES
+                    (:presupuesto, :promocion, :monto, NOW())
+                ");
+
+                foreach ($promocionesAplicadas as $idPromo => $monto) {
+                    if ($monto <= 0) {
+                        continue;
+                    }
+
+                    $sqlPresPromo->execute([
+                        ':presupuesto' => $idPresupuesto,
+                        ':promocion' => $idPromo,
+                        ':monto' => $monto
+                    ]);
+                }
+            }
+
+            if ($descuentosAplicados) {
+                $sqlPresDesc = $pdo->prepare("
+                    INSERT INTO presupuesto_descuento
+                    (id_presupuesto, id_descuento, id_usuario, tipo, valor, monto_aplicado, motivo)
+                    VALUES
+                    (:presupuesto, :descuento, :usuario, :tipo, :valor, :monto, :motivo)
+                ");
+
+                foreach ($descuentosAplicados as $desc) {
+                    $sqlPresDesc->execute([
+                        ':presupuesto' => $idPresupuesto,
+                        ':descuento' => $desc['id_descuento'],
+                        ':usuario' => $d['usuario'],
+                        ':tipo' => $desc['tipo'],
+                        ':valor' => $desc['valor'],
+                        ':monto' => $desc['monto'],
+                        ':motivo' => $desc['motivo']
+                    ]);
+                }
+            }
+
             $sqlUpd = $pdo->prepare("
             UPDATE diagnostico_servicio
             SET estado = 2

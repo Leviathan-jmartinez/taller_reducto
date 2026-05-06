@@ -26,18 +26,22 @@
         let lista = document.getElementById("clientes_asignados");
 
         if (document.getElementById("cli_" + id)) return;
+        if (document.getElementById("cli_existente_" + id)) return;
+
+        let vacio = document.getElementById("clientes_vacio");
+        if (vacio) vacio.remove();
 
         let li = document.createElement("li");
         li.className = "list-group-item d-flex justify-content-between align-items-center";
         li.id = "cli_" + id;
         li.innerHTML = `
-    ${nombre}
-    <input type="hidden" name="clientes[]" value="${id}">
-    <button type="button" class="btn btn-sm btn-danger"
-        onclick="quitarClienteDescuento(${id})">
-        <i class="fas fa-times"></i>
-    </button>
-    `;
+        ${nombre}
+        <input type="hidden" name="clientes[]" value="${id}">
+        <button type="button" class="btn btn-sm btn-danger"
+            onclick="quitarClienteDescuento(${id})">
+            <i class="fas fa-times"></i>
+        </button>
+        `;
         lista.appendChild(li);
     }
 

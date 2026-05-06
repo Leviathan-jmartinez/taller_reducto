@@ -79,6 +79,9 @@
     }
 
     function restaurarArticulosPromo() {
+        if (window.PROMOCION_FORM_MODO !== 'crear') {
+            return;
+        }
 
         let articulos = JSON.parse(localStorage.getItem('promo_articulos')) || [];
 

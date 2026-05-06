@@ -144,6 +144,10 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
 
     public function promo_articulo_controlador()
     {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start(['name' => 'STR']);
+        }
+
         $id = intval($_POST['promo_articulo']);
 
         return presupuestoServicioModelo::promo_articulo_modelo($id);
@@ -151,6 +155,10 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
 
     public function descuentos_cliente_controlador()
     {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start(['name' => 'STR']);
+        }
+
         $idCliente = intval($_POST['descuentos_cliente']);
 
         return presupuestoServicioModelo::descuentos_cliente_modelo($idCliente);
@@ -398,10 +406,8 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
 
         $id = mainModel::decryption($_POST['id']);
         $sucursalPresupuesto = mainModel::ejecutar_consulta_simple("
-            SELECT rs.id_sucursal 
+            SELECT ps.id_sucursal 
             FROM presupuesto_servicio ps          
-            INNER JOIN diagnostico_servicio d on d.id_diagnostico = ps.id_diagnostico 
-            INNER JOIN recepcion_servicio rs on rs.idrecepcion = d.idrecepcion 
             WHERE ps.idpresupuesto_servicio = '$id'
         ")->fetchColumn();
 

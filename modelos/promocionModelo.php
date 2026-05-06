@@ -3,6 +3,36 @@ require_once "mainModel.php";
 
 class promocionModelo extends mainModel
 {
+    protected static function filtros_promociones_sql($filtros, $alias = 'p')
+    {
+        $where = [];
+        $params = [];
+
+        if (!empty($filtros['buscar'])) {
+            $where[] = "($alias.nombre LIKE :buscar OR $alias.descripcion LIKE :buscar)";
+            $params[':buscar'] = '%' . $filtros['buscar'] . '%';
+        }
+
+        if ($filtros['estado'] !== '' && $filtros['estado'] !== null) {
+            $where[] = "$alias.estado = :estado";
+            $params[':estado'] = (int)$filtros['estado'];
+        }
+
+        if (!empty($filtros['vigente'])) {
+            $where[] = "CURDATE() BETWEEN $alias.fecha_inicio AND $alias.fecha_fin";
+        }
+
+        if (!empty($filtros['id_sucursal'])) {
+            $where[] = "($alias.id_sucursal IS NULL OR $alias.id_sucursal = :sucursal)";
+            $params[':sucursal'] = (int)$filtros['id_sucursal'];
+        }
+
+        return [
+            'where' => $where ? 'WHERE ' . implode(' AND ', $where) : '',
+            'params' => $params
+        ];
+    }
+
     /* ================= GUARDAR PROMOCIÓN ================= */
     protected static function guardar_promocion_modelo($promo, $articulos)
     {
@@ -14,9 +44,11 @@ class promocionModelo extends mainModel
             /* Insertar promoción */
             $sql = $pdo->prepare("
                 INSERT INTO promociones
-                (nombre, descripcion, tipo, valor, fecha_inicio, fecha_fin, id_usuario_crea, estado,fecha_creacion)
+                (nombre, descripcion, tipo, valor, fecha_inicio, fecha_fin,
+                 id_sucursal, id_usuario_crea, estado,fecha_creacion)
                 VALUES
-                (:nombre, :descripcion, :tipo, :valor, :inicio, :fin, :usuario, 1,now())
+                (:nombre, :descripcion, :tipo, :valor, :inicio, :fin,
+                 :sucursal, :usuario, 1,now())
             ");
 
             $sql->execute([
@@ -26,6 +58,7 @@ class promocionModelo extends mainModel
                 ":valor"       => $promo['valor'],
                 ":inicio"      => $promo['fecha_inicio'],
                 ":fin"         => $promo['fecha_fin'],
+                ":sucursal"    => $promo['id_sucursal'],
                 ":usuario" =>   $_SESSION['id_str']
             ]);
 
@@ -98,9 +131,15 @@ class promocionModelo extends mainModel
         return $html;
     }
 
-    protected static function listar_promociones_modelo()
+    protected static function listar_promociones_modelo($inicio = 0, $registros = 15, $filtros = [])
     {
-        $sql = mainModel::conectar()->prepare("
+        $f = self::filtros_promociones_sql($filtros);
+        $inicio = max(0, (int)$inicio);
+        $registros = max(1, (int)$registros);
+
+        $pdo = mainModel::conectar();
+
+        $sql = $pdo->prepare("
         SELECT
             p.id_promocion,
             p.nombre,
@@ -108,14 +147,41 @@ class promocionModelo extends mainModel
             p.valor,
             p.fecha_inicio,
             p.fecha_fin,
+            p.id_sucursal,
             p.estado,
+            s.suc_descri,
             CONCAT(u.usu_nombre,' ',u.usu_apellido) AS creado_por
         FROM promociones p
         INNER JOIN usuarios u ON u.id_usuario = p.id_usuario_crea
-        ORDER BY p.fecha_creacion DESC");
+        LEFT JOIN sucursales s ON s.id_sucursal = p.id_sucursal
+        {$f['where']}
+        ORDER BY p.fecha_creacion DESC
+        LIMIT :inicio, :registros");
 
+        foreach ($f['params'] as $param => $value) {
+            $type = is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR;
+            $sql->bindValue($param, $value, $type);
+        }
+        $sql->bindValue(':inicio', $inicio, PDO::PARAM_INT);
+        $sql->bindValue(':registros', $registros, PDO::PARAM_INT);
         $sql->execute();
-        return $sql->fetchAll(PDO::FETCH_ASSOC);
+
+        $sqlTotal = $pdo->prepare("
+            SELECT COUNT(*)
+            FROM promociones p
+            {$f['where']}
+        ");
+
+        foreach ($f['params'] as $param => $value) {
+            $type = is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR;
+            $sqlTotal->bindValue($param, $value, $type);
+        }
+        $sqlTotal->execute();
+
+        return [
+            'datos' => $sql->fetchAll(PDO::FETCH_ASSOC),
+            'total' => (int)$sqlTotal->fetchColumn()
+        ];
     }
 
 
@@ -129,7 +195,8 @@ class promocionModelo extends mainModel
         WHERE id_promocion = :id");
 
         $sql->bindParam(":estado", $estado, PDO::PARAM_INT);
-        $sql->bindParam(":usuario", $_SESSION['id_usuario'], PDO::PARAM_INT);
+        $usuario = $_SESSION['id_usuario'] ?? $_SESSION['id_str'];
+        $sql->bindParam(":usuario", $usuario, PDO::PARAM_INT);
         $sql->bindParam(":id", $id, PDO::PARAM_INT);
 
         return $sql->execute();
@@ -186,6 +253,7 @@ class promocionModelo extends mainModel
                     valor = :valor,
                     fecha_inicio = :inicio,
                     fecha_fin = :fin,
+                    id_sucursal = :sucursal,
                     estado = :estado,
                     id_usuario_modifica = :usuario,
                     fecha_actualizacion = NOW()
@@ -198,7 +266,9 @@ class promocionModelo extends mainModel
             $sql->bindParam(":valor", $datos['valor']);
             $sql->bindParam(":inicio", $datos['fecha_inicio']);
             $sql->bindParam(":fin", $datos['fecha_fin']);
-            $sql->bindParam(":usuario", $_SESSION['id_usuario'], PDO::PARAM_INT);
+            $sql->bindValue(":sucursal", $datos['id_sucursal'], $datos['id_sucursal'] === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
+            $usuario = $_SESSION['id_usuario'] ?? $_SESSION['id_str'];
+            $sql->bindParam(":usuario", $usuario, PDO::PARAM_INT);
             $sql->bindParam(":id", $datos['id'], PDO::PARAM_INT);
             $sql->bindParam(":estado", $datos['estado'], PDO::PARAM_INT);
 
