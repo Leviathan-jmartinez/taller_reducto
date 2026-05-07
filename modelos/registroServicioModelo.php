@@ -15,12 +15,19 @@ class registroServicioModelo extends mainModel
             SELECT estado, id_sucursal
             FROM orden_trabajo
             WHERE idorden_trabajo = ?
+            FOR UPDATE
         ");
             $q->execute([$datos['idorden_trabajo']]);
             $ot = $q->fetch(PDO::FETCH_ASSOC);
 
             if (!$ot) {
+                $pdo->rollBack();
                 return ['msg' => 'Orden de trabajo no existe'];
+            }
+
+            if ((int)$ot['estado'] !== 1) {
+                $pdo->rollBack();
+                return ['msg' => 'La orden de trabajo no esta activa'];
             }
 
             if ($ot['estado'] == 0) {
@@ -33,6 +40,7 @@ class registroServicioModelo extends mainModel
 
             /* ================= VALIDAR SUCURSAL ================= */
             if ($ot['id_sucursal'] != $_SESSION['nick_sucursal']) {
+                $pdo->rollBack();
                 return ['msg' => 'No puede registrar servicios de otra sucursal'];
             }
 
@@ -45,6 +53,7 @@ class registroServicioModelo extends mainModel
             $v->execute([$datos['idorden_trabajo']]);
 
             if ($v->rowCount() > 0) {
+                $pdo->rollBack();
                 return ['msg' => 'El servicio ya fue registrado'];
             }
 
@@ -193,7 +202,10 @@ class registroServicioModelo extends mainModel
 
     protected static function buscar_ot_para_registro_modelo($texto)
     {
-        session_start(['name' => 'STR']);
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start(['name' => 'STR']);
+        }
+
         $sql = self::conectar()->prepare("
                 SELECT 
             ot.idorden_trabajo,
@@ -226,6 +238,8 @@ class registroServicioModelo extends mainModel
         LEFT JOIN registro_servicio rs 
             ON rs.idorden_trabajo = ot.idorden_trabajo
             AND rs.estado = 1
+        INNER JOIN orden_trabajo_detalle otd
+            ON otd.idorden_trabajo = ot.idorden_trabajo
 
         WHERE ot.estado = 1 
         AND ot.id_sucursal = :sucursal
@@ -236,6 +250,7 @@ class registroServicioModelo extends mainModel
             OR v.placa LIKE :b
             OR ot.idorden_trabajo LIKE :b
         )
+        GROUP BY ot.idorden_trabajo
         ORDER BY ot.idorden_trabajo DESC
         LIMIT 20");
 
@@ -256,15 +271,23 @@ class registroServicioModelo extends mainModel
                m.mod_descri,
                v.placa
         FROM orden_trabajo ot
-        INNER JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-        INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
-        INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
-        INNER JOIN clientes c ON c.id_cliente = r.id_cliente
-        INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
-        INNER JOIN modelo_auto m ON v.id_modeloauto = v.id_modeloauto
+        LEFT JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+        LEFT JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
+        LEFT JOIN recepcion_servicio r_normal ON r_normal.idrecepcion = ds.idrecepcion
+        LEFT JOIN recepcion_servicio r_reclamo ON r_reclamo.idreclamo_servicio = ot.idreclamo_servicio
+        LEFT JOIN clientes c ON c.id_cliente = COALESCE(r_normal.id_cliente, r_reclamo.id_cliente)
+        LEFT JOIN vehiculos v ON v.id_vehiculo = COALESCE(r_normal.id_vehiculo, r_reclamo.id_vehiculo)
+        LEFT JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
         WHERE ot.idorden_trabajo = ?
+          AND ot.id_sucursal = ?
+          AND ot.estado = 1
+          AND EXISTS (
+              SELECT 1
+              FROM orden_trabajo_detalle d
+              WHERE d.idorden_trabajo = ot.idorden_trabajo
+          )
         LIMIT 1");
-        $sql->execute([$idOT]);
+        $sql->execute([$idOT, $_SESSION['nick_sucursal']]);
         return $sql->fetch(PDO::FETCH_ASSOC);
     }
 
@@ -335,13 +358,15 @@ class registroServicioModelo extends mainModel
                 stockUltimoIdActualizacion = ?
             WHERE id_sucursal = ?
               AND id_articulo = ?
+              AND stockDisponible >= ?
         ");
             $upd->execute([
                 $item['cantidad'],
                 $usuario,
                 $idMovimiento,
                 $idSucursal,
-                $item['id_articulo']
+                $item['id_articulo'],
+                $item['cantidad']
             ]);
 
             if ($upd->rowCount() === 0) {

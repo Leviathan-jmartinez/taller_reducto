@@ -78,10 +78,13 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
 
                 switch ($rows['estado']) {
                     case 1:
-                        $estado = '<span class="badge badge-warning">En proceso</span>';
+                        $estado = '<span class="badge badge-warning">Activa</span>';
                         break;
                     case 2:
-                        $estado = '<span class="badge badge-primary">Finalizado</span>';
+                        $estado = '<span class="badge badge-success">Servicio registrado</span>';
+                        break;
+                    case 3:
+                        $estado = '<span class="badge badge-info">Pendiente completar</span>';
                         break;
                     case 0:
                         $estado = '<span class="badge badge-danger">Anulada</span>';
@@ -98,26 +101,26 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
                 <td>' . $rows['nombre_cliente'] . ' ' . $rows['apellido_cliente'] . '</td>
                 <td>' . $rows['modelo'] . ' ' . $rows['placa'] . '</td>
                 <td>' . date("d-m-Y", strtotime($rows['fecha_inicio'])) . '</td>
-                <td>#' . $rows['idpresupuesto_servicio'] . '</td>
+                <td>' . (!empty($rows['idpresupuesto_servicio']) ? '#' . $rows['idpresupuesto_servicio'] : 'Reclamo') . '</td>
                 <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
                 <td>' . $estado . '</td>
                 <td>';
 
-                /* ================= ACCIONES ================= */
-
-                // ✔ asignar técnico
-                if ($rows['estado'] == 1) {
+                if (($rows['origen'] ?? '') === 'RECLAMO' && (int)$rows['estado'] === 3) {
                     $tabla .= '
-                    <a href="' . SERVERURL . 'ordenTrabajo-asignar/' . mainModel::encryption($rows['idorden_trabajo']) . '/"
+                    <a href="' . SERVERURL . 'ordenTrabajo-asignar/?id=' . urlencode(mainModel::encryption($rows['idorden_trabajo'])) . '"
                         class="btn btn-primary btn-sm"
-                        title="Completar OT">
+                        title="Completar OT por reclamo">
                         <i class="fas fa-tools"></i>
                     </a>';
                 }
 
+                /* ================= ACCIONES ================= */
+
+                // ✔ asignar técnico
                 // ✔ imprimir
                 $tabla .= '
-            <a href="' . SERVERURL . 'pdf/ordenTrabajo.php?id=' . mainModel::encryption($rows['idorden_trabajo']) . '"
+            <a href="' . SERVERURL . 'pdf/ordenTrabajo.php?id=' . urlencode(mainModel::encryption($rows['idorden_trabajo'])) . '"
                 target="_blank"
                 class="btn btn-info btn-sm"
                 title="Imprimir OT">
@@ -125,7 +128,7 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
             </a>';
 
                 // ✔ anular
-                if (in_array($rows['estado'], [1, 2])) {
+                if (in_array((int)$rows['estado'], [1, 3], true)) {
                     $tabla .= '
                 <form class="FormularioAjax d-inline"
                     action="' . SERVERURL . 'ajax/ordenTrabajoAjax.php"
@@ -374,6 +377,8 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
 
     public function generar_ot_controlador2()
     {
+        session_start(['name' => 'STR']);
+
         if (empty($_POST['idpresupuesto_servicio']) || empty($_POST['idtrabajos'])) {
             return json_encode([
                 'Alerta' => 'simple',
@@ -395,6 +400,7 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
         $datos = [
             'idpresupuesto' => $_POST['idpresupuesto_servicio'],
             'idusuario'     => $_POST['id_usuario'],
+            'idsucursal'    => $_SESSION['nick_sucursal'],
             'idtrabajos'          => intval($_POST['idtrabajos']),
             'tecnico_responsable' => intval($_POST['tecnico_responsable']),
             'observacion'   => $_POST['observacion'] ?? ''
@@ -437,12 +443,9 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
         $usuario = $_SESSION['id_str'];
 
         $sucursalOT = mainModel::ejecutar_consulta_simple("
-        SELECT r.id_sucursal
-        FROM orden_trabajo ot
-        INNER JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-        INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
-        INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
-        WHERE ot.idorden_trabajo = '$idOT'
+            SELECT id_sucursal
+            FROM orden_trabajo
+            WHERE idorden_trabajo = '$idOT'
         ")->fetchColumn();
 
         if ($sucursalOT != $_SESSION['nick_sucursal']) {
@@ -508,8 +511,8 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
 
         return json_encode([
             "Alerta" => "simple",
-            "Titulo" => "ERROR SQL",
-            "Texto" => $ok,
+            "Titulo" => "Error",
+            "Texto" => $ok === false ? "El reclamo ya tiene una OT activa" : $ok,
             "Tipo" => "error"
         ]);
     }
@@ -518,13 +521,22 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
     {
         session_start(['name' => 'STR']);
 
+        if (empty($_POST['idorden_trabajo']) || empty($_POST['idtrabajos']) || empty($_POST['tecnico_responsable'])) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Debe seleccionar equipo y tecnico",
+                "Tipo" => "error"
+            ]);
+        }
+
         $datos = [
             "idorden_trabajo" => $_POST['idorden_trabajo'],
             "tecnico" => $_POST['tecnico_responsable'],
             "equipo" => $_POST['idtrabajos'],
             "obs" => $_POST['observacion'] ?? '',
-            "trabajos" => json_decode($_POST['trabajos_json'], true),
-            "repuestos" => json_decode($_POST['repuestos_json'], true)
+            "trabajos" => json_decode($_POST['trabajos_json'] ?? '[]', true),
+            "repuestos" => json_decode($_POST['repuestos_json'] ?? '[]', true)
         ];
 
         $res = ordenTrabajoModelo::completar_ot_modelo($datos);
@@ -534,7 +546,7 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
                 "Alerta" => "redireccionar_confirmado",
                 "URL" => SERVERURL . "ordenTrabajo-buscar/",
                 "Titulo" => "OT completada",
-                "Texto" => "Orden guardada correctamente",
+                "Texto" => "La OT por reclamo quedo activa para registro",
                 "Tipo" => "success"
             ]);
         }

@@ -51,7 +51,7 @@ class registroServicioControlador extends registroServicioModelo
         /* ================= VALIDAR ESTADO OT ================= */
         $estado = registroServicioModelo::estado_ot_modelo($idOT);
 
-        if ($estado != 2) {
+        if ($estado != 1) {
             return json_encode([
                 'Alerta' => 'simple',
                 'Titulo' => 'Error',
@@ -92,6 +92,10 @@ class registroServicioControlador extends registroServicioModelo
     /* ================= BUSCAR OT ================= */
     public function buscar_ot_para_registro_controlador()
     {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start(['name' => 'STR']);
+        }
+
         $texto = trim($_POST['buscar_ot'] ?? '');
 
         $datos = self::buscar_ot_para_registro_modelo($texto);
@@ -131,6 +135,10 @@ class registroServicioControlador extends registroServicioModelo
     /* ================= CARGAR OT ================= */
     public function cargar_ot_para_registro_controlador()
     {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start(['name' => 'STR']);
+        }
+
         $idOT = mainModel::decryption($_POST['id_ot']);
 
         $ot = self::obtener_ot_para_registro_modelo($idOT);

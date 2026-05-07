@@ -29,6 +29,11 @@
             })
             .then(r => r.json())
             .then(data => {
+                if (data.error) {
+                    alert('La OT no esta activa para registro');
+                    limpiarRegistroServicio();
+                    return;
+                }
 
                 document.getElementById('idorden_trabajo').value = idOT;
                 document.getElementById('ot_numero').value = data.ot.idorden_trabajo;
@@ -222,6 +227,7 @@
         document.querySelector('[name="fecha_ejecucion"]').disabled = true;
         document.querySelector('[name="observacion"]').value = '';
         document.querySelector('[name="observacion"]').disabled = true;
+        document.getElementById('btnRegistrar').disabled = true;
     }
 
     document.querySelector('.FormularioAjax')

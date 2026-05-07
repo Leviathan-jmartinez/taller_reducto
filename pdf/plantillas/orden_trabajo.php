@@ -200,8 +200,9 @@
     function estadoOT($estado)
     {
         return match ((int)$estado) {
-            1 => 'En proceso',
-            2 => 'Finalizada',
+            1 => 'Activa',
+            2 => 'Servicio registrado',
+            3 => 'Pendiente completar',
             0 => 'Anulada',
             default => 'Desconocido',
         };
@@ -212,15 +213,15 @@
     <div class="grid">
         <div class="box">
             <h3>Cliente</h3>
-            <?= $cabecera['nombre_cliente'] . ' ' . $cabecera['apellido_cliente'] ?><br>
+            <?= trim(($cabecera['nombre_cliente'] ?? '') . ' ' . ($cabecera['apellido_cliente'] ?? '')) ?><br>
             <strong>Tel:</strong> <?= $cabecera['celular_cliente'] ?? '-' ?>
         </div>
 
         <div class="box">
             <h3>Vehículo</h3>
-            <?= $cabecera['modelo'] ?><br>
-            <strong>Placa:</strong> <?= $cabecera['placa'] ?><br>
-            <strong>Km:</strong> <?= number_format($cabecera['kilometraje'], 0, ',', '.') ?>
+            <?= $cabecera['modelo'] ?? '-' ?><br>
+            <strong>Placa:</strong> <?= $cabecera['placa'] ?? '-' ?><br>
+            <strong>Km:</strong> <?= number_format((float)($cabecera['kilometraje'] ?? 0), 0, ',', '.') ?>
         </div>
 
         <div class="box">
@@ -239,6 +240,23 @@
         </div>
     </div>
 
+    <?php if (($cabecera['origen'] ?? '') === 'RECLAMO'): ?>
+        <div class="box" style="margin-bottom:10px;">
+            <h3>Detalle del reclamo</h3>
+            <strong>Tipo:</strong> <?= $cabecera['tipo_reclamo'] ?? '-' ?><br>
+            <strong>Prioridad:</strong>
+            <?php
+            echo ($cabecera['prioridad'] ?? null) == 1
+                ? 'Alta'
+                : (($cabecera['prioridad'] ?? null) == 2 ? 'Media' : 'Baja');
+            ?><br>
+            <strong>Fecha:</strong>
+            <?= !empty($cabecera['fecha_reclamo']) ? date('d/m/Y H:i', strtotime($cabecera['fecha_reclamo'])) : '-' ?><br>
+            <strong>Descripcion:</strong><br>
+            <?= nl2br($cabecera['descripcion_reclamo'] ?? '-') ?>
+        </div>
+    <?php endif; ?>
+
     <!-- DETALLE -->
     <table>
         <thead>
@@ -250,12 +268,17 @@
             </tr>
         </thead>
         <tbody>
+            <?php if (empty($detalle)): ?>
+                <tr>
+                    <td colspan="4" class="center">Sin detalle cargado</td>
+                </tr>
+            <?php endif; ?>
             <?php foreach ($detalle as $d): ?>
                 <tr>
                     <td><?= $d['desc_articulo'] ?></td>
                     <td class="center"><?= $d['cantidad'] ?></td>
-                    <td class="right"><?= number_format($d['precio_unitario'], 0, ',', '.') ?></td>
-                    <td class="right"><?= number_format($d['subtotal'], 0, ',', '.') ?></td>
+                    <td class="right"><?= number_format((float)$d['precio_unitario'], 0, ',', '.') ?></td>
+                    <td class="right"><?= number_format((float)$d['subtotal'], 0, ',', '.') ?></td>
                 </tr>
             <?php endforeach; ?>
         </tbody>
@@ -271,16 +294,16 @@
     <div class="totales">
         <div class="totales-linea">
             <span>Subtotal servicios</span>
-            <span>Gs. <?= number_format($cabecera['subtotal'], 0, ',', '.') ?></span>
+            <span>Gs. <?= number_format((float)($cabecera['subtotal'] ?? 0), 0, ',', '.') ?></span>
         </div>
 
         <div class="totales-linea">
             <span>Descuentos</span>
-            <span>- Gs. <?= number_format($cabecera['total_descuento'], 0, ',', '.') ?></span>
+            <span>- Gs. <?= number_format((float)($cabecera['total_descuento'] ?? 0), 0, ',', '.') ?></span>
         </div>
 
         <div class="totales-final">
-            TOTAL ESTIMADO: Gs. <?= number_format($cabecera['total_final'], 0, ',', '.') ?>
+            TOTAL ESTIMADO: Gs. <?= number_format((float)($cabecera['total_final'] ?? 0), 0, ',', '.') ?>
         </div>
     </div>
 

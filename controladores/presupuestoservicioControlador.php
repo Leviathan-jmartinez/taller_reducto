@@ -21,14 +21,23 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
         SELECT 
             d.id_diagnostico,
             c.nombre_cliente,
-            v.placa
+            c.apellido_cliente,
+            v.placa,
+            ma.mar_descri AS marca,
+            m.mod_descri AS modelo
         FROM diagnostico_servicio d
         INNER JOIN recepcion_servicio r ON r.idrecepcion = d.idrecepcion
         INNER JOIN clientes c ON c.id_cliente = r.id_cliente
         INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
+        INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
+        INNER JOIN marcas ma ON ma.id_marcas = m.id_marcas
         WHERE d.estado = 1
         AND (
-            c.nombre_cliente LIKE :b OR v.placa LIKE :b
+            c.nombre_cliente LIKE :b
+            OR c.apellido_cliente LIKE :b
+            OR v.placa LIKE :b
+            OR ma.mar_descri LIKE :b
+            OR m.mod_descri LIKE :b
         )
         ORDER BY d.id_diagnostico DESC
         ");
@@ -36,19 +45,37 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
         $sql->bindValue(":b", "%$texto%");
         $sql->execute();
 
-        $html = '<table class="table"><tbody>';
+        $html = '<table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Vehiculo</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>';
 
         foreach ($sql->fetchAll() as $row) {
+            $cliente = trim($row['nombre_cliente'] . ' ' . $row['apellido_cliente']);
+            $vehiculo = trim($row['marca'] . ' ' . $row['modelo'] . ' ' . $row['placa']);
+            $clienteHtml = htmlspecialchars($cliente, ENT_QUOTES, 'UTF-8');
+            $vehiculoHtml = htmlspecialchars($vehiculo, ENT_QUOTES, 'UTF-8');
+            $descJs = htmlspecialchars(
+                json_encode($cliente . ' - ' . $vehiculo, JSON_UNESCAPED_UNICODE),
+                ENT_QUOTES,
+                'UTF-8'
+            );
+            $idDiagnostico = (int) $row['id_diagnostico'];
 
             $html .= "
         <tr>
-            <td>{$row['nombre_cliente']}</td>
-            <td>{$row['placa']}</td>
+            <td>{$clienteHtml}</td>
+            <td>{$vehiculoHtml}</td>
             <td>
                 <button class='btn btn-success btn-sm'
                     onclick=\"seleccionarDiagnostico(
-                        {$row['id_diagnostico']},
-                        '{$row['nombre_cliente']} - {$row['placa']}'
+                        {$idDiagnostico},
+                        {$descJs}
                     )\">
                     Seleccionar
                 </button>
@@ -168,6 +195,15 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start(['name' => 'STR']);
+        }
+
+        if (!mainModel::tienePermiso('servicio.presupuesto.crear')) {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Acceso denegado',
+                'Texto' => 'No tiene permiso para registrar presupuestos',
+                'Tipo' => 'error'
+            ]);
         }
 
         $detalle = json_decode($_POST['detalle_json'], true);
@@ -348,19 +384,6 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
                     </form>';
                     }
 
-                    if ($puedeGenerarOT && $rows['estadoPre'] == 2) {
-                        $tabla .= '
-                    <form class="FormularioAjax d-inline"
-                        action="' . SERVERURL . 'ajax/ordenTrabajoAjax.php"
-                        method="POST" data-form="save">
-                        <input type="hidden" name="accion" value="generar_ot">
-                        <input type="hidden" name="id" value="' . mainModel::encryption($rows['idpresupuesto_servicio']) . '">
-                        <button class="btn btn-primary btn-sm">
-                            <i class="fas fa-tools"></i>
-                        </button>
-                    </form>';
-                    }
-
                     $tabla .= '</div></td>';
                 }
 
@@ -393,6 +416,15 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start(['name' => 'STR']);
+        }
+
+        if (!mainModel::tienePermiso('servicio.presupuesto.aprobar')) {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Acceso denegado',
+                'Texto' => 'No tiene permiso para aprobar presupuestos',
+                'Tipo' => 'error'
+            ]);
         }
 
         if (!isset($_POST['id'])) {
@@ -443,6 +475,15 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start(['name' => 'STR']);
+        }
+
+        if (!mainModel::tienePermiso('servicio.presupuesto.anular')) {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Acceso denegado',
+                'Texto' => 'No tiene permiso para anular presupuestos',
+                'Tipo' => 'error'
+            ]);
         }
 
         $id = mainModel::decryption($_POST['id']);

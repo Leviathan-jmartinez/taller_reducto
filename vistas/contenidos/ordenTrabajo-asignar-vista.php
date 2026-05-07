@@ -1,22 +1,27 @@
 <?php
-$pagina = require __DIR__ . '/../inc/pagina.php';
+if (!isset($pagina) || !is_array($pagina)) {
+    $pagina = explode('/', trim($_GET['vista'] ?? '', '/'));
+}
+
 require_once "./controladores/ordenTrabajoControlador.php";
+
 $insOT = new ordenTrabajoControlador();
-
-$id = $pagina[1] ?? 0;
-
+$id = $_GET['id'] ?? ($pagina[1] ?? 0);
 $ot = $insOT->obtener_ot_controlador($id);
 
 if (!$ot) {
     echo '<div class="alert alert-danger">OT no encontrada</div>';
     return;
 }
+
+if (($ot['origen'] ?? '') !== 'RECLAMO' || (int)$ot['estado'] !== 3) {
+    echo '<div class="alert alert-warning">Solo las OT pendientes por reclamo se completan desde esta pantalla.</div>';
+    return;
+}
 ?>
 
-<!-- ================= CABECERA ================= -->
 <div class="card mb-3 shadow-sm">
     <div class="card-body d-flex justify-content-between align-items-center">
-
         <div>
             <h4 class="mb-0">
                 <i class="fas fa-tools"></i> OT #<?php echo $ot['idorden_trabajo']; ?>
@@ -27,141 +32,101 @@ if (!$ot) {
                     : '-'; ?>
             </small>
         </div>
-
         <div>
-            <span class="badge bg-warning">Pendiente</span>
-
-            <?php if ($ot['origen'] == 'RECLAMO'): ?>
-                <span class="badge bg-danger">Reclamo</span>
-            <?php
-endif; ?>
+            <span class="badge bg-info">Pendiente completar</span>
+            <span class="badge bg-danger">Reclamo</span>
         </div>
-
     </div>
 </div>
 
-<!-- ================= VEHICULO ================= -->
 <div class="card mb-3">
     <div class="card-header bg-dark text-white">
-        <i class="fas fa-car"></i> Información del vehículo
+        <i class="fas fa-car"></i> Informacion del vehiculo
     </div>
-
     <div class="card-body">
         <div class="row">
-
             <div class="col-md-4">
                 <strong>Cliente:</strong><br>
                 <?php echo $ot['nombre_cliente'] . ' ' . $ot['apellido_cliente']; ?>
             </div>
-
             <div class="col-md-4">
-                <strong>Vehículo:</strong><br>
+                <strong>Vehiculo:</strong><br>
                 <?php echo $ot['placa'] ?? '-'; ?>
             </div>
-
             <div class="col-md-4">
                 <strong>Kilometraje:</strong><br>
                 <?php echo $ot['kilometraje'] ?? '-'; ?>
             </div>
-
         </div>
     </div>
 </div>
 
-<!-- ================= RECLAMO ================= -->
-<?php if ($ot['origen'] == 'RECLAMO'): ?>
-    <div class="card mb-3 border-warning">
-        <div class="card-header bg-dark">
-            <i class="fas fa-exclamation-triangle"></i> Detalle del Reclamo
-        </div>
-
-        <div class="card-body">
-
-            <div class="row">
-
-                <div class="col-md-4">
-                    <strong>Tipo:</strong><br>
-                    <?php echo $ot['tipo_reclamo'] ?? '-'; ?>
-                </div>
-
-                <div class="col-md-4">
-                    <strong>Prioridad:</strong><br>
-                    <?php echo $ot['prioridad'] == 1 ? 'Alta' : ($ot['prioridad'] == 2 ? 'Media' : 'Baja');
-                    ?>
-                </div>
-
-                <div class="col-md-4">
-                    <strong>Fecha:</strong><br>
-                    <?php echo !empty($ot['fecha_reclamo'])
-                        ? date("d/m/Y H:i", strtotime($ot['fecha_reclamo']))
-                        : '-'; ?>
-                </div>
-
-                <div class="col-12 mt-2">
-                    <strong>Descripción:</strong><br>
-                    <?php echo $ot['descripcion'] ?? '-'; ?>
-                </div>
-
+<div class="card mb-3 border-warning">
+    <div class="card-header bg-dark text-white">
+        <i class="fas fa-exclamation-triangle"></i> Detalle del reclamo
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <strong>Tipo:</strong><br>
+                <?php echo $ot['tipo_reclamo'] ?? '-'; ?>
             </div>
-
+            <div class="col-md-4">
+                <strong>Prioridad:</strong><br>
+                <?php echo $ot['prioridad'] == 1 ? 'Alta' : ($ot['prioridad'] == 2 ? 'Media' : 'Baja'); ?>
+            </div>
+            <div class="col-md-4">
+                <strong>Fecha:</strong><br>
+                <?php echo !empty($ot['fecha_reclamo'])
+                    ? date("d/m/Y H:i", strtotime($ot['fecha_reclamo']))
+                    : '-'; ?>
+            </div>
+            <div class="col-12 mt-2">
+                <strong>Descripcion:</strong><br>
+                <?php echo $ot['descripcion'] ?? '-'; ?>
+            </div>
         </div>
     </div>
-<?php
-endif; ?>
+</div>
 
-<!-- ================= FORM OT ================= -->
 <div class="card">
     <div class="card-header bg-dark text-white">
-        <i class="fas fa-edit"></i> Completar Orden de Trabajo
+        <i class="fas fa-edit"></i> Completar OT por reclamo
     </div>
-
     <div class="card-body">
-
         <form class="FormularioAjax"
             action="<?php echo SERVERURL; ?>ajax/ordenTrabajoAjax.php"
             method="POST"
             data-form="save">
-            <input type="hidden" name="trabajos_json" id="trabajos_json">
-            <input type="hidden" name="repuestos_json" id="repuestos_json">
-            <input type="hidden" name="accion" value="completar_ot">
+
             <input type="hidden" name="accion" value="completar_ot">
             <input type="hidden" name="idorden_trabajo" value="<?php echo $ot['idorden_trabajo']; ?>">
+            <input type="hidden" name="trabajos_json" id="trabajos_json">
+            <input type="hidden" name="repuestos_json" id="repuestos_json">
 
             <div class="row">
-
-
-
-                <!-- EQUIPO -->
                 <div class="col-md-4">
                     <label>Equipo</label>
                     <select name="idtrabajos" class="form-control" required>
                         <?php echo $insOT->listar_equipos_select(); ?>
                     </select>
                 </div>
-
-
-                <!-- TECNICO -->
                 <div class="col-md-4">
-                    <label>Técnico</label>
+                    <label>Tecnico</label>
                     <select name="tecnico_responsable" class="form-control" required disabled>
                         <option value="">Seleccione un equipo primero</option>
                     </select>
                 </div>
-
-                <!-- OBS -->
                 <div class="col-md-4">
-                    <label>Observación</label>
+                    <label>Observacion</label>
                     <input type="text" name="observacion" class="form-control"
                         value="<?php echo $ot['observacion'] ?? ''; ?>">
                 </div>
-
             </div>
 
             <hr>
 
-            <!-- TRABAJOS -->
             <h5><i class="fas fa-wrench"></i> Trabajos</h5>
-
             <div class="row mb-2">
                 <div class="col-md-8">
                     <input type="text" id="buscar_servicio" class="form-control" placeholder="Buscar servicio...">
@@ -173,23 +138,20 @@ endif; ?>
                     </button>
                 </div>
             </div>
-
-            <table class="table  table-dark table-sm">
+            <table class="table table-dark table-sm">
                 <thead>
                     <tr>
                         <th>Servicio realizado</th>
-                        <th width="80">Acción</th>
+                        <th width="80">Accion</th>
                     </tr>
                 </thead>
                 <tbody id="lista_trabajos"></tbody>
             </table>
 
-            <!-- REPUESTOS -->
             <h5><i class="fas fa-cogs"></i> Repuestos</h5>
-
             <div class="row mb-2">
                 <div class="col-md-5">
-                    <input type="text" id="buscar_articulo" class="form-control" placeholder="Buscar artículo...">
+                    <input type="text" id="buscar_articulo" class="form-control" placeholder="Buscar articulo...">
                     <div id="resultado_articulos" class="list-group"></div>
                 </div>
                 <div class="col-md-3">
@@ -201,13 +163,12 @@ endif; ?>
                     </button>
                 </div>
             </div>
-
-            <table class="table  table-dark table-sm">
+            <table class="table table-dark table-sm">
                 <thead>
                     <tr>
                         <th>Repuesto</th>
                         <th>Cant</th>
-                        <th width="80">Acción</th>
+                        <th width="80">Accion</th>
                     </tr>
                 </thead>
                 <tbody id="lista_repuestos"></tbody>
@@ -216,11 +177,8 @@ endif; ?>
             <button class="btn btn-success">
                 <i class="fas fa-save"></i> Guardar OT
             </button>
-
         </form>
-
     </div>
 </div>
 
-<?php
-include_once "./vistas/inc/ordenTrabajoJS.php"; ?>
+<?php include_once "./vistas/inc/ordenTrabajoJS.php"; ?>

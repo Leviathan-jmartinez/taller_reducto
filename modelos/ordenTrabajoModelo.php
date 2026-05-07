@@ -191,13 +191,14 @@ class ordenTrabajoModelo extends mainModel
             ot.fecha_inicio,
             ot.fecha_fin,
             ot.estado,
+            ot.origen,
             ot.observacion,
 
-            ps.subtotal,
-            ps.total_descuento,
-            ps.total_final,
+            COALESCE(ps.subtotal, tot.total_detalle, 0) AS subtotal,
+            COALESCE(ps.total_descuento, 0) AS total_descuento,
+            COALESCE(ps.total_final, tot.total_detalle, 0) AS total_final,
 
-            r.kilometraje,
+            COALESCE(r_normal.kilometraje, r_reclamo.kilometraje) AS kilometraje,
 
             c.nombre_cliente,
             c.apellido_cliente,
@@ -207,45 +208,59 @@ class ordenTrabajoModelo extends mainModel
             v.placa,
             ma.mod_descri AS modelo,
 
+            rs.tipo_reclamo,
+            rs.prioridad,
+            rs.fecha_reclamo,
+            rs.descripcion AS descripcion_reclamo,
+
             et.nombre AS nombre_equipo,
 
-            GROUP_CONCAT(
-                CONCAT(e.nombre,' ',e.apellido)
-                SEPARATOR ', '
+            (
+                SELECT GROUP_CONCAT(CONCAT(e.nombre,' ',e.apellido) SEPARATOR ', ')
+                FROM equipo_empleado ee
+                INNER JOIN empleados e ON e.idempleados = ee.idempleados
+                WHERE ee.id_equipo = et.id_equipo
+                  AND ee.estado = 1
+                  AND e.estado = 1
             ) AS miembros_equipo
 
         FROM orden_trabajo ot
 
-        INNER JOIN presupuesto_servicio ps 
+        LEFT JOIN presupuesto_servicio ps 
             ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
 
-        INNER JOIN diagnostico_servicio ds 
+        LEFT JOIN diagnostico_servicio ds 
             ON ds.id_diagnostico = ps.id_diagnostico
 
-        INNER JOIN recepcion_servicio r 
-            ON r.idrecepcion = ds.idrecepcion
+        LEFT JOIN recepcion_servicio r_normal
+            ON r_normal.idrecepcion = ds.idrecepcion
 
-        INNER JOIN clientes c 
-            ON c.id_cliente = r.id_cliente
+        LEFT JOIN reclamo_servicio rs
+            ON rs.idreclamo_servicio = ot.idreclamo_servicio
 
-        INNER JOIN vehiculos v 
-            ON v.id_vehiculo = r.id_vehiculo
+        LEFT JOIN recepcion_servicio r_reclamo
+            ON r_reclamo.idreclamo_servicio = rs.idreclamo_servicio
 
-        INNER JOIN modelo_auto ma 
+        LEFT JOIN clientes c 
+            ON c.id_cliente = COALESCE(r_normal.id_cliente, r_reclamo.id_cliente)
+
+        LEFT JOIN vehiculos v 
+            ON v.id_vehiculo = COALESCE(r_normal.id_vehiculo, r_reclamo.id_vehiculo)
+
+        LEFT JOIN modelo_auto ma 
             ON ma.id_modeloauto = v.id_modeloauto
+
+        LEFT JOIN (
+            SELECT idorden_trabajo, SUM(subtotal) AS total_detalle
+            FROM orden_trabajo_detalle
+            GROUP BY idorden_trabajo
+        ) tot
+            ON tot.idorden_trabajo = ot.idorden_trabajo
 
         LEFT JOIN equipo_trabajo et
             ON et.id_equipo = ot.idtrabajos
 
-        LEFT JOIN equipo_empleado ee
-            ON ee.id_equipo = et.id_equipo
-            AND ee.estado = 1
-
-        LEFT JOIN empleados e
-            ON e.idempleados = ee.idempleados
-
         WHERE ot.idorden_trabajo = :id
-        GROUP BY ot.idorden_trabajo
         LIMIT 1
         ");
 
@@ -288,25 +303,40 @@ class ordenTrabajoModelo extends mainModel
                 SELECT idorden_trabajo
                 FROM orden_trabajo
                 WHERE idpresupuesto_servicio = ?
+                  AND estado != 0
             ");
             $val->execute([$datos['idpresupuesto']]);
 
             if ($val->rowCount() > 0) {
+                $pdo->rollBack();
                 return ['msg' => 'Este presupuesto ya tiene una OT'];
             }
 
             $qSuc = $pdo->prepare("
-            SELECT r.id_sucursal
+            SELECT ps.estado, r.id_sucursal
             FROM presupuesto_servicio ps
             INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
             INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
             WHERE ps.idpresupuesto_servicio = ?
+            FOR UPDATE
         ");
             $qSuc->execute([$datos['idpresupuesto']]);
-            $idSucursal = $qSuc->fetchColumn();
+            $presupuesto = $qSuc->fetch(PDO::FETCH_ASSOC);
+            $idSucursal = $presupuesto['id_sucursal'] ?? null;
 
             if (!$idSucursal) {
+                $pdo->rollBack();
                 return ['msg' => 'No se pudo obtener sucursal'];
+            }
+
+            if ((int)$presupuesto['estado'] !== 2) {
+                $pdo->rollBack();
+                return ['msg' => 'El presupuesto no esta aprobado'];
+            }
+
+            if ((int)$idSucursal !== (int)$datos['idsucursal']) {
+                $pdo->rollBack();
+                return ['msg' => 'No puede generar OT de otra sucursal'];
             }
 
             /* CABECERA OT */
@@ -394,6 +424,7 @@ class ordenTrabajoModelo extends mainModel
             ot.idorden_trabajo,
             ot.fecha_inicio,
             ot.estado,
+            ot.origen,
             ps.idpresupuesto_servicio,
             u.usu_nombre,
             u.usu_apellido,
@@ -423,19 +454,35 @@ class ordenTrabajoModelo extends mainModel
             $pdo->beginTransaction();
 
             $q = $pdo->prepare("
-                SELECT estado, idpresupuesto_servicio
+                SELECT estado, idpresupuesto_servicio, idreclamo_servicio
                 FROM orden_trabajo
                 WHERE idorden_trabajo = ?
+                FOR UPDATE
             ");
             $q->execute([$idOT]);
             $ot = $q->fetch(PDO::FETCH_ASSOC);
 
             if (!$ot) {
+                $pdo->rollBack();
                 return ['msg' => 'OT no existe'];
             }
 
-            if (!in_array($ot['estado'], [1, 2])) {
+            if (!in_array((int)$ot['estado'], [1, 3], true)) {
+                $pdo->rollBack();
                 return ['msg' => 'No se puede anular esta OT'];
+            }
+
+            $qReg = $pdo->prepare("
+                SELECT COUNT(*)
+                FROM registro_servicio
+                WHERE idorden_trabajo = ?
+                  AND estado != 0
+            ");
+            $qReg->execute([$idOT]);
+
+            if ($qReg->fetchColumn() > 0) {
+                $pdo->rollBack();
+                return ['msg' => 'No se puede anular una OT con servicio registrado'];
             }
 
             // Anular OT
@@ -448,13 +495,24 @@ class ordenTrabajoModelo extends mainModel
             ");
             $upd->execute([$usuario, $idOT]);
 
-            // Volver presupuesto a aprobado
-            $updPres = $pdo->prepare("
-                UPDATE presupuesto_servicio
-                SET estado = 2
-                WHERE idpresupuesto_servicio = ?
-            ");
-            $updPres->execute([$ot['idpresupuesto_servicio']]);
+            if (!empty($ot['idpresupuesto_servicio'])) {
+                // Volver presupuesto a aprobado
+                $updPres = $pdo->prepare("
+                    UPDATE presupuesto_servicio
+                    SET estado = 2
+                    WHERE idpresupuesto_servicio = ?
+                ");
+                $updPres->execute([$ot['idpresupuesto_servicio']]);
+            }
+
+            if (!empty($ot['idreclamo_servicio'])) {
+                $updReclamo = $pdo->prepare("
+                    UPDATE reclamo_servicio
+                    SET estado = 1
+                    WHERE idreclamo_servicio = ?
+                ");
+                $updReclamo->execute([$ot['idreclamo_servicio']]);
+            }
 
             $pdo->commit();
             return true;
@@ -498,7 +556,7 @@ class ordenTrabajoModelo extends mainModel
                 origen,
                 idreclamo_servicio
             )
-            VALUES (?, ?, NULL, ?, ?, NOW(), 1, 'RECLAMO', ?)
+            VALUES (?, ?, NULL, ?, ?, NOW(), 3, 'RECLAMO', ?)
         ");
 
             $sql->execute([
@@ -531,6 +589,35 @@ class ordenTrabajoModelo extends mainModel
         try {
 
             $pdo->beginTransaction();
+
+            $qOT = $pdo->prepare("
+                SELECT estado, id_sucursal, origen
+                FROM orden_trabajo
+                WHERE idorden_trabajo = ?
+                FOR UPDATE
+            ");
+            $qOT->execute([$d['idorden_trabajo']]);
+            $ot = $qOT->fetch(PDO::FETCH_ASSOC);
+
+            if (!$ot) {
+                $pdo->rollBack();
+                return 'OT no existe';
+            }
+
+            if ((int)$ot['id_sucursal'] !== (int)$_SESSION['nick_sucursal']) {
+                $pdo->rollBack();
+                return 'No puede completar una OT de otra sucursal';
+            }
+
+            if (($ot['origen'] ?? '') !== 'RECLAMO') {
+                $pdo->rollBack();
+                return 'Solo las OT por reclamo requieren completar';
+            }
+
+            if ((int)$ot['estado'] !== 3) {
+                $pdo->rollBack();
+                return 'Solo se puede completar una OT pendiente por reclamo';
+            }
 
             /* BORRAR DETALLE */
             $pdo->prepare("
@@ -594,7 +681,7 @@ class ordenTrabajoModelo extends mainModel
                 tecnico_responsable = :tecnico,
                 idtrabajos = :equipo,
                 observacion = :obs,
-                estado = 2
+                estado = 1
             WHERE idorden_trabajo = :id
         ");
 

@@ -94,7 +94,9 @@ if (in_array($modulo, $modulos_con_fecha)) {
             "presupuesto_servicio" => [
                 "fecha_inicio" => "fecha_inicio_presupuesto_servicio",
                 "fecha_final"  => "fecha_final_presupuesto_servicio",
-                "extra" => []
+                "extra" => [
+                    "estado_presupuesto" => "estado_presupuesto"
+                ]
             ],
             "presupuesto" => [
                 "fecha_inicio" => "fecha_inicio_presupuesto",
@@ -140,7 +142,9 @@ if (in_array($modulo, $modulos_con_fecha)) {
         /* ===== ELIMINAR ===== */
         if (isset($_POST['eliminar_busqueda'])) {
             unset($_SESSION['estado_presupuesto']);
+            unset($_SESSION['filtro_presupuesto_servicio_activo']);
             unset($_SESSION['estado_ot']);
+            unset($_SESSION['filtro_orden_trabajo_activo']);
             unset($_SESSION['estado_regSer']);
             unset($_SESSION['estado_reclamo_servicio']);
             unset($_SESSION[$cfg['fecha_inicio']]);
@@ -203,6 +207,14 @@ if (in_array($modulo, $modulos_con_fecha)) {
         /* ===== CAMPOS EXTRA (solo diagnóstico) ===== */
         foreach ($cfg['extra'] as $postKey => $sessionKey) {
             $_SESSION[$sessionKey] = $_POST[$postKey] ?? '';
+        }
+
+        if ($modulo == "presupuesto_servicio") {
+            $_SESSION['filtro_presupuesto_servicio_activo'] = '1';
+        }
+
+        if ($modulo == "orden_trabajo") {
+            $_SESSION['filtro_orden_trabajo_activo'] = '1';
         }
 
         if (

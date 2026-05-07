@@ -39,8 +39,9 @@ $sucursales = $insSucursal->listar_sucursales_controlador();
                     <label>Estado</label>
                     <select name="estado" class="form-control">
                         <option value="">Todos</option>
-                        <option value="1">En proceso</option>
-                        <option value="2">Finalizada</option>
+                        <option value="1">Activa</option>
+                        <option value="2">Servicio registrado</option>
+                        <option value="3">Pendiente completar</option>
                         <option value="0">Anulado</option>
                     </select>
                 </div>

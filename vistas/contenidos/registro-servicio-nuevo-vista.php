@@ -178,7 +178,7 @@ if (!mainModel::tienePermiso('servicio.registro.crear')) {
         </fieldset>
 
         <div class="text-center">
-            <button class="btn btn-info btn-raised " id="btnRegistrar">
+            <button class="btn btn-info btn-raised " id="btnRegistrar" disabled>
                 <i class="fas fa-save"></i> &nbsp; Registrar Servicio
             </button>
             <button type="button" class="btn btn-secondary btn-raised"

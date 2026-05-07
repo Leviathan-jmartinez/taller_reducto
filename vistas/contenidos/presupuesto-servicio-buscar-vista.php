@@ -7,6 +7,8 @@ if (!mainModel::tienePermiso('servicio.presupuesto.ver')) {
 
 $fecha_inicio = $_SESSION['fecha_inicio_presupuesto_servicio'] ?? '';
 $fecha_final  = $_SESSION['fecha_final_presupuesto_servicio'] ?? '';
+$estado = $_SESSION['estado_presupuesto'] ?? '';
+$busqueda_activa = isset($_SESSION['filtro_presupuesto_servicio_activo']);
 ?>
 
 <div class="container-fluid">
@@ -62,9 +64,6 @@ $fecha_final  = $_SESSION['fecha_final_presupuesto_servicio'] ?? '';
                         value="<?php echo $fecha_final; ?>">
                 </div>
             </div>
-            <?php
-$estado = $_SESSION['estado_presupuesto'] ?? ''; ?>
-
             <select name="estado_presupuesto" class="form-control">
                 <option value="">Todos</option>
                 <option value="1" <?php if ($estado == "1") echo "selected"; ?>>Pendiente</option>
@@ -92,7 +91,7 @@ $estado = $_SESSION['estado_presupuesto'] ?? ''; ?>
 
 <!-- ================= INFO FILTRO ================= -->
 
-<?php if ($fecha_inicio || $fecha_final) { ?>
+<?php if ($busqueda_activa) { ?>
 
     <div class="container-fluid mt-3">
         <p class="text-center" style="font-size: 18px;">
@@ -105,6 +104,17 @@ $estado = $_SESSION['estado_presupuesto'] ?? ''; ?>
                 hasta <strong><?php echo $fecha_final; ?></strong>
             <?php
 } ?>
+            <?php if ($estado !== '') {
+                $estados = [
+                    '1' => 'Pendiente',
+                    '2' => 'Aprobado',
+                    '3' => 'OT generada',
+                    '4' => 'Facturado',
+                    '0' => 'Anulado'
+                ]; ?>
+                estado <strong><?php echo $estados[$estado] ?? $estado; ?></strong>
+            <?php
+} ?>
         </p>
     </div>
 
@@ -115,16 +125,20 @@ $estado = $_SESSION['estado_presupuesto'] ?? ''; ?>
 
 <div class="container-fluid mt-3">
     <?php
-require_once "./controladores/presupuestoServicioControlador.php";
-    $presupuesto = new presupuestoServicioControlador();
+    if ($busqueda_activa) {
+        require_once "./controladores/presupuestoServicioControlador.php";
+        $presupuesto = new presupuestoServicioControlador();
 
-    echo $presupuesto->paginador_presupuestoservi_controlador(
-        $pagina[1],
-        15,
-        $pagina[0],
-        $fecha_inicio,
-        $fecha_final
-    );
+        echo $presupuesto->paginador_presupuestoservi_controlador(
+            $pagina[1],
+            15,
+            $pagina[0],
+            $fecha_inicio,
+            $fecha_final
+        );
+    } else {
+        echo '<div class="alert alert-info text-center">Ingrese un criterio de busqueda para ver presupuestos.</div>';
+    }
     ?>
 </div>
 

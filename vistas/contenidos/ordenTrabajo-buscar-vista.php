@@ -27,12 +27,9 @@ if (!mainModel::tienePermiso('servicio.ot.ver')) {
 <?php
 $fecha_inicio = $_SESSION['fecha_inicio_orden_trabajo'] ?? '';
 $fecha_final  = $_SESSION['fecha_final_orden_trabajo'] ?? '';
-
+$estado = $_SESSION['estado_ot'] ?? '';
+$busqueda_activa = isset($_SESSION['filtro_orden_trabajo_activo']);
 ?>
-
-
-<?php
-$estado = $_SESSION['estado_ot'] ?? ''; ?>
 
 <!-- SIEMPRE MOSTRAR FORMULARIO -->
 <div class="container-fluid">
@@ -60,8 +57,9 @@ $estado = $_SESSION['estado_ot'] ?? ''; ?>
                     <label>Estado</label>
                     <select name="estado_ot" class="form-control">
                         <option value="">Todos</option>
-                        <option value="1" <?php if ($estado == "1") echo "selected"; ?>>En proceso</option>
-                        <option value="2" <?php if ($estado == "2") echo "selected"; ?>>Finalizado</option>
+                        <option value="1" <?php if ($estado == "1") echo "selected"; ?>>Activa</option>
+                        <option value="2" <?php if ($estado == "2") echo "selected"; ?>>Servicio registrado</option>
+                        <option value="3" <?php if ($estado == "3") echo "selected"; ?>>Pendiente completar</option>
                         <option value="0" <?php if ($estado === "0") echo "selected"; ?>>Anulada</option>
                     </select>
                 </div>
@@ -83,20 +81,55 @@ $estado = $_SESSION['estado_ot'] ?? ''; ?>
     </form>
 </div>
 
+<?php if ($busqueda_activa) { ?>
+    <div class="container-fluid mt-3">
+        <p class="text-center" style="font-size: 18px;">
+            Mostrando resultados
+            <?php if ($fecha_inicio) { ?>
+                desde <strong><?php echo $fecha_inicio; ?></strong>
+            <?php
+} ?>
+            <?php if ($fecha_final) { ?>
+                hasta <strong><?php echo $fecha_final; ?></strong>
+            <?php
+} ?>
+            <?php
+            $estados = [
+                '1' => 'Activa',
+                '2' => 'Servicio registrado',
+                '3' => 'Pendiente completar',
+                '0' => 'Anulada'
+            ];
+
+            if ($estado !== '') { ?>
+                estado <strong><?php echo $estados[$estado] ?? $estado; ?></strong>
+            <?php
+            } else { ?>
+                estado <strong>Todos</strong>
+            <?php
+            } ?>
+        </p>
+    </div>
+<?php
+} ?>
 
 <div class="container-fluid">
     <?php
-require_once "./controladores/ordenTrabajoControlador.php";
+    if ($busqueda_activa) {
+        require_once "./controladores/ordenTrabajoControlador.php";
 
-    $ot = new ordenTrabajoControlador();
+        $ot = new ordenTrabajoControlador();
 
-    echo $ot->listar_ot_controlador(
-        $pagina[1],
-        15,
-        $pagina[0],
-        $_SESSION['fecha_inicio_orden_trabajo'] ?? '',
-        $_SESSION['fecha_final_orden_trabajo'] ?? ''
-    );
+        echo $ot->listar_ot_controlador(
+            $pagina[1],
+            15,
+            $pagina[0],
+            $fecha_inicio,
+            $fecha_final
+        );
+    } else {
+        echo '<div class="alert alert-info text-center">Ingrese un criterio de busqueda para ver ordenes de trabajo.</div>';
+    }
     ?>
 </div>
 

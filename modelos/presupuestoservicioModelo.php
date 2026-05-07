@@ -13,7 +13,10 @@ class presupuestoservicioModelo extends mainModel
             c.id_cliente,
             CONCAT(c.nombre_cliente,' ',c.apellido_cliente) AS cliente,
             v.id_vehiculo,
-            v.placa AS vehiculo,
+            CONCAT(ma.mar_descri, ' ', m.mod_descri, ' ', v.placa) AS vehiculo,
+            ma.mar_descri AS marca,
+            m.mod_descri AS modelo,
+            v.placa,
             r.kilometraje,
             d.observaciones,
             r.id_sucursal
@@ -21,6 +24,8 @@ class presupuestoservicioModelo extends mainModel
         INNER JOIN recepcion_servicio r ON r.idrecepcion = d.idrecepcion
         INNER JOIN clientes c ON c.id_cliente = r.id_cliente
         INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
+        INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
+        INNER JOIN marcas ma ON ma.id_marcas = m.id_marcas
         WHERE d.id_diagnostico = ?
         LIMIT 1
         ");
@@ -339,6 +344,28 @@ class presupuestoservicioModelo extends mainModel
 
             $totalFinal = max(0, $subtotalServicios - $totalDescuento);
 
+            $totalesVista = [
+                'subtotal' => (float)($d['subtotal'] ?? -1),
+                'total_descuento' => (float)($d['total_descuento'] ?? -1),
+                'total_final' => (float)($d['total_final'] ?? -1)
+            ];
+
+            $totalesCalculados = [
+                'subtotal' => $subtotalServicios,
+                'total_descuento' => $totalDescuento,
+                'total_final' => $totalFinal
+            ];
+
+            foreach ($totalesCalculados as $campo => $valorCalculado) {
+                if (abs(round($totalesVista[$campo]) - round($valorCalculado)) > 1) {
+                    $pdo->rollBack();
+                    return [
+                        'error' => true,
+                        'msg' => 'Los totales del presupuesto cambiaron. Verifique nuevamente antes de guardar.'
+                    ];
+                }
+            }
+
             /* ================= INSERT PRESUPUESTO ================= */
             $sql = $pdo->prepare("
             INSERT INTO presupuesto_servicio
@@ -504,6 +531,7 @@ class presupuestoservicioModelo extends mainModel
             $pres = $sql->fetch(PDO::FETCH_ASSOC);
 
             if (!$pres) {
+                $pdo->rollBack();
                 return ['error' => true, 'msg' => 'No existe'];
             }
 
@@ -511,11 +539,12 @@ class presupuestoservicioModelo extends mainModel
             $sql = $pdo->prepare("
             SELECT COUNT(*) 
             FROM orden_trabajo
-            WHERE idpresupuesto_servicio = :id
+            WHERE idpresupuesto_servicio = :id and estado != 0
             ");
             $sql->execute([':id' => $id]);
 
             if ($sql->fetchColumn() > 0) {
+                $pdo->rollBack();
                 return ['error' => true, 'msg' => 'Tiene OT'];
             }
 

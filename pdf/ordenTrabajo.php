@@ -19,6 +19,9 @@ $data = $insOT->datos_ot_controlador($idOT);
 $cabecera = $data['cabecera'];  
 $detalle  = $data['detalle'];
 
+if (!$cabecera) {
+    exit('Orden de trabajo no encontrada');
+}
 
 ob_start();
 require "plantillas/orden_trabajo.php";

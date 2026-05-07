@@ -45,7 +45,7 @@ $articlesMAR = $ins_articulo->listar_marca_controlador();
         <?php if ($editando) { ?>
             <input type="hidden" name="articulo_id_up" value="<?php echo $id; ?>">
         <?php
-} ?>
+        } ?>
         <legend><i class="fas fa-info-circle"></i> &nbsp; Información básica</legend>
         <div class="row">
 
@@ -88,13 +88,13 @@ $articlesMAR = $ins_articulo->listar_marca_controlador();
                         name="<?php echo $editando ? 'tipo_iva_up' : 'tipo_iva_reg'; ?>">
                         <option value="" disabled selected>Seleccione IVA</option>
                         <?php
-foreach ($articlesIVA as $iva) { ?>
+                        foreach ($articlesIVA as $iva) { ?>
                             <option value="<?php echo $iva['idiva']; ?>"
                                 <?php if ($editando && $campos['idiva'] == $iva['idiva']) echo "selected"; ?>>
                                 <?php echo $iva['tipo_impuesto_descri']; ?>
                             </option>
                         <?php
-} ?>
+                        } ?>
                     </select>
                 </div>
             </div>
@@ -106,13 +106,13 @@ foreach ($articlesIVA as $iva) { ?>
                         name="<?php echo $editando ? 'um_up' : 'um_reg'; ?>">
                         <option value="" disabled selected>Seleccione unidad</option>
                         <?php
-foreach ($articlesUM as $um) { ?>
+                        foreach ($articlesUM as $um) { ?>
                             <option value="<?php echo $um['idunidad_medida']; ?>"
                                 <?php if ($editando && $campos['idunidad_medida'] == $um['idunidad_medida']) echo "selected"; ?>>
                                 <?php echo $um['medida']; ?>
                             </option>
                         <?php
-} ?>
+                        } ?>
                     </select>
                 </div>
             </div>
@@ -124,13 +124,13 @@ foreach ($articlesUM as $um) { ?>
                         name="<?php echo $editando ? 'categoria_up' : 'categoria_reg'; ?>">
                         <option value="" disabled selected>Seleccione categoría</option>
                         <?php
-foreach ($articlesCAT as $cat) { ?>
+                        foreach ($articlesCAT as $cat) { ?>
                             <option value="<?php echo $cat['id_categoria']; ?>"
                                 <?php if ($editando && $campos['id_categoria'] == $cat['id_categoria']) echo "selected"; ?>>
                                 <?php echo $cat['cat_descri']; ?>
                             </option>
                         <?php
-} ?>
+                        } ?>
                     </select>
                 </div>
             </div>
@@ -142,13 +142,13 @@ foreach ($articlesCAT as $cat) { ?>
                         name="<?php echo $editando ? 'marca_up' : 'marca_reg'; ?>">
                         <option value="" disabled selected>Seleccione marca</option>
                         <?php
-foreach ($articlesMAR as $marca) { ?>
+                        foreach ($articlesMAR as $marca) { ?>
                             <option value="<?php echo $marca['id_marcas']; ?>"
                                 <?php if ($editando && $campos['id_marcas'] == $marca['id_marcas']) echo "selected"; ?>>
                                 <?php echo $marca['mar_descri']; ?>
                             </option>
                         <?php
-} ?>
+                        } ?>
                     </select>
                 </div>
             </div>
@@ -192,7 +192,7 @@ foreach ($articlesMAR as $marca) { ?>
                     </div>
                 </div>
             <?php
-} ?>
+            } ?>
         </div>
 
         <p class="text-center mt-4">
@@ -207,7 +207,7 @@ foreach ($articlesMAR as $marca) { ?>
                     CANCELAR
                 </a>
             <?php
-} ?>
+            } ?>
         </p>
 
     </form>
@@ -251,7 +251,7 @@ foreach ($articlesMAR as $marca) { ?>
                         </button>
                     </form>
                 <?php
-} ?>
+                } ?>
             </div>
         </div>
 
@@ -263,7 +263,7 @@ foreach ($articlesMAR as $marca) { ?>
 
 <div class="container-fluid mt-4">
     <?php
-$pag_actual = 1;
+    $pag_actual = 1;
     if (isset($pagina[1]) && is_numeric($pagina[1])) {
         $pag_actual = (int)$pagina[1];
     }
