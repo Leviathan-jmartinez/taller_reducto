@@ -134,7 +134,7 @@ class reclamoServicioControlador extends reclamoServicioModelo
         return $html . '</tbody></table>';
     }
 
-    public function paginador_reclamo_controlador($pagina, $registros, $url, $busqueda = "")
+    public function listar_reclamo_controlador($pagina, $registros, $url, $busqueda = "")
     {
         $pagina    = (int) mainModel::limpiar_string($pagina);
         $registros = (int) mainModel::limpiar_string($registros);
@@ -155,6 +155,8 @@ class reclamoServicioControlador extends reclamoServicioModelo
 
         // 🔍 búsqueda
         if (!empty($busqueda)) {
+            $busqueda = mainModel::limpiar_string($busqueda);
+
             $filtros[] = [
                 "campo" => "(c.nombre_cliente LIKE '%$busqueda%' 
                      OR c.apellido_cliente LIKE '%$busqueda%' 

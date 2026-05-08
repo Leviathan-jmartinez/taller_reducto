@@ -7,6 +7,7 @@ if (!mainModel::tienePermiso('servicio.reclamo.ver')) {
 
 $busqueda = $_SESSION['busqueda_reclamo_servicio'] ?? '';
 $estado   = $_SESSION['estado_reclamo_servicio'] ?? '';
+$hayFiltro = $busqueda !== '' || $estado !== '';
 ?>
 
 <div class="container-fluid">
@@ -81,7 +82,7 @@ $estado   = $_SESSION['estado_reclamo_servicio'] ?? '';
 </div>
 
 <!-- 🧾 INDICADOR DE FILTRO -->
-<?php if ($busqueda || $estado !== '') { ?>
+<?php if ($hayFiltro) { ?>
     <div class="container-fluid mt-2">
         <p class="text-center" style="font-size:14px;">
             Filtro:
@@ -107,20 +108,26 @@ switch ($estado) {
 <!-- 📋 LISTADO -->
 <div class="container-fluid mt-3">
     <?php
-require_once "./controladores/reclamoServicioControlador.php";
+    if ($hayFiltro) {
+        require_once "./controladores/reclamoServicioControlador.php";
 
-    $reclamo = new reclamoServicioControlador();
+        $reclamo = new reclamoServicioControlador();
 
-    echo $reclamo->paginador_reclamo_controlador(
-        $pagina[1],
-        15,
-        $pagina[0],
-        $busqueda
-    );
+        echo $reclamo->listar_reclamo_controlador(
+            $pagina[1],
+            15,
+            $pagina[0],
+            $busqueda
+        );
+    } else {
+        echo '<div class="alert alert-info text-center">
+            Ingrese un criterio de busqueda para mostrar reclamos.
+        </div>';
+    }
     ?>
 </div>
 
-<!-- 🧠 JS LIMPIAR -->
+<!-- JS LIMPIAR -->
 <script>
 document.addEventListener('click', function(e) {
 

@@ -124,6 +124,7 @@ if (in_array($modulo, $modulos_con_fecha)) {
                 "fecha_inicio" => "fecha_inicio_reclamo_servicio",
                 "fecha_final"  => "fecha_final_reclamo_servicio",
                 "extra" => [
+                    "busqueda_inicial" => "busqueda_reclamo_servicio",
                     "estado_reclamo_servicio" => "estado_reclamo_servicio"
                 ]
             ],

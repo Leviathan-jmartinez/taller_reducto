@@ -212,11 +212,6 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
                 onclick="limpiarFormularioPresupuesto()">
                 <i class="fas fa-times"></i> &nbsp; Cancelar
             </button>
-
-            <a href="<?= SERVERURL; ?>presupuesto-servicio-lista/"
-                class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left"></i> Volver
-            </a>
         </div>
 
     </form>

@@ -244,7 +244,16 @@ class presupuestoControlador extends presupuestoModelo
     {
         session_start(['name' => 'STR']);
         $fecha_venc = $_POST['fecha_vencimientoPre'] ?? null;
-
+        if (!mainModel::tienePermiso('compra.presupuesto.crear')) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Acceso no autorizado!",
+                "Texto" => "No tienes permisos para realizar esta acción",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
         if ($_SESSION['tipo_presupuesto'] == "sin_pedido") {
             if (empty($_SESSION['Sdatos_proveedorPre'])) {
                 $alerta = [
@@ -661,6 +670,15 @@ class presupuestoControlador extends presupuestoModelo
     /**Controlador anular presupuesto */
     public function anular_presupuesto_controlador()
     {
+
+        if (!mainModel::tienePermiso('compra.presupuesto.anular')) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Advertencia!",
+                "Texto" => "No posee los permisos necesarios para realizar esta acción",
+                "Tipo" => "error"
+            ]);
+        }
         $id = mainModel::decryption($_POST['presupuesto_id_del']);
         $id = mainModel::limpiar_string($id);
         session_start(['name' => 'STR']);
@@ -688,14 +706,7 @@ class presupuestoControlador extends presupuestoModelo
         }
 
 
-        if (!mainModel::tienePermiso('compra.presupuesto.anular')) {
-            return json_encode([
-                "Alerta" => "simple",
-                "Titulo" => "Advertencia!",
-                "Texto" => "No posee los permisos necesarios para realizar esta acción",
-                "Tipo" => "error"
-            ]);
-        }
+
         $datos_presupuesto_del = [
             "updatedby" => $_SESSION['id_str'],
             "sucursal" => $_SESSION['nick_sucursal'],

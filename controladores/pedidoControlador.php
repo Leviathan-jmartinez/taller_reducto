@@ -112,6 +112,16 @@ class pedidoControlador extends pedidoModelo
     public function agregar_pedido_controlador()
     {
         session_start(['name' => 'STR']);
+        if (!mainModel::tienePermiso('compra.pedido.crear')) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Acceso no autorizado!",
+                "Texto" => "No tienes permisos para realizar esta acción",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
 
         if (empty($_SESSION['datos_articulo'])) {
             $alerta = [

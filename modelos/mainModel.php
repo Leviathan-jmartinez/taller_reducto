@@ -263,6 +263,12 @@ class mainModel
                     }
                     break;
 
+                case 'RAW':
+                    if (!empty($campo)) {
+                        $sql .= " AND $campo";
+                    }
+                    break;
+
                 case 'DATE_RANGE':
 
                     if (!empty($f['desde']) && !empty($f['hasta'])) {

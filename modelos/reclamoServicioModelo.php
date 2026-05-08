@@ -137,21 +137,23 @@ class reclamoServicioModelo extends mainModel
         $sql = "
         SELECT 
             rs.*,
-            rgs.idorden_trabajo,
-            c.nombre_cliente,
-            c.apellido_cliente,
-            v.placa,
-            m.mod_descri AS modelo
+            MAX(rgs.idorden_trabajo) AS idorden_trabajo,
+            MAX(COALESCE(c.nombre_cliente, '')) AS nombre_cliente,
+            MAX(COALESCE(c.apellido_cliente, '')) AS apellido_cliente,
+            MAX(COALESCE(v.placa, '')) AS placa,
+            MAX(COALESCE(m.mod_descri, '')) AS modelo
         FROM reclamo_servicio rs
         INNER JOIN registro_servicio rgs ON rgs.idregistro_servicio = rs.idregistro_servicio
         INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rgs.idorden_trabajo
-        INNER JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-        INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
-        INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
-        INNER JOIN clientes c ON c.id_cliente = r.id_cliente
-        INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
-        INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
+        LEFT JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+        LEFT JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
+        LEFT JOIN recepcion_servicio r_normal ON r_normal.idrecepcion = ds.idrecepcion
+        LEFT JOIN recepcion_servicio r_reclamo ON r_reclamo.idreclamo_servicio = ot.idreclamo_servicio
+        LEFT JOIN clientes c ON c.id_cliente = COALESCE(r_normal.id_cliente, r_reclamo.id_cliente)
+        LEFT JOIN vehiculos v ON v.id_vehiculo = COALESCE(r_normal.id_vehiculo, r_reclamo.id_vehiculo)
+        LEFT JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
         WHERE 1=1 $filtrosSQL
+        GROUP BY rs.idreclamo_servicio
         ORDER BY rs.idreclamo_servicio DESC
         LIMIT $inicio, $registros
         ";
@@ -159,16 +161,17 @@ class reclamoServicioModelo extends mainModel
         $datos = $pdo->query($sql)->fetchAll();
 
         $total = $pdo->query("
-        SELECT COUNT(*)
+        SELECT COUNT(DISTINCT rs.idreclamo_servicio)
         FROM reclamo_servicio rs
         INNER JOIN registro_servicio rgs ON rgs.idregistro_servicio = rs.idregistro_servicio
         INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rgs.idorden_trabajo
-        INNER JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-        INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
-        INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
-        INNER JOIN clientes c ON c.id_cliente = r.id_cliente
-        INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
-        INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
+        LEFT JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+        LEFT JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
+        LEFT JOIN recepcion_servicio r_normal ON r_normal.idrecepcion = ds.idrecepcion
+        LEFT JOIN recepcion_servicio r_reclamo ON r_reclamo.idreclamo_servicio = ot.idreclamo_servicio
+        LEFT JOIN clientes c ON c.id_cliente = COALESCE(r_normal.id_cliente, r_reclamo.id_cliente)
+        LEFT JOIN vehiculos v ON v.id_vehiculo = COALESCE(r_normal.id_vehiculo, r_reclamo.id_vehiculo)
+        LEFT JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
         WHERE 1=1 $filtrosSQL
         ")->fetchColumn();
 
