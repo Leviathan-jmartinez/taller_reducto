@@ -267,6 +267,17 @@
         cargarEquiposDiagnostico();
     });
 
+    document.addEventListener('ajax:limpiar', function(e) {
+        const modulo = e.detail ? e.detail.modulo : null;
+
+        if (modulo && modulo !== 'diagnostico') {
+            return;
+        }
+
+        limpiarDiagnostico();
+        cargarEquiposDiagnostico();
+    });
+
     document.addEventListener('click', function(e) {
         const itemRecepcion = e.target.closest('.diagnostico-autocomplete-item');
         if (itemRecepcion) {
@@ -365,12 +376,22 @@
         }
     }
 
-    function evaluarDiagnostico(id, esReclamo, esGarantia, requiereCobro, idReclamo) {
+    function evaluarDiagnostico(id, esReclamo, esGarantia, requiereCobro, idReclamo, esReclamoValido = 1) {
         esReclamo = parseInt(esReclamo) || 0;
         esGarantia = parseInt(esGarantia) || 0;
         requiereCobro = parseInt(requiereCobro) || 0;
+        esReclamoValido = parseInt(esReclamoValido) || 0;
 
         if (esReclamo === 1) {
+            if (esReclamoValido !== 1) {
+                Swal.fire({
+                    title: "Reclamo no valido",
+                    text: "El diagnostico no habilita presupuesto ni OT por reclamo",
+                    type: "warning"
+                });
+                return;
+            }
+
             if (esGarantia === 1 && requiereCobro === 0) {
                 Swal.fire({
                     title: "Reclamo en garantia",

@@ -1,10 +1,6 @@
 <script>
     const SERVERURL = "<?php echo SERVERURL; ?>";
 
-    function abrirModalRegistro() {
-        $('#modalRegistro').modal('show');
-    }
-
     function buscarRegistro(texto) {
 
         let data = new FormData();
@@ -45,7 +41,6 @@
 
         document.getElementById('trabajos_realizados').innerHTML = html;
 
-        $('#modalRegistro').modal('hide');
     }
 
     function limpiarReclamoServicio() {
@@ -58,5 +53,8 @@
         document.getElementById('vehiculo').value = '';
         document.getElementById('trabajos_realizados').innerHTML = '';
         document.getElementById('resultado_registro').innerHTML = '';
+
+        const buscarRegistroInput = document.getElementById('buscar_registro');
+        if (buscarRegistroInput) buscarRegistroInput.value = '';
     }
 </script>

@@ -241,6 +241,13 @@ class diagnosticoModelo extends mainModel
         INNER JOIN marcas ma ON ma.id_marcas = m.id_marcas
         INNER JOIN usuarios u ON u.id_usuario = d.id_usuario
         INNER JOIN equipo_trabajo et ON et.id_equipo = d.id_equipo
+        LEFT JOIN (
+            SELECT idreclamo_servicio, MAX(idorden_trabajo) AS idorden_trabajo
+            FROM orden_trabajo
+            WHERE estado != 0
+            GROUP BY idreclamo_servicio
+        ) ot_reclamo
+            ON ot_reclamo.idreclamo_servicio = rs.idreclamo_servicio
         WHERE rs.id_sucursal = '{$_SESSION['nick_sucursal']}'
         $filtrosSQL
         ";
@@ -258,6 +265,7 @@ class diagnosticoModelo extends mainModel
 
             rs.origen,
             rs.idreclamo_servicio,
+            ot_reclamo.idorden_trabajo AS id_ot_reclamo,
 
             CONCAT(c.nombre_cliente,' ',c.apellido_cliente) AS cliente,
             v.placa,

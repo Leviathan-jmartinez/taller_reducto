@@ -30,6 +30,7 @@ if (!mainModel::tienePermiso('servicio.registro.ver')) {
 $fecha_inicio = $_SESSION['fecha_inicio_registro_servicio'] ?? '';
 $fecha_final  = $_SESSION['fecha_final_registro_servicio'] ?? '';
 $estado = $_SESSION['estado_regSer'] ?? '';
+$busqueda_activa = isset($_SESSION['filtro_registro_servicio_activo']);
 ?>
 
 <!-- 🔎 FORMULARIO SIEMPRE VISIBLE -->
@@ -89,17 +90,21 @@ $estado = $_SESSION['estado_regSer'] ?? '';
 
 <div class="container-fluid mt-3">
     <?php
-require_once "./controladores/registroServicioControlador.php";
+    if ($busqueda_activa) {
+        require_once "./controladores/registroServicioControlador.php";
 
-    $reg = new registroServicioControlador();
+        $reg = new registroServicioControlador();
 
-    echo $reg->listar_registro_servicio_controlador(
-        $pagina[1],
-        15,
-        $pagina[0],
-        $fecha_inicio,
-        $fecha_final
-    );
+        echo $reg->listar_registro_servicio_controlador(
+            $pagina[1],
+            15,
+            $pagina[0],
+            $fecha_inicio,
+            $fecha_final
+        );
+    } else {
+        echo '<div class="alert alert-info text-center">Ingrese filtros y presione Buscar para ver registros.</div>';
+    }
     ?>
 </div>
 

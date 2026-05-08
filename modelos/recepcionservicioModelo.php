@@ -482,6 +482,28 @@ class recepcionservicioModelo extends mainModel
             /* obtener ID antes del commit */
             $id_recepcion = $pdo->lastInsertId();
 
+            if ($origen === 'RECLAMO' && !empty($idreclamo)) {
+                $updReclamo = $pdo->prepare("
+                    UPDATE reclamo_servicio
+                    SET estado = 2
+                    WHERE idreclamo_servicio = :reclamo
+                      AND id_sucursal = :sucursal
+                      AND estado = 1
+                ");
+                $updReclamo->execute([
+                    ':reclamo' => $idreclamo,
+                    ':sucursal' => $d['id_sucursal']
+                ]);
+
+                if ($updReclamo->rowCount() < 1) {
+                    $pdo->rollBack();
+                    return [
+                        "error" => true,
+                        "msg" => "El reclamo no esta disponible para recepcion"
+                    ];
+                }
+            }
+
             $pdo->commit();
 
             /* devolver ID */
@@ -574,16 +596,58 @@ class recepcionservicioModelo extends mainModel
 
     protected static function anular_recepcion_modelo($id, $sucursal)
     {
-        $sql = mainModel::conectar()->prepare("
-        UPDATE recepcion_servicio
-        SET estado = 0,
-            fecha_actualizacion = NOW()
-        WHERE idrecepcion = :id
-          AND estado = 1 AND id_sucursal = :sucursal ");
+        $pdo = mainModel::conectar();
 
-        $sql->bindParam(":id", $id, PDO::PARAM_INT);
-        $sql->bindParam(":sucursal", $sucursal, PDO::PARAM_INT);
+        try {
+            $pdo->beginTransaction();
 
-        return $sql->execute();
+            $q = $pdo->prepare("
+                SELECT idreclamo_servicio
+                FROM recepcion_servicio
+                WHERE idrecepcion = :id
+                  AND estado = 1
+                  AND id_sucursal = :sucursal
+                FOR UPDATE
+            ");
+            $q->execute([
+                ":id" => $id,
+                ":sucursal" => $sucursal
+            ]);
+            $recepcion = $q->fetch(PDO::FETCH_ASSOC);
+
+            if (!$recepcion) {
+                $pdo->rollBack();
+                return false;
+            }
+
+            $sql = $pdo->prepare("
+                UPDATE recepcion_servicio
+                SET estado = 0,
+                    fecha_actualizacion = NOW()
+                WHERE idrecepcion = :id
+                  AND estado = 1
+                  AND id_sucursal = :sucursal
+            ");
+            $sql->execute([
+                ":id" => $id,
+                ":sucursal" => $sucursal
+            ]);
+
+            if (!empty($recepcion['idreclamo_servicio'])) {
+                $updReclamo = $pdo->prepare("
+                    UPDATE reclamo_servicio
+                    SET estado = 1
+                    WHERE idreclamo_servicio = ?
+                      AND estado = 2
+                ");
+                $updReclamo->execute([$recepcion['idreclamo_servicio']]);
+            }
+
+            $pdo->commit();
+            return true;
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            return false;
+        }
     }
 }

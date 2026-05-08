@@ -62,7 +62,19 @@ if (!mainModel::tienePermiso('servicio.reclamo.crear')) {
 
         <!-- ================= BUSCAR REGISTRO ================= -->
         <fieldset class="border p-3 mb-3">
-            <legend class="w-auto px-2">Servicio realizado</legend>
+            <legend class="w-auto px-2">Seleccionar servicio realizado</legend>
+
+            <div class="row mb-3">
+                <div class="col-md-8">
+                    <input type="text"
+                        id="buscar_registro"
+                        class="form-control"
+                        placeholder="Buscar por cliente, vehículo, registro u OT"
+                        onkeyup="buscarRegistro(this.value)">
+                </div>
+            </div>
+
+            <div id="resultado_registro" class="mb-3"></div>
 
             <div class="row">
                 <div class="col-md-4">
@@ -91,13 +103,6 @@ if (!mainModel::tienePermiso('servicio.reclamo.crear')) {
                 </div>
             </div>
 
-            <div class="text-right mt-2">
-                <button type="button"
-                    class="btn btn-info"
-                    onclick="abrirModalRegistro()">
-                    Buscar servicio
-                </button>
-            </div>
         </fieldset>
 
         <!-- ================= RECLAMO ================= -->
@@ -164,28 +169,6 @@ if (!mainModel::tienePermiso('servicio.reclamo.crear')) {
     </form>
 </div>
 
-<!-- ================= MODAL BUSCAR REGISTRO ================= -->
-<div class="modal fade" id="modalRegistro">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
 
-            <div class="modal-header">
-                <h5 class="modal-title">Seleccionar servicio</h5>
-                <button type="button" class="close"
-                    data-dismiss="modal">&times;</button>
-            </div>
-
-            <div class="modal-body">
-                <input type="text"
-                    class="form-control mb-2"
-                    placeholder="Buscar por cliente o vehículo"
-                    onkeyup="buscarRegistro(this.value)">
-
-                <div id="resultado_registro"></div>
-            </div>
-
-        </div>
-    </div>
-</div>
 
 <?php include_once "./vistas/inc/reclamoServicioJS.php"; ?>

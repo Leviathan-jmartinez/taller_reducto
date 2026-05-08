@@ -146,6 +146,7 @@ if (in_array($modulo, $modulos_con_fecha)) {
             unset($_SESSION['estado_ot']);
             unset($_SESSION['filtro_orden_trabajo_activo']);
             unset($_SESSION['estado_regSer']);
+            unset($_SESSION['filtro_registro_servicio_activo']);
             unset($_SESSION['estado_reclamo_servicio']);
             unset($_SESSION[$cfg['fecha_inicio']]);
             unset($_SESSION[$cfg['fecha_final']]);
@@ -215,6 +216,10 @@ if (in_array($modulo, $modulos_con_fecha)) {
 
         if ($modulo == "orden_trabajo") {
             $_SESSION['filtro_orden_trabajo_activo'] = '1';
+        }
+
+        if ($modulo == "registro_servicio") {
+            $_SESSION['filtro_registro_servicio_activo'] = '1';
         }
 
         if (

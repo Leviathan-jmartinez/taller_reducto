@@ -12,7 +12,14 @@ class registroServicioControlador extends registroServicioModelo
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start(['name' => 'STR']);
         }
-
+        if (!mainModel::tienePermiso('servicio.registro.crear')) {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Acceso denegado',
+                'Texto'  => 'No tiene permiso para registrar servicios',
+                'Tipo'   => 'error'
+            ]);
+        }
         if (
             empty($_POST['idorden_trabajo']) ||
             empty($_POST['fecha_ejecucion'])

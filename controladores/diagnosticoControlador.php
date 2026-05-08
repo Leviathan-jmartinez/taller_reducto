@@ -387,6 +387,11 @@ class diagnosticoControlador extends diagnosticoModelo
                     ? '<span class="badge badge-warning">Reclamo</span>'
                     : '<span class="badge badge-secondary">Normal</span>';
 
+                $esReclamo = ($rows['origen'] ?? '') === 'RECLAMO';
+                $tieneOTReclamo = $esReclamo && !empty($rows['id_ot_reclamo']);
+                $reclamoValido = (int)($rows['es_reclamo_valido'] ?? 1) === 1;
+                $puedeProcesarDiagnostico = (int)$rows['estado'] !== 0 && $esReclamo && $reclamoValido && !$tieneOTReclamo;
+
                 $tabla .= '<tr class="text-center">
             <td>' . (int) $rows['id_diagnostico'] . '</td>
             <td>' . (int) $rows['idrecepcion'] . '</td>
@@ -405,17 +410,22 @@ class diagnosticoControlador extends diagnosticoModelo
                     <button type="button" class="btn btn-secondary btn-sm mr-1 btn-ver-diagnostico"
                         data-id="' . (int) $rows['id_diagnostico'] . '">
                         <i class="fas fa-eye"></i>
-                    </button>
+                    </button>';
+
+                if ($puedeProcesarDiagnostico) {
+                    $tabla .= '
                     <button class="btn btn-info btn-sm mr-1"
                     onclick="evaluarDiagnostico(
                         ' . $rows['id_diagnostico'] . ',
-                        ' . ($rows['origen'] == 'RECLAMO' ? 1 : 0) . ',
+                        ' . ($esReclamo ? 1 : 0) . ',
                         ' . ($rows['es_garantia'] ?? 0) . ',
                         ' . ($rows['requiere_cobro'] ?? 0) . ',
-                        ' . ($rows['idreclamo_servicio'] !== null ? $rows['idreclamo_servicio'] : 'null') . '
+                        ' . ($rows['idreclamo_servicio'] !== null ? $rows['idreclamo_servicio'] : 'null') . ',
+                        ' . ($reclamoValido ? 1 : 0) . '
                     )">
                         <i class="fas fa-cogs"></i>
                     </button>';
+                }
 
                 /* ================= BOTÓN ANULAR ================= */
 

@@ -512,6 +512,15 @@ class ordenTrabajoModelo extends mainModel
                     WHERE idreclamo_servicio = ?
                 ");
                 $updReclamo->execute([$ot['idreclamo_servicio']]);
+
+                $updDiagnostico = $pdo->prepare("
+                    UPDATE diagnostico_servicio d
+                    INNER JOIN recepcion_servicio r ON r.idrecepcion = d.idrecepcion
+                    SET d.estado = 1
+                    WHERE r.idreclamo_servicio = ?
+                      AND d.estado != 0
+                ");
+                $updDiagnostico->execute([$ot['idreclamo_servicio']]);
             }
 
             $pdo->commit();
@@ -530,6 +539,30 @@ class ordenTrabajoModelo extends mainModel
             $pdo->beginTransaction();
 
             /* 🔒 VALIDAR QUE NO EXISTA OT */
+            $qReclamo = $pdo->prepare("
+                SELECT estado, id_sucursal
+                FROM reclamo_servicio
+                WHERE idreclamo_servicio = ?
+                FOR UPDATE
+            ");
+            $qReclamo->execute([$idReclamo]);
+            $reclamo = $qReclamo->fetch(PDO::FETCH_ASSOC);
+
+            if (!$reclamo) {
+                $pdo->rollBack();
+                return 'Reclamo no existe';
+            }
+
+            if ((int)$reclamo['id_sucursal'] !== (int)$sucursal) {
+                $pdo->rollBack();
+                return 'No puede generar OT de un reclamo de otra sucursal';
+            }
+
+            if ((int)$reclamo['estado'] !== 2) {
+                $pdo->rollBack();
+                return 'El reclamo no esta en proceso';
+            }
+
             $check = $pdo->prepare("
             SELECT idorden_trabajo 
             FROM orden_trabajo
@@ -539,6 +572,7 @@ class ordenTrabajoModelo extends mainModel
             $check->execute([$idReclamo]);
 
             if ($check->rowCount() > 0) {
+                $pdo->rollBack();
                 return false; // ya existe
             }
 
@@ -572,6 +606,14 @@ class ordenTrabajoModelo extends mainModel
             UPDATE reclamo_servicio
             SET estado = 2
             WHERE idreclamo_servicio = ?
+        ")->execute([$idReclamo]);
+
+            $pdo->prepare("
+            UPDATE diagnostico_servicio d
+            INNER JOIN recepcion_servicio r ON r.idrecepcion = d.idrecepcion
+            SET d.estado = 3
+            WHERE r.idreclamo_servicio = ?
+              AND d.estado != 0
         ")->execute([$idReclamo]);
 
             $pdo->commit();

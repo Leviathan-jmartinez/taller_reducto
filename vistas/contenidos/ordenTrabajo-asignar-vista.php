@@ -5,6 +5,11 @@ if (!isset($pagina) || !is_array($pagina)) {
 
 require_once "./controladores/ordenTrabajoControlador.php";
 
+if (!mainModel::tienePermiso('servicio.ot.asignar_tecnico')) {
+    echo '<div class="alert alert-danger">No posee permisos para completar OT por reclamo.</div>';
+    return;
+}
+
 $insOT = new ordenTrabajoControlador();
 $id = $_GET['id'] ?? ($pagina[1] ?? 0);
 $ot = $insOT->obtener_ot_controlador($id);
@@ -35,6 +40,10 @@ if (($ot['origen'] ?? '') !== 'RECLAMO' || (int)$ot['estado'] !== 3) {
         <div>
             <span class="badge bg-info">Pendiente completar</span>
             <span class="badge bg-danger">Reclamo</span>
+            <a href="<?php echo SERVERURL; ?>ordenTrabajo-buscar/"
+                class="btn btn-secondary btn-sm ml-2">
+                <i class="fas fa-arrow-left"></i> Volver al listado
+            </a>
         </div>
     </div>
 </div>

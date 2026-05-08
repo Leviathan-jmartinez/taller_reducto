@@ -177,6 +177,7 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
         action="<?php echo SERVERURL; ?>ajax/diagnosticoAjax.php"
         method="POST"
         data-form="save"
+        data-modulo="diagnostico"
         autocomplete="off">
 
         <input type="hidden" name="accion" value="guardar_diagnostico">

@@ -10,7 +10,14 @@ class reclamoServicioControlador extends reclamoServicioModelo
     public function registrar_reclamo_controlador()
     {
         session_start(['name' => 'STR']);
-
+        if (!mainModel::tienePermiso('servicio.reclamo.crear')) {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Advertencia',
+                'Texto'  => 'No posee los permisos necesarios para realizar esta acción',
+                'Tipo'   => 'error'
+            ]);
+        }
         if (
             empty($_POST['idregistro_servicio']) ||
             empty($_POST['descripcion'])
@@ -151,7 +158,10 @@ class reclamoServicioControlador extends reclamoServicioModelo
             $filtros[] = [
                 "campo" => "(c.nombre_cliente LIKE '%$busqueda%' 
                      OR c.apellido_cliente LIKE '%$busqueda%' 
-                     OR v.placa LIKE '%$busqueda%')",
+                     OR v.placa LIKE '%$busqueda%'
+                     OR rs.idreclamo_servicio LIKE '%$busqueda%'
+                     OR rgs.idregistro_servicio LIKE '%$busqueda%'
+                     OR ot.idorden_trabajo LIKE '%$busqueda%')",
                 "tipo"  => "RAW"
             ];
         }
@@ -184,7 +194,7 @@ class reclamoServicioControlador extends reclamoServicioModelo
         <table class="table table-sm table-dark">
         <thead class="text-center">
             <tr>
-                <th>#</th>
+                <th>Reclamo</th>
                 <th>Cliente</th>
                 <th>Vehículo</th>
                 <th>Fecha</th>
@@ -207,6 +217,12 @@ class reclamoServicioControlador extends reclamoServicioModelo
                     case 1:
                         $estado = '<span class="badge badge-primary">Activo</span>';
                         break;
+                    case 2:
+                        $estado = '<span class="badge badge-warning">En proceso</span>';
+                        break;
+                    case 3:
+                        $estado = '<span class="badge badge-success">Resuelto</span>';
+                        break;
                     case 0:
                         $estado = '<span class="badge badge-secondary">Anulado</span>';
                         break;
@@ -214,37 +230,51 @@ class reclamoServicioControlador extends reclamoServicioModelo
                         $estado = '<span class="badge badge-default">?</span>';
                 }
 
+                $cliente = htmlspecialchars(trim(($r['nombre_cliente'] ?? '') . ' ' . ($r['apellido_cliente'] ?? '')), ENT_QUOTES, 'UTF-8');
+                $vehiculo = htmlspecialchars(trim(($r['modelo'] ?? '') . ' ' . ($r['placa'] ?? '')), ENT_QUOTES, 'UTF-8');
+                $descripcion = htmlspecialchars($r['descripcion'] ?? '-', ENT_QUOTES, 'UTF-8');
+
                 $tabla .= '
             <tr class="text-center">
-                <td>' . $contador . '</td>
-                <td>' . $r['nombre_cliente'] . ' ' . $r['apellido_cliente'] . '</td>
-                <td>' . $r['placa'] . '</td>
+                <td><strong>#' . (int)$r['idreclamo_servicio'] . '</strong><br><small class="text-muted">Fila ' . $contador . '</small></td>
+                <td>' . $cliente . '</td>
+                <td>' . ($vehiculo !== '' ? $vehiculo : '-') . '</td>
                 <td>' . date("d-m-Y H:i", strtotime($r['fecha_reclamo'])) . '</td>
-                <td>' . $r['descripcion'] . '</td>
+                <td class="text-left" style="min-width:260px; white-space:normal;">' . $descripcion . '</td>
                 <td>' . $estado . '</td>';
 
                 if (mainModel::tienePermiso('servicio.reclamo.anular')) {
 
-                    if ($r['estado'] == 1) {
+                    if ((int)$r['estado'] === 1) {
                         $tabla .= '
                     <td>
                         <form class="FormularioAjax"
                             action="' . SERVERURL . 'ajax/reclamoServicioAjax.php"
                             method="POST"
-                            data-form="delete">
+                            data-form="delete"
+                            autocomplete="off">
 
                             <input type="hidden" name="accion" value="anular_reclamo">
                             <input type="hidden" name="id"
                                 value="' . mainModel::encryption($r['idreclamo_servicio']) . '">
 
                             <button type="submit"
-                                class="btn btn-danger btn-sm">
+                                class="btn btn-danger btn-sm"
+                                title="Anular reclamo">
                                 <i class="fas fa-ban"></i>
                             </button>
                         </form>
                     </td>';
                     } else {
-                        $tabla .= '<td>-</td>';
+                        $tabla .= '
+                    <td>
+                        <button type="button"
+                            class="btn btn-secondary btn-sm"
+                            disabled
+                            title="Solo se puede anular un reclamo activo sin proceso iniciado">
+                            <i class="fas fa-ban"></i>
+                        </button>
+                    </td>';
                     }
                 }
 
@@ -253,9 +283,10 @@ class reclamoServicioControlador extends reclamoServicioModelo
             }
         } else {
 
+            $colspan = mainModel::tienePermiso('servicio.reclamo.anular') ? 7 : 6;
             $tabla .= '
         <tr>
-            <td colspan="7" class="text-center">Sin registros</td>
+            <td colspan="' . $colspan . '" class="text-center">Sin registros</td>
         </tr>';
         }
 
@@ -293,9 +324,14 @@ class reclamoServicioControlador extends reclamoServicioModelo
         $id = mainModel::decryption($_POST['id']);
         $id = mainModel::limpiar_string($id);
 
-        $check = mainModel::ejecutar_consulta_simple(
-            "SELECT estado FROM reclamo_servicio WHERE idreclamo_servicio = '$id' LIMIT 1"
-        );
+        $check = mainModel::conectar()->prepare("
+            SELECT estado
+            FROM reclamo_servicio
+            WHERE idreclamo_servicio = ?
+              AND id_sucursal = ?
+            LIMIT 1
+        ");
+        $check->execute([$id, $_SESSION['nick_sucursal']]);
 
         if ($check->rowCount() <= 0) {
             return json_encode([
@@ -308,7 +344,7 @@ class reclamoServicioControlador extends reclamoServicioModelo
 
         $row = $check->fetch();
 
-        if ($row['estado'] == 0) {
+        if ((int)$row['estado'] === 0) {
             return json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Advertencia",
@@ -317,9 +353,18 @@ class reclamoServicioControlador extends reclamoServicioModelo
             ]);
         }
 
+        if ((int)$row['estado'] !== 1) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Advertencia",
+                "Texto" => "Solo se puede anular un reclamo activo sin proceso iniciado",
+                "Tipo" => "warning"
+            ]);
+        }
+
         $ok = self::anular_reclamo_modelo($id, $_SESSION['id_str']);
 
-        if ($ok) {
+        if ($ok === true) {
             return json_encode([
                 "Alerta" => "recargar",
                 "Titulo" => "Reclamo",
@@ -331,13 +376,17 @@ class reclamoServicioControlador extends reclamoServicioModelo
         return json_encode([
             "Alerta" => "simple",
             "Titulo" => "Error",
-            "Texto" => "No se pudo anular el reclamo",
+            "Texto" => is_array($ok) ? ($ok['msg'] ?? "No se pudo anular el reclamo") : "No se pudo anular el reclamo",
             "Tipo" => "error"
         ]);
     }
 
     public function obtener_reclamo_para_recepcion_controlador()
     {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start(['name' => 'STR']);
+        }
+
         $id = mainModel::decryption($_POST['id']);
 
         $sql = mainModel::conectar()->prepare("
@@ -358,15 +407,21 @@ class reclamoServicioControlador extends reclamoServicioModelo
         INNER JOIN modelo_auto mo ON mo.id_modeloauto = v.id_modeloauto
         INNER JOIN marcas m ON m.id_marcas = mo.id_marcas
         WHERE rs.idreclamo_servicio = ?
+          AND rs.id_sucursal = ?
+          AND rs.estado = 1
         LIMIT 1
         ");
 
-        $sql->execute([$id]);
+        $sql->execute([$id, $_SESSION['nick_sucursal']]);
         return $sql->fetch(PDO::FETCH_ASSOC);
     }
 
     public function buscar_reclamo_recepcion_controlador()
     {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start(['name' => 'STR']);
+        }
+
         $texto = trim($_POST['buscar'] ?? '');
 
         $sql = mainModel::conectar()->prepare("
@@ -396,6 +451,7 @@ class reclamoServicioControlador extends reclamoServicioModelo
                 ON m.id_modeloauto = v.id_modeloauto
 
             WHERE rs.estado = 1
+            AND rs.id_sucursal = :sucursal
             AND (
                 c.nombre_cliente LIKE :b
                 OR c.apellido_cliente LIKE :b
@@ -406,6 +462,7 @@ class reclamoServicioControlador extends reclamoServicioModelo
             ");
 
         $sql->bindValue(':b', "%$texto%");
+        $sql->bindValue(':sucursal', $_SESSION['nick_sucursal'], PDO::PARAM_INT);
         $sql->execute();
 
         $datos = $sql->fetchAll(PDO::FETCH_ASSOC);

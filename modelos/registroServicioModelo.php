@@ -158,6 +158,18 @@ class registroServicioModelo extends mainModel
                 WHERE idrecepcion = ?
             ");
                 $updRec->execute([$idRecepcion]);
+
+                $updReclamo = $pdo->prepare("
+                    UPDATE reclamo_servicio rc
+                    INNER JOIN recepcion_servicio r
+                        ON r.idreclamo_servicio = rc.idreclamo_servicio
+                    SET rc.estado = 3,
+                        rc.fecha_cierre = NOW(),
+                        rc.observacion_cierre = 'Servicio registrado'
+                    WHERE r.idrecepcion = ?
+                      AND rc.estado != 0
+                ");
+                $updReclamo->execute([$idRecepcion]);
             }
 
             $pdo->commit();
@@ -238,19 +250,20 @@ class registroServicioModelo extends mainModel
         LEFT JOIN registro_servicio rs 
             ON rs.idorden_trabajo = ot.idorden_trabajo
             AND rs.estado = 1
-        INNER JOIN orden_trabajo_detalle otd
-            ON otd.idorden_trabajo = ot.idorden_trabajo
-
         WHERE ot.estado = 1 
         AND ot.id_sucursal = :sucursal
         AND rs.idorden_trabajo IS NULL 
+        AND EXISTS (
+            SELECT 1
+            FROM orden_trabajo_detalle otd
+            WHERE otd.idorden_trabajo = ot.idorden_trabajo
+        )
         AND (
                 c.nombre_cliente LIKE :b
             OR c.apellido_cliente LIKE :b
             OR v.placa LIKE :b
             OR ot.idorden_trabajo LIKE :b
         )
-        GROUP BY ot.idorden_trabajo
         ORDER BY ot.idorden_trabajo DESC
         LIMIT 20");
 
@@ -615,6 +628,29 @@ class registroServicioModelo extends mainModel
                 )
             ");
             $updRec->execute([$reg['idorden_trabajo']]);
+
+            $updReclamo = $pdo->prepare("
+                UPDATE reclamo_servicio rc
+                INNER JOIN recepcion_servicio r
+                    ON r.idreclamo_servicio = rc.idreclamo_servicio
+                INNER JOIN orden_trabajo ot
+                    ON (
+                        ot.idreclamo_servicio = rc.idreclamo_servicio
+                        OR ot.idpresupuesto_servicio IN (
+                            SELECT ps.idpresupuesto_servicio
+                            FROM presupuesto_servicio ps
+                            INNER JOIN diagnostico_servicio ds
+                                ON ds.id_diagnostico = ps.id_diagnostico
+                            WHERE ds.idrecepcion = r.idrecepcion
+                        )
+                    )
+                SET rc.estado = 2,
+                    rc.fecha_cierre = NULL,
+                    rc.observacion_cierre = NULL
+                WHERE ot.idorden_trabajo = ?
+                  AND rc.estado = 3
+            ");
+            $updReclamo->execute([$reg['idorden_trabajo']]);
 
 
             $pdo->commit();

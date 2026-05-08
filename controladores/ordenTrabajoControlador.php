@@ -5,8 +5,6 @@ require_once __DIR__ . "/../modelos/ordenTrabajoModelo.php";
 class ordenTrabajoControlador extends ordenTrabajoModelo
 {
 
-
-
     public function listar_ot_controlador($pagina, $registros, $url, $busqueda1, $busqueda2)
     {
         $pagina    = (int) mainModel::limpiar_string($pagina);
@@ -105,7 +103,7 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
                 <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
                 <td>' . $estado . '</td>
                 <td>';
-
+                       
                 if (($rows['origen'] ?? '') === 'RECLAMO' && (int)$rows['estado'] === 3) {
                     $tabla .= '
                     <a href="' . SERVERURL . 'ordenTrabajo-asignar/?id=' . urlencode(mainModel::encryption($rows['idorden_trabajo'])) . '"
@@ -483,6 +481,15 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
     {
         session_start(['name' => 'STR']);
 
+        if (!mainModel::tienePermiso('servicio.ot.crear_reclamo')) {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Acceso denegado',
+                'Texto' => 'No tiene permiso para crear OT por reclamo',
+                'Tipo' => 'error'
+            ]);
+        }
+
         if (empty($_POST['idreclamo_servicio'])) {
             return json_encode([
                 "Alerta" => "simple",
@@ -521,6 +528,15 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
     {
         session_start(['name' => 'STR']);
 
+        if (!mainModel::tienePermiso('servicio.ot.asignar_tecnico')) {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Acceso denegado',
+                'Texto' => 'No tiene permiso para registrar el servicio de esta OT',
+                'Tipo' => 'error'
+            ]);
+        }
+        
         if (empty($_POST['idorden_trabajo']) || empty($_POST['idtrabajos']) || empty($_POST['tecnico_responsable'])) {
             return json_encode([
                 "Alerta" => "simple",
