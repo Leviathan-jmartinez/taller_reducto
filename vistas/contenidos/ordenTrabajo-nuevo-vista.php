@@ -68,12 +68,33 @@ $id_usuario     = $_SESSION['id_str'];
                     <input type="text" id="nro_presupuesto"
                         class="form-control" readonly>
                 </div>
-
-                <div class="col-md-8 text-right align-self-end">
+                <div class="col-md-4">
+                    <label>Fecha presupuesto</label>
+                    <input type="text" id="fecha_presupuesto"
+                        class="form-control" readonly>
+                </div>
+                <div class="col-md-12 text-right align-self-end mt-2">
                     <button type="button" class="btn btn-success"
                         onclick="abrirModalPresupuesto()">
                         <i class="fas fa-search"></i> Buscar presupuesto
                     </button>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-4">
+                    <label>Subtotal</label>
+                    <input type="text" id="presupuesto_subtotal"
+                        class="form-control" readonly>
+                </div>
+                <div class="col-md-4">
+                    <label>Descuento</label>
+                    <input type="text" id="presupuesto_descuento"
+                        class="form-control" readonly>
+                </div>
+                <div class="col-md-4">
+                    <label>Total</label>
+                    <input type="text" id="presupuesto_total"
+                        class="form-control" readonly>
                 </div>
             </div>
         </fieldset>

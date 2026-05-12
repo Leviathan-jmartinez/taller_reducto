@@ -31,7 +31,7 @@
 
    <script src="<?php echo SERVERURL; ?>vistas/js/main.js"></script>
 
-   <script src="<?php echo SERVERURL; ?>vistas/js/alertas.js"></script>
+   <script src="<?php echo SERVERURL; ?>vistas/js/alertas.js?v=<?php echo filemtime('./vistas/js/alertas.js'); ?>"></script>
 
    <script>
        const SERVERURL = "<?php echo SERVERURL; ?>";

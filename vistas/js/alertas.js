@@ -87,6 +87,35 @@ function alertasAjax(alerta, form = null) {
         });
     } else if (alerta.Alerta === "limpiar") {
 
+        if (alerta.PostAccion === "generar_ot_reclamo") {
+            Swal.fire({
+                title: alerta.Titulo,
+                text: 'Diagnostico registrado. El reclamo fue marcado como valido. Desea generar la OT ahora?',
+                type: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#008000',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Si, generar OT',
+                cancelButtonText: 'No, despues'
+            }).then((confirmacion) => {
+                if (confirmacion.value && typeof crearOTReclamo === "function") {
+                    crearOTReclamo(alerta.id_diagnostico, alerta.idreclamo_servicio);
+                    return;
+                }
+
+                if (form) {
+                    form.reset();
+                    document.dispatchEvent(new CustomEvent('ajax:limpiar', {
+                        detail: {
+                            modulo: form.dataset.modulo || null
+                        }
+                    }));
+                }
+            });
+
+            return;
+        }
+
         Swal.fire({
             title: alerta.Titulo,
             text: alerta.Texto,
@@ -94,7 +123,6 @@ function alertasAjax(alerta, form = null) {
             confirmButtonText: 'Aceptar'
         }).then((result) => {
             if (result.value) {
-
                 if (form) {
                     form.reset();
 

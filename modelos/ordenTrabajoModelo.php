@@ -63,16 +63,25 @@ class ordenTrabajoModelo extends mainModel
 
             /* ================= VEHICULO ================= */
             MAX(COALESCE(v.placa, vR.placa)) AS placa,
-            ma.mod_descri AS modelo,
+            MAX(COALESCE(ma.mod_descri, maR.mod_descri)) AS modelo,
 
             /* ================= KM ================= */
             MAX(COALESCE(r.kilometraje, rR.kilometraje)) AS kilometraje,
 
             /* ================= RECLAMO ================= */
-            rs.tipo_reclamo,
-            rs.prioridad,
-            rs.fecha_reclamo,
-            rs.descripcion,
+            MAX(rs.tipo_reclamo) AS tipo_reclamo,
+            MAX(rs.prioridad) AS prioridad,
+            MAX(rs.fecha_reclamo) AS fecha_reclamo,
+            MAX(rs.descripcion) AS descripcion,
+
+            MAX(dR.id_diagnostico) AS id_diagnostico_reclamo,
+            MAX(dR.fecha_diagnostico) AS fecha_diagnostico,
+            MAX(dR.observaciones) AS diagnostico_observaciones,
+            MAX(dR.descripcion_cliente) AS diagnostico_descripcion_cliente,
+            MAX(dR.diagnostico_general) AS diagnostico_general,
+            MAX(dR.es_garantia) AS es_garantia,
+            MAX(dR.es_reclamo_valido) AS es_reclamo_valido,
+            MAX(dR.requiere_cobro) AS requiere_cobro,
 
             /* ================= EQUIPO ================= */
             GROUP_CONCAT(CONCAT(e.nombre,' ',e.apellido) SEPARATOR ', ') AS miembros
@@ -105,11 +114,24 @@ class ordenTrabajoModelo extends mainModel
         LEFT JOIN recepcion_servicio rR 
             ON rR.idreclamo_servicio = rs.idreclamo_servicio
 
+        LEFT JOIN diagnostico_servicio dR
+            ON dR.idrecepcion = rR.idrecepcion
+            AND dR.estado != 0
+            AND dR.id_diagnostico = (
+                SELECT MAX(d2.id_diagnostico)
+                FROM diagnostico_servicio d2
+                WHERE d2.idrecepcion = rR.idrecepcion
+                  AND d2.estado != 0
+            )
+
         LEFT JOIN clientes cR 
             ON cR.id_cliente = rR.id_cliente
 
         LEFT JOIN vehiculos vR 
             ON vR.id_vehiculo = rR.id_vehiculo
+
+        LEFT JOIN modelo_auto maR
+            ON maR.id_modeloauto = vR.id_modeloauto
 
         /* ===== EQUIPO ===== */
         LEFT JOIN equipo_trabajo et 
@@ -145,6 +167,26 @@ class ordenTrabajoModelo extends mainModel
         WHERE d.idorden_trabajo = :id");
         $sql->bindParam(":id", $id);
         $sql->execute();
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    protected static function obtener_detalle_diagnostico_modelo($idDiagnostico)
+    {
+        $sql = mainModel::conectar()->prepare("
+            SELECT
+                sistema,
+                problema,
+                gravedad,
+                solucion_propuesta,
+                requiere_repuesto,
+                requiere_mano_obra
+            FROM diagnostico_detalle
+            WHERE id_diagnostico = :id
+            ORDER BY id_diagnostico_detalle ASC
+        ");
+        $sql->bindParam(":id", $idDiagnostico, PDO::PARAM_INT);
+        $sql->execute();
+
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -337,6 +379,16 @@ class ordenTrabajoModelo extends mainModel
             if ((int)$idSucursal !== (int)$datos['idsucursal']) {
                 $pdo->rollBack();
                 return ['msg' => 'No puede generar OT de otra sucursal'];
+            }
+
+            if (!self::validar_equipo_tecnico_modelo(
+                $pdo,
+                $datos['idtrabajos'],
+                $datos['tecnico_responsable'],
+                $idSucursal
+            )) {
+                $pdo->rollBack();
+                return ['msg' => 'El tecnico no pertenece al equipo seleccionado o el equipo no pertenece a la sucursal'];
             }
 
             /* CABECERA OT */
@@ -563,6 +615,25 @@ class ordenTrabajoModelo extends mainModel
                 return 'El reclamo no esta en proceso';
             }
 
+            $qDiagnostico = $pdo->prepare("
+                SELECT d.id_diagnostico
+                FROM diagnostico_servicio d
+                INNER JOIN recepcion_servicio r ON r.idrecepcion = d.idrecepcion
+                WHERE r.idreclamo_servicio = ?
+                  AND d.estado != 0
+                  AND d.es_reclamo_valido = 1
+                  AND d.es_garantia = 1
+                  AND d.requiere_cobro = 0
+                ORDER BY d.id_diagnostico DESC
+                LIMIT 1
+            ");
+            $qDiagnostico->execute([$idReclamo]);
+
+            if (!$qDiagnostico->fetchColumn()) {
+                $pdo->rollBack();
+                return 'El reclamo no habilita OT directa. Debe ser valido, en garantia y sin cobro';
+            }
+
             $check = $pdo->prepare("
             SELECT idorden_trabajo 
             FROM orden_trabajo
@@ -661,6 +732,16 @@ class ordenTrabajoModelo extends mainModel
                 return 'Solo se puede completar una OT pendiente por reclamo';
             }
 
+            if (!self::validar_equipo_tecnico_modelo(
+                $pdo,
+                $d['equipo'],
+                $d['tecnico'],
+                $ot['id_sucursal']
+            )) {
+                $pdo->rollBack();
+                return 'El tecnico no pertenece al equipo seleccionado o el equipo no pertenece a la sucursal';
+            }
+
             /* BORRAR DETALLE */
             $pdo->prepare("
             DELETE FROM orden_trabajo_detalle 
@@ -742,5 +823,24 @@ class ordenTrabajoModelo extends mainModel
             $pdo->rollBack();
             return $e->getMessage();
         }
+    }
+
+    private static function validar_equipo_tecnico_modelo(PDO $pdo, $idEquipo, $idTecnico, $idSucursal)
+    {
+        $sql = $pdo->prepare("
+            SELECT COUNT(*)
+            FROM equipo_trabajo et
+            INNER JOIN equipo_empleado ee ON ee.id_equipo = et.id_equipo
+            INNER JOIN empleados e ON e.idempleados = ee.idempleados
+            WHERE et.id_equipo = ?
+              AND et.id_sucursal = ?
+              AND et.estado = 1
+              AND ee.idempleados = ?
+              AND ee.estado = 1
+              AND e.estado = 1
+        ");
+        $sql->execute([$idEquipo, $idSucursal, $idTecnico]);
+
+        return (int)$sql->fetchColumn() > 0;
     }
 }

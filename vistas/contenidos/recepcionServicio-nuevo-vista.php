@@ -93,6 +93,10 @@ $modelos_recepcion = is_array($modelos_recepcion) ? $modelos_recepcion : [];
         padding: 12px;
         text-align: center;
     }
+
+    .recepcion-reclamo-detalle {
+        display: none;
+    }
 </style>
 
 <div class="container-fluid">
@@ -125,12 +129,49 @@ $modelos_recepcion = is_array($modelos_recepcion) ? $modelos_recepcion : [];
         <input type="hidden" name="accion" value="guardar_recepcion">
         <div class="text-right mb-3">
             <button type="button"
+                id="btnServicioReclamo"
                 class="btn btn-warning"
-                data-toggle="modal"
-                data-target="#modalReclamo">
-                <i class="fas fa-exclamation-circle"></i> Buscar reclamo
+                onclick="activarServicioDesdeReclamo()">
+                <i class="fas fa-exclamation-circle"></i> Servicio proveniente de reclamo
             </button>
         </div>
+
+        <fieldset id="bloque_reclamo_recepcion" class="border p-3 mb-3" style="display:none;">
+            <legend class="w-auto px-2">Reclamo de origen</legend>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <label>Buscar reclamo</label>
+                    <input type="text"
+                        id="buscar_reclamo_recepcion"
+                        class="form-control"
+                        placeholder="Buscar por cliente, apellido, placa o nro. de reclamo">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="button" class="btn btn-secondary btn-block" onclick="limpiarReclamoRecepcion()">
+                        <i class="fas fa-times"></i> Quitar reclamo
+                    </button>
+                </div>
+            </div>
+
+            <div id="tabla_reclamos" class="mt-3"></div>
+
+            <div id="detalle_reclamo_recepcion" class="recepcion-reclamo-detalle alert alert-light border mt-3 mb-0">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong><i class="fas fa-clipboard-list"></i> Detalle del reclamo</strong>
+                    <span id="rec_badge_prioridad" class="badge badge-secondary">-</span>
+                </div>
+                <div class="row">
+                    <div class="col-md-3"><strong>Nro. reclamo:</strong><br><span id="rec_id">-</span></div>
+                    <div class="col-md-3"><strong>Fecha:</strong><br><span id="rec_fecha">-</span></div>
+                    <div class="col-md-3"><strong>Tipo:</strong><br><span id="rec_tipo">-</span></div>
+                    <div class="col-md-3"><strong>Garantia:</strong><br><span id="rec_garantia">-</span></div>
+                    <div class="col-md-6 mt-2"><strong>Cliente:</strong><br><span id="rec_cliente">-</span></div>
+                    <div class="col-md-6 mt-2"><strong>Vehiculo:</strong><br><span id="rec_vehiculo">-</span></div>
+                    <div class="col-md-12 mt-2"><strong>Descripcion:</strong><br><span id="rec_descripcion">-</span></div>
+                </div>
+            </div>
+        </fieldset>
         <!-- CLIENTE -->
         <fieldset class="border p-3 mb-3">
             <legend class="w-auto px-2">Cliente</legend>
@@ -531,7 +572,7 @@ $modelos_recepcion = is_array($modelos_recepcion) ? $modelos_recepcion : [];
                     placeholder="Buscar por cliente o vehículo"
                     onkeyup="buscarReclamoAjax(this.value)">
 
-                <div id="tabla_reclamos"></div>
+                <div id="tabla_reclamos_modal"></div>
 
             </div>
 

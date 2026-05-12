@@ -281,7 +281,15 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
         $texto = trim($_POST['buscar_presupuesto'] ?? '');
         session_start(['name' => 'STR']);
         $consulta = "
-            SELECT ps.idpresupuesto_servicio, ds.idrecepcion,c.nombre_cliente, v.placa
+            SELECT
+                ps.idpresupuesto_servicio,
+                ps.fecha,
+                ps.subtotal,
+                ps.total_descuento,
+                ps.total_final,
+                ds.idrecepcion,
+                c.nombre_cliente,
+                v.placa
             FROM presupuesto_servicio ps
             INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
             INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
@@ -314,6 +322,7 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
                 <tr>
                     <th>Cliente</th>
                     <th>Vehículo</th>
+                    <th>Total</th>
                     <th></th>
                 </tr>
             </thead><tbody>';
@@ -323,13 +332,18 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
             <tr>
                 <td>' . $row['nombre_cliente'] . '</td>
                 <td>' . $row['placa'] . '</td>
+                <td class="text-right">' . number_format((float)$row['total_final'], 0, ',', '.') . '</td>
                 <td class="text-center">
                     <button class="btn btn-success btn-sm"
                         onclick="seleccionarPresupuesto(
                             ' . $row['idpresupuesto_servicio'] . ',
                             ' . $row['idrecepcion'] . ',
                             \'' . $row['nombre_cliente'] . '\',
-                            \'' . $row['placa'] . '\'
+                            \'' . $row['placa'] . '\',
+                            \'' . date("d/m/Y", strtotime($row['fecha'])) . '\',
+                            \'' . number_format((float)$row['subtotal'], 0, ',', '.') . '\',
+                            \'' . number_format((float)$row['total_descuento'], 0, ',', '.') . '\',
+                            \'' . number_format((float)$row['total_final'], 0, ',', '.') . '\'
                         )">
                         Seleccionar
                     </button>
@@ -376,6 +390,15 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
     public function generar_ot_controlador2()
     {
         session_start(['name' => 'STR']);
+
+        if (!mainModel::tienePermiso('servicio.ot.generar')) {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Acceso denegado',
+                'Texto'  => 'No tiene permiso para generar orden de trabajo',
+                'Tipo'   => 'error'
+            ]);
+        }
 
         if (empty($_POST['idpresupuesto_servicio']) || empty($_POST['idtrabajos'])) {
             return json_encode([
@@ -481,11 +504,11 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
     {
         session_start(['name' => 'STR']);
 
-        if (!mainModel::tienePermiso('servicio.ot.crear_reclamo')) {
+        if (!mainModel::tienePermiso('servicio.ot.generar')) {
             return json_encode([
                 'Alerta' => 'simple',
                 'Titulo' => 'Acceso denegado',
-                'Texto' => 'No tiene permiso para crear OT por reclamo',
+                'Texto' => 'No tiene permiso para generar orden de trabajo',
                 'Tipo' => 'error'
             ]);
         }
@@ -546,13 +569,34 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
             ]);
         }
 
+        $trabajos = json_decode($_POST['trabajos_json'] ?? '[]', true);
+        $repuestos = json_decode($_POST['repuestos_json'] ?? '[]', true);
+
+        if (!is_array($trabajos) || !is_array($repuestos)) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Detalle de OT invalido",
+                "Tipo" => "error"
+            ]);
+        }
+
+        if (empty($trabajos) && empty($repuestos)) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Debe agregar al menos un trabajo o repuesto",
+                "Tipo" => "warning"
+            ]);
+        }
+
         $datos = [
             "idorden_trabajo" => $_POST['idorden_trabajo'],
             "tecnico" => $_POST['tecnico_responsable'],
             "equipo" => $_POST['idtrabajos'],
             "obs" => $_POST['observacion'] ?? '',
-            "trabajos" => json_decode($_POST['trabajos_json'] ?? '[]', true),
-            "repuestos" => json_decode($_POST['repuestos_json'] ?? '[]', true)
+            "trabajos" => $trabajos,
+            "repuestos" => $repuestos
         ];
 
         $res = ordenTrabajoModelo::completar_ot_modelo($datos);
@@ -580,6 +624,17 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
         $id = mainModel::decryption($id);
         $id = mainModel::limpiar_string($id);
         return ordenTrabajoModelo::obtener_ot_modelo($id);
+    }
+
+    public function obtener_detalle_diagnostico_ot_controlador($idDiagnostico)
+    {
+        $idDiagnostico = (int) mainModel::limpiar_string($idDiagnostico);
+
+        if ($idDiagnostico <= 0) {
+            return [];
+        }
+
+        return ordenTrabajoModelo::obtener_detalle_diagnostico_modelo($idDiagnostico);
     }
 
     public function listar_tecnicos_select()

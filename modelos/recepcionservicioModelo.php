@@ -637,10 +637,19 @@ class recepcionservicioModelo extends mainModel
                 $updReclamo = $pdo->prepare("
                     UPDATE reclamo_servicio
                     SET estado = 1
-                    WHERE idreclamo_servicio = ?
+                    WHERE idreclamo_servicio = :reclamo
+                      AND id_sucursal = :sucursal
                       AND estado = 2
                 ");
-                $updReclamo->execute([$recepcion['idreclamo_servicio']]);
+                $updReclamo->execute([
+                    ':reclamo' => $recepcion['idreclamo_servicio'],
+                    ':sucursal' => $sucursal
+                ]);
+
+                if ($updReclamo->rowCount() < 1) {
+                    $pdo->rollBack();
+                    return false;
+                }
             }
 
             $pdo->commit();

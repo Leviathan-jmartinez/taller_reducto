@@ -362,9 +362,10 @@ class diagnosticoModelo extends mainModel
 
             // ================= OBTENER DATOS =================
             $sql = $pdo->prepare("
-            SELECT estado, idrecepcion
-            FROM diagnostico_servicio
-            WHERE id_diagnostico = :id
+            SELECT d.estado, d.idrecepcion, r.idreclamo_servicio
+            FROM diagnostico_servicio d
+            INNER JOIN recepcion_servicio r ON r.idrecepcion = d.idrecepcion
+            WHERE d.id_diagnostico = :id
         ");
             $sql->execute([':id' => $id]);
             $diag = $sql->fetch(PDO::FETCH_ASSOC);
@@ -397,6 +398,23 @@ class diagnosticoModelo extends mainModel
                     "error" => true,
                     "msg" => "No se puede anular, ya tiene presupuesto"
                 ];
+            }
+
+            if (!empty($diag['idreclamo_servicio'])) {
+                $sql = $pdo->prepare("
+                    SELECT COUNT(*)
+                    FROM orden_trabajo
+                    WHERE idreclamo_servicio = :reclamo
+                      AND estado != 0
+                ");
+                $sql->execute([':reclamo' => $diag['idreclamo_servicio']]);
+
+                if ($sql->fetchColumn() > 0) {
+                    return [
+                        "error" => true,
+                        "msg" => "No se puede anular, el reclamo ya tiene una OT activa"
+                    ];
+                }
             }
 
             // ================= TRANSACTION =================

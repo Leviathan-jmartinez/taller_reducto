@@ -25,12 +25,38 @@ class reclamoServicioModelo extends mainModel
                 return ['msg' => 'Ya existe reclamo activo'];
             }
 
+            $qOrigen = $pdo->prepare("
+                SELECT
+                    COALESCE(r_normal.id_cliente, r_reclamo.id_cliente) AS id_cliente,
+                    COALESCE(r_normal.id_vehiculo, r_reclamo.id_vehiculo) AS id_vehiculo
+                FROM registro_servicio rgs
+                INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rgs.idorden_trabajo
+                LEFT JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+                LEFT JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
+                LEFT JOIN recepcion_servicio r_normal ON r_normal.idrecepcion = ds.idrecepcion
+                LEFT JOIN recepcion_servicio r_reclamo ON r_reclamo.idreclamo_servicio = ot.idreclamo_servicio
+                WHERE rgs.idregistro_servicio = ?
+                LIMIT 1
+            ");
+            $qOrigen->execute([$datos['idregistro_servicio']]);
+            $origenServicio = $qOrigen->fetch(PDO::FETCH_ASSOC);
+
+            if (
+                empty($origenServicio['id_cliente']) ||
+                empty($origenServicio['id_vehiculo'])
+            ) {
+                $pdo->rollBack();
+                return ['msg' => 'No se pudo identificar cliente y vehiculo del servicio reclamado'];
+            }
+
             /* INSERT RECLAMO */
             $ins = $pdo->prepare("
             INSERT INTO reclamo_servicio
             (
                 idregistro_servicio,
                 id_sucursal,
+                id_cliente,
+                id_vehiculo,
                 fecha_reclamo,
                 descripcion,
                 tipo_reclamo,
@@ -40,12 +66,14 @@ class reclamoServicioModelo extends mainModel
                 estado,
                 usuario_registra
             )
-            VALUES (?, ?, NOW(), ?, ?, ?, ?, ?, 1, ?)
+            VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?, ?, 1, ?)
         ");
 
             $ins->execute([
                 $datos['idregistro_servicio'],
                 $datos['id_sucursal'],
+                $origenServicio['id_cliente'],
+                $origenServicio['id_vehiculo'],
                 $datos['descripcion'],
                 $datos['tipo_reclamo'],
                 $datos['origen'],
@@ -145,12 +173,8 @@ class reclamoServicioModelo extends mainModel
         FROM reclamo_servicio rs
         INNER JOIN registro_servicio rgs ON rgs.idregistro_servicio = rs.idregistro_servicio
         INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rgs.idorden_trabajo
-        LEFT JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-        LEFT JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
-        LEFT JOIN recepcion_servicio r_normal ON r_normal.idrecepcion = ds.idrecepcion
-        LEFT JOIN recepcion_servicio r_reclamo ON r_reclamo.idreclamo_servicio = ot.idreclamo_servicio
-        LEFT JOIN clientes c ON c.id_cliente = COALESCE(r_normal.id_cliente, r_reclamo.id_cliente)
-        LEFT JOIN vehiculos v ON v.id_vehiculo = COALESCE(r_normal.id_vehiculo, r_reclamo.id_vehiculo)
+        LEFT JOIN clientes c ON c.id_cliente = rs.id_cliente
+        LEFT JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
         LEFT JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
         WHERE 1=1 $filtrosSQL
         GROUP BY rs.idreclamo_servicio
@@ -165,12 +189,8 @@ class reclamoServicioModelo extends mainModel
         FROM reclamo_servicio rs
         INNER JOIN registro_servicio rgs ON rgs.idregistro_servicio = rs.idregistro_servicio
         INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rgs.idorden_trabajo
-        LEFT JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-        LEFT JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
-        LEFT JOIN recepcion_servicio r_normal ON r_normal.idrecepcion = ds.idrecepcion
-        LEFT JOIN recepcion_servicio r_reclamo ON r_reclamo.idreclamo_servicio = ot.idreclamo_servicio
-        LEFT JOIN clientes c ON c.id_cliente = COALESCE(r_normal.id_cliente, r_reclamo.id_cliente)
-        LEFT JOIN vehiculos v ON v.id_vehiculo = COALESCE(r_normal.id_vehiculo, r_reclamo.id_vehiculo)
+        LEFT JOIN clientes c ON c.id_cliente = rs.id_cliente
+        LEFT JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
         LEFT JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
         WHERE 1=1 $filtrosSQL
         ")->fetchColumn();

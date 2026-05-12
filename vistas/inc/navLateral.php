@@ -94,6 +94,10 @@
                                 <li><a href="<?= SERVERURL; ?>descuento-nuevo/"><i class="fas fa-tags fa-fw"></i> &nbsp; Descuentos</a></li>
                             <?php } ?>
 
+                            <?php if (mainModel::tienePermiso('servicio.regla_comercial.ver')) { ?>
+                                <li><a href="<?= SERVERURL; ?>regla-comercial-nuevo/"><i class="fas fa-project-diagram fa-fw"></i> &nbsp; Reglas Comerciales</a></li>
+                            <?php } ?>
+
                             <?php if (mainModel::tienePermiso('servicio.presupuesto.ver')) { ?>
                                 <li><a href="<?= SERVERURL; ?>presupuesto-servicio-nuevo"><i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; Presupuesto de Trabajo</a></li>
                             <?php } ?>

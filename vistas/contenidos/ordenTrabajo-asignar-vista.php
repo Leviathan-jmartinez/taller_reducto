@@ -23,6 +23,10 @@ if (($ot['origen'] ?? '') !== 'RECLAMO' || (int)$ot['estado'] !== 3) {
     echo '<div class="alert alert-warning">Solo las OT pendientes por reclamo se completan desde esta pantalla.</div>';
     return;
 }
+
+$detalleDiagnostico = !empty($ot['id_diagnostico_reclamo'])
+    ? $insOT->obtener_detalle_diagnostico_ot_controlador($ot['id_diagnostico_reclamo'])
+    : [];
 ?>
 
 <div class="card mb-3 shadow-sm">
@@ -70,29 +74,76 @@ if (($ot['origen'] ?? '') !== 'RECLAMO' || (int)$ot['estado'] !== 3) {
     </div>
 </div>
 
-<div class="card mb-3 border-warning">
+<div class="card mb-3">
     <div class="card-header bg-dark text-white">
-        <i class="fas fa-exclamation-triangle"></i> Detalle del reclamo
+        <i class="fas fa-stethoscope"></i> Diagnostico del reclamo
     </div>
     <div class="card-body">
         <div class="row">
-            <div class="col-md-4">
-                <strong>Tipo:</strong><br>
-                <?php echo $ot['tipo_reclamo'] ?? '-'; ?>
+            <div class="col-md-3">
+                <strong>Diagnostico:</strong><br>
+                <?php echo !empty($ot['id_diagnostico_reclamo']) ? '#' . $ot['id_diagnostico_reclamo'] : '-'; ?>
             </div>
-            <div class="col-md-4">
-                <strong>Prioridad:</strong><br>
-                <?php echo $ot['prioridad'] == 1 ? 'Alta' : ($ot['prioridad'] == 2 ? 'Media' : 'Baja'); ?>
-            </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <strong>Fecha:</strong><br>
-                <?php echo !empty($ot['fecha_reclamo'])
-                    ? date("d/m/Y H:i", strtotime($ot['fecha_reclamo']))
+                <?php echo !empty($ot['fecha_diagnostico'])
+                    ? date("d/m/Y H:i", strtotime($ot['fecha_diagnostico']))
                     : '-'; ?>
             </div>
+            <div class="col-md-2">
+                <strong>Garantia:</strong><br>
+                <?php echo !empty($ot['es_garantia']) ? 'Si' : 'No'; ?>
+            </div>
+            <div class="col-md-2">
+                <strong>Reclamo valido:</strong><br>
+                <?php echo !empty($ot['es_reclamo_valido']) ? 'Si' : 'No'; ?>
+            </div>
+            <div class="col-md-2">
+                <strong>Requiere cobro:</strong><br>
+                <?php echo !empty($ot['requiere_cobro']) ? 'Si' : 'No'; ?>
+            </div>
             <div class="col-12 mt-2">
-                <strong>Descripcion:</strong><br>
-                <?php echo $ot['descripcion'] ?? '-'; ?>
+                <strong>Observacion:</strong><br>
+                <?php
+                $diagnosticoTexto = $ot['diagnostico_general']
+                    ?: ($ot['diagnostico_observaciones'] ?: ($ot['diagnostico_descripcion_cliente'] ?? ''));
+                echo $diagnosticoTexto ?: '-';
+                ?>
+            </div>
+            <div class="col-12 mt-3">
+                <strong>Detalle tecnico:</strong>
+                <div class="table-responsive mt-2">
+                    <table class="table table-dark table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Sistema</th>
+                                <th>Problema</th>
+                                <th>Gravedad</th>
+                                <th>Solucion propuesta</th>
+                                <th>Repuesto</th>
+                                <th>Mano de obra</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($detalleDiagnostico)) { ?>
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">Sin detalle tecnico</td>
+                                </tr>
+                            <?php } else { ?>
+                                <?php foreach ($detalleDiagnostico as $det) { ?>
+                                    <tr>
+                                        <td><?php echo $det['sistema'] ?: '-'; ?></td>
+                                        <td><?php echo $det['problema'] ?: '-'; ?></td>
+                                        <td><?php echo $det['gravedad'] ?: '-'; ?></td>
+                                        <td><?php echo $det['solucion_propuesta'] ?: '-'; ?></td>
+                                        <td><?php echo !empty($det['requiere_repuesto']) ? 'Si' : 'No'; ?></td>
+                                        <td><?php echo !empty($det['requiere_mano_obra']) ? 'Si' : 'No'; ?></td>
+                                    </tr>
+                                <?php } ?>
+                            <?php } ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

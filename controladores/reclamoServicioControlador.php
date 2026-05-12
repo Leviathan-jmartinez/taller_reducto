@@ -392,20 +392,20 @@ class reclamoServicioControlador extends reclamoServicioModelo
         $id = mainModel::decryption($_POST['id']);
 
         $sql = mainModel::conectar()->prepare("
-        SELECT 
+        SELECT
             rs.idreclamo_servicio,
+            DATE_FORMAT(rs.fecha_reclamo, '%d/%m/%Y %H:%i') AS fecha_reclamo,
+            rs.descripcion,
+            rs.tipo_reclamo,
+            rs.prioridad,
+            rs.requiere_garantia,
             c.id_cliente,
             CONCAT(c.nombre_cliente,' ',c.apellido_cliente) AS cliente,
             v.id_vehiculo,
             CONCAT(m.mar_descri,' ',mo.mod_descri,' ',v.placa) AS vehiculo
         FROM reclamo_servicio rs
-        INNER JOIN registro_servicio rgs ON rgs.idregistro_servicio = rs.idregistro_servicio
-        INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rgs.idorden_trabajo
-        INNER JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-        INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico 
-        INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
-        INNER JOIN clientes c ON c.id_cliente = r.id_cliente
-        INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
+        INNER JOIN clientes c ON c.id_cliente = rs.id_cliente
+        INNER JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
         INNER JOIN modelo_auto mo ON mo.id_modeloauto = v.id_modeloauto
         INNER JOIN marcas m ON m.id_marcas = mo.id_marcas
         WHERE rs.idreclamo_servicio = ?
@@ -427,38 +427,34 @@ class reclamoServicioControlador extends reclamoServicioModelo
         $texto = trim($_POST['buscar'] ?? '');
 
         $sql = mainModel::conectar()->prepare("
-            SELECT 
+            SELECT
                 rs.idreclamo_servicio,
-                c.nombre_cliente,
-                c.apellido_cliente,
-                v.placa,
-                m.mod_descri
+                MAX(DATE_FORMAT(rs.fecha_reclamo, '%d/%m/%Y %H:%i')) AS fecha_reclamo,
+                MAX(rs.tipo_reclamo) AS tipo_reclamo,
+                MAX(rs.prioridad) AS prioridad,
+                MAX(c.nombre_cliente) AS nombre_cliente,
+                MAX(c.apellido_cliente) AS apellido_cliente,
+                MAX(v.placa) AS placa,
+                MAX(m.mod_descri) AS mod_descri
             FROM reclamo_servicio rs
-            INNER JOIN registro_servicio rgs 
-                ON rgs.idregistro_servicio = rs.idregistro_servicio
-            INNER JOIN orden_trabajo ot 
-                ON ot.idorden_trabajo = rgs.idorden_trabajo
-            INNER JOIN presupuesto_servicio ps 
-                ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-            INNER JOIN diagnostico_servicio ds 
-                ON ds.id_diagnostico = ps.id_diagnostico
-            INNER JOIN recepcion_servicio r 
-                ON r.idrecepcion = ds.idrecepcion
-
             INNER JOIN clientes c 
-                ON c.id_cliente = r.id_cliente
+                ON c.id_cliente = rs.id_cliente
             INNER JOIN vehiculos v 
-                ON v.id_vehiculo = r.id_vehiculo
+                ON v.id_vehiculo = rs.id_vehiculo
             INNER JOIN modelo_auto m 
                 ON m.id_modeloauto = v.id_modeloauto
 
             WHERE rs.estado = 1
             AND rs.id_sucursal = :sucursal
             AND (
+                c.doc_number LIKE :b
+                OR
                 c.nombre_cliente LIKE :b
                 OR c.apellido_cliente LIKE :b
                 OR v.placa LIKE :b
+                OR rs.idreclamo_servicio LIKE :b
             )
+            GROUP BY rs.idreclamo_servicio
             ORDER BY rs.idreclamo_servicio DESC
             LIMIT 20
             ");
@@ -477,8 +473,11 @@ class reclamoServicioControlador extends reclamoServicioModelo
         <thead>
             <tr>
                 <th>Reclamo</th>
+                <th>Fecha</th>
                 <th>Cliente</th>
                 <th>Vehículo</th>
+                <th>Tipo</th>
+                <th>Prioridad</th>
                 <th></th>
             </tr>
         </thead><tbody>';
@@ -488,10 +487,13 @@ class reclamoServicioControlador extends reclamoServicioModelo
             $html .= '
         <tr>
             <td>#' . $r['idreclamo_servicio'] . '</td>
-            <td>' . $r['nombre_cliente'] . ' ' . $r['apellido_cliente'] . '</td>
-            <td>' . $r['mod_descri'] . ' ' . $r['placa'] . '</td>
+            <td>' . htmlspecialchars($r['fecha_reclamo'], ENT_QUOTES, 'UTF-8') . '</td>
+            <td>' . htmlspecialchars($r['nombre_cliente'] . ' ' . $r['apellido_cliente'], ENT_QUOTES, 'UTF-8') . '</td>
+            <td>' . htmlspecialchars($r['mod_descri'] . ' ' . $r['placa'], ENT_QUOTES, 'UTF-8') . '</td>
+            <td>' . htmlspecialchars($r['tipo_reclamo'] ?: '-', ENT_QUOTES, 'UTF-8') . '</td>
+            <td>' . htmlspecialchars($r['prioridad'] ?: '-', ENT_QUOTES, 'UTF-8') . '</td>
             <td>
-                <button class="btn btn-success btn-sm"
+                <button type="button" class="btn btn-success btn-sm"
                     onclick="seleccionarReclamo(
                         \'' . mainModel::encryption($r['idreclamo_servicio']) . '\'
                     )">

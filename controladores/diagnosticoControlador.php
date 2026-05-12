@@ -245,14 +245,37 @@ class diagnosticoControlador extends diagnosticoModelo
         $guardar = diagnosticoModelo::guardar_diagnostico_modelo($datos);
 
         if (isset($guardar['success'])) {
+            $postAccion = [];
 
-            return json_encode([
+            if (
+                (int)$datos['es_reclamo_valido'] === 1 &&
+                (int)$datos['es_garantia'] === 1 &&
+                (int)$datos['requiere_cobro'] === 0
+            ) {
+                $recepcion = diagnosticoModelo::obtener_recepcion_detalle_modelo(
+                    (int)$datos['idrecepcion'],
+                    (int)$datos['id_sucursal']
+                );
+
+                if (
+                    $recepcion &&
+                    strtoupper($recepcion['origen'] ?? '') === 'RECLAMO' &&
+                    !empty($recepcion['idreclamo_servicio'])
+                ) {
+                    $postAccion = [
+                        "PostAccion" => "generar_ot_reclamo",
+                        "idreclamo_servicio" => (int)$recepcion['idreclamo_servicio']
+                    ];
+                }
+            }
+
+            return json_encode(array_merge([
                 "Alerta" => "limpiar",
                 "Titulo" => "Diagnóstico registrado",
                 "Texto"  => "Se guardó correctamente",
                 "Tipo"   => "success",
                 "id_diagnostico" => $guardar['id_diagnostico']
-            ]);
+            ], $postAccion));
         }
 
         return json_encode([
