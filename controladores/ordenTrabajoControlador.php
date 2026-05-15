@@ -317,7 +317,7 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
             return '<div class="alert alert-warning">No se encontraron presupuestos</div>';
         }
 
-        $tabla = '<table class="table table-hover table-sm">
+        $tabla = '<table class="table table-dark table-sm">
             <thead>
                 <tr>
                     <th>Cliente</th>

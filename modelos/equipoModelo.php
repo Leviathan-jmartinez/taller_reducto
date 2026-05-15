@@ -34,6 +34,40 @@ class equipoModelo extends mainModel
         return mainModel::conectar()->lastInsertId();
     }
 
+    /* ===== DATOS EQUIPO ===== */
+    protected static function datos_equipo_modelo($id_equipo)
+    {
+        $sql = mainModel::conectar()->prepare(
+            "SELECT id_equipo, id_sucursal, nombre, descripcion, estado
+             FROM equipo_trabajo
+             WHERE id_equipo = :id
+             LIMIT 1"
+        );
+        $sql->bindParam(":id", $id_equipo, PDO::PARAM_INT);
+        $sql->execute();
+        return $sql->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /* ===== ACTUALIZAR EQUIPO ===== */
+    protected static function actualizar_equipo_modelo($datos)
+    {
+        $sql = mainModel::conectar()->prepare(
+            "UPDATE equipo_trabajo
+             SET id_sucursal = :sucursal,
+                 nombre = :nombre,
+                 descripcion = :descripcion
+             WHERE id_equipo = :id
+               AND estado = 1"
+        );
+
+        $sql->bindParam(":sucursal", $datos['sucursal']);
+        $sql->bindParam(":nombre", $datos['nombre']);
+        $sql->bindParam(":descripcion", $datos['descripcion']);
+        $sql->bindParam(":id", $datos['id_equipo'], PDO::PARAM_INT);
+        $sql->execute();
+        return $sql;
+    }
+
     /* ===== EMPLEADOS DISPONIBLES ===== */
     protected static function empleados_disponibles_modelo($id_sucursal)
     {

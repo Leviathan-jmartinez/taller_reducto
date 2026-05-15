@@ -381,16 +381,6 @@ class ordenTrabajoModelo extends mainModel
                 return ['msg' => 'No puede generar OT de otra sucursal'];
             }
 
-            if (!self::validar_equipo_tecnico_modelo(
-                $pdo,
-                $datos['idtrabajos'],
-                $datos['tecnico_responsable'],
-                $idSucursal
-            )) {
-                $pdo->rollBack();
-                return ['msg' => 'El tecnico no pertenece al equipo seleccionado o el equipo no pertenece a la sucursal'];
-            }
-
             /* CABECERA OT */
             $cab = $pdo->prepare("
                     INSERT INTO orden_trabajo
@@ -732,16 +722,6 @@ class ordenTrabajoModelo extends mainModel
                 return 'Solo se puede completar una OT pendiente por reclamo';
             }
 
-            if (!self::validar_equipo_tecnico_modelo(
-                $pdo,
-                $d['equipo'],
-                $d['tecnico'],
-                $ot['id_sucursal']
-            )) {
-                $pdo->rollBack();
-                return 'El tecnico no pertenece al equipo seleccionado o el equipo no pertenece a la sucursal';
-            }
-
             /* BORRAR DETALLE */
             $pdo->prepare("
             DELETE FROM orden_trabajo_detalle 
@@ -825,22 +805,5 @@ class ordenTrabajoModelo extends mainModel
         }
     }
 
-    private static function validar_equipo_tecnico_modelo(PDO $pdo, $idEquipo, $idTecnico, $idSucursal)
-    {
-        $sql = $pdo->prepare("
-            SELECT COUNT(*)
-            FROM equipo_trabajo et
-            INNER JOIN equipo_empleado ee ON ee.id_equipo = et.id_equipo
-            INNER JOIN empleados e ON e.idempleados = ee.idempleados
-            WHERE et.id_equipo = ?
-              AND et.id_sucursal = ?
-              AND et.estado = 1
-              AND ee.idempleados = ?
-              AND ee.estado = 1
-              AND e.estado = 1
-        ");
-        $sql->execute([$idEquipo, $idSucursal, $idTecnico]);
-
-        return (int)$sql->fetchColumn() > 0;
-    }
+    
 }

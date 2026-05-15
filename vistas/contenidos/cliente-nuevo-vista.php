@@ -1,11 +1,15 @@
 <?php
 $pagina = require __DIR__ . '/../inc/pagina.php';
-if (!mainModel::tienePermiso('cliente.ver')) {
+
+$vistaPartes = explode('/', trim($_GET['vista'] ?? '', '/'));
+$vistaActual = $vistaPartes[0] ?? 'cliente-nuevo';
+$id = ($vistaActual === 'cliente-actualizar') ? ($vistaPartes[1] ?? null) : null;
+$permisoNecesario = ($vistaActual === 'cliente-actualizar') ? 'cliente.editar' : 'cliente.ver';
+
+if (!mainModel::tienePermiso($permisoNecesario)) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
-
-$id = $pagina[1] ?? null;
 
 $editando = false;
 

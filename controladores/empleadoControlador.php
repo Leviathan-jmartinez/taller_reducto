@@ -29,6 +29,16 @@ class empleadoControlador extends empleadoModelo
     /* ========= AGREGAR ========= */
     public function agregar_empleado_controlador()
     {
+        if (!mainModel::tienePermiso('empleado.crear')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto" => "No posee permisos para registrar empleados",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         $datos = [
             "cargo"        => mainModel::limpiar_string($_POST['cargo_reg']),
             "sucursal"     => mainModel::limpiar_string($_POST['sucursal_reg']),
@@ -77,6 +87,16 @@ class empleadoControlador extends empleadoModelo
     /* ========= ACTUALIZAR ========= */
     public function actualizar_empleado_controlador()
     {
+        if (!mainModel::tienePermiso('empleado.editar')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto" => "No posee permisos para actualizar empleados",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         $id = mainModel::decryption($_POST['empleado_id_up']);
 
         $datos = [

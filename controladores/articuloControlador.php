@@ -209,6 +209,16 @@ class articuloControlador extends articuloModelo
     /**agregar articulo */
     public function agregar_articulo_controlador()
     {
+        if (!mainModel::tienePermiso('articulo.crear')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto" => "No posee permisos para registrar articulos",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         $categoria = mainModel::limpiar_string($_POST['categoria_reg']);
         $proveedor = mainModel::limpiar_string($_POST['proveedor_reg'] ?? '');
         $umedida = mainModel::limpiar_string($_POST['um_reg']);

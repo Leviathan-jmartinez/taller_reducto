@@ -11,8 +11,14 @@ if (isset($_POST['accion']) && $_POST['accion'] == "crear_equipo") {
     exit();
 }
 
+/* ACTUALIZAR EQUIPO */
+if (isset($_POST['accion']) && $_POST['accion'] == "actualizar_equipo") {
+    echo $ins_equipo->actualizar_equipo_controlador();
+    exit();
+}
+
 /* ASIGNAR EMPLEADOS */
-if (isset($_POST['id_equipo']) && isset($_POST['empleados'])) {
+if (isset($_POST['id_equipo']) && isset($_POST['empleados']) && (!isset($_POST['accion']) || $_POST['accion'] == "")) {
     echo $ins_equipo->asignar_empleados_controlador();
     exit();
 }

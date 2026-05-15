@@ -10,6 +10,16 @@ class rolesControlador extends rolesModelo
     /* ========= AGREGAR ========= */
     public function agregar_roles_controlador()
     {
+        if (!mainModel::tienePermiso('roles.editar')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto" => "No posee permisos para registrar roles",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         $nombre = mainModel::limpiar_string($_POST['rol_nombre_reg']);
         $descripcion = mainModel::limpiar_string($_POST['rol_descripcion_reg']);
 
@@ -198,6 +208,16 @@ class rolesControlador extends rolesModelo
     /* ========= ACTUALIZAR ========= */
     public function actualizar_roles_controlador()
     {
+        if (!mainModel::tienePermiso('roles.editar')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto" => "No posee permisos para actualizar roles",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         $id = mainModel::decryption($_POST['rol_id_up']);
         $id = mainModel::limpiar_string($id);
 
@@ -236,7 +256,7 @@ class rolesControlador extends rolesModelo
                 "Titulo" => "Actualizado",
                 "Texto" => "Rol actualizado correctamente",
                 "Tipo" => "success",
-                "URL" => SERVERURL . "roles-nuevo/"
+                "URL" => SERVERURL . "rol-nuevo/"
             ];
         } else {
             $alerta = [
@@ -253,6 +273,16 @@ class rolesControlador extends rolesModelo
     /* ========= ELIMINAR ========= */
     public function eliminar_roles_controlador()
     {
+        if (!mainModel::tienePermiso('roles.editar')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto" => "No posee permisos para eliminar roles",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         $id = mainModel::decryption($_POST['rol_id_del']);
         $id = mainModel::limpiar_string($id);
 

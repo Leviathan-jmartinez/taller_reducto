@@ -30,7 +30,7 @@ class reclamoServicioControlador extends reclamoServicioModelo
             ]);
         }
 
-        $idRegistro = mainModel::decryption($_POST['idregistro_servicio']);
+        $idRegistro = mainModel::limpiar_string(mainModel::decryption($_POST['idregistro_servicio']));
 
         /* 🔥 OBTENER SUCURSAL */
         $idSucursal = mainModel::ejecutar_consulta_simple("
@@ -38,6 +38,24 @@ class reclamoServicioControlador extends reclamoServicioModelo
         FROM registro_servicio
         WHERE idregistro_servicio = '$idRegistro'
         ")->fetchColumn();
+
+        if (!$idSucursal) {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Error',
+                'Texto'  => 'El registro de servicio no existe',
+                'Tipo'   => 'error'
+            ]);
+        }
+
+        if ((int)$idSucursal !== (int)$_SESSION['nick_sucursal']) {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Error',
+                'Texto'  => 'El registro no pertenece a la sucursal del usuario',
+                'Tipo'   => 'error'
+            ]);
+        }
 
         $datos = [
             'idregistro_servicio' => $idRegistro,

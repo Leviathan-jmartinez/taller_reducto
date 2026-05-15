@@ -5,7 +5,9 @@ if (!mainModel::tienePermiso('roles.ver')) {
     return;
 }
 
-$id = $pagina[1] ?? null;
+$vistaPartes = explode('/', trim($_GET['vista'] ?? '', '/'));
+$vistaActual = $vistaPartes[0] ?? 'rol-nuevo';
+$id = ($vistaActual === 'rol-actualizar') ? ($vistaPartes[1] ?? null) : null;
 
 $editando = false;
 

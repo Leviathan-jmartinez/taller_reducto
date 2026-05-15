@@ -16,6 +16,16 @@ class proveedorControlador extends proveedorModelo
     /** Agregar proveedor */
     public function agregar_proveedor_controlador()
     {
+        if (!mainModel::tienePermiso('proveedor.crear')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto" => "No posee permisos para registrar proveedores",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         $razon   = mainModel::limpiar_string($_POST['razon_social_reg']);
         $ruc     = mainModel::limpiar_string($_POST['ruc_reg']);
         $telefono = mainModel::limpiar_string($_POST['telefono_reg']);
@@ -90,6 +100,16 @@ class proveedorControlador extends proveedorModelo
     /** Eliminar proveedor */
     public function eliminar_proveedor_controlador()
     {
+        if (!mainModel::tienePermiso('proveedor.eliminar')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto" => "No posee permisos para eliminar proveedores",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         $id = mainModel::decryption($_POST['proveedor_id_del']);
         $id = mainModel::limpiar_string($id);
 

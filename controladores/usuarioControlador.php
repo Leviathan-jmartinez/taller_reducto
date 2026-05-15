@@ -10,6 +10,16 @@ class usuarioControlador extends usuarioModelo
     /** controlador agregar usuario*/
     public function agregar_usuario_controlador()
     {
+        if (!mainModel::tienePermiso('usuarios.crear')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto" => "No posee permisos para registrar usuarios",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         /**inicio */
         $ci = mainModel::limpiar_string($_POST['usuario_dni_reg']);
         $nombre = mainModel::limpiar_string($_POST['usuario_nombre_reg']);
@@ -710,7 +720,7 @@ class usuarioControlador extends usuarioModelo
     public function listar_usuarios_controlador()
     {
         if (
-            !mainModel::tienePermiso('roles.ver')
+            !mainModel::tienePermiso('usuarios.ver')
         ) {
             return [];
         }
@@ -721,6 +731,10 @@ class usuarioControlador extends usuarioModelo
 
     public function roles_por_usuario_controlador()
     {
+        if (!mainModel::tienePermiso('usuarios.asignarrol')) {
+            return '<div class="alert alert-danger">Acceso denegado</div>';
+        }
+
         $idUsuario = mainModel::decryption($_POST['id_usuario']);
         $idUsuario = mainModel::limpiar_string($idUsuario);
 
@@ -757,6 +771,15 @@ class usuarioControlador extends usuarioModelo
 
     public function guardar_roles_usuario_controlador()
     {
+        if (!mainModel::tienePermiso('usuarios.asignarrol')) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto"  => "No posee permisos para asignar roles",
+                "Tipo"   => "error"
+            ]);
+        }
+
         $idUsuario = mainModel::decryption($_POST['id_usuario']);
         $idUsuario = mainModel::limpiar_string($idUsuario);
 
@@ -783,6 +806,10 @@ class usuarioControlador extends usuarioModelo
 
     public function sucursal_por_usuario_controlador()
     {
+        if (!mainModel::tienePermiso('usuarios.asignarlocal')) {
+            return '<div class="alert alert-danger">Acceso denegado</div>';
+        }
+
         $idUsuario = mainModel::decryption($_POST['id_usuario']);
 
         $data = usuarioModelo::obtener_sucursal_usuario_modelo($idUsuario);
@@ -811,6 +838,15 @@ class usuarioControlador extends usuarioModelo
 
     public function asignar_sucursal_controlador()
     {
+        if (!mainModel::tienePermiso('usuarios.asignarlocal')) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto"  => "No posee permisos para asignar sucursal",
+                "Tipo"   => "error"
+            ]);
+        }
+
         $idUsuario = mainModel::decryption($_POST['id_usuario']);
         $idSucursal = $_POST['id_sucursal'];
         $res = usuarioModelo::guardar_sucursal_usuario_modelo($idUsuario, $idSucursal);

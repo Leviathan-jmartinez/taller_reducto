@@ -10,6 +10,16 @@ class clienteControlador extends clienteModelo
     /** controlador agregar cliente*/
     public function agregar_cliente_controlador()
     {
+        if (!mainModel::tienePermiso('cliente.crear')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto" => "No posee permisos para registrar clientes",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         $doc = mainModel::limpiar_string($_POST['cliente_doc_reg']);
         $nombre = mainModel::limpiar_string($_POST['cliente_nombre_reg']);
         $apellido = mainModel::limpiar_string($_POST['cliente_apellido_reg']);
@@ -330,6 +340,16 @@ class clienteControlador extends clienteModelo
     /** controlador actualizar cliente */
     public function actualizar_cliente_controlador()
     {
+        if (!mainModel::tienePermiso('cliente.editar')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto" => "No posee permisos para actualizar clientes",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         $id = mainModel::decryption($_POST['cliente_id_up']);
         $id = mainModel::limpiar_string($id);
 

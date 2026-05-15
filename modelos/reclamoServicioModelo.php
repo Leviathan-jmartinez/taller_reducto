@@ -116,7 +116,7 @@ class reclamoServicioModelo extends mainModel
 
         FROM registro_servicio rs
         INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rs.idorden_trabajo
-        LEFT JOIN orden_trabajo_detalle d ON d.idorden_trabajo = ot.idorden_trabajo
+        LEFT JOIN registro_servicio_detalle d ON d.idregistro_servicio = rs.idregistro_servicio
         LEFT JOIN articulos a ON a.id_articulo = d.id_articulo
 
         LEFT JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio

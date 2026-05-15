@@ -4,6 +4,9 @@ if (!mainModel::tienePermiso('empleado.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
+
+$vistaPartes = explode('/', trim($_GET['vista'] ?? '', '/'));
+$idEquipo = $vistaPartes[1] ?? null;
 ?>
 
 <!-- Page header -->
@@ -25,7 +28,7 @@ if (!mainModel::tienePermiso('empleado.ver')) {
 require_once "./controladores/equipoControlador.php";
     $ins_equipo = new equipoControlador();
 
-    $miembros = $ins_equipo->miembros_equipo_controlador($pagina[1]);
+    $miembros = $ins_equipo->miembros_equipo_controlador($idEquipo);
 
     ?>
 
@@ -65,7 +68,7 @@ $cont = 1;
                                         autocomplete="off">
 
                                         <input type="hidden" name="accion" value="quitar_miembro">
-                                        <input type="hidden" name="equipo_id" value="<?php echo $pagina[1]; ?>">
+                                        <input type="hidden" name="equipo_id" value="<?php echo $idEquipo; ?>">
                                         <input type="hidden" name="empleado_id" value="<?php echo $lc->encryption($m['idempleados']); ?>">
 
                                         <button type="submit" class="btn btn-warning btn-sm">

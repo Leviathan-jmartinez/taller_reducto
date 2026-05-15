@@ -166,6 +166,16 @@ class vehiculoControlador extends vehiculoModelo
 
     public function agregar_vehiculo_controlador()
     {
+        if (!mainModel::tienePermiso('vehiculo.crear')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto" => "No posee permisos para registrar vehiculos",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         $cliente = mainModel::limpiar_string($_POST['cliente_reg']);
         $modelo  = mainModel::limpiar_string($_POST['modelo_reg']);
         $color   = mainModel::limpiar_string($_POST['color_reg']);
@@ -210,6 +220,16 @@ class vehiculoControlador extends vehiculoModelo
 
     public function actualizar_vehiculo_controlador()
     {
+        if (!mainModel::tienePermiso('vehiculo.editar')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto" => "No posee permisos para actualizar vehiculos",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         $id = mainModel::decryption($_POST['vehiculo_id_up']);
 
         $datos = [

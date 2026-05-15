@@ -530,8 +530,12 @@ class registroServicioModelo extends mainModel
             /* ================= VALIDAR REGISTRO ================= */
             $q = $pdo->prepare("
             SELECT rs.estado,
-                   rs.idorden_trabajo
+                   rs.idorden_trabajo,
+                   rs.id_sucursal AS sucursal_registro,
+                   ot.id_sucursal AS sucursal_ot
             FROM registro_servicio rs
+            INNER JOIN orden_trabajo ot
+                ON ot.idorden_trabajo = rs.idorden_trabajo
             WHERE rs.idregistro_servicio = ?
             FOR UPDATE
         ");
@@ -539,39 +543,19 @@ class registroServicioModelo extends mainModel
             $reg = $q->fetch(PDO::FETCH_ASSOC);
 
             if (!$reg) {
+                $pdo->rollBack();
                 return ['msg' => 'Registro de servicio no existe'];
             }
 
             if ($reg['estado'] != 1) {
+                $pdo->rollBack();
                 return ['msg' => 'El registro no puede ser anulado'];
             }
-            $qSuc = $pdo->prepare("
-                    SELECT COALESCE(
-                        /* NORMAL */
-                        (SELECT r1.id_sucursal
-                        FROM presupuesto_servicio ps
-                        INNER JOIN diagnostico_servicio ds 
-                            ON ds.id_diagnostico = ps.id_diagnostico
-                        INNER JOIN recepcion_servicio r1 
-                            ON r1.idrecepcion = ds.idrecepcion
-                        WHERE ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-                        LIMIT 1),
 
-                        /* RECLAMO */
-                        (SELECT r2.id_sucursal
-                        FROM recepcion_servicio r2
-                        WHERE r2.idreclamo_servicio = ot.idreclamo_servicio
-                        LIMIT 1)
-                    )
-                    FROM registro_servicio rs
-                    INNER JOIN orden_trabajo ot 
-                        ON ot.idorden_trabajo = rs.idorden_trabajo
-                    WHERE rs.idregistro_servicio = ?
-                ");
-            $qSuc->execute([$datos['idregistro_servicio']]);
-            $idSucursalReal = $qSuc->fetchColumn();
-
-            if ($idSucursalReal != $_SESSION['nick_sucursal']) {
+            if (
+                (int)$reg['sucursal_registro'] !== (int)$datos['id_sucursal'] ||
+                (int)$reg['sucursal_ot'] !== (int)$datos['id_sucursal']
+            ) {
                 throw new Exception('No puede anular registros de otra sucursal');
             }
 

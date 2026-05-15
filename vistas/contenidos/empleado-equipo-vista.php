@@ -1,6 +1,14 @@
 <?php
 
-if (!mainModel::tienePermiso('empleado.ver')) {
+$vistaPartes = explode('/', trim($_GET['vista'] ?? '', '/'));
+$vistaActual = $vistaPartes[0] ?? 'empleado-equipo';
+$idEquipo = ($vistaActual === 'empleado-equipo-actualizar') ? ($vistaPartes[1] ?? null) : null;
+$editando = false;
+$camposEquipo = [];
+
+$permisoNecesario = ($vistaActual === 'empleado-equipo-actualizar') ? 'empleado.editar' : 'empleado.ver';
+
+if (!mainModel::tienePermiso($permisoNecesario)) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
@@ -33,18 +41,28 @@ if (!mainModel::tienePermiso('empleado.ver')) {
     <?php
     require_once "./controladores/equipoControlador.php";
     $ins_equipo = new equipoControlador();
+
+    if ($idEquipo !== null) {
+        $camposEquipo = $ins_equipo->datos_equipo_controlador($idEquipo);
+        if (!empty($camposEquipo)) {
+            $editando = true;
+        }
+    }
     ?>
 
     <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/equipoAjax.php"
         method="POST"
-        data-form="save"
+        data-form="<?php echo $editando ? 'update' : 'save'; ?>"
         autocomplete="off">
 
-        <input type="hidden" name="accion" value="crear_equipo">
+        <input type="hidden" name="accion" value="<?php echo $editando ? 'actualizar_equipo' : 'crear_equipo'; ?>">
+        <?php if ($editando): ?>
+            <input type="hidden" name="equipo_id_up" value="<?php echo $idEquipo; ?>">
+        <?php endif; ?>
 
         <fieldset>
-            <legend><i class="fas fa-plus"></i> &nbsp; Crear nuevo equipo</legend>
+            <legend><i class="fas <?php echo $editando ? 'fa-sync-alt' : 'fa-plus'; ?>"></i> &nbsp; <?php echo $editando ? 'Actualizar equipo' : 'Crear nuevo equipo'; ?></legend>
 
             <div class="row">
                 <div class="col-md-4">
@@ -57,7 +75,8 @@ if (!mainModel::tienePermiso('empleado.ver')) {
                             $empCtrl = new empleadoControlador();
                             $sucursales = $empCtrl->listar_sucursales_controlador();
                             foreach ($sucursales as $s) {
-                                echo "<option value='{$s['id_sucursal']}'>{$s['suc_descri']}</option>";
+                                $selected = ($editando && (int)$camposEquipo['id_sucursal'] === (int)$s['id_sucursal']) ? 'selected' : '';
+                                echo "<option value='{$s['id_sucursal']}' {$selected}>{$s['suc_descri']}</option>";
                             }
                             ?>
                         </select>
@@ -67,23 +86,26 @@ if (!mainModel::tienePermiso('empleado.ver')) {
                 <div class="col-md-4">
                     <div class="form-group">
                         <label>Nombre del equipo</label>
-                        <input type="text" class="form-control" name="nombre" required>
+                        <input type="text" class="form-control" name="nombre" value="<?php echo $editando ? htmlspecialchars($camposEquipo['nombre'], ENT_QUOTES, 'UTF-8') : ''; ?>" required>
                     </div>
                 </div>
 
                 <div class="col-md-4">
                     <div class="form-group">
                         <label>Descripción</label>
-                        <input type="text" class="form-control" name="descripcion">
+                        <input type="text" class="form-control" name="descripcion" value="<?php echo $editando ? htmlspecialchars($camposEquipo['descripcion'] ?? '', ENT_QUOTES, 'UTF-8') : ''; ?>">
                     </div>
                 </div>
             </div>
         </fieldset>
 
         <p class="text-center mt-3">
-            <button type="submit" class="btn btn-raised btn-info">
-                <i class="fas fa-save"></i> &nbsp; GUARDAR
+            <button type="submit" class="btn btn-raised <?php echo $editando ? 'btn-success' : 'btn-info'; ?>">
+                <i class="fas <?php echo $editando ? 'fa-sync-alt' : 'fa-save'; ?>"></i> &nbsp; <?php echo $editando ? 'ACTUALIZAR' : 'GUARDAR'; ?>
             </button>
+            <?php if ($editando): ?>
+                <a href="<?php echo SERVERURL; ?>empleado-equipo/" class="btn btn-raised btn-secondary">CANCELAR</a>
+            <?php endif; ?>
         </p>
     </form>
 </div>
@@ -125,6 +147,12 @@ if (!mainModel::tienePermiso('empleado.ver')) {
                                 class="btn btn-info btn-sm">
                                 <i class="fas fa-eye"></i>
                             </a>
+                            <?php if (mainModel::tienePermiso('empleado.editar')): ?>
+                                <a href="<?php echo SERVERURL; ?>empleado-equipo-actualizar/<?php echo $lc->encryption($eq['id_equipo']); ?>/"
+                                    class="btn btn-success btn-sm">
+                                    <i class="fas fa-sync-alt"></i>
+                                </a>
+                            <?php endif; ?>
                             <?php if (mainModel::tienePermiso('empleado.eliminar')): ?>
                                 <form class="FormularioAjax d-inline"
                                     action="<?php echo SERVERURL; ?>ajax/equipoAjax.php"

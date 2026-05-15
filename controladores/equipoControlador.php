@@ -15,11 +15,29 @@ class equipoControlador extends equipoModelo
         return equipoModelo::listar_equipos_modelo();
     }
 
+    public function datos_equipo_controlador($id_equipo_enc)
+    {
+        $id_equipo = mainModel::decryption($id_equipo_enc);
+        $id_equipo = mainModel::limpiar_string($id_equipo);
+
+        return equipoModelo::datos_equipo_modelo($id_equipo);
+    }
+
     /* ==================================================
        CREAR EQUIPO
     ================================================== */
     public function crear_equipo_controlador()
     {
+        if (!mainModel::tienePermiso('empleado.crear')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto" => "No posee permisos para crear equipos",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         $sucursal    = mainModel::limpiar_string($_POST['sucursal']);
         $nombre      = mainModel::limpiar_string($_POST['nombre']);
         $descripcion = mainModel::limpiar_string($_POST['descripcion']);
@@ -49,6 +67,64 @@ class equipoControlador extends equipoModelo
     }
 
     /* ==================================================
+       ACTUALIZAR EQUIPO
+    ================================================== */
+    public function actualizar_equipo_controlador()
+    {
+        if (!mainModel::tienePermiso('empleado.editar')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto" => "No posee permisos para actualizar equipos",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        $id = mainModel::decryption($_POST['equipo_id_up'] ?? '');
+        $id = mainModel::limpiar_string($id);
+        $sucursal = mainModel::limpiar_string($_POST['sucursal']);
+        $nombre = mainModel::limpiar_string($_POST['nombre']);
+        $descripcion = mainModel::limpiar_string($_POST['descripcion']);
+
+        if ($id == "" || $sucursal == "" || $nombre == "") {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Debe completar los campos obligatorios",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        $equipo = equipoModelo::datos_equipo_modelo($id);
+
+        if (!$equipo || (int)$equipo['estado'] !== 1) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El equipo no existe o esta inactivo",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        equipoModelo::actualizar_equipo_modelo([
+            "id_equipo" => $id,
+            "sucursal" => $sucursal,
+            "nombre" => $nombre,
+            "descripcion" => $descripcion
+        ]);
+
+        echo json_encode([
+            "Alerta" => "recargar",
+            "Titulo" => "Equipo",
+            "Texto" => "Equipo actualizado correctamente",
+            "Tipo" => "success"
+        ]);
+    }
+
+    /* ==================================================
        EMPLEADOS DISPONIBLES POR SUCURSAL
     ================================================== */
     public function empleados_disponibles_controlador($id_sucursal)
@@ -61,6 +137,16 @@ class equipoControlador extends equipoModelo
     ================================================== */
     public function asignar_empleados_controlador()
     {
+        if (!mainModel::tienePermiso('empleado.editar')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto" => "No posee permisos para asignar empleados a equipos",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         $id_equipo = mainModel::limpiar_string($_POST['id_equipo']);
         $empleados = $_POST['empleados'] ?? [];
 
@@ -112,6 +198,16 @@ class equipoControlador extends equipoModelo
     ================================================== */
     public function eliminar_equipo_controlador()
     {
+        if (!mainModel::tienePermiso('empleado.eliminar')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto" => "No posee permisos para eliminar equipos",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         $id = mainModel::decryption($_POST['equipo_id_del']);
         $id = mainModel::limpiar_string($id);
 
@@ -140,6 +236,16 @@ class equipoControlador extends equipoModelo
     ================================================== */
     public function quitar_miembro_controlador()
     {
+        if (!mainModel::tienePermiso('empleado.editar')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto" => "No posee permisos para quitar miembros del equipo",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         $id_equipo = mainModel::decryption($_POST['equipo_id']);
         $id_equipo = mainModel::limpiar_string($id_equipo);
 

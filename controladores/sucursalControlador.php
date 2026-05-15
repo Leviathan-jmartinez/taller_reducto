@@ -25,6 +25,16 @@ class sucursalControlador extends sucursalModelo
     /** agregar sucursal */
     public function agregar_sucursal_controlador()
     {
+        if (!mainModel::tienePermiso('sucursal.crear')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto" => "No posee permisos para registrar sucursales",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         $empresa   = mainModel::limpiar_string($_POST['empresa_reg']);
         $descri    = mainModel::limpiar_string($_POST['sucursal_descri_reg']);
         $direccion = mainModel::limpiar_string($_POST['sucursal_direccion_reg']);
@@ -210,6 +220,16 @@ class sucursalControlador extends sucursalModelo
 
     public function actualizar_sucursal_controlador()
     {
+        if (!mainModel::tienePermiso('sucursal.editar')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto" => "No posee permisos para actualizar sucursales",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         $id = mainModel::decryption($_POST['sucursal_id_up']);
         $id = mainModel::limpiar_string($id);
 
@@ -250,6 +270,16 @@ class sucursalControlador extends sucursalModelo
 
     public function eliminar_sucursal_controlador()
     {
+        if (!mainModel::tienePermiso('sucursal.eliminar')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto" => "No posee permisos para eliminar sucursales",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         $id = mainModel::decryption($_POST['sucursal_id_del']);
         $id = mainModel::limpiar_string($id);
 

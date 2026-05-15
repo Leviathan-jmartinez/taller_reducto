@@ -4,6 +4,9 @@ if (!mainModel::tienePermiso('usuarios.editar')) {
 	echo '<div class="alert alert-danger">Acceso no autorizado</div>';
 	return;
 }
+
+$vistaPartes = explode('/', trim($_GET['vista'] ?? '', '/'));
+$idUsuario = $vistaPartes[1] ?? null;
 ?>
 
 <!-- Page header -->
@@ -77,12 +80,12 @@ if (!mainModel::tienePermiso('usuarios.editar')) {
 require_once "./controladores/usuarioControlador.php";
 	$ins_user = new usuarioControlador();
 
-	$datos_usuario = $ins_user->datos_usuario_controlador("Unico", $pagina[1]);
+	$datos_usuario = $ins_user->datos_usuario_controlador("Unico", $idUsuario);
 	if ($datos_usuario->rowCount() == 1) {
 		$campos = $datos_usuario->fetch();
 	?>
 		<form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/usuarioAjax.php" method="POST" data-form="update" autocomplete="off">
-			<input type="hidden" name="usuario_id_up" value="<?php echo $pagina[1] ?>">
+			<input type="hidden" name="usuario_id_up" value="<?php echo $idUsuario; ?>">
 			<fieldset>
 				<legend><i class="far fa-address-card"></i> &nbsp; Información personal</legend>
 				<div class="container-fluid">
@@ -196,7 +199,7 @@ require_once "./controladores/usuarioControlador.php";
 					</div>
 				</div>
 			</fieldset>
-			<?php if ($lc->encryption($_SESSION['id_str']) != $pagina[1]) { ?>
+			<?php if ($lc->encryption($_SESSION['id_str']) != $idUsuario) { ?>
 				<input type="hidden" name="tipo_cuenta" value="impropia">
 			<?php } else { ?>
 				<input type="hidden" name="tipo_cuenta" value="propia">
