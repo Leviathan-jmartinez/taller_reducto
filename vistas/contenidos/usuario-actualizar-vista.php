@@ -152,6 +152,25 @@ require_once "./controladores/usuarioControlador.php";
 															} ?>>Inactiva</option>
 									</select>
 								</div>
+								<div class="form-group">
+									<?php
+									$intentosFallidos = isset($campos['usu_intentos_fallidos']) ? (int)$campos['usu_intentos_fallidos'] : 0;
+									$bloqueado = isset($campos['usu_bloqueado']) ? (int)$campos['usu_bloqueado'] : 0;
+									?>
+									<span>Intentos fallidos &nbsp;
+										<span class="badge badge-<?php echo ($intentosFallidos >= 3 ? 'danger' : ($intentosFallidos > 0 ? 'warning' : 'success')); ?>">
+											<?php echo $intentosFallidos; ?>/3
+										</span>
+									</span>
+									<br>
+									<span>Bloqueo por intentos &nbsp;
+										<?php if ($bloqueado == 1) {
+											echo '<span class="badge badge-danger">Bloqueada</span>';
+										} else {
+											echo '<span class="badge badge-success">Libre</span>';
+										} ?>
+									</span>
+								</div>
 							<?php
 } ?>
 						</div>

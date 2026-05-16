@@ -231,6 +231,14 @@ class usuarioControlador extends usuarioModelo
         $Npaginas = ceil($total / $registros);
 
         /* ========= TABLA ========= */
+        $puede_ver_seguridad = mainModel::tienePermiso('usuarios.editar');
+        $tiene_acciones = (
+            mainModel::tienePermiso('usuarios.editar') ||
+            mainModel::tienePermiso('usuarios.eliminar') ||
+            mainModel::tienePermiso('usuarios.asignarrol') ||
+            mainModel::tienePermiso('usuarios.asignarlocal')
+        );
+
         $tabla = '<div class="table-responsive">
         <table class="table table-dark table-sm">
         <thead>
@@ -242,12 +250,13 @@ class usuarioControlador extends usuarioModelo
                 <th>USUARIO</th>
                 <th>EMAIL</th>';
 
-        if (
-            mainModel::tienePermiso('usuarios.editar') ||
-            mainModel::tienePermiso('usuarios.eliminar') ||
-            mainModel::tienePermiso('usuarios.asignarrol') ||
-            mainModel::tienePermiso('usuarios.asignarlocal')
-        ) {
+        if ($puede_ver_seguridad) {
+            $tabla .= '
+                <th>INTENTOS</th>
+                <th>BLOQUEO</th>';
+        }
+
+        if ($tiene_acciones) {
             $tabla .= '<th>ACCIONES</th>';
         }
 
@@ -269,12 +278,19 @@ class usuarioControlador extends usuarioModelo
                 <td>' . $rows['usu_nick'] . '</td>
                 <td>' . $rows['usu_email'] . '</td>';
 
+                if ($puede_ver_seguridad) {
+                    $intentosFallidos = isset($rows['usu_intentos_fallidos']) ? (int)$rows['usu_intentos_fallidos'] : 0;
+                    $bloqueado = isset($rows['usu_bloqueado']) ? (int)$rows['usu_bloqueado'] : 0;
+
+                    $tabla .= '
+                <td>
+                    <span class="badge badge-' . ($intentosFallidos >= 3 ? 'danger' : ($intentosFallidos > 0 ? 'warning' : 'success')) . '">' . $intentosFallidos . '/3</span>
+                </td>
+                <td>' . ($bloqueado == 1 ? '<span class="badge badge-danger">Bloqueada</span>' : '<span class="badge badge-success">Libre</span>') . '</td>';
+                }
+
                 /* ========= ACCIONES ========= */
-                if (
-                    mainModel::tienePermiso('usuarios.editar') ||
-                    mainModel::tienePermiso('usuarios.eliminar') ||
-                    mainModel::tienePermiso('usuarios.asignarrol')
-                ) {
+                if ($tiene_acciones) {
 
                     $tabla .= '<td>';
 
@@ -334,9 +350,10 @@ class usuarioControlador extends usuarioModelo
 
             $reg_final = $contador - 1;
         } else {
+            $columnas = 6 + ($puede_ver_seguridad ? 2 : 0) + ($tiene_acciones ? 1 : 0);
 
             $tabla .= '<tr class="text-center">
-            <td colspan="7">No hay registros en el sistema</td>
+            <td colspan="' . $columnas . '">No hay registros en el sistema</td>
         </tr>';
         }
 
