@@ -34,7 +34,7 @@ class proveedorControlador extends proveedorModelo
         $ciudad  = mainModel::limpiar_string($_POST['ciudad_reg']);
         $estado  = mainModel::limpiar_string($_POST['estado_reg']);
 
-        if ($razon == "" || $ciudad == "" || $estado == "") {
+        if ($razon == "" || $ruc == "" || $ciudad == "" || $estado == "") {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Error",
@@ -55,7 +55,7 @@ class proveedorControlador extends proveedorModelo
         }
 
         $check = mainModel::ejecutar_consulta_simple(
-            "SELECT idproveedores FROM proveedores WHERE razon_social='$razon'"
+            "SELECT idproveedores FROM proveedores WHERE ruc='$ruc'"
         );
         if ($check->rowCount() > 0) {
             echo json_encode([
@@ -360,7 +360,7 @@ class proveedorControlador extends proveedorModelo
         $estado    = mainModel::limpiar_string($_POST['estado_up']);
 
         /* === campos obligatorios === */
-        if ($razon == "" || $ciudad == "" || $estado == "") {
+        if ($razon == "" || $ruc == "" || $ciudad == "" || $estado == "") {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Error",
@@ -392,17 +392,17 @@ class proveedorControlador extends proveedorModelo
             exit();
         }
 
-        /* === validar duplicado de razon social === */
-        if ($razon != $campos['razon_social']) {
+        /* === validar duplicado de RUC === */
+        if ($ruc != $campos['ruc']) {
             $check_dup = mainModel::ejecutar_consulta_simple(
                 "SELECT idproveedores FROM proveedores 
-             WHERE razon_social='$razon' LIMIT 1"
+             WHERE ruc='$ruc' LIMIT 1"
             );
             if ($check_dup->rowCount() > 0) {
                 echo json_encode([
                     "Alerta" => "simple",
                     "Titulo" => "Error",
-                    "Texto" => "La razón social ya se encuentra registrada",
+                    "Texto" => "El RUC ya se encuentra registrado",
                     "Tipo" => "error"
                 ]);
                 exit();

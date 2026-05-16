@@ -225,6 +225,20 @@ class rolesControlador extends rolesModelo
         $descripcion = mainModel::limpiar_string($_POST['rol_descripcion_up']);
         $estado = mainModel::limpiar_string($_POST['rol_estado_up']);
 
+        $check_rol = mainModel::ejecutar_consulta_simple(
+            "SELECT id_rol, nombre FROM roles WHERE id_rol='$id'"
+        );
+        if ($check_rol->rowCount() <= 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El rol no existe en el sistema",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+        $rol_actual = $check_rol->fetch();
+
         /* ===== VALIDAR ===== */
         if ($nombre == "") {
             echo json_encode([
@@ -238,7 +252,28 @@ class rolesControlador extends rolesModelo
 
         /* ===== VALIDAR ESTADO ===== */
         if ($estado != "0" && $estado != "1") {
-            $estado = "1";
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El estado seleccionado no es valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($nombre != $rol_actual['nombre']) {
+            $check_nombre = mainModel::ejecutar_consulta_simple(
+                "SELECT id_rol FROM roles WHERE nombre='$nombre'"
+            );
+            if ($check_nombre->rowCount() > 0) {
+                echo json_encode([
+                    "Alerta" => "simple",
+                    "Titulo" => "Duplicado",
+                    "Texto" => "El rol ya existe",
+                    "Tipo" => "error"
+                ]);
+                exit();
+            }
         }
 
         $datos = [
@@ -285,6 +320,19 @@ class rolesControlador extends rolesModelo
 
         $id = mainModel::decryption($_POST['rol_id_del']);
         $id = mainModel::limpiar_string($id);
+
+        $check_rol = mainModel::ejecutar_consulta_simple(
+            "SELECT id_rol FROM roles WHERE id_rol='$id'"
+        );
+        if ($check_rol->rowCount() <= 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El rol no existe en el sistema",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
 
         $delete = rolesModelo::eliminar_roles_modelo($id);
 

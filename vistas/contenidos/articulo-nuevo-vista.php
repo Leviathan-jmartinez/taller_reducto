@@ -17,7 +17,7 @@ require_once "./controladores/articuloControlador.php";
 $ins_articulo = new articuloControlador();
 
 if ($id != null) {
-    $dat = $ins_articulo->datos_articulo_proveedor_controlador($id);
+    $dat = $ins_articulo->datos_articulos_controlador("Unico", $id);
     if ($dat->rowCount() == 1) {
         $campos = $dat->fetch();
         $editando = true;
@@ -28,7 +28,6 @@ $busqueda = $_SESSION['busqueda_articulo'] ?? "";
 
 /* LISTAS */
 $articlesIVA = $ins_articulo->listar_iva_controlador();
-$articlesPro = $ins_articulo->listar_proveedores_controlador();
 $articlesUM  = $ins_articulo->listar_um_controlador();
 $articlesCAT = $ins_articulo->listar_cate_controlador();
 $articlesMAR = $ins_articulo->listar_marca_controlador();
@@ -251,7 +250,7 @@ $articlesMAR = $ins_articulo->listar_marca_controlador();
                         <input type="hidden" name="eliminar_busqueda" value="1">
 
                         <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-times"></i> Cancelar
+                            <i class="fas fa-times"></i> Limpiar
                         </button>
                     </form>
                 <?php

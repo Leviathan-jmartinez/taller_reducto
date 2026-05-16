@@ -128,6 +128,11 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
                     CANCELAR
                 </a>
             <?php
+} else { ?>
+                <button type="reset" class="btn btn-raised btn-secondary">
+                    CANCELAR
+                </button>
+            <?php
 } ?>
         </p>
 
@@ -167,7 +172,7 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
                         <input type="hidden" name="eliminar_busqueda" value="1">
 
                         <button type="submit" class="btn btn-danger">
-                            Cancelar
+                            Limpiar
                         </button>
                     </form>
                 <?php

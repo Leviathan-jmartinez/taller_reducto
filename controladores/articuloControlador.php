@@ -56,7 +56,7 @@ class articuloControlador extends articuloModelo
                 <th>#</th>
                 <th>CÓDIGO</th>
                 <th>NOMBRE</th>
-                <th>DETALLE</th>';
+                <th>PRECIO VENTA</th>';
 
         if (mainModel::tienePermiso('articulo.editar')) {
             $tabla .= '<th>ACTUALIZAR</th>';
@@ -80,13 +80,7 @@ class articuloControlador extends articuloModelo
                 <td>' . $rows['codigo'] . '</td>
                 <td>' . $rows['desc_articulo'] . '</td>
                 <td>
-                    <button type="button" class="btn btn-info"
-                        data-toggle="popover"
-                        data-trigger="hover"
-                        title="Precio Compra: ' . number_format((float)$rows['precio_compra'], 0, ',', '.') . '"
-                        data-content="Precio Venta: ' . number_format((float)$rows['precio_venta'], 0, ',', '.') . '">
-                        <i class="fas fa-info-circle"></i>
-                    </button>
+                    ' . number_format((float)$rows['precio_venta'], 0, ',', '.') . '
                 </td>';
 
                 if (mainModel::tienePermiso('articulo.editar')) {
@@ -157,7 +151,7 @@ class articuloControlador extends articuloModelo
     }
     /**fin controlador */
 
-    /** controlador datos clientes  */
+    /** controlador datos articulos  */
     public function datos_articulos_controlador($tipo, $id)
     {
         $tipo = mainModel::limpiar_string($tipo);
@@ -167,25 +161,11 @@ class articuloControlador extends articuloModelo
     }
 
 
-    public function datos_articulo_proveedor_controlador($id)
-    {
-        $id = mainModel::decryption($id);
-        $id = mainModel::limpiar_string($id);
-
-        return articuloModelo::obtener_articulo_con_proveedor_modelo($id);
-    }
-
     /**fin controlador */
     public function listar_iva_controlador()
     {
         $iva = articuloModelo::obtener_impuestos_modelo(); // Llamamos al método protegido desde la clase hija
         return $iva;
-    }
-
-    public function listar_proveedores_controlador()
-    {
-        $proveedor = articuloModelo::obtener_proveedores_modelo(); // Llamamos al método protegido desde la clase hija
-        return $proveedor;
     }
 
     public function listar_um_controlador()
@@ -220,13 +200,11 @@ class articuloControlador extends articuloModelo
         }
 
         $categoria = mainModel::limpiar_string($_POST['categoria_reg']);
-        $proveedor = mainModel::limpiar_string($_POST['proveedor_reg'] ?? '');
         $umedida = mainModel::limpiar_string($_POST['um_reg']);
         $iva = mainModel::limpiar_string($_POST['tipo_iva_reg']);
         $imarca = mainModel::limpiar_string($_POST['marca_reg']);
         $descrip = mainModel::limpiar_string($_POST['articulo_nombre_reg']);
         $pricesale = mainModel::limpiar_string($_POST['articulo_priceV_reg']);
-        $pricebuy = mainModel::limpiar_string($_POST['articulo_priceC_reg'] ?? '');
         $code = mainModel::limpiar_string($_POST['articulo_codigo_reg']);
         $tipo = mainModel::limpiar_string($_POST['tipoprodReg']);
 
@@ -247,16 +225,6 @@ class articuloControlador extends articuloModelo
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
                 "Texto" => "El formato del campo Código no es válido",
-                "Tipo" => "error"
-            ];
-            echo json_encode($alerta);
-            exit();
-        }
-        if ($pricebuy !== "" && mainModel::verificarDatos("[0-9]+(\.[0-9]{1,2})?", $pricebuy)) {
-            $alerta = [
-                "Alerta" => "simple",
-                "Titulo" => "Ocurrio un error inesperado!",
-                "Texto" => "El formato del campo Precio de compra no es válido",
                 "Tipo" => "error"
             ];
             echo json_encode($alerta);
@@ -339,13 +307,11 @@ class articuloControlador extends articuloModelo
 
         $datos_articulo = [
             "id_categoria" => $categoria,
-            "idproveedores" => $proveedor,
             "idunidad_medida" => $umedida,
             "idiva" => $iva,
             "id_marcas" => $imarca,
             "descrip" => $descrip,
             "pricesale" => $pricesale,
-            "pricebuy" => $pricebuy,
             "code" => $code,
             "tipo" => $tipo
         ];
@@ -466,7 +432,6 @@ class articuloControlador extends articuloModelo
 
         /* ===== CAPTURA DE DATOS ===== */
         $id_categoria     = mainModel::limpiar_string($_POST['categoria_up'] ?? null);
-        $idproveedores    = mainModel::limpiar_string($_POST['proveedor_up'] ?? '');
         $idunidad_medida  = mainModel::limpiar_string($_POST['um_up'] ?? null);
         $idiva            = mainModel::limpiar_string($_POST['tipo_iva_up'] ?? null);
         $id_marcas        = mainModel::limpiar_string($_POST['marca_up'] ?? null);
@@ -474,8 +439,6 @@ class articuloControlador extends articuloModelo
         $desc_articulo = mainModel::limpiar_string($_POST['articulo_nombre_up']);
         $precio_venta = trim($_POST['articulo_priceV_up']);
         $precio_venta = str_replace(',', '.', $precio_venta);
-        $precio_compra = trim($_POST['articulo_priceC_up'] ?? '');
-        $precio_compra = str_replace(',', '.', $precio_compra);
         $codigo        = mainModel::limpiar_string($_POST['articulo_codigo_up']);
         $estado        = mainModel::limpiar_string($_POST['articulo_estado_up'] ?? 1);
         $tipo          = mainModel::limpiar_string($_POST['tipoprodUp'] ?? 1);
@@ -516,17 +479,6 @@ class articuloControlador extends articuloModelo
             ]);
             exit();
         }
-
-        if ($precio_compra !== "" && !is_numeric($precio_compra)) {
-            echo json_encode([
-                "Alerta" => "simple",
-                "Titulo" => "Error",
-                "Texto" => "Precio compra inválido",
-                "Tipo" => "error"
-            ]);
-            exit();
-        }
-
         if (!is_numeric($precio_venta)) {
             echo json_encode([
                 "Alerta" => "simple",
@@ -577,13 +529,11 @@ class articuloControlador extends articuloModelo
         /* ===== DATA ===== */
         $datos_articulo_up = [
             "id_categoria" => $id_categoria,
-            "idproveedores" => $idproveedores,
             "idunidad_medida" => $idunidad_medida,
             "idiva" => $idiva,
             "id_marcas" => $id_marcas,
             "desc_articulo" => $desc_articulo,
             "precio_venta" => $precio_venta,
-            "precio_compra" => $precio_compra,
             "estado" => $estado,
             "codigo" => $codigo,
             "tipo" => $tipo,

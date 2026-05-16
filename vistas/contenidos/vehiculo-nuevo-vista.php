@@ -158,6 +158,11 @@ foreach ($modelos as $m) { ?>
                     CANCELAR
                 </a>
             <?php
+} else { ?>
+                <button type="reset" class="btn btn-raised btn-secondary">
+                    CANCELAR
+                </button>
+            <?php
 } ?>
         </p>
 
@@ -198,7 +203,7 @@ foreach ($modelos as $m) { ?>
                         <input type="hidden" name="eliminar_busqueda" value="1">
 
                         <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-times"></i> Cancelar
+                            <i class="fas fa-times"></i> Limpiar
                         </button>
                     </form>
                 <?php

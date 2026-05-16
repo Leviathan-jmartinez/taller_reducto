@@ -161,7 +161,7 @@ foreach ($ciudades as $c) { ?>
                     value="<?php echo $_SESSION['busqueda_proveedor'] ?? ''; ?>">
             </div>
 
-            <div class="col-12 col-md-6">a
+            <div class="col-12 col-md-6">
                 <button type="submit" class="btn btn-info">
                     <i class="fas fa-search"></i> Buscar
                 </button>
@@ -175,7 +175,7 @@ foreach ($ciudades as $c) { ?>
                         <input type="hidden" name="eliminar_busqueda" value="1">
 
                         <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-times"></i> Cancelar
+                            <i class="fas fa-times"></i> Limpiar
                         </button>
                     </form>
                 <?php

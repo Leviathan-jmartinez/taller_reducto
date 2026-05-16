@@ -206,28 +206,28 @@
                                     </ul>
                                 </li>
                             <?php } ?>
-                        </ul>
-                    </li>
-                <?php } ?>
-
-                <!-- SEGURIDAD -->
-                <?php if (mainModel::tienePermiso('usuarios.ver')) { ?>
-                    <li>
-                        <a href="#" class="nav-btn-submenu">
-                            <i class="fas fa-shield-alt fa-fw"></i> &nbsp; Seguridad
-                            <i class="fas fa-chevron-down"></i>
-                        </a>
-                        <ul>
+                            <!-- SEGURIDAD -->
                             <?php if (mainModel::tienePermiso('usuarios.ver')) { ?>
-                                <li><a href="<?= SERVERURL; ?>usuario-nuevo/"><i class="fas fa-user fa-fw"></i> &nbsp; Usuarios</a></li>
-                            <?php } ?>
+                                <li>
+                                    <a href="#" class="nav-btn-submenu">
+                                        <i class="fas fa-shield-alt fa-fw"></i> &nbsp; Seguridad
+                                        <i class="fas fa-chevron-down"></i>
+                                    </a>
+                                    <ul>
+                                        <?php if (mainModel::tienePermiso('usuarios.ver')) { ?>
+                                            <li><a href="<?= SERVERURL; ?>usuario-nuevo/"><i class="fas fa-user fa-fw"></i> &nbsp; Usuarios</a></li>
+                                        <?php } ?>
 
-                            <?php if (mainModel::tienePermiso('roles.ver')) { ?>
-                                <li><a href="<?= SERVERURL; ?>rol-permisos/"><i class="fas fa-key fa-fw"></i> &nbsp; Roles y Permisos</a></li>
+                                        <?php if (mainModel::tienePermiso('roles.ver')) { ?>
+                                            <li><a href="<?= SERVERURL; ?>rol-permisos/"><i class="fas fa-key fa-fw"></i> &nbsp; Roles y Permisos</a></li>
+                                        <?php } ?>
+                                    </ul>
+                                </li>
                             <?php } ?>
                         </ul>
                     </li>
                 <?php } ?>
+
                 <li>
                     <a href="#" class="nav-btn-submenu">
                         <i class="fas fa-chart-bar fa-fw"></i> &nbsp; Informes Referenciales

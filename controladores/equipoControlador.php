@@ -52,6 +52,32 @@ class equipoControlador extends equipoModelo
             exit();
         }
 
+        $check_sucursal = mainModel::ejecutar_consulta_simple(
+            "SELECT id_sucursal FROM sucursales WHERE id_sucursal='$sucursal' AND estado=1"
+        );
+        if ($check_sucursal->rowCount() <= 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "La sucursal seleccionada no es valida",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        $check_equipo = mainModel::ejecutar_consulta_simple(
+            "SELECT id_equipo FROM equipo_trabajo WHERE id_sucursal='$sucursal' AND nombre='$nombre' AND estado=1"
+        );
+        if ($check_equipo->rowCount() > 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Ya existe un equipo activo con ese nombre en la sucursal",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         equipoModelo::agregar_equipo_modelo([
             "sucursal"    => $sucursal,
             "nombre"      => $nombre,
@@ -97,6 +123,19 @@ class equipoControlador extends equipoModelo
             exit();
         }
 
+        $check_sucursal = mainModel::ejecutar_consulta_simple(
+            "SELECT id_sucursal FROM sucursales WHERE id_sucursal='$sucursal' AND estado=1"
+        );
+        if ($check_sucursal->rowCount() <= 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "La sucursal seleccionada no es valida",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         $equipo = equipoModelo::datos_equipo_modelo($id);
 
         if (!$equipo || (int)$equipo['estado'] !== 1) {
@@ -104,6 +143,19 @@ class equipoControlador extends equipoModelo
                 "Alerta" => "simple",
                 "Titulo" => "Error",
                 "Texto" => "El equipo no existe o esta inactivo",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        $check_equipo = mainModel::ejecutar_consulta_simple(
+            "SELECT id_equipo FROM equipo_trabajo WHERE id_sucursal='$sucursal' AND nombre='$nombre' AND estado=1 AND id_equipo<>'$id'"
+        );
+        if ($check_equipo->rowCount() > 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Ya existe un equipo activo con ese nombre en la sucursal",
                 "Tipo" => "error"
             ]);
             exit();
@@ -160,7 +212,33 @@ class equipoControlador extends equipoModelo
             exit();
         }
 
+        $equipo = equipoModelo::datos_equipo_modelo($id_equipo);
+        if (!$equipo || (int)$equipo['estado'] !== 1) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El equipo no existe o esta inactivo",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         foreach ($empleados as $id_empleado) {
+            $id_empleado = mainModel::limpiar_string($id_empleado);
+
+            $check_empleado = mainModel::ejecutar_consulta_simple(
+                "SELECT idempleados FROM empleados WHERE idempleados='$id_empleado' AND id_sucursal='{$equipo['id_sucursal']}' AND estado=1"
+            );
+            if ($check_empleado->rowCount() <= 0) {
+                echo json_encode([
+                    "Alerta" => "simple",
+                    "Titulo" => "Error",
+                    "Texto" => "Uno de los empleados seleccionados no es valido para este equipo",
+                    "Tipo" => "error"
+                ]);
+                exit();
+            }
+
             equipoModelo::asignar_empleado_equipo_modelo(
                 $id_equipo,
                 $id_empleado,
@@ -221,6 +299,17 @@ class equipoControlador extends equipoModelo
             exit();
         }
 
+        $equipo = equipoModelo::datos_equipo_modelo($id);
+        if (!$equipo) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El equipo no existe",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         equipoModelo::eliminar_equipo_modelo($id);
 
         echo json_encode([
@@ -257,6 +346,19 @@ class equipoControlador extends equipoModelo
                 "Alerta" => "simple",
                 "Titulo" => "Error",
                 "Texto" => "Datos incompletos",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        $check_miembro = mainModel::ejecutar_consulta_simple(
+            "SELECT id_equipo FROM equipo_empleado WHERE id_equipo='$id_equipo' AND idempleados='$id_empleado' AND estado=1"
+        );
+        if ($check_miembro->rowCount() <= 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El empleado no pertenece al equipo",
                 "Tipo" => "error"
             ]);
             exit();

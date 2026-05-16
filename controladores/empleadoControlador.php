@@ -1,4 +1,4 @@
-<?php
+    <?php
 if ($peticionAjax) {
     require_once "../modelos/empleadoModelo.php";
 } else {
@@ -51,11 +51,37 @@ class empleadoControlador extends empleadoModelo
             "estado"       => 1
         ];
 
-        if ($datos['nombre'] == "" || $datos['apellido'] == "" || $datos['cedula'] == "") {
+        if ($datos['cargo'] == "" || $datos['sucursal'] == "" || $datos['nombre'] == "" || $datos['apellido'] == "" || $datos['cedula'] == "") {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Error",
                 "Texto" => "Campos obligatorios incompletos",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        $check_cargo = mainModel::ejecutar_consulta_simple(
+            "SELECT idcargos FROM cargos WHERE idcargos='{$datos['cargo']}' AND estado=1"
+        );
+        if ($check_cargo->rowCount() <= 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El cargo seleccionado no es valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        $check_sucursal = mainModel::ejecutar_consulta_simple(
+            "SELECT id_sucursal FROM sucursales WHERE id_sucursal='{$datos['sucursal']}' AND estado=1"
+        );
+        if ($check_sucursal->rowCount() <= 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "La sucursal seleccionada no es valida",
                 "Tipo" => "error"
             ]);
             exit();
@@ -98,6 +124,7 @@ class empleadoControlador extends empleadoModelo
         }
 
         $id = mainModel::decryption($_POST['empleado_id_up']);
+        $id = mainModel::limpiar_string($id);
 
         $datos = [
             "id"           => $id,
@@ -111,6 +138,81 @@ class empleadoControlador extends empleadoModelo
             "estado_civil" => mainModel::limpiar_string($_POST['estado_civil_up']),
             "estado"       => mainModel::limpiar_string($_POST['estado_up'])
         ];
+
+        $check_empleado = mainModel::ejecutar_consulta_simple(
+            "SELECT idempleados, nro_cedula FROM empleados WHERE idempleados='$id'"
+        );
+        if ($check_empleado->rowCount() <= 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El empleado no existe en el sistema",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+        $empleado_actual = $check_empleado->fetch();
+
+        if ($datos['cargo'] == "" || $datos['sucursal'] == "" || $datos['nombre'] == "" || $datos['apellido'] == "" || $datos['cedula'] == "") {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Campos obligatorios incompletos",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($datos['estado'] != "0" && $datos['estado'] != "1") {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El estado seleccionado no es valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        $check_cargo = mainModel::ejecutar_consulta_simple(
+            "SELECT idcargos FROM cargos WHERE idcargos='{$datos['cargo']}' AND estado=1"
+        );
+        if ($check_cargo->rowCount() <= 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El cargo seleccionado no es valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        $check_sucursal = mainModel::ejecutar_consulta_simple(
+            "SELECT id_sucursal FROM sucursales WHERE id_sucursal='{$datos['sucursal']}' AND estado=1"
+        );
+        if ($check_sucursal->rowCount() <= 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "La sucursal seleccionada no es valida",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($datos['cedula'] != $empleado_actual['nro_cedula']) {
+            $check = mainModel::ejecutar_consulta_simple(
+                "SELECT idempleados FROM empleados WHERE nro_cedula='{$datos['cedula']}'"
+            );
+            if ($check->rowCount() > 0) {
+                echo json_encode([
+                    "Alerta" => "simple",
+                    "Titulo" => "Error",
+                    "Texto" => "La cedula ya esta registrada",
+                    "Tipo" => "error"
+                ]);
+                exit();
+            }
+        }
 
         empleadoModelo::actualizar_empleado_modelo($datos);
 

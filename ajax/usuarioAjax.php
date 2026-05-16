@@ -9,30 +9,36 @@ if (isset($_POST['usuario_nombre_reg']) || isset($_POST['usuario_id_del']) || is
     /** Agregar un usuario */
     if (isset($_POST['usuario_nombre_reg']) && isset($_POST['usuario_apellido_reg'])) {
         echo $inst_usuario->agregar_usuario_controlador();
+        exit();
     }
     /** Eliminar usuario */
     if (isset($_POST['usuario_id_del'])) {
         echo $inst_usuario->eliminar_usuario_controlador();
+        exit();
     }
     /** Actualizar usuario */
     if (isset($_POST['usuario_id_up'])) {
         echo $inst_usuario->actualizar_usuario_controlador();
+        exit();
     }
-    if ($_POST['accion'] === 'roles_por_usuario') {
+
+    $accion = $_POST['accion'] ?? "";
+
+    if ($accion === 'roles_por_usuario') {
         echo $inst_usuario->roles_por_usuario_controlador();
         exit();
     }
 
-    if ($_POST['accion'] === 'guardar_roles_usuario') {
+    if ($accion === 'guardar_roles_usuario') {
         echo $inst_usuario->guardar_roles_usuario_controlador();
         exit();
     }
-    if ($_POST['accion'] === 'sucursal_por_usuario') {
+    if ($accion === 'sucursal_por_usuario') {
         echo $inst_usuario->sucursal_por_usuario_controlador();
         exit();
     }
 
-    if ($_POST['accion'] === 'asignar_sucursal') {
+    if ($accion === 'asignar_sucursal') {
         echo $inst_usuario->asignar_sucursal_controlador();
         exit();
     }

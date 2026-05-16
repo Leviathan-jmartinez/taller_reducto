@@ -11,11 +11,6 @@ class vehiculoControlador extends vehiculoModelo
        LISTAS REFERENCIALES
     ================================================== */
 
-    public function listar_clientes_controlador()
-    {
-        return vehiculoModelo::obtener_clientes_modelo();
-    }
-
     public function listar_modelos_controlador()
     {
         return vehiculoModelo::obtener_modelos_modelo();
@@ -194,6 +189,55 @@ class vehiculoControlador extends vehiculoModelo
             exit();
         }
 
+        if ($estado != "0" && $estado != "1") {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El estado seleccionado no es valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        $check_cliente = mainModel::ejecutar_consulta_simple(
+            "SELECT id_cliente FROM clientes WHERE id_cliente='$cliente' AND estado_cliente=1"
+        );
+        if ($check_cliente->rowCount() <= 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El cliente seleccionado no es valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        $check_modelo = mainModel::ejecutar_consulta_simple(
+            "SELECT id_modeloauto FROM modelo_auto WHERE id_modeloauto='$modelo' AND estado=1"
+        );
+        if ($check_modelo->rowCount() <= 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El modelo seleccionado no es valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        $check_placa = mainModel::ejecutar_consulta_simple(
+            "SELECT id_vehiculo FROM vehiculos WHERE placa='$placa'"
+        );
+        if ($check_placa->rowCount() > 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "La placa ya esta registrada",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         $datos = [
             "id_cliente" => $cliente,
             "id_modeloauto" => $modelo,
@@ -231,6 +275,7 @@ class vehiculoControlador extends vehiculoModelo
         }
 
         $id = mainModel::decryption($_POST['vehiculo_id_up']);
+        $id = mainModel::limpiar_string($id);
 
         $datos = [
             "id_vehiculo" => $id,
@@ -242,6 +287,81 @@ class vehiculoControlador extends vehiculoModelo
             "nro_serie" => mainModel::limpiar_string($_POST['serie_up']),
             "estado" => mainModel::limpiar_string($_POST['estado_up'])
         ];
+
+        $check_vehiculo = mainModel::ejecutar_consulta_simple(
+            "SELECT id_vehiculo, placa FROM vehiculos WHERE id_vehiculo='$id'"
+        );
+        if ($check_vehiculo->rowCount() <= 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El vehiculo no existe en el sistema",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+        $vehiculo_actual = $check_vehiculo->fetch();
+
+        if ($datos['id_cliente'] == "" || $datos['id_modeloauto'] == "" || $datos['color'] == "" || $datos['placa'] == "") {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Debe completar los campos obligatorios",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($datos['estado'] != "0" && $datos['estado'] != "1") {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El estado seleccionado no es valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        $check_cliente = mainModel::ejecutar_consulta_simple(
+            "SELECT id_cliente FROM clientes WHERE id_cliente='{$datos['id_cliente']}' AND estado_cliente=1"
+        );
+        if ($check_cliente->rowCount() <= 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El cliente seleccionado no es valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        $check_modelo = mainModel::ejecutar_consulta_simple(
+            "SELECT id_modeloauto FROM modelo_auto WHERE id_modeloauto='{$datos['id_modeloauto']}' AND estado=1"
+        );
+        if ($check_modelo->rowCount() <= 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El modelo seleccionado no es valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($datos['placa'] != $vehiculo_actual['placa']) {
+            $check_placa = mainModel::ejecutar_consulta_simple(
+                "SELECT id_vehiculo FROM vehiculos WHERE placa='{$datos['placa']}'"
+            );
+            if ($check_placa->rowCount() > 0) {
+                echo json_encode([
+                    "Alerta" => "simple",
+                    "Titulo" => "Error",
+                    "Texto" => "La placa ya esta registrada",
+                    "Tipo" => "error"
+                ]);
+                exit();
+            }
+        }
 
         vehiculoModelo::actualizar_vehiculo_modelo($datos);
 

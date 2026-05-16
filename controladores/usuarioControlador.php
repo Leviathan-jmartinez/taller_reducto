@@ -485,6 +485,17 @@ class usuarioControlador extends usuarioModelo
         $admin_clave = mainModel::limpiar_string($_POST['clave_admin']);
         $tipo_cuenta = mainModel::limpiar_string($_POST['tipo_cuenta']);
 
+        if ($tipo_cuenta != "propia" && $tipo_cuenta != "impropia") {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El tipo de cuenta no es valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
         if ($nombre == "" || $apellido == "" || $nick == "" || $admin_user == "" || $admin_clave == "") {
             $alerta = [
                 "Alerta" => "simple",

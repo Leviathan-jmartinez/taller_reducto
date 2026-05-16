@@ -105,6 +105,8 @@ if (!mainModel::tienePermiso($permisoNecesario)) {
             </button>
             <?php if ($editando): ?>
                 <a href="<?php echo SERVERURL; ?>empleado-equipo/" class="btn btn-raised btn-secondary">CANCELAR</a>
+            <?php else: ?>
+                <button type="reset" class="btn btn-raised btn-secondary">CANCELAR</button>
             <?php endif; ?>
         </p>
     </form>
