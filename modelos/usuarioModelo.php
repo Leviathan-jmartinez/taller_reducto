@@ -23,36 +23,26 @@ class usuarioModelo extends mainModel
     protected static function eliminar_usuario_modelo($id)
     {
         $pdo = mainModel::conectar();
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-        // 1) Verificar si el usuario ya fue usado en el sistema
-        $check = $pdo->prepare("
-        SELECT 1 
-        FROM pedido_cabecera 
-        WHERE id_usuario = :id
-        LIMIT 1
-        ");
-        $check->bindParam(":id", $id, PDO::PARAM_INT);
-        $check->execute();
-
-        if ($check->rowCount() > 0) {
-            // Ya fue usado → solo desactivar
+        try {
             $stmt = $pdo->prepare("
-            UPDATE usuarios 
-            SET usu_estado = 0 
-            WHERE id_usuario = :id
-        ");
-        } else {
-            // No está relacionado → se puede eliminar
+                DELETE FROM usuarios
+                WHERE id_usuario = :id
+            ");
+            $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt;
+        } catch (PDOException $e) {
             $stmt = $pdo->prepare("
-            DELETE FROM usuarios 
-            WHERE id_usuario = :id
-        ");
+                UPDATE usuarios
+                SET usu_estado = 0
+                WHERE id_usuario = :id
+            ");
+            $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt;
         }
-
-        $stmt->bindParam(":id", $id, PDO::PARAM_INT);
-        $stmt->execute();
-
-        return $stmt;
     }
 
     /**modelo datos usuario */

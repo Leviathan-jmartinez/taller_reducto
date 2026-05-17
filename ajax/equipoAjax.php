@@ -22,6 +22,13 @@ if (isset($_POST['id_equipo']) && isset($_POST['empleados']) && (!isset($_POST['
     echo $ins_equipo->asignar_empleados_controlador();
     exit();
 }
+
+/* CARGAR EMPLEADOS PARA ASIGNACION */
+if (isset($_POST['accion']) && $_POST['accion'] == "empleados_asignacion") {
+    echo $ins_equipo->empleados_asignacion_equipo_controlador();
+    exit();
+}
+
 /* ELIMINAR EQUIPO */
 if (isset($_POST['accion']) && $_POST['accion'] == "eliminar_equipo") {
     echo $ins_equipo->eliminar_equipo_controlador();

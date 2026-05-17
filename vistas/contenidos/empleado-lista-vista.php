@@ -29,11 +29,13 @@ if (!mainModel::tienePermiso('empleado.ver')) {
                 <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR EMPLEADO
             </a>
         </li>
-        <li>
-            <a href="<?php echo SERVERURL; ?>empleado-equipo-asignar/">
-                <i class="fas fa-search fa-fw"></i> &nbsp; ASIGNAR EMPLEADO A EQUIPO
-            </a>
-        </li>
+        <?php if (mainModel::tienePermiso('equipo.editar')): ?>
+            <li>
+                <a href="<?php echo SERVERURL; ?>empleado-equipo-asignar/">
+                    <i class="fas fa-search fa-fw"></i> &nbsp; ASIGNAR EMPLEADO A EQUIPO
+                </a>
+            </li>
+        <?php endif; ?>
     </ul>
 </div>
 <div class="container-fluid">
@@ -41,7 +43,7 @@ if (!mainModel::tienePermiso('empleado.ver')) {
 require_once "./controladores/empleadoControlador.php";
     $ins = new empleadoControlador();
 
-    echo $ins->paginador_empleados_controlador(
+    echo $ins->listar_empleados_controlador(
         $pagina[1] ?? 1,
         10,
         "empleado-lista",

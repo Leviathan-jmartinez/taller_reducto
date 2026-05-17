@@ -163,7 +163,7 @@
                                     </ul>
                                 </li>
                             <?php } ?>
-                            <?php if (mainModel::tienePermiso('servicio.ver')) { ?>
+                            <?php if (mainModel::tienePermiso('servicio.ver') || mainModel::tienePermiso('equipo.crear') || mainModel::tienePermiso('equipo.editar')) { ?>
                                 <!-- SERVICIOS -->
                                 <li>
                                     <a href="#" class="nav-btn-submenu">
@@ -196,7 +196,7 @@
                                             </li>
                                         <?php } ?>
 
-                                        <?php if (mainModel::tienePermiso('empleado.ver')) { ?>
+                                        <?php if (mainModel::tienePermiso('equipo.crear') || mainModel::tienePermiso('equipo.editar')) { ?>
                                             <li>
                                                 <a href="<?= SERVERURL; ?>empleado-equipo/">
                                                     <i class="fas fa-users fa-fw"></i> &nbsp; Equipos

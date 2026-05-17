@@ -1,6 +1,19 @@
 <?php
 $pagina = require __DIR__ . '/../inc/pagina.php';
-if (!mainModel::tienePermiso('usuarios.crear')) {
+
+$vistaPartes = explode('/', trim($_GET['vista'] ?? '', '/'));
+$vistaActual = $vistaPartes[0] ?? 'usuario-nuevo';
+$idUsuario = ($vistaActual === 'usuario-actualizar') ? ($vistaPartes[1] ?? null) : null;
+$editando = false;
+$campos = [];
+$cuentaPropia = false;
+
+if ($vistaActual === 'usuario-actualizar' && $idUsuario === null) {
+	echo '<div class="alert alert-danger">No se pudo cargar el usuario seleccionado</div>';
+	return;
+}
+
+if ($vistaActual !== 'usuario-actualizar' && !mainModel::tienePermiso('usuarios.crear')) {
 	echo '<div class="alert alert-danger">Acceso no autorizado</div>';
 	return;
 }
@@ -8,13 +21,30 @@ if (!mainModel::tienePermiso('usuarios.crear')) {
 require_once "./controladores/usuarioControlador.php";
 $ins = new usuarioControlador();
 
+if ($idUsuario !== null) {
+	$datos_usuario = $ins->datos_usuario_controlador("Unico", $idUsuario);
+	if ($datos_usuario->rowCount() == 1) {
+		$campos = $datos_usuario->fetch();
+		$editando = true;
+		$cuentaPropia = ($lc->encryption($_SESSION['id_str']) == $idUsuario);
+		if (!$cuentaPropia && !mainModel::tienePermiso('usuarios.editar')) {
+			echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+			return;
+		}
+	} else {
+		echo '<div class="alert alert-danger">No se pudo cargar el usuario seleccionado</div>';
+		return;
+	}
+}
+
 $busqueda = $_SESSION['busqueda_usuario'] ?? "";
 ?>
 
 <!-- Page header -->
 <div class="full-box page-header">
 	<h3 class="text-left">
-		<i class="fas fa-clipboard-list fa-fw"></i> &nbsp; USUARIOS
+		<i class="fas <?php echo $editando ? 'fa-sync-alt' : 'fa-clipboard-list'; ?> fa-fw"></i> &nbsp;
+		<?php echo $editando ? 'ACTUALIZAR USUARIO' : 'USUARIOS'; ?>
 	</h3>
 	<p class="text-justify">
 
@@ -23,7 +53,10 @@ $busqueda = $_SESSION['busqueda_usuario'] ?? "";
 
 <!-- Content -->
 <div class="container-fluid">
-	<form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/usuarioAjax.php" method="POST" data-form="save" autocomplete="off">
+	<form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/usuarioAjax.php" method="POST" data-form="<?php echo $editando ? 'update' : 'save'; ?>" autocomplete="off">
+		<?php if ($editando): ?>
+			<input type="hidden" name="usuario_id_up" value="<?php echo $idUsuario; ?>">
+		<?php endif; ?>
 		<fieldset>
 			<legend><i class="far fa-address-card"></i> &nbsp; Información personal</legend>
 			<div class="container-fluid">
@@ -31,26 +64,26 @@ $busqueda = $_SESSION['busqueda_usuario'] ?? "";
 					<div class="col-12 col-md-4">
 						<div class="form-group">
 							<label for="usuario_dni" class="bmd-label-floating">C.I.</label>
-							<input type="text" pattern="[0-9]{7,20}" class="form-control" name="usuario_dni_reg" id="usuario_dni" maxlength="20">
+							<input type="text" pattern="[0-9-]{1,20}" class="form-control" name="<?php echo $editando ? 'usuario_ci_up' : 'usuario_dni_reg'; ?>" id="usuario_dni" maxlength="20" value="<?php echo $editando ? htmlspecialchars($campos['usu_ci'], ENT_QUOTES, 'UTF-8') : ''; ?>" <?php echo $cuentaPropia ? 'readonly' : ''; ?>>
 						</div>
 					</div>
 
 					<div class="col-12 col-md-4">
 						<div class="form-group">
 							<label for="usuario_nombre" class="bmd-label-floating">Nombres</label>
-							<input type="text" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{1,35}" class="form-control" name="usuario_nombre_reg" id="usuario_nombre" maxlength="35">
+							<input type="text" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{1,35}" class="form-control" name="<?php echo $editando ? 'usuario_nombre_up' : 'usuario_nombre_reg'; ?>" id="usuario_nombre" maxlength="35" value="<?php echo $editando ? htmlspecialchars($campos['usu_nombre'], ENT_QUOTES, 'UTF-8') : ''; ?>" <?php echo $cuentaPropia ? 'readonly' : ''; ?>>
 						</div>
 					</div>
 					<div class="col-12 col-md-4">
 						<div class="form-group">
 							<label for="usuario_apellido" class="bmd-label-floating">Apellidos</label>
-							<input type="text" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{1,35}" class="form-control" name="usuario_apellido_reg" id="usuario_apellido" maxlength="35">
+							<input type="text" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{1,35}" class="form-control" name="<?php echo $editando ? 'usuario_apellido_up' : 'usuario_apellido_reg'; ?>" id="usuario_apellido" maxlength="35" value="<?php echo $editando ? htmlspecialchars($campos['usu_apellido'], ENT_QUOTES, 'UTF-8') : ''; ?>" <?php echo $cuentaPropia ? 'readonly' : ''; ?>>
 						</div>
 					</div>
 					<div class="col-12 col-md-6">
 						<div class="form-group">
 							<label for="usuario_telefono" class="bmd-label-floating">Teléfono</label>
-							<input type="text" pattern="[0-9()+]{8,20}" class="form-control" name="usuario_telefono_reg" id="usuario_telefono" maxlength="20">
+							<input type="text" pattern="[0-9()+]{8,20}" class="form-control" name="<?php echo $editando ? 'usuario_telefono_up' : 'usuario_telefono_reg'; ?>" id="usuario_telefono" maxlength="20" value="<?php echo $editando ? htmlspecialchars($campos['usu_telefono'], ENT_QUOTES, 'UTF-8') : ''; ?>">
 						</div>
 					</div>
 				</div>
@@ -64,39 +97,105 @@ $busqueda = $_SESSION['busqueda_usuario'] ?? "";
 					<div class="col-12 col-md-6">
 						<div class="form-group">
 							<label for="usuario_usuario" class="bmd-label-floating">Nombre de usuario</label>
-							<input type="text" pattern="[a-zA-Z0-9]{1,35}" class="form-control" name="usuario_usuario_reg" id="usuario_usuario" maxlength="35">
+							<input type="text" pattern="[a-zA-Z0-9]{1,35}" class="form-control" name="<?php echo $editando ? 'usuario_usuario_up' : 'usuario_usuario_reg'; ?>" id="usuario_usuario" maxlength="35" value="<?php echo $editando ? htmlspecialchars($campos['usu_nick'], ENT_QUOTES, 'UTF-8') : ''; ?>" <?php echo $cuentaPropia ? 'readonly' : ''; ?>>
 						</div>
 					</div>
 					<div class="col-12 col-md-6">
 						<div class="form-group">
 							<label for="usuario_email" class="bmd-label-floating">Email</label>
-							<input type="email" class="form-control" name="usuario_email_reg" id="usuario_email" maxlength="70">
+							<input type="email" class="form-control" name="<?php echo $editando ? 'usuario_email_up' : 'usuario_email_reg'; ?>" id="usuario_email" maxlength="70" value="<?php echo $editando ? htmlspecialchars($campos['usu_email'], ENT_QUOTES, 'UTF-8') : ''; ?>">
 						</div>
 					</div>
+                    <?php if ($editando): ?>
+                        <div class="col-12">
+                            <div class="form-group">
+                                <span>Estado de la cuenta &nbsp;
+                                    <?php echo ((int)$campos['usu_estado'] === 1) ? '<span class="badge badge-success">Activa</span>' : '<span class="badge badge-danger">Inactiva</span>'; ?>
+                                </span>
+                                <?php if ($cuentaPropia): ?>
+                                    <input type="hidden" name="usuario_estado_up" value="<?php echo (int)$campos['usu_estado']; ?>">
+                                <?php else: ?>
+                                    <select class="form-control" name="usuario_estado_up">
+                                        <option value="1" <?php echo ((int)$campos['usu_estado'] === 1) ? 'selected' : ''; ?>>Activa</option>
+                                        <option value="0" <?php echo ((int)$campos['usu_estado'] === 0) ? 'selected' : ''; ?>>Inactiva</option>
+                                    </select>
+                                <?php endif; ?>
+                            </div>
+                            <div class="form-group">
+                                <?php
+                                $intentosFallidos = isset($campos['usu_intentos_fallidos']) ? (int)$campos['usu_intentos_fallidos'] : 0;
+                                $bloqueado = isset($campos['usu_bloqueado']) ? (int)$campos['usu_bloqueado'] : 0;
+                                ?>
+                                <span>Intentos fallidos &nbsp;
+                                    <span class="badge badge-<?php echo ($intentosFallidos >= 3 ? 'danger' : ($intentosFallidos > 0 ? 'warning' : 'success')); ?>">
+                                        <?php echo $intentosFallidos; ?>/3
+                                    </span>
+                                </span>
+                                <br>
+                                <span>Bloqueo por intentos &nbsp;
+                                    <?php echo ($bloqueado === 1) ? '<span class="badge badge-danger">Bloqueada</span>' : '<span class="badge badge-success">Libre</span>'; ?>
+                                </span>
+                            </div>
+                        </div>
+                    <?php endif; ?>
 					<div class="col-12 col-md-6">
 						<div class="form-group">
-							<label for="usuario_clave_1" class="bmd-label-floating">Contraseña</label>
-							<input type="password" class="form-control" name="usuario_clave_1_reg" id="usuario_clave_1" pattern="[a-zA-Z0-9$@._-]{7,18}" maxlength="18" required="">
+							<label for="usuario_clave_1" class="bmd-label-floating"><?php echo $editando ? 'Nueva contraseña' : 'Contraseña'; ?></label>
+							<input type="password" class="form-control" name="<?php echo $editando ? 'usuario_clave_nueva_1' : 'usuario_clave_1_reg'; ?>" id="usuario_clave_1" pattern="[a-zA-Z0-9$@._-]{7,18}" maxlength="18" <?php echo $editando ? '' : 'required=""'; ?>>
 						</div>
 					</div>
 					<div class="col-12 col-md-6">
 						<div class="form-group">
 							<label for="usuario_clave_2" class="bmd-label-floating">Repetir contraseña</label>
-							<input type="password" class="form-control" name="usuario_clave_2_reg" id="usuario_clave_2" pattern="[a-zA-Z0-9$@._-]{7,18}" maxlength="18" required="">
+							<input type="password" class="form-control" name="<?php echo $editando ? 'usuario_clave_nueva_2' : 'usuario_clave_2_reg'; ?>" id="usuario_clave_2" pattern="[a-zA-Z0-9$@._-]{7,18}" maxlength="18" <?php echo $editando ? '' : 'required=""'; ?>>
 						</div>
 					</div>
 				</div>
 			</div>
 		</fieldset>
 		<br>
+		<?php if ($editando): ?>
+			<fieldset>
+				<p class="text-center">Para guardar los cambios debe ingresar su nombre de usuario y contraseña.</p>
+				<div class="container-fluid">
+					<div class="row">
+						<div class="col-12 col-md-6">
+							<div class="form-group">
+								<label for="usuario_admin" class="bmd-label-floating">Nombre de usuario</label>
+								<input type="text" pattern="[a-zA-Z0-9]{1,35}" class="form-control" name="usuario_admin" id="usuario_admin" maxlength="35" required="">
+							</div>
+						</div>
+						<div class="col-12 col-md-6">
+							<div class="form-group">
+								<label for="clave_admin" class="bmd-label-floating">Contraseña</label>
+								<input type="password" class="form-control" name="clave_admin" id="clave_admin" pattern="[a-zA-Z0-9$@.-]{7,100}" maxlength="100" required="">
+							</div>
+						</div>
+					</div>
+				</div>
+			</fieldset>
+			<?php if ($cuentaPropia): ?>
+				<input type="hidden" name="tipo_cuenta" value="propia">
+			<?php else: ?>
+				<input type="hidden" name="tipo_cuenta" value="impropia">
+			<?php endif; ?>
+			<br>
+		<?php endif; ?>
 		<p class="text-center" style="margin-top: 40px;">
-			<button type="reset" class="btn btn-raised btn-secondary btn-sm"><i class="fas fa-times"></i> &nbsp; Cancelar</button>
+			<?php if ($editando): ?>
+				<a href="<?php echo SERVERURL; ?>usuario-nuevo/" class="btn btn-raised btn-secondary btn-sm"><i class="fas fa-times"></i> &nbsp; Cancelar</a>
+			<?php else: ?>
+				<button type="reset" class="btn btn-raised btn-secondary btn-sm"><i class="fas fa-times"></i> &nbsp; Cancelar</button>
+			<?php endif; ?>
 			&nbsp; &nbsp;
-			<button type="submit" class="btn btn-raised btn-info btn-sm"><i class="far fa-save"></i> &nbsp; GUARDAR</button>
+			<button type="submit" class="btn btn-raised <?php echo $editando ? 'btn-success' : 'btn-info'; ?> btn-sm">
+				<i class="fas <?php echo $editando ? 'fa-sync-alt' : 'fa-save'; ?>"></i> &nbsp; <?php echo $editando ? 'ACTUALIZAR' : 'GUARDAR'; ?>
+			</button>
 		</p>
 	</form>
 </div>
 
+<?php if (!$cuentaPropia): ?>
 <!-- ================= BUSCADOR ================= -->
 <div class="container-fluid mb-3">
 
@@ -247,3 +346,4 @@ $pag_actual = 1;
 
 <?php
 include_once "./vistas/inc/usuarioJS.php"; ?>
+<?php endif; ?>

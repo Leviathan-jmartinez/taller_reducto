@@ -68,21 +68,6 @@ class equipoModelo extends mainModel
         return $sql;
     }
 
-    /* ===== EMPLEADOS DISPONIBLES ===== */
-    protected static function empleados_disponibles_modelo($id_sucursal)
-    {
-        $sql = mainModel::conectar()->prepare(
-            "SELECT e.*
-             FROM empleados e
-             WHERE e.estado = 1
-             AND e.id_sucursal = :sucursal
-             ORDER BY e.apellido"
-        );
-        $sql->bindParam(":sucursal", $id_sucursal);
-        $sql->execute();
-        return $sql->fetchAll(PDO::FETCH_ASSOC);
-    }
-
     /* ===== ASIGNAR EMPLEADO ===== */
     protected static function asignar_empleado_equipo_modelo($id_equipo, $id_empleado, $rol)
     {
@@ -115,15 +100,26 @@ class equipoModelo extends mainModel
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    protected static function empleados_con_equipo_modelo($id_sucursal)
+    protected static function empleados_asignacion_equipo_modelo($id_equipo)
     {
+        $equipo = self::datos_equipo_modelo($id_equipo);
+        if (!$equipo || (int)$equipo['estado'] !== 1) {
+            return false;
+        }
+
         $sql = mainModel::conectar()->prepare("
-            SELECT 
+            SELECT
                 e.idempleados,
                 e.nombre,
                 e.apellido,
+                e.nro_cedula,
+                CASE WHEN ee_actual.idempleados IS NULL THEN 0 ELSE 1 END AS es_miembro,
                 GROUP_CONCAT(et.nombre ORDER BY et.nombre SEPARATOR ' | ') AS equipos
             FROM empleados e
+            LEFT JOIN equipo_empleado ee_actual
+                ON ee_actual.idempleados = e.idempleados
+                AND ee_actual.id_equipo = :equipo_actual
+                AND ee_actual.estado = 1
             LEFT JOIN equipo_empleado ee
                 ON ee.idempleados = e.idempleados
                 AND ee.estado = 1
@@ -132,26 +128,67 @@ class equipoModelo extends mainModel
                 AND et.estado = 1
             WHERE e.estado = 1
             AND e.id_sucursal = :sucursal
-            GROUP BY e.idempleados, e.nombre, e.apellido
+            GROUP BY e.idempleados, e.nombre, e.apellido, e.nro_cedula, ee_actual.idempleados
             ORDER BY e.apellido, e.nombre
         ");
-
-        $sql->bindParam(":sucursal", $id_sucursal);
+        $sql->bindParam(":equipo_actual", $id_equipo, PDO::PARAM_INT);
+        $sql->bindParam(":sucursal", $equipo['id_sucursal'], PDO::PARAM_INT);
         $sql->execute();
-        return $sql->fetchAll(PDO::FETCH_ASSOC);
+
+        return [
+            "equipo" => $equipo,
+            "empleados" => $sql->fetchAll(PDO::FETCH_ASSOC)
+        ];
     }
 
     /* ===== ELIMINAR (ANULAR) EQUIPO ===== */
     protected static function eliminar_equipo_modelo($id_equipo)
     {
-        $sql = mainModel::conectar()->prepare(
-            "UPDATE equipo_trabajo
-         SET estado = 0
-         WHERE id_equipo = :id"
+        $conexion = mainModel::conectar();
+
+        $sql_relacion = $conexion->prepare(
+            "SELECT id_equipo
+             FROM equipo_empleado
+             WHERE id_equipo = :id
+             LIMIT 1"
         );
-        $sql->bindParam(":id", $id_equipo);
-        $sql->execute();
-        return $sql;
+        $sql_relacion->bindParam(":id", $id_equipo, PDO::PARAM_INT);
+        $sql_relacion->execute();
+
+        if ($sql_relacion->rowCount() > 0) {
+            $sql_equipo = $conexion->prepare(
+                "UPDATE equipo_trabajo
+                 SET estado = 0
+                 WHERE id_equipo = :id"
+            );
+            $accion = "inactivado";
+        } else {
+            $sql_equipo = $conexion->prepare(
+                "DELETE FROM equipo_trabajo
+                 WHERE id_equipo = :id"
+            );
+            $accion = "eliminado";
+        }
+
+        $sql_equipo->bindParam(":id", $id_equipo, PDO::PARAM_INT);
+        if ($sql_equipo->execute() && $sql_equipo->rowCount() > 0) {
+            return [
+                "ok" => true,
+                "accion" => $accion
+            ];
+        }
+
+        $sql_equipo = $conexion->prepare(
+            "UPDATE equipo_trabajo
+             SET estado = 0
+             WHERE id_equipo = :id"
+        );
+        $sql_equipo->bindParam(":id", $id_equipo, PDO::PARAM_INT);
+
+        return [
+            "ok" => $sql_equipo->execute() && $sql_equipo->rowCount() > 0,
+            "accion" => "inactivado"
+        ];
     }
 
     /* ===== QUITAR MIEMBRO DE EQUIPO ===== */

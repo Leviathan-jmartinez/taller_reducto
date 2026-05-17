@@ -28,7 +28,7 @@ class equipoControlador extends equipoModelo
     ================================================== */
     public function crear_equipo_controlador()
     {
-        if (!mainModel::tienePermiso('empleado.crear')) {
+        if (!mainModel::tienePermiso('equipo.crear')) {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Acceso denegado",
@@ -97,7 +97,7 @@ class equipoControlador extends equipoModelo
     ================================================== */
     public function actualizar_equipo_controlador()
     {
-        if (!mainModel::tienePermiso('empleado.editar')) {
+        if (!mainModel::tienePermiso('equipo.editar')) {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Acceso denegado",
@@ -138,11 +138,11 @@ class equipoControlador extends equipoModelo
 
         $equipo = equipoModelo::datos_equipo_modelo($id);
 
-        if (!$equipo || (int)$equipo['estado'] !== 1) {
+        if (!$equipo) {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Error",
-                "Texto" => "El equipo no existe o esta inactivo",
+                "Texto" => "El equipo no existe",
                 "Tipo" => "error"
             ]);
             exit();
@@ -177,19 +177,11 @@ class equipoControlador extends equipoModelo
     }
 
     /* ==================================================
-       EMPLEADOS DISPONIBLES POR SUCURSAL
-    ================================================== */
-    public function empleados_disponibles_controlador($id_sucursal)
-    {
-        return equipoModelo::empleados_disponibles_modelo($id_sucursal);
-    }
-
-    /* ==================================================
        ASIGNAR EMPLEADOS A EQUIPO
     ================================================== */
     public function asignar_empleados_controlador()
     {
-        if (!mainModel::tienePermiso('empleado.editar')) {
+        if (!mainModel::tienePermiso('equipo.editar')) {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Acceso denegado",
@@ -265,10 +257,40 @@ class equipoControlador extends equipoModelo
         return equipoModelo::miembros_equipo_modelo($id_equipo);
     }
 
-    public function empleados_con_equipo_controlador($id_sucursal)
+    public function empleados_asignacion_equipo_controlador()
     {
-        $id_sucursal = mainModel::limpiar_string($id_sucursal);
-        return equipoModelo::empleados_con_equipo_modelo($id_sucursal);
+        if (!mainModel::tienePermiso('equipo.editar')) {
+            echo json_encode([
+                "ok" => false,
+                "mensaje" => "No posee permisos para asignar empleados a equipos"
+            ]);
+            exit();
+        }
+
+        $id_equipo = mainModel::limpiar_string($_POST['id_equipo'] ?? '');
+        if ($id_equipo == "") {
+            echo json_encode([
+                "ok" => false,
+                "mensaje" => "Debe seleccionar un equipo"
+            ]);
+            exit();
+        }
+
+        $datos = equipoModelo::empleados_asignacion_equipo_modelo($id_equipo);
+        if (!$datos) {
+            echo json_encode([
+                "ok" => false,
+                "mensaje" => "El equipo no existe o esta inactivo"
+            ]);
+            exit();
+        }
+
+        echo json_encode([
+            "ok" => true,
+            "equipo" => $datos['equipo'],
+            "empleados" => $datos['empleados']
+        ]);
+        exit();
     }
 
     /* ==================================================
@@ -276,7 +298,7 @@ class equipoControlador extends equipoModelo
     ================================================== */
     public function eliminar_equipo_controlador()
     {
-        if (!mainModel::tienePermiso('empleado.eliminar')) {
+        if (!mainModel::tienePermiso('equipo.eliminar')) {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Acceso denegado",
@@ -310,12 +332,25 @@ class equipoControlador extends equipoModelo
             exit();
         }
 
-        equipoModelo::eliminar_equipo_modelo($id);
+        $eliminar = equipoModelo::eliminar_equipo_modelo($id);
+        if (!$eliminar['ok']) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "No se pudo procesar el equipo seleccionado",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        $mensaje = ($eliminar['accion'] === "inactivado")
+            ? "El equipo tiene relaciones, por eso fue inactivado correctamente"
+            : "Equipo eliminado correctamente";
 
         echo json_encode([
             "Alerta" => "recargar",
             "Titulo" => "Equipo",
-            "Texto" => "Equipo eliminado correctamente",
+            "Texto" => $mensaje,
             "Tipo" => "success"
         ]);
     }
@@ -325,7 +360,7 @@ class equipoControlador extends equipoModelo
     ================================================== */
     public function quitar_miembro_controlador()
     {
-        if (!mainModel::tienePermiso('empleado.editar')) {
+        if (!mainModel::tienePermiso('equipo.editar')) {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Acceso denegado",

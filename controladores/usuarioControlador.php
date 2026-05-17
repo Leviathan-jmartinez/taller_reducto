@@ -248,7 +248,8 @@ class usuarioControlador extends usuarioModelo
                 <th>NOMBRE</th>
                 <th>TELÉFONO</th>
                 <th>USUARIO</th>
-                <th>EMAIL</th>';
+                <th>EMAIL</th>
+                <th>ESTADO</th>';
 
         if ($puede_ver_seguridad) {
             $tabla .= '
@@ -276,7 +277,8 @@ class usuarioControlador extends usuarioModelo
                 <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
                 <td>' . $rows['usu_telefono'] . '</td>
                 <td>' . $rows['usu_nick'] . '</td>
-                <td>' . $rows['usu_email'] . '</td>';
+                <td>' . $rows['usu_email'] . '</td>
+                <td>' . ((int)$rows['usu_estado'] === 1 ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-danger">Inactivo</span>') . '</td>';
 
                 if ($puede_ver_seguridad) {
                     $intentosFallidos = isset($rows['usu_intentos_fallidos']) ? (int)$rows['usu_intentos_fallidos'] : 0;
@@ -350,7 +352,7 @@ class usuarioControlador extends usuarioModelo
 
             $reg_final = $contador - 1;
         } else {
-            $columnas = 6 + ($puede_ver_seguridad ? 2 : 0) + ($tiene_acciones ? 1 : 0);
+            $columnas = 7 + ($puede_ver_seguridad ? 2 : 0) + ($tiene_acciones ? 1 : 0);
 
             $tabla .= '<tr class="text-center">
             <td colspan="' . $columnas . '">No hay registros en el sistema</td>
@@ -511,6 +513,31 @@ class usuarioControlador extends usuarioModelo
             ];
             echo json_encode($alerta);
             exit();
+        }
+
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start(['name' => 'STR']);
+        }
+
+        $es_cuenta_propia = isset($_SESSION['id_str']) && (string)$_SESSION['id_str'] === (string)$id;
+
+        if ($tipo_cuenta == "propia" && !$es_cuenta_propia) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "La cuenta seleccionada no corresponde al usuario en sesion",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($tipo_cuenta == "propia") {
+            $ci = $campos_usuario_up['usu_ci'];
+            $nombre = $campos_usuario_up['usu_nombre'];
+            $apellido = $campos_usuario_up['usu_apellido'];
+            $nick = $campos_usuario_up['usu_nick'];
+            $estado = $campos_usuario_up['usu_estado'];
         }
 
         if ($nombre == "" || $apellido == "" || $nick == "" || $admin_user == "" || $admin_clave == "") {
@@ -692,7 +719,6 @@ class usuarioControlador extends usuarioModelo
         if ($tipo_cuenta == "propia") {
             $check_cuenta = mainModel::ejecutar_consulta_simple("SELECT id_usuario from usuarios where usu_nick='$admin_user' and usu_clave = '$admin_clave' and id_usuario ='$id'");
         } else {
-            session_start(['name' => 'STR']);
             if (!mainModel::tienePermiso('usuarios.editar')) {
                 return json_encode([
                     "Alerta" => "simple",

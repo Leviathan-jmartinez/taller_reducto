@@ -6,9 +6,12 @@ $idEquipo = ($vistaActual === 'empleado-equipo-actualizar') ? ($vistaPartes[1] ?
 $editando = false;
 $camposEquipo = [];
 
-$permisoNecesario = ($vistaActual === 'empleado-equipo-actualizar') ? 'empleado.editar' : 'empleado.ver';
+$puedeCrearEquipo = mainModel::tienePermiso('equipo.crear');
+$puedeEditarEquipo = mainModel::tienePermiso('equipo.editar');
+$puedeEliminarEquipo = mainModel::tienePermiso('equipo.eliminar');
+$permisoNecesario = ($vistaActual === 'empleado-equipo-actualizar') ? $puedeEditarEquipo : ($puedeCrearEquipo || $puedeEditarEquipo);
 
-if (!mainModel::tienePermiso($permisoNecesario)) {
+if (!$permisoNecesario) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
@@ -28,11 +31,13 @@ if (!mainModel::tienePermiso($permisoNecesario)) {
                 <i class="fas fa-users-cog fa-fw"></i> &nbsp; EQUIPOS
             </a>
         </li>
-        <li>
-            <a href="<?php echo SERVERURL; ?>empleado-equipo-asignar/">
-                <i class="fas fa-user-plus fa-fw"></i> &nbsp; ASIGNAR EMPLEADOS
-            </a>
-        </li>
+        <?php if ($puedeEditarEquipo): ?>
+            <li>
+                <a href="<?php echo SERVERURL; ?>empleado-equipo-asignar/">
+                    <i class="fas fa-user-plus fa-fw"></i> &nbsp; ASIGNAR EMPLEADOS
+                </a>
+            </li>
+        <?php endif; ?>
     </ul>
 </div>
 
@@ -50,6 +55,7 @@ if (!mainModel::tienePermiso($permisoNecesario)) {
     }
     ?>
 
+    <?php if ($editando || $puedeCrearEquipo): ?>
     <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/equipoAjax.php"
         method="POST"
@@ -110,9 +116,11 @@ if (!mainModel::tienePermiso($permisoNecesario)) {
             <?php endif; ?>
         </p>
     </form>
+    <?php endif; ?>
 </div>
 
 <!-- ================== LISTA EQUIPOS ================== -->
+<?php if ($puedeEditarEquipo): ?>
 <div class="container-fluid mt-4">
     <?php
     $equipos = $ins_equipo->listar_equipos_controlador();
@@ -149,13 +157,13 @@ if (!mainModel::tienePermiso($permisoNecesario)) {
                                 class="btn btn-info btn-sm">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <?php if (mainModel::tienePermiso('empleado.editar')): ?>
+                            <?php if ($puedeEditarEquipo): ?>
                                 <a href="<?php echo SERVERURL; ?>empleado-equipo-actualizar/<?php echo $lc->encryption($eq['id_equipo']); ?>/"
                                     class="btn btn-success btn-sm">
                                     <i class="fas fa-sync-alt"></i>
                                 </a>
                             <?php endif; ?>
-                            <?php if (mainModel::tienePermiso('empleado.eliminar')): ?>
+                            <?php if ($puedeEliminarEquipo): ?>
                                 <form class="FormularioAjax d-inline"
                                     action="<?php echo SERVERURL; ?>ajax/equipoAjax.php"
                                     method="POST"
@@ -178,3 +186,4 @@ if (!mainModel::tienePermiso($permisoNecesario)) {
         </table>
     </div>
 </div>
+<?php endif; ?>

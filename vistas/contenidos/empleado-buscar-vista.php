@@ -112,8 +112,8 @@ if (!mainModel::tienePermiso('empleado.ver')) {
 require_once "./controladores/empleadoControlador.php";
         $ins_empleado = new empleadoControlador();
 
-        echo $ins_empleado->paginador_empleados_controlador(
-            $pagina[1],
+        echo $ins_empleado->listar_empleados_controlador(
+            $pagina[1] ?? 1,
             15,
             $pagina[0],
             $_SESSION['busqueda_empleado']

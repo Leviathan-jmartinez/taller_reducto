@@ -1,6 +1,6 @@
 <?php
 $pagina = require __DIR__ . '/../inc/pagina.php';
-if (!mainModel::tienePermiso('empleado.ver')) {
+if (!mainModel::tienePermiso('equipo.editar')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
@@ -60,7 +60,7 @@ $cont = 1;
                                     : '<span class="badge badge-danger">Inactivo</span>'; ?>
                             </td>
                             <td>
-                                <?php if (mainModel::tienePermiso('empleado.eliminar')): ?>
+                                <?php if (mainModel::tienePermiso('equipo.editar')): ?>
                                     <form class="FormularioAjax d-inline"
                                         action="<?php echo SERVERURL; ?>ajax/equipoAjax.php"
                                         method="POST"

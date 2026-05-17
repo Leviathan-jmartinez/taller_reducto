@@ -522,24 +522,25 @@ Si se elimina con ordenes de trabajo asociadas, queda inactivo.
 Registrar, Editar, Eliminar y Asignar Empleados a Equipos de Trabajo.
 
 * Descripcion Basica
-Este caso permite administrar equipos de trabajo por sucursal. El sistema permite crear equipos, editar sus datos, eliminar equipos de forma logica, ver miembros y asignar o quitar empleados.
+Este caso permite administrar equipos de trabajo por sucursal. El sistema permite crear equipos, editar sus datos, eliminar o inactivar equipos, ver miembros y asignar o quitar empleados.
 
 * Actores relacionados
 Administrador o Encargado de personal.
 
 * Pre Condicion
 El usuario debe estar autenticado.
-El usuario debe contar con permiso para creacion de equipos.
-El usuario debe contar con permiso para edicion y asignacion de equipos.
-El usuario debe contar con permiso para eliminacion de equipos.
+El usuario debe contar con permiso equipo.crear para creacion de equipos.
+El usuario debe contar con permiso equipo.editar para edicion, listado, miembros y asignacion de equipos.
+El usuario debe contar con permiso equipo.eliminar para eliminacion de equipos.
 Deben existir sucursales y empleados activos.
 
 * Flujo de eventos
 Flujo Basico:
 El usuario ingresa al modulo Equipos de Trabajo.
-El sistema muestra las opciones Equipos y Asignar Empleados.
+El sistema muestra la opcion Equipos si el usuario tiene permiso equipo.crear o equipo.editar.
+El sistema muestra la opcion Asignar Empleados si el usuario tiene permiso equipo.editar.
 El sistema carga sucursales activas para el selector. Tabla consultada: sucursales.
-El sistema consulta equipos activos para el listado. Tablas consultadas: equipo_trabajo, sucursales.
+Si el usuario tiene permiso equipo.editar, el sistema consulta equipos activos para el listado. Tablas consultadas: equipo_trabajo, sucursales.
 
 Nuevo
 El usuario selecciona sucursal desde la lista cargada. Tabla consultada: sucursales.
@@ -547,19 +548,19 @@ El usuario ingresa nombre del equipo y descripcion.
 Si el usuario presiona Cancelar, el sistema limpia los campos del formulario sin consultar tablas.
 
 Guardar
-El sistema valida permiso de creacion.
+El sistema valida permiso equipo.crear.
 El sistema valida sucursal y nombre.
 El sistema valida sucursal existente y que no exista otro equipo activo con el mismo nombre en la sucursal.
 El sistema registra el equipo. Tabla insertada: equipo_trabajo.
 El sistema emite mensaje de equipo creado correctamente.
 
 Buscar/Listar
+El sistema valida permiso equipo.editar.
 El sistema consulta equipos activos y une la descripcion de la sucursal.
 Tablas consultadas: equipo_trabajo, sucursales.
 El sistema muestra equipo, sucursal y estado.
-Si el usuario tiene permiso de edicion, muestra Editar.
-Si el usuario tiene permiso de eliminacion, muestra Eliminar.
-El sistema permite ver miembros del equipo.
+Si el usuario tiene permiso equipo.editar, muestra Editar y permite ver miembros del equipo.
+Si el usuario tiene permiso equipo.eliminar, muestra Eliminar.
 
 Editar
 El usuario presiona Editar.
@@ -568,40 +569,71 @@ El sistema consulta el equipo seleccionado. Tabla consultada: equipo_trabajo.
 El sistema carga sucursales activas para el selector. Tabla consultada: sucursales.
 El sistema carga sucursal, nombre y descripcion, y marca la sucursal cuyo ID coincide con el equipo.
 El usuario modifica sucursal, nombre o descripcion.
-El sistema valida permiso de edicion.
-El sistema valida que el equipo exista y este activo. Tabla consultada: equipo_trabajo.
+El sistema valida permiso equipo.editar.
+El sistema valida que el equipo exista. Tabla consultada: equipo_trabajo.
 El sistema valida sucursal existente y que no exista otro equipo activo con el mismo nombre en la sucursal.
 El sistema edita el equipo. Tabla modificada: equipo_trabajo.
 El sistema emite mensaje de equipo editado correctamente.
 
+
 Asignar Empleados
 El usuario ingresa a Asignar Empleados.
+El sistema valida permiso equipo.editar.
 El sistema consulta equipos activos con su sucursal. Tablas consultadas: equipo_trabajo, sucursales.
-El sistema consulta empleados activos de la sucursal actual y muestra si ya tienen equipo. Tablas consultadas: empleados, equipo_empleado, equipo_trabajo.
-El usuario selecciona equipo y empleados.
-El sistema valida permiso de edicion.
-El sistema valida que el equipo exista y este activo.
-El sistema valida que los empleados seleccionados esten activos y pertenezcan a la sucursal del equipo.
+El sistema muestra el selector de equipo, el buscador de empleados, la seccion de empleados disponibles y la seccion de miembros actuales.
+El sistema mantiene deshabilitado el buscador y el boton Asignar Seleccionados hasta que el usuario seleccione un equipo.
+
+El usuario selecciona un equipo.
+El sistema consulta que el equipo exista y este activo. Tabla consultada: equipo_trabajo.
+El sistema consulta empleados activos de la sucursal del equipo. Tabla consultada: empleados.
+El sistema consulta relaciones activas de empleados con equipos para identificar miembros actuales y empleados con otros equipos. Tablas consultadas: equipo_empleado, equipo_trabajo.
+El sistema separa los empleados en Disponibles y Miembros actuales.
+El sistema muestra la cantidad de empleados disponibles y miembros actuales.
+El sistema habilita el buscador de empleados.
+
+El usuario puede filtrar empleados por nombre, apellido, cedula o equipo asignado.
+El sistema filtra en pantalla los empleados disponibles y miembros actuales sin consultar nuevamente la base de datos.
+
+El usuario selecciona uno o mas empleados disponibles.
+El sistema actualiza el contador de empleados seleccionados.
+El sistema habilita el boton Asignar Seleccionados cuando existe al menos un empleado seleccionado.
+
+El usuario presiona Asignar Seleccionados.
+El sistema valida permiso equipo.editar.
+El sistema valida que se haya seleccionado un equipo y al menos un empleado.
+El sistema valida que el equipo exista y este activo. Tabla consultada: equipo_trabajo.
+El sistema valida que los empleados seleccionados esten activos y pertenezcan a la sucursal del equipo. Tabla consultada: empleados.
 El sistema registra o reactiva la asignacion del empleado al equipo.
 Tabla insertada o modificada: equipo_empleado.
 El sistema emite mensaje de empleados asignados correctamente.
 
 Quitar Miembro
-El usuario ingresa a miembros del equipo.
-El sistema consulta miembros activos del equipo y sus datos de empleado.
+Desde el listado de equipos, el usuario presiona la opcion Ver miembros de un equipo.
+El sistema abre la vista Miembros del Equipo con el identificador del equipo seleccionado.
+El sistema valida permiso equipo.editar.
+El sistema obtiene el ID del equipo desde la ruta.
+El sistema consulta los miembros activos del equipo y sus datos de empleado.
 Tablas consultadas: equipo_empleado, empleados.
-El usuario presiona quitar miembro.
-El sistema valida permiso de edicion.
-El sistema valida que el empleado pertenezca al equipo.
+El sistema muestra empleado, rol, estado y la accion Quitar miembro.
+
+El usuario presiona Quitar miembro sobre un empleado.
+El sistema envia el ID del equipo y el ID del empleado.
+El sistema valida permiso equipo.editar.
+El sistema valida que el equipo y el empleado hayan sido recibidos correctamente.
+El sistema valida que el empleado pertenezca activamente al equipo.
+Tabla consultada: equipo_empleado.
 El sistema desactiva la relacion del empleado con el equipo.
 Tabla modificada: equipo_empleado.
+El sistema emite mensaje de empleado quitado del equipo.
 
 Eliminar
 El usuario presiona Eliminar.
-El sistema valida permiso de eliminacion.
+El sistema valida permiso equipo.eliminar.
 El sistema valida ID del equipo y existencia del equipo.
-El sistema desactiva el equipo. Tabla modificada: equipo_trabajo.
-El sistema emite mensaje de equipo eliminado correctamente.
+El sistema consulta si el equipo tiene registros en equipo_empleado. Tabla consultada: equipo_empleado.
+Si el equipo tiene registros en equipo_empleado, el sistema desactiva el equipo. Tabla modificada: equipo_trabajo.
+Si el equipo no tiene registros en equipo_empleado, el sistema elimina el equipo. Tabla eliminada: equipo_trabajo.
+El sistema emite mensaje de equipo inactivado o eliminado correctamente segun corresponda.
 
 * Flujo Alternativo
 Si el usuario no tiene permiso, el sistema muestra acceso denegado.
@@ -615,7 +647,8 @@ Si un empleado seleccionado no corresponde a la sucursal del equipo, el sistema 
 * Post Condicion
 El equipo queda registrado en equipo_trabajo.
 Si se edita, sus datos quedan modificados.
-Si se elimina, queda inactivo.
+Si se elimina con registros en equipo_empleado, queda inactivo.
+Si se elimina sin registros en equipo_empleado, se elimina del sistema.
 Las asignaciones de empleados quedan registradas en equipo_empleado.
 
 * Descripcion de las tablas
@@ -639,81 +672,117 @@ Administrador del sistema.
 
 * Pre Condicion
 El usuario debe estar autenticado.
-El usuario debe contar con permiso para creacion.
-El usuario debe contar con permiso para edicion.
-El usuario debe contar con permiso para eliminacion.
-El usuario debe contar con permiso para asignacion de roles.
-El usuario debe contar con permiso para asignacion de sucursal.
+El usuario debe contar con permiso usuarios.crear para registrar usuarios.
+El usuario debe contar con permiso usuarios.ver para consultar y listar usuarios.
+El usuario debe contar con permiso usuarios.editar para editar usuarios y ver datos de seguridad de cuenta.
+El usuario puede actualizar su propia cuenta sin permiso usuarios.editar, pero solo con los campos permitidos para cuenta propia.
+El usuario debe contar con permiso usuarios.eliminar para eliminar o desactivar usuarios.
+El usuario debe contar con permiso usuarios.asignarrol para asignar roles.
+El usuario debe contar con permiso usuarios.asignarlocal para asignar sucursal.
 
 * Flujo de eventos
 Flujo Basico:
 El usuario ingresa al modulo Usuarios.
-El sistema muestra opciones Nuevo Usuario, Lista de Usuarios, Buscar Usuario, Asignar Rol y Asignar Sucursal segun permisos.
+El sistema muestra opciones Nuevo Usuario, Lista de Usuarios, Buscar Usuario, Asignar Rol, Asignar Sucursal y Permisos por Rol segun permisos.
+En la vista Nuevo Usuario, el sistema muestra el formulario de registro, buscador, listado de usuarios y acciones segun permisos.
+En la edicion de cuenta propia, el sistema muestra solo el formulario de actualizacion y oculta buscador, listado y acciones administrativas.
 El sistema consulta usuarios para el listado cuando corresponde. Tabla consultada: usuarios.
 
 Nuevo
-El usuario ingresa CI, nombres, apellidos, telefono, usuario, email y contrasena.
+El usuario ingresa CI, nombres, apellidos, telefono, nombre de usuario, email, contrasena y confirmacion de contrasena.
 En esta carga no se consultan tablas referenciales; la validacion contra usuarios se realiza al guardar.
 Si el usuario presiona Cancelar, el sistema limpia los campos del formulario sin consultar tablas.
 
 Guardar
-El sistema valida permiso de creacion.
-El sistema valida campos obligatorios, formatos, duplicado de CI, usuario y email.
+El sistema valida permiso usuarios.crear.
+El sistema valida campos obligatorios: nombres, apellidos, nombre de usuario, contrasena y confirmacion de contrasena.
+El sistema valida formato de CI, nombres, apellidos, telefono, usuario y contrasena.
+El sistema valida que las contrasenas coincidan.
+El sistema valida duplicado de CI, usuario y email.
 Tabla consultada: usuarios.
 El sistema registra el usuario. Tabla insertada: usuarios.
 El sistema emite mensaje de usuario registrado correctamente.
 
 Buscar/Listar
-El usuario puede buscar por CI, nombre, apellido, usuario o email.
+El sistema valida permiso usuarios.ver para mostrar listado de usuarios.
+El usuario puede buscar por CI o nombre de usuario.
 El sistema consulta usuarios segun la busqueda. Tabla consultada: usuarios.
-El sistema muestra usuarios y acciones segun permisos.
+El sistema no muestra el usuario principal ni el usuario de la sesion actual en el listado.
+El sistema muestra CI, nombre, telefono, usuario, email y estado.
+Si el usuario tiene permiso usuarios.editar, el sistema muestra intentos fallidos, bloqueo por intentos y la accion Editar.
+Si el usuario tiene permiso usuarios.asignarrol, el sistema muestra la accion Asignar roles.
+Si el usuario tiene permiso usuarios.asignarlocal, el sistema muestra la accion Asignar sucursal.
+Si el usuario tiene permiso usuarios.eliminar, el sistema muestra la accion Eliminar.
 
 Editar
 El usuario presiona Editar.
 El sistema consulta el usuario seleccionado. Tabla consultada: usuarios.
-El sistema carga los datos en el formulario.
-El usuario modifica datos y confirma con credenciales administrativas.
-El sistema valida permiso de edicion cuando corresponde.
-El sistema valida existencia, tipo de cuenta, formatos, duplicados y credenciales.
-El sistema edita el usuario. Tabla modificada: usuarios.
+El sistema carga CI, nombres, apellidos, telefono, usuario, email, estado, intentos fallidos y bloqueo.
+Si la cuenta es impropia, el usuario puede modificar CI, nombres, apellidos, telefono, usuario, email, estado y, opcionalmente, contrasena.
+Si la cuenta es propia, el sistema deja CI, nombres, apellidos, usuario y estado en solo lectura; el usuario solo puede modificar telefono, email y, opcionalmente, contrasena.
+Opcionalmente, el usuario ingresa nueva contrasena y confirmacion de contrasena.
+El usuario ingresa nombre de usuario y contrasena administrativa para confirmar la actualizacion.
+El usuario presiona Actualizar.
+El sistema valida existencia del usuario. Tabla consultada: usuarios.
+El sistema valida tipo de cuenta propia o impropia.
+Si la cuenta es propia, el sistema valida que corresponda al usuario en sesion y conserva desde la base de datos CI, nombres, apellidos, usuario y estado.
+Si la cuenta es impropia, el sistema valida permiso usuarios.editar.
+El sistema valida campos obligatorios, formatos, estado, duplicados, contrasenas y credenciales administrativas.
+Si los datos son correctos, el sistema actualiza el registro del usuario. Tabla modificada: usuarios.
+El sistema emite mensaje de usuario actualizado correctamente.
 
 Asignar Roles
-El sistema valida permiso de asignacion de roles.
-El sistema consulta usuarios disponibles para seleccionar. Tabla consultada: usuarios.
+El usuario presiona la accion Asignar roles desde el listado de usuarios.
+El sistema valida permiso usuarios.asignarrol.
+El sistema envia el ID del usuario seleccionado.
 El sistema consulta roles disponibles y roles asignados al usuario. Tablas consultadas: roles, usuario_rol.
-El usuario selecciona un usuario.
+El sistema muestra los roles en un modal con casillas de seleccion.
 El usuario marca o desmarca roles.
-El sistema guarda roles del usuario. Tabla modificada: usuario_rol.
+El usuario presiona Guardar cambios.
+El sistema elimina las relaciones anteriores del usuario y registra las relaciones seleccionadas.
+Tabla eliminada e insertada: usuario_rol.
+El sistema emite mensaje de roles actualizados correctamente.
 
 Asignar Sucursal
-El sistema valida permiso de asignacion de sucursal.
-El sistema consulta usuarios disponibles para seleccionar. Tabla consultada: usuarios.
+El usuario presiona la accion Asignar sucursal desde el listado de usuarios o ingresa a la vista Asignar Sucursal.
+El sistema valida permiso usuarios.asignarlocal.
+Desde el listado, el sistema envia el ID del usuario seleccionado y consulta su sucursal actual. Tabla consultada: usuarios.
 El sistema consulta sucursales activas para el selector. Tabla consultada: sucursales.
-El usuario selecciona un usuario.
 El usuario selecciona sucursal.
 El sistema edita la sucursal del usuario. Tabla modificada: usuarios.
+El sistema emite mensaje de sucursal actualizada correctamente.
 
 Eliminar
 El usuario presiona Eliminar.
-El sistema valida permiso de eliminacion.
+El sistema emite mensaje de confirmacion.
+El usuario confirma la accion.
+El sistema valida que no se intente eliminar el usuario principal del sistema.
+El sistema valida permiso usuarios.eliminar.
 El sistema valida que el usuario exista. Tabla consultada: usuarios.
-El sistema verifica si el usuario tiene pedidos asociados. Tabla consultada: pedido_cabecera.
-Si el usuario tiene pedidos asociados, el sistema lo desactiva.
-Si no tiene pedidos asociados, el sistema lo elimina.
+El sistema intenta eliminar el usuario.
+Si la base de datos no permite eliminarlo porque el usuario esta relacionado con otros registros, el sistema lo desactiva.
+Si la base de datos permite eliminarlo, el sistema lo elimina.
 Tabla modificada o eliminada: usuarios.
+El sistema emite mensaje de usuario desactivado o eliminado correctamente segun corresponda.
 
 * Flujo Alternativo
 Si el usuario no tiene permiso, el sistema muestra acceso denegado.
 Si faltan campos obligatorios, el sistema muestra error.
 Si CI, usuario o email ya existen, el sistema no permite guardar.
 Si el tipo de cuenta no es valido, el sistema muestra error.
+Si la cuenta fue marcada como propia pero no corresponde al usuario en sesion, el sistema muestra error.
+Si el estado no es valido, el sistema muestra error.
+Si las contrasenas no coinciden o no cumplen formato, el sistema muestra error.
 Si las credenciales administrativas no son validas, el sistema cancela la edicion.
+Si se intenta eliminar el usuario principal, el sistema muestra error.
+Si no se pueden guardar roles o sucursal, el sistema muestra error.
 
 * Post Condicion
 El usuario queda registrado o editado en usuarios.
 Los roles quedan asociados en usuario_rol.
 La sucursal queda asociada al usuario.
-Si se elimina con pedidos asociados, el usuario queda inactivo.
+Si la eliminacion es bloqueada por relaciones, el usuario queda inactivo.
+Si no existen relaciones que bloqueen la eliminacion, el usuario se elimina del sistema.
 
 * Descripcion de las tablas
 | Nombre | Alias | Base de Datos |
@@ -722,7 +791,6 @@ Si se elimina con pedidos asociados, el usuario queda inactivo.
 | roles | roles | Bd_reduc |
 | usuario_rol | usuario_rol | Bd_reduc |
 | sucursales | sucursales | Bd_reduc |
-| pedido_cabecera | pedido_cabecera | Bd_reduc |
 
 ## 9. Roles y Permisos
 
