@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermiso('articulo.ver')) {
+if (!mainModel::tienePermiso('reportes.articulos.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }

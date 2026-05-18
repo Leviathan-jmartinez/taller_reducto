@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermiso('reportes.clientes.ver')) {
+if (!mainModel::tienePermiso('reportes.sucursales.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
@@ -7,28 +7,27 @@ if (!mainModel::tienePermiso('reportes.clientes.ver')) {
 
 <div class="full-box page-header">
     <h3 class="text-left">
-        <i class="fas fa-user-friends"></i> &nbsp; REPORTE DE CLIENTES
+        <i class="fas fa-city"></i> &nbsp; REPORTE DE SUCURSALES
     </h3>
 </div>
 
 <div class="container-fluid">
-    <!-- FORM PREVIEW -->
     <form id="formPreview" class="form-neon" autocomplete="off">
-        <input type="hidden" name="modulo" value="clientes">
+        <input type="hidden" name="modulo" value="sucursales">
 
         <div class="row">
             <div class="col-md-3">
                 <label>Estado</label>
                 <select name="estado" class="form-control">
                     <option value="T">Todos</option>
-                    <option value="A">Activos</option>
-                    <option value="I">Inactivos</option>
+                    <option value="A">Activas</option>
+                    <option value="I">Inactivas</option>
                 </select>
             </div>
 
             <div class="col-md-6">
-                <label>Buscar (Nombre / Apellido / Documento / Email)</label>
-                <input type="text" name="buscar" class="form-control" placeholder="Escriba para filtrar">
+                <label>Buscar</label>
+                <input type="text" name="buscar" class="form-control" placeholder="Sucursal, direccion, telefono o empresa">
             </div>
         </div>
 
@@ -44,39 +43,34 @@ if (!mainModel::tienePermiso('reportes.clientes.ver')) {
     </form>
 </div>
 
-<!-- FORM PDF (oculto) -->
 <form id="formPdf"
     action="<?= SERVERURL ?>ajax/reportesAjax.php"
     method="POST"
     target="_blank"
     class="d-none">
-    <input type="hidden" name="accion" value="imprimir_reporte_clientes">
+    <input type="hidden" name="accion" value="imprimir_reporte_sucursales">
     <input type="hidden" name="estado">
     <input type="hidden" name="buscar">
 </form>
 
-<!-- RESUMEN -->
-<div class="container-fluid mt-3" id="resumenCli" style="display:none;">
+<div class="container-fluid mt-3" id="resumenSuc" style="display:none;">
     <div class="row text-center">
         <div class="col">Total<br><strong id="r_total">0</strong></div>
-        <div class="col">Activos<br><strong id="r_activos">0</strong></div>
-        <div class="col">Inactivos<br><strong id="r_inactivos">0</strong></div>
+        <div class="col">Activas<br><strong id="r_activos">0</strong></div>
+        <div class="col">Inactivas<br><strong id="r_inactivos">0</strong></div>
     </div>
 </div>
 
-<!-- TABLA -->
 <div class="container-fluid mt-3">
     <div class="table-responsive">
-        <table class="table table-dark table-sm" id="tablaCli">
+        <table class="table table-dark table-sm" id="tablaSuc">
             <thead class="text-center">
                 <tr>
-                    <th>Documento</th>
-                    <th>Nombre</th>
-                    <th>Apellido</th>
-                    <th>Ciudad</th>
-                    <th>Dirección</th>
-                    <th>Celular</th>
-                    <th>Email</th>
+                    <th>Sucursal</th>
+                    <th>Empresa</th>
+                    <th>Direccion</th>
+                    <th>Telefono</th>
+                    <th>Establecimiento</th>
                     <th>Estado</th>
                 </tr>
             </thead>
@@ -97,35 +91,29 @@ if (!mainModel::tienePermiso('reportes.clientes.ver')) {
             })
             .then(r => r.json())
             .then(json => {
-                // Resumen
-                document.getElementById("resumenCli").style.display = "block";
+                document.getElementById("resumenSuc").style.display = "block";
                 document.getElementById("r_total").innerText = json.resumen.total;
                 document.getElementById("r_activos").innerText = json.resumen.activos;
                 document.getElementById("r_inactivos").innerText = json.resumen.inactivos;
 
-                let tbody = document.querySelector("#tablaCli tbody");
+                let tbody = document.querySelector("#tablaSuc tbody");
                 tbody.innerHTML = "";
 
                 json.data.forEach(it => {
-                    let doc = [it.doc_type, it.doc_number, it.digito_v].filter(Boolean).join(' ');
                     let tr = document.createElement("tr");
                     tr.innerHTML = `
-                <td>${doc || '-'}</td>
-                <td>${it.nombre_cliente ?? '-'}</td>
-                <td>${it.apellido_cliente ?? '-'}</td>
-                <td>${it.ciudad ?? '-'}</td>
-                <td>${it.direccion_cliente ?? '-'}</td>
-                <td>${it.celular_cliente ?? '-'}</td>
-                <td>${it.email_cliente ?? '-'}</td>
-                <td class="text-center">${it.estado_cliente == 1 ? 'Activo' : 'Inactivo'}</td>
-            `;
+                        <td>${it.suc_descri ?? '-'}</td>
+                        <td>${it.empresa ?? '-'}</td>
+                        <td>${it.suc_direccion ?? '-'}</td>
+                        <td>${it.suc_telefono ?? '-'}</td>
+                        <td class="text-center">${it.nro_establecimiento ?? '-'}</td>
+                        <td class="text-center">${it.estado == 1 ? 'Activa' : 'Inactiva'}</td>
+                    `;
                     tbody.appendChild(tr);
                 });
 
-                // Habilitar PDF
                 document.getElementById("btnPdf").classList.remove("d-none");
 
-                // Copiar filtros al form PDF
                 const pdf = document.getElementById("formPdf");
                 ["estado", "buscar"].forEach(k => {
                     pdf.querySelector(`[name="${k}"]`).value = fd.get(k);

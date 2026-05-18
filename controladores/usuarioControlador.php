@@ -474,6 +474,17 @@ class usuarioControlador extends usuarioModelo
         $id = mainModel::decryption($_POST['usuario_id_up']);
         $id = mainModel::limpiar_string($id);
 
+
+        if (!mainModel::tienePermiso('usuarios.editar')) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto" => "No posee permisos para actualizar usuarios",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         // comparar registro si existe en la BD
         $checkUser = mainModel::ejecutar_consulta_simple("SELECT * FROM usuarios where id_usuario='$id'");
         if ($checkUser->rowCount() <= 0) {
@@ -837,7 +848,57 @@ class usuarioControlador extends usuarioModelo
         $idUsuario = mainModel::decryption($_POST['id_usuario']);
         $idUsuario = mainModel::limpiar_string($idUsuario);
 
+        if ($idUsuario == "") {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto"  => "Debe seleccionar un usuario",
+                "Tipo"   => "error"
+            ]);
+        }
+
+        $checkUsuario = mainModel::ejecutar_consulta_simple(
+            "SELECT id_usuario FROM usuarios WHERE id_usuario='$idUsuario'"
+        );
+        if ($checkUsuario->rowCount() <= 0) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto"  => "El usuario seleccionado no existe",
+                "Tipo"   => "error"
+            ]);
+        }
+
         $roles = $_POST['roles'] ?? [];
+        $roles = array_values(array_unique(array_map(function ($rol) {
+            return mainModel::limpiar_string($rol);
+        }, $roles)));
+
+        foreach ($roles as $rol) {
+            if ($rol == "" || !ctype_digit((string)$rol)) {
+                return json_encode([
+                    "Alerta" => "simple",
+                    "Titulo" => "Error",
+                    "Texto"  => "Uno de los roles seleccionados no es valido",
+                    "Tipo"   => "error"
+                ]);
+            }
+        }
+
+        if (!empty($roles)) {
+            $rolesLista = implode(",", $roles);
+            $checkRoles = mainModel::ejecutar_consulta_simple(
+                "SELECT id_rol FROM roles WHERE id_rol IN ($rolesLista)"
+            );
+            if ($checkRoles->rowCount() != count($roles)) {
+                return json_encode([
+                    "Alerta" => "simple",
+                    "Titulo" => "Error",
+                    "Texto"  => "Uno de los roles seleccionados no existe",
+                    "Tipo"   => "error"
+                ]);
+            }
+        }
 
         $res = usuarioModelo::guardar_roles_usuario_modelo($idUsuario, $roles);
 
@@ -902,10 +963,45 @@ class usuarioControlador extends usuarioModelo
         }
 
         $idUsuario = mainModel::decryption($_POST['id_usuario']);
-        $idSucursal = $_POST['id_sucursal'];
+        $idUsuario = mainModel::limpiar_string($idUsuario);
+        $idSucursal = mainModel::limpiar_string($_POST['id_sucursal'] ?? '');
+
+        if ($idUsuario == "" || $idSucursal == "") {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto"  => "Debe seleccionar un usuario y una sucursal",
+                "Tipo"   => "error"
+            ]);
+        }
+
+        $checkUsuario = mainModel::ejecutar_consulta_simple(
+            "SELECT id_usuario FROM usuarios WHERE id_usuario='$idUsuario'"
+        );
+        if ($checkUsuario->rowCount() <= 0) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto"  => "El usuario seleccionado no existe",
+                "Tipo"   => "error"
+            ]);
+        }
+
+        $checkSucursal = mainModel::ejecutar_consulta_simple(
+            "SELECT id_sucursal FROM sucursales WHERE id_sucursal='$idSucursal' AND estado=1"
+        );
+        if ($checkSucursal->rowCount() <= 0) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto"  => "La sucursal seleccionada no es valida",
+                "Tipo"   => "error"
+            ]);
+        }
+
         $res = usuarioModelo::guardar_sucursal_usuario_modelo($idUsuario, $idSucursal);
 
-        if ($res > 0) {
+        if ($res) {
             return json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Sucursal actualizada",

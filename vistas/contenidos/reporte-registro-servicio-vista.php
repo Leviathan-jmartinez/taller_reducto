@@ -1,13 +1,13 @@
 <?php
-if (!mainModel::tienePermiso('servicio.reportes.ver')) {
+if (!mainModel::tienePermiso('reportes.registro_servicio.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
 
-require_once "./controladores/sucursalControlador.php";
-$insSucursal = new sucursalControlador();
-$sucursales = $insSucursal->listar_sucursales_controlador();
-$empleados = $insSucursal->listar_empleados_controlador();
+require_once "./controladores/reportesControlador.php";
+$rep = new reporteControlador();
+$sucursales = $rep->listar_sucursales_controlador();
+$empleados = $rep->listar_empleados_controlador();
 ?>
 
 <div class="container-fluid">

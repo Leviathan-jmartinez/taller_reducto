@@ -739,25 +739,48 @@ El sistema consulta roles disponibles y roles asignados al usuario. Tablas consu
 El sistema muestra los roles en un modal con casillas de seleccion.
 El usuario marca o desmarca roles.
 El usuario presiona Guardar cambios.
+El sistema emite mensaje de confirmacion.
+Si el usuario cancela la confirmacion, el sistema no realiza cambios.
+El usuario confirma la accion.
+El sistema valida nuevamente permiso usuarios.asignarrol.
+El sistema valida que el ID del usuario haya sido recibido.
+El sistema desencripta y valida el ID del usuario seleccionado.
+El sistema valida que el usuario exista. Tabla consultada: usuarios.
+Si se recibieron roles seleccionados, el sistema valida que los roles existan. Tabla consultada: roles.
 El sistema elimina las relaciones anteriores del usuario y registra las relaciones seleccionadas.
+Si no se selecciona ningun rol, el sistema elimina las relaciones anteriores y deja al usuario sin roles asignados.
 Tabla eliminada e insertada: usuario_rol.
 El sistema emite mensaje de roles actualizados correctamente.
 
 Asignar Sucursal
-El usuario presiona la accion Asignar sucursal desde el listado de usuarios o ingresa a la vista Asignar Sucursal.
+El usuario presiona la accion Asignar sucursal desde el listado de usuarios.
 El sistema valida permiso usuarios.asignarlocal.
 Desde el listado, el sistema envia el ID del usuario seleccionado y consulta su sucursal actual. Tabla consultada: usuarios.
 El sistema consulta sucursales activas para el selector. Tabla consultada: sucursales.
+El sistema muestra un modal de Asignar sucursal.
+El sistema carga en el modal el selector de sucursales y marca como seleccionada la sucursal actual del usuario, si posee una asignada.
 El usuario selecciona sucursal.
+El usuario presiona Guardar cambios.
+El sistema emite mensaje de confirmacion.
+Si el usuario cancela la confirmacion, el sistema no realiza cambios.
+El usuario confirma la accion.
+El sistema valida nuevamente permiso usuarios.asignarlocal.
+El sistema valida que el ID del usuario y la sucursal seleccionada hayan sido recibidos.
+El sistema valida que el usuario exista. Tabla consultada: usuarios.
+El sistema valida que la sucursal seleccionada exista y este activa. Tabla consultada: sucursales.
 El sistema edita la sucursal del usuario. Tabla modificada: usuarios.
-El sistema emite mensaje de sucursal actualizada correctamente.
+Si la sucursal seleccionada es la misma que ya tenia el usuario, el sistema mantiene la asignacion sin emitir error.
+El sistema emite mensaje de sucursal actualizada correctamente cuando la operacion se ejecuta correctamente.
 
 Eliminar
 El usuario presiona Eliminar.
 El sistema emite mensaje de confirmacion.
+Si el usuario cancela la confirmacion, el sistema no realiza cambios.
 El usuario confirma la accion.
+El sistema valida que el ID del usuario haya sido recibido.
+El sistema desencripta y valida el ID del usuario seleccionado.
 El sistema valida que no se intente eliminar el usuario principal del sistema.
-El sistema valida permiso usuarios.eliminar.
+El sistema valida nuevamente permiso usuarios.eliminar.
 El sistema valida que el usuario exista. Tabla consultada: usuarios.
 El sistema intenta eliminar el usuario.
 Si la base de datos no permite eliminarlo porque el usuario esta relacionado con otros registros, el sistema lo desactiva.
@@ -774,7 +797,17 @@ Si la cuenta fue marcada como propia pero no corresponde al usuario en sesion, e
 Si el estado no es valido, el sistema muestra error.
 Si las contrasenas no coinciden o no cumplen formato, el sistema muestra error.
 Si las credenciales administrativas no son validas, el sistema cancela la edicion.
+Si el usuario cancela una confirmacion, el sistema conserva los datos sin cambios.
+Si no se recibe un ID de usuario valido para asignar roles, el sistema muestra error.
+Si el usuario seleccionado para asignar roles no existe, el sistema muestra error.
+Si algun rol seleccionado no es valido o no existe, el sistema muestra error.
+Si no se recibe un ID de usuario o una sucursal valida para asignar sucursal, el sistema muestra error.
+Si el usuario seleccionado para asignar sucursal no existe, el sistema muestra error.
+Si la sucursal seleccionada no existe o no esta activa, el sistema muestra error.
+Si no se recibe un ID de usuario valido para eliminar, el sistema muestra error.
 Si se intenta eliminar el usuario principal, el sistema muestra error.
+Si el usuario seleccionado para eliminar no existe, el sistema muestra error.
+Si no se puede eliminar ni desactivar el usuario, el sistema muestra error.
 Si no se pueden guardar roles o sucursal, el sistema muestra error.
 
 * Post Condicion
@@ -805,13 +838,15 @@ Administrador del sistema.
 
 * Pre Condicion
 El usuario debe estar autenticado.
-El usuario debe contar con permiso para visualizacion.
-El usuario debe contar con permiso para creacion, edicion, eliminacion y modificacion de permisos.
-El usuario debe contar con permiso para eliminacion.
+El usuario debe contar con permiso roles.ver para ingresar al modulo Roles.
+El usuario debe contar con permiso roles.editar para registrar o editar roles.
+El usuario debe contar con permiso roles.eliminar para eliminar roles.
+El usuario debe contar con permiso permisos.asignar_permisos para ingresar y modificar permisos por rol.
 
 * Flujo de eventos
 Flujo Basico:
 El usuario ingresa al modulo Roles.
+El sistema valida permiso roles.ver.
 El sistema muestra el formulario de roles y consulta el listado. Tabla consultada: roles.
 
 Nuevo
@@ -820,10 +855,15 @@ En esta carga no se consultan tablas referenciales; la validacion contra roles s
 Si el usuario presiona Cancelar, el sistema limpia los campos del formulario sin consultar tablas.
 
 Guardar
-El sistema valida permiso de edicion.
+El usuario presiona Guardar.
+El sistema emite mensaje de confirmacion.
+Si el usuario cancela la confirmacion, el sistema no realiza cambios.
+El usuario confirma la accion.
+El sistema valida permiso roles.editar.
 El sistema valida nombre obligatorio.
 El sistema valida que el rol no este duplicado. Tabla consultada: roles.
 El sistema registra el rol. Tabla insertada: roles.
+El sistema emite mensaje de rol registrado correctamente.
 
 Buscar/Listar
 El usuario busca rol por nombre o descripcion.
@@ -831,38 +871,79 @@ El sistema consulta roles segun la busqueda. Tabla consultada: roles.
 El sistema muestra nombre, descripcion y estado.
 Si el usuario tiene permiso de edicion, muestra Editar.
 Si el usuario tiene permiso de eliminacion, muestra Eliminar.
+El sistema muestra paginador si existen registros suficientes.
 
 Editar
 El usuario presiona Editar.
 El sistema consulta el rol seleccionado. Tabla consultada: roles.
 El sistema carga nombre, descripcion y estado en el formulario.
 El usuario modifica nombre, descripcion o estado.
-El sistema valida permiso de edicion.
+El usuario presiona Actualizar.
+El sistema emite mensaje de confirmacion.
+Si el usuario cancela la confirmacion, el sistema no realiza cambios.
+El usuario confirma la accion.
+El sistema valida permiso roles.editar.
 El sistema valida existencia del rol, nombre obligatorio, estado valido y nombre no duplicado.
 El sistema edita el rol. Tabla modificada: roles.
+El sistema emite mensaje de rol actualizado correctamente y redirecciona al listado de roles.
 
 Eliminar
 El usuario presiona Eliminar.
-El sistema valida permiso de edicion.
+El sistema emite mensaje de confirmacion.
+Si el usuario cancela la confirmacion, el sistema no realiza cambios.
+El usuario confirma la accion.
+El sistema valida permiso roles.eliminar.
+El sistema desencripta y valida el ID del rol seleccionado.
 El sistema valida que el rol exista. Tabla consultada: roles.
-El sistema elimina el rol. Tabla eliminada: roles.
+El sistema valida si el rol tiene permisos asociados. Tabla consultada: rol_permiso.
+Si el rol tiene permisos asociados u otra relacion, el sistema cambia el estado del rol a inactivo. Tabla modificada: roles.
+Si el rol no tiene relaciones, el sistema elimina el rol. Tabla eliminada: roles.
+El sistema emite mensaje de rol desactivado o eliminado correctamente segun corresponda.
 
 Permisos por Rol
 El usuario ingresa a Permisos por Rol.
-El sistema valida permiso de edicion.
-El sistema consulta roles disponibles para seleccionar. Tabla consultada: roles.
+El sistema valida permiso permisos.asignar_permisos.
+El sistema consulta roles activos disponibles y los muestra en el selector Rol. Tabla consultada: roles.
+El sistema muestra el mensaje inicial para seleccionar un rol.
 El usuario selecciona un rol.
-El sistema consulta permisos disponibles y permisos asociados al rol.
-Tablas consultadas: permisos, rol_permiso.
+El sistema envia el ID del rol seleccionado por AJAX.
+El sistema valida permiso permisos.asignar_permisos.
+El sistema valida que el ID del rol haya sido recibido.
+El sistema valida que el rol exista y este activo. Tabla consultada: roles.
+El sistema consulta permisos disponibles y permisos asociados al rol. Tablas consultadas: permisos, rol_permiso.
+El sistema agrupa los permisos por modulo segun la clave del permiso.
+El sistema carga en pantalla los permisos en casillas de seleccion, marcando los permisos ya asignados al rol.
+El sistema muestra una casilla por modulo para marcar o desmarcar todos los permisos del modulo.
 El usuario marca o desmarca permisos.
-El sistema valida permiso de edicion.
-El sistema guarda permisos del rol. Tabla modificada: rol_permiso.
+El usuario presiona Guardar permisos.
+El sistema emite mensaje de confirmacion.
+Si el usuario cancela la confirmacion, el sistema no realiza cambios.
+El usuario confirma la accion.
+El sistema valida nuevamente permiso permisos.asignar_permisos.
+El sistema valida que el ID del rol haya sido recibido.
+El sistema valida que el rol exista y este activo. Tabla consultada: roles.
+Si se recibieron permisos seleccionados, el sistema valida que sean validos y existan. Tabla consultada: permisos.
+El sistema elimina las relaciones anteriores del rol y registra las relaciones seleccionadas.
+Si no se selecciona ningun permiso, el sistema elimina las relaciones anteriores y deja el rol sin permisos asignados.
+Tabla eliminada e insertada: rol_permiso.
+El sistema emite mensaje de permisos actualizados correctamente.
 
 * Flujo Alternativo
 Si el usuario no tiene permiso, el sistema muestra acceso denegado.
+Si el usuario cancela una confirmacion, el sistema conserva los datos sin cambios.
+Si el usuario marca una casilla de modulo, el sistema marca o desmarca todos los permisos del modulo.
+Si el usuario marca o desmarca permisos individuales, el sistema sincroniza el estado de la casilla del modulo.
 Si no se ingresa nombre del rol, el sistema muestra error.
 Si el rol ya existe, el sistema no permite guardar.
 Si el rol no es valido, el sistema muestra error.
+Si el estado del rol no es valido, el sistema muestra error.
+Si el rol seleccionado para eliminar no existe, el sistema muestra error.
+Si el rol tiene permisos asociados u otra relacion, el sistema lo desactiva.
+Si no se puede eliminar el rol, el sistema muestra error.
+Si no se selecciona un rol para permisos, el sistema muestra error.
+Si el rol seleccionado para permisos no existe o esta inactivo, el sistema muestra error.
+Si algun permiso seleccionado no es valido o no existe, el sistema muestra error.
+Si no se pueden guardar los permisos del rol, el sistema muestra error.
 
 * Post Condicion
 El rol queda registrado, editado o eliminado en roles.

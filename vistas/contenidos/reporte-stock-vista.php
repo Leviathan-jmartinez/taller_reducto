@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermiso('articulo.ver')) {
+if (!mainModel::tienePermiso('reportes.stock.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
@@ -21,7 +21,7 @@ $proveedores = $rep->listar_proveedores_controlador();
 <div class="container-fluid">
     <!-- FORM PREVIEW -->
     <form id="formPreview" class="form-neon" autocomplete="off">
-        <input type="hidden" name="modulo" value="articulos">
+        <input type="hidden" name="modulo" value="stock">
 
         <div class="row">
             <div class="col-md-2">
@@ -96,7 +96,7 @@ $proveedores = $rep->listar_proveedores_controlador();
     method="POST"
     target="_blank"
     class="d-none">
-    <input type="hidden" name="accion" value="imprimir_reporte_articulos">
+    <input type="hidden" name="accion" value="imprimir_reporte_stock">
     <input type="hidden" name="sucursal">
     <input type="hidden" name="categoria">
     <input type="hidden" name="proveedor">

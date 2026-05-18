@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermiso('usuarios.permisos_por_roles')) {
+if (!mainModel::tienePermiso('permisos.asignar_permisos')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
@@ -31,7 +31,7 @@ $roles = $insRoles->listar_rolesSelect_controlador();
             </li>
         <?php } ?>
 
-        <?php if (mainModel::tienePermiso('usuarios.permisos_por_roles')) { ?>
+        <?php if (mainModel::tienePermiso('permisos.asignar_permisos')) { ?>
             <li>
                 <a class="active" href="<?php echo SERVERURL; ?>rol-permisos/">
                     <i class="fas fa-key fa-fw"></i> &nbsp; PERMISOS

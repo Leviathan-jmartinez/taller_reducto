@@ -98,15 +98,34 @@ class rolesModelo extends mainModel
         // 🔥 Si querés lógica futura (ej: rol en uso), acá se valida
         // Por ahora elimina directo
 
-        $sql = $pdo->prepare("
-            DELETE FROM roles
-            WHERE id_rol = :id
-        ");
+        try {
+            $sql = $pdo->prepare("
+                DELETE FROM roles
+                WHERE id_rol = :id
+            ");
 
-        $sql->bindParam(":id", $id, PDO::PARAM_INT);
-        $sql->execute();
+            $sql->bindParam(":id", $id, PDO::PARAM_INT);
+            $sql->execute();
 
-        return $sql;
+            return [
+                "ok" => $sql->rowCount() > 0,
+                "accion" => "eliminado"
+            ];
+        } catch (PDOException $e) {
+            $sql = $pdo->prepare("
+                UPDATE roles
+                SET estado = 0
+                WHERE id_rol = :id
+            ");
+
+            $sql->bindParam(":id", $id, PDO::PARAM_INT);
+            $sql->execute();
+
+            return [
+                "ok" => $sql->rowCount() > 0,
+                "accion" => "desactivado"
+            ];
+        }
     }
 
     /* ========= PERMISOS POR ROL ========= */

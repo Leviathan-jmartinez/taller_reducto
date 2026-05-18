@@ -6,7 +6,7 @@ class vistasModelo
     {
         $lista_blanca = ["home", "articulo-actualizar", "articulo-buscar", "articulo-lista", "articulo-nuevo", 
         "cliente-actualizar", "cliente-buscar", "cliente-lista", "cliente-nuevo", "company",  "proveedor-actualizar", "proveedor-buscar", "proveedor-lista", "proveedor-nuevo",      
-        "usuario-actualizar", "usuario-buscar", "usuario-lista", "usuario-rol", "rol-permisos", "rol-nuevo","rol-actualizar","usuario-nuevo", "usuario-sucursal","pedido-lista","pedido-nuevo","pedido-buscar",
+        "usuario-actualizar", "usuario-buscar", "usuario-lista", "rol-permisos", "rol-nuevo","rol-actualizar","usuario-nuevo","pedido-lista","pedido-nuevo","pedido-buscar",
         "sucursal-nuevo","sucursal-lista","sucursal-actualizar","sucursal-buscar", "vehiculo-lista","vehiculo-nuevo","vehiculo-actualizar","vehiculo-buscar",
         "empleado-actualizar","empleado-nuevo","empleado-lista","empleado-buscar","cargo-nuevo","cargo-lista","cargo-actualizar","cargo-buscar", "empleado-equipo-asignar", 
         "empleado-equipo","empleado-equipo-actualizar","empleado-equipo-miembros", 
@@ -16,7 +16,7 @@ class vistasModelo
         "presupuesto-servicio-lista", "presupuesto-servicio-buscar", "ordenTrabajo-lista","ordenTrabajo-nuevo", "ordenTrabajo-asignar", "ordenTrabajo-buscar","registro-servicio-nuevo","registro-servicio-lista",
         "registro-servicio-buscar"   ,"reclamo-servicio-nuevo","reclamo-servicio-lista","transferencia-nuevo","transferencia-historial","transferencia-recibir","reporte-stock",
         "reporte-pedidos", "reporte-presupuestos", "reporte-ordenes-compra", "reporte-compras", "reporte-recepcion-servicio", "reporte-presupuesto-servicio","reporte-orden-trabajo"
-         ,"reporte-registro-servicio", "reporte-LibroCompras","reporte-articulos", "reporte-proveedores", "reporte-clientes", "reporte-empleados","reporte-transferencias","reporte-movimientostock"];
+         ,"reporte-registro-servicio", "reporte-LibroCompras","reporte-articulos", "reporte-proveedores", "reporte-clientes", "reporte-empleados","reporte-sucursales","reporte-vehiculos","reporte-transferencias","reporte-movimientostock"];
         if (in_array($vistas, $lista_blanca)) {
             if (is_file("./vistas/contenidos/" . $vistas . "-vista.php")) {
                 $contenido = "./vistas/contenidos/" . $vistas . "-vista.php";

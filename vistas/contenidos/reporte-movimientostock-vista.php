@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermiso('stock.movimiento.ver')) {
+if (!mainModel::tienePermiso('reportes.movimientos_stock.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }

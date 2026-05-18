@@ -1,12 +1,12 @@
 <?php
-if (!mainModel::tienePermiso('compra.reportes.ver')) {
+if (!mainModel::tienePermiso('reportes.compras.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
 
-require_once "./controladores/sucursalControlador.php";
-$insSucursal = new sucursalControlador();
-$sucursales = $insSucursal->listar_sucursales_controlador();
+require_once "./controladores/reportesControlador.php";
+$rep = new reporteControlador();
+$sucursales = $rep->listar_sucursales_controlador();
 ?>
 
 <div class="container-fluid">

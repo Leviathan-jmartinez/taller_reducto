@@ -46,7 +46,7 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
         <?php
 } ?>
 
-        <?php if (mainModel::tienePermiso('usuarios.permisos_por_roles')) { ?>
+        <?php if (mainModel::tienePermiso('permisos.asignar_permisos')) { ?>
             <li>
                 <a href="<?php echo SERVERURL; ?>rol-permisos/">
                     <i class="fas fa-key fa-fw"></i> &nbsp; PERMISOS

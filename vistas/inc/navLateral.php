@@ -219,7 +219,7 @@
                                         <?php } ?>
 
                                         <?php if (mainModel::tienePermiso('roles.ver')) { ?>
-                                            <li><a href="<?= SERVERURL; ?>rol-permisos/"><i class="fas fa-key fa-fw"></i> &nbsp; Roles y Permisos</a></li>
+                                            <li><a href="<?= SERVERURL; ?>rol-nuevo/"><i class="fas fa-key fa-fw"></i> &nbsp; Roles y Permisos</a></li>
                                         <?php } ?>
                                     </ul>
                                 </li>
@@ -227,14 +227,25 @@
                         </ul>
                     </li>
                 <?php } ?>
-
+                <?php if (
+                    mainModel::tienePermiso('reportes.articulos.ver') ||
+                    mainModel::tienePermiso('reportes.proveedores.ver') ||
+                    mainModel::tienePermiso('reportes.sucursales.ver') ||
+                    mainModel::tienePermiso('reportes.clientes.ver') ||
+                    mainModel::tienePermiso('reportes.vehiculos.ver') ||
+                    mainModel::tienePermiso('reportes.empleados.ver')
+                ) { ?>
                 <li>
                     <a href="#" class="nav-btn-submenu">
                         <i class="fas fa-chart-bar fa-fw"></i> &nbsp; Informes Referenciales
                         <i class="fas fa-chevron-down"></i>
                     </a>
                     <ul>
-                        <?php if (mainModel::tienePermiso('compra.reportes.ver')) { ?>
+                        <?php if (
+                            mainModel::tienePermiso('reportes.articulos.ver') ||
+                            mainModel::tienePermiso('reportes.proveedores.ver') ||
+                            mainModel::tienePermiso('reportes.sucursales.ver')
+                        ) { ?>
                             <!-- ================= COMPRAS ================= -->
                             <li>
                                 <a href="#" class="nav-btn-submenu">
@@ -242,20 +253,35 @@
                                     <i class="fas fa-chevron-down"></i>
                                 </a>
                                 <ul>
+                                    <?php if (mainModel::tienePermiso('reportes.articulos.ver')) { ?>
                                     <li>
                                         <a href="<?= SERVERURL; ?>reporte-articulos/">
                                             <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Artículos
                                         </a>
                                     </li>
+                                    <?php } ?>
+                                    <?php if (mainModel::tienePermiso('reportes.proveedores.ver')) { ?>
                                     <li>
                                         <a href="<?= SERVERURL; ?>reporte-proveedores/">
                                             <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Proveedores
                                         </a>
                                     </li>
+                                    <?php } ?>
+                                    <?php if (mainModel::tienePermiso('reportes.sucursales.ver')) { ?>
+                                    <li>
+                                        <a href="<?= SERVERURL; ?>reporte-sucursales/">
+                                            <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Sucursales
+                                        </a>
+                                    </li>
+                                    <?php } ?>
                                 </ul>
                             </li>
                         <?php } ?>
-                        <?php if (mainModel::tienePermiso('servicio.reportes.ver')) { ?>
+                        <?php if (
+                            mainModel::tienePermiso('reportes.clientes.ver') ||
+                            mainModel::tienePermiso('reportes.vehiculos.ver') ||
+                            mainModel::tienePermiso('reportes.empleados.ver')
+                        ) { ?>
                             <!-- ================= SERVICIOS ================= -->
                             <li>
                                 <a href="#" class="nav-btn-submenu">
@@ -263,23 +289,48 @@
                                     <i class="fas fa-chevron-down"></i>
                                 </a>
                                 <ul>
+                                    <?php if (mainModel::tienePermiso('reportes.clientes.ver')) { ?>
                                     <li>
                                         <a href="<?= SERVERURL; ?>reporte-clientes/">
                                             <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Clientes
                                         </a>
                                     </li>
+                                    <?php } ?>
+                                    <?php if (mainModel::tienePermiso('reportes.vehiculos.ver')) { ?>
+                                    <li>
+                                        <a href="<?= SERVERURL; ?>reporte-vehiculos/">
+                                            <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; VehÃ­culos
+                                        </a>
+                                    </li>
+                                    <?php } ?>
+                                    <?php if (mainModel::tienePermiso('reportes.empleados.ver')) { ?>
                                     <li>
                                         <a href="<?= SERVERURL; ?>reporte-empleados/">
                                             <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Empleados
                                         </a>
                                     </li>
+                                    <?php } ?>
                                 </ul>
                             </li>
                         <?php } ?>
                     </ul>
                 </li>
+                <?php } ?>
 
 
+                <?php if (
+                    mainModel::tienePermiso('reportes.pedidos.ver') ||
+                    mainModel::tienePermiso('reportes.presupuestos_compra.ver') ||
+                    mainModel::tienePermiso('reportes.ordenes_compra.ver') ||
+                    mainModel::tienePermiso('reportes.compras.ver') ||
+                    mainModel::tienePermiso('reportes.libro_compras.ver') ||
+                    mainModel::tienePermiso('reportes.stock.ver') ||
+                    mainModel::tienePermiso('reportes.movimientos_stock.ver') ||
+                    mainModel::tienePermiso('reportes.recepcion_servicio.ver') ||
+                    mainModel::tienePermiso('reportes.presupuesto_servicio.ver') ||
+                    mainModel::tienePermiso('reportes.orden_trabajo.ver') ||
+                    mainModel::tienePermiso('reportes.registro_servicio.ver')
+                ) { ?>
                 <li>
                     <a href="#" class="nav-btn-submenu">
                         <i class="fas fa-chart-bar fa-fw"></i> &nbsp; Informes de movimientos
@@ -287,7 +338,15 @@
                     </a>
 
                     <ul>
-                        <?php if (mainModel::tienePermiso('compra.reportes.ver')) { ?>
+                        <?php if (
+                            mainModel::tienePermiso('reportes.pedidos.ver') ||
+                            mainModel::tienePermiso('reportes.presupuestos_compra.ver') ||
+                            mainModel::tienePermiso('reportes.ordenes_compra.ver') ||
+                            mainModel::tienePermiso('reportes.compras.ver') ||
+                            mainModel::tienePermiso('reportes.libro_compras.ver') ||
+                            mainModel::tienePermiso('reportes.stock.ver') ||
+                            mainModel::tienePermiso('reportes.movimientos_stock.ver')
+                        ) { ?>
                             <!-- ================= INFORMES DE COMPRAS ================= -->
                             <li>
                                 <a href="#" class="nav-btn-submenu">
@@ -295,47 +354,66 @@
                                     <i class="fas fa-chevron-down"></i>
                                 </a>
                                 <ul>
+                                    <?php if (mainModel::tienePermiso('reportes.pedidos.ver')) { ?>
                                     <li>
                                         <a href="<?= SERVERURL; ?>reporte-pedidos/">
                                             <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Informe de Pedidos
                                         </a>
                                     </li>
+                                    <?php } ?>
+                                    <?php if (mainModel::tienePermiso('reportes.presupuestos_compra.ver')) { ?>
                                     <li>
                                         <a href="<?= SERVERURL; ?>reporte-presupuestos/">
                                             <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Informe de Presupuestos
                                         </a>
                                     </li>
+                                    <?php } ?>
+                                    <?php if (mainModel::tienePermiso('reportes.ordenes_compra.ver')) { ?>
                                     <li>
                                         <a href="<?= SERVERURL; ?>reporte-ordenes-compra/">
                                             <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Informe de Órdenes de Compra
                                         </a>
                                     </li>
+                                    <?php } ?>
+                                    <?php if (mainModel::tienePermiso('reportes.compras.ver')) { ?>
                                     <li>
                                         <a href="<?= SERVERURL; ?>reporte-compras/">
                                             <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Informe de Compras
                                         </a>
                                     </li>
+                                    <?php } ?>
+                                    <?php if (mainModel::tienePermiso('reportes.libro_compras.ver')) { ?>
                                     <li>
                                         <a href="<?= SERVERURL; ?>reporte-LibroCompras/">
                                             <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Informe Libro de Compras
                                         </a>
                                     </li>
+                                    <?php } ?>
 
+                                    <?php if (mainModel::tienePermiso('reportes.stock.ver')) { ?>
                                     <li>
                                         <a href="<?= SERVERURL; ?>reporte-stock/">
                                             <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Informe de Stock
                                         </a>
                                     </li>
+                                    <?php } ?>
+                                    <?php if (mainModel::tienePermiso('reportes.movimientos_stock.ver')) { ?>
                                     <li>
                                         <a href="<?= SERVERURL; ?>reporte-movimientostock/">
                                             <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Movimientos de Stock
                                         </a>
                                     </li>
+                                    <?php } ?>
 
                                 </ul>
                             </li>
                         <?php } ?>
-                        <?php if (mainModel::tienePermiso('servicio.reportes.ver')) { ?>
+                        <?php if (
+                            mainModel::tienePermiso('reportes.recepcion_servicio.ver') ||
+                            mainModel::tienePermiso('reportes.presupuesto_servicio.ver') ||
+                            mainModel::tienePermiso('reportes.orden_trabajo.ver') ||
+                            mainModel::tienePermiso('reportes.registro_servicio.ver')
+                        ) { ?>
                             <!-- ================= INFORMES DE SERVICIOS ================= -->
                             <li>
                                 <a href="#" class="nav-btn-submenu">
@@ -345,32 +423,41 @@
                                 <ul>
 
 
+                                    <?php if (mainModel::tienePermiso('reportes.recepcion_servicio.ver')) { ?>
                                     <li>
                                         <a href="<?= SERVERURL; ?>reporte-recepcion-servicio/">
                                             <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Informe de Rec. de Servicios
                                         </a>
                                     </li>
+                                    <?php } ?>
+                                    <?php if (mainModel::tienePermiso('reportes.presupuesto_servicio.ver')) { ?>
                                     <li>
                                         <a href="<?= SERVERURL; ?>reporte-presupuesto-servicio/">
                                             <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Informe de Presupuestos
                                         </a>
                                     </li>
+                                    <?php } ?>
+                                    <?php if (mainModel::tienePermiso('reportes.orden_trabajo.ver')) { ?>
                                     <li>
                                         <a href="<?= SERVERURL; ?>reporte-orden-trabajo/">
                                             <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Informe de OT
                                         </a>
                                     </li>
+                                    <?php } ?>
+                                    <?php if (mainModel::tienePermiso('reportes.registro_servicio.ver')) { ?>
                                     <li>
                                         <a href="<?= SERVERURL; ?>reporte-registro-servicio/">
                                             <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Informe de Reg. Servicios
                                         </a>
                                     </li>
+                                    <?php } ?>
 
                                 </ul>
                             </li>
                         <?php } ?>
                     </ul>
                 </li>
+                <?php } ?>
 
 
                 <li>

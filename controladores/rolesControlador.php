@@ -10,7 +10,7 @@ class rolesControlador extends rolesModelo
     /* ========= AGREGAR ========= */
     public function agregar_roles_controlador()
     {
-        if (!mainModel::tienePermiso('roles.editar')) {
+        if (!mainModel::tienePermiso('roles.crear')) {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Acceso denegado",
@@ -308,7 +308,7 @@ class rolesControlador extends rolesModelo
     /* ========= ELIMINAR ========= */
     public function eliminar_roles_controlador()
     {
-        if (!mainModel::tienePermiso('roles.editar')) {
+        if (!mainModel::tienePermiso('roles.eliminar')) {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Acceso denegado",
@@ -336,11 +336,15 @@ class rolesControlador extends rolesModelo
 
         $delete = rolesModelo::eliminar_roles_modelo($id);
 
-        if ($delete->rowCount() > 0) {
+        if ($delete["ok"]) {
+            $mensaje = ($delete["accion"] === "desactivado")
+                ? "El rol tiene relaciones, por eso fue desactivado correctamente"
+                : "Rol eliminado correctamente";
+
             $alerta = [
                 "Alerta" => "recargar",
-                "Titulo" => "Eliminado",
-                "Texto" => "Rol eliminado correctamente",
+                "Titulo" => "Procesado",
+                "Texto" => $mensaje,
                 "Tipo" => "success"
             ];
         } else {
@@ -359,7 +363,7 @@ class rolesControlador extends rolesModelo
     {
         session_start(['name' => 'STR']);
 
-        if (!mainModel::tienePermiso('roles.editar')) {
+        if (!mainModel::tienePermiso('permisos.asignar_permisos')) {
             return '<div class="alert alert-danger">Acceso denegado</div>';
         }
 
@@ -367,6 +371,13 @@ class rolesControlador extends rolesModelo
 
         if (empty($idRol)) {
             return '<div class="alert alert-danger">Rol inválido</div>';
+        }
+
+        $checkRol = mainModel::ejecutar_consulta_simple(
+            "SELECT id_rol FROM roles WHERE id_rol='$idRol' AND estado=1"
+        );
+        if ($checkRol->rowCount() <= 0) {
+            return '<div class="alert alert-danger">Rol invalido</div>';
         }
 
         $permisos = rolesModelo::obtener_permisos_rol_modelo($idRol);
@@ -430,7 +441,7 @@ class rolesControlador extends rolesModelo
     {
         session_start(['name' => 'STR']);
 
-        if (!mainModel::tienePermiso('roles.editar')) {
+        if (!mainModel::tienePermiso('permisos.asignar_permisos')) {
             return json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Acceso denegado",
@@ -441,6 +452,9 @@ class rolesControlador extends rolesModelo
 
         $idRol = mainModel::limpiar_string($_POST['id_rol']);
         $permisos = $_POST['permisos'] ?? [];
+        $permisos = array_values(array_unique(array_map(function ($permiso) {
+            return mainModel::limpiar_string($permiso);
+        }, $permisos)));
 
         if (empty($idRol)) {
             return json_encode([
@@ -449,6 +463,44 @@ class rolesControlador extends rolesModelo
                 "Texto"  => "Rol inválido",
                 "Tipo"   => "error"
             ]);
+        }
+
+        $checkRol = mainModel::ejecutar_consulta_simple(
+            "SELECT id_rol FROM roles WHERE id_rol='$idRol' AND estado=1"
+        );
+        if ($checkRol->rowCount() <= 0) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto"  => "Rol invalido",
+                "Tipo"   => "error"
+            ]);
+        }
+
+        foreach ($permisos as $permiso) {
+            if ($permiso == "" || !ctype_digit((string)$permiso)) {
+                return json_encode([
+                    "Alerta" => "simple",
+                    "Titulo" => "Error",
+                    "Texto"  => "Uno de los permisos seleccionados no es valido",
+                    "Tipo"   => "error"
+                ]);
+            }
+        }
+
+        if (!empty($permisos)) {
+            $permisosLista = implode(",", $permisos);
+            $checkPermisos = mainModel::ejecutar_consulta_simple(
+                "SELECT id_permiso FROM permisos WHERE id_permiso IN ($permisosLista)"
+            );
+            if ($checkPermisos->rowCount() != count($permisos)) {
+                return json_encode([
+                    "Alerta" => "simple",
+                    "Titulo" => "Error",
+                    "Texto"  => "Uno de los permisos seleccionados no existe",
+                    "Tipo"   => "error"
+                ]);
+            }
         }
 
         $res = rolesModelo::guardar_permisos_rol_modelo($idRol, $permisos);

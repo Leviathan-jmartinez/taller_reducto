@@ -23,8 +23,23 @@ if ($modulo === "articulos") {
     exit();
 }
 
+if ($modulo === "stock") {
+    echo $inst_reporte->reporte_stock_controlador();
+    exit();
+}
+
 if ($modulo === "clientes") {
     echo $inst_reporte->reporte_clientes_controlador();
+    exit();
+}
+
+if ($modulo === "sucursales") {
+    echo $inst_reporte->reporte_sucursales_controlador();
+    exit();
+}
+
+if ($modulo === "vehiculos") {
+    echo $inst_reporte->reporte_vehiculos_controlador();
     exit();
 }
 
@@ -62,6 +77,10 @@ switch ($accion) {
         $inst_reporte->imprimir_reporte_articulos_controlador();
         exit();
 
+    case 'imprimir_reporte_stock':
+        $inst_reporte->imprimir_reporte_stock_controlador();
+        exit();
+
 
     /* ===== PROVEEDORES ===== */
     case 'reporte_proveedores':
@@ -76,6 +95,16 @@ switch ($accion) {
     /* ===== CLIENTES ===== */
     case 'imprimir_reporte_clientes':
         $inst_reporte->imprimir_reporte_clientes_controlador();
+        exit();
+
+    /* ===== SUCURSALES ===== */
+    case 'imprimir_reporte_sucursales':
+        $inst_reporte->imprimir_reporte_sucursales_controlador();
+        exit();
+
+    /* ===== VEHICULOS ===== */
+    case 'imprimir_reporte_vehiculos':
+        $inst_reporte->imprimir_reporte_vehiculos_controlador();
         exit();
 
 

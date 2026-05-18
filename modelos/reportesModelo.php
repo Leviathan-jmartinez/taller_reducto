@@ -216,6 +216,146 @@ class reportesModelo extends mainModel
     }
 
     /* ==================================================
+        REPORTE SUCURSALES
+    ================================================== */
+    public static function reporte_sucursales_modelo($f)
+    {
+        $where = " WHERE 1=1 ";
+        $params = [];
+
+        if (!empty($f['estado']) && $f['estado'] != 'T') {
+            if ($f['estado'] == 'A') {
+                $where .= " AND s.estado = 1 ";
+            } elseif ($f['estado'] == 'I') {
+                $where .= " AND s.estado = 0 ";
+            }
+        }
+
+        if (!empty($f['buscar'])) {
+            $where .= " AND (
+                s.suc_descri LIKE :buscar OR
+                s.suc_direccion LIKE :buscar OR
+                s.suc_telefono LIKE :buscar OR
+                e.razon_social LIKE :buscar
+            ) ";
+            $params[':buscar'] = '%' . $f['buscar'] . '%';
+        }
+
+        $sql = self::conectar()->prepare("
+        SELECT
+            s.id_sucursal,
+            s.suc_descri,
+            s.suc_direccion,
+            s.suc_telefono,
+            s.nro_establecimiento,
+            s.estado,
+            e.razon_social AS empresa
+        FROM sucursales s
+        INNER JOIN empresa e ON e.id_empresa = s.id_empresa
+        $where
+        ORDER BY s.suc_descri ASC
+        ");
+
+        $sql->execute($params);
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function resumen_sucursales_modelo($f)
+    {
+        $datos = self::reporte_sucursales_modelo($f);
+        $resumen = [
+            "total" => count($datos),
+            "activos" => 0,
+            "inactivos" => 0
+        ];
+
+        foreach ($datos as $row) {
+            if ((int)$row['estado'] === 1) {
+                $resumen['activos']++;
+            } else {
+                $resumen['inactivos']++;
+            }
+        }
+
+        return $resumen;
+    }
+
+    /* ==================================================
+        REPORTE VEHICULOS
+    ================================================== */
+    public static function reporte_vehiculos_modelo($f)
+    {
+        $where = " WHERE 1=1 ";
+        $params = [];
+
+        if (!empty($f['modelo']) && $f['modelo'] != 0) {
+            $where .= " AND v.id_modeloauto = :modelo ";
+            $params[':modelo'] = $f['modelo'];
+        }
+
+        if (!empty($f['estado']) && $f['estado'] != 'T') {
+            if ($f['estado'] == 'A') {
+                $where .= " AND v.estado = 1 ";
+            } elseif ($f['estado'] == 'I') {
+                $where .= " AND v.estado = 0 ";
+            }
+        }
+
+        if (!empty($f['buscar'])) {
+            $where .= " AND (
+                v.placa LIKE :buscar OR
+                v.nro_serie LIKE :buscar OR
+                v.color LIKE :buscar OR
+                c.doc_number LIKE :buscar OR
+                c.nombre_cliente LIKE :buscar OR
+                c.apellido_cliente LIKE :buscar
+            ) ";
+            $params[':buscar'] = '%' . $f['buscar'] . '%';
+        }
+
+        $sql = self::conectar()->prepare("
+        SELECT
+            v.id_vehiculo,
+            v.placa,
+            v.nro_serie,
+            v.anho,
+            v.color,
+            v.estado,
+            m.mod_descri AS modelo,
+            CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) AS cliente,
+            c.doc_number
+        FROM vehiculos v
+        INNER JOIN clientes c ON c.id_cliente = v.id_cliente
+        INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
+        $where
+        ORDER BY v.placa ASC
+        ");
+
+        $sql->execute($params);
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function resumen_vehiculos_modelo($f)
+    {
+        $datos = self::reporte_vehiculos_modelo($f);
+        $resumen = [
+            "total" => count($datos),
+            "activos" => 0,
+            "inactivos" => 0
+        ];
+
+        foreach ($datos as $row) {
+            if ((int)$row['estado'] === 1) {
+                $resumen['activos']++;
+            } else {
+                $resumen['inactivos']++;
+            }
+        }
+
+        return $resumen;
+    }
+
+    /* ==================================================
         REPORTE PROVEEDORES - DETALLE
     ================================================== */
     public static function reporte_proveedores_modelo($f)

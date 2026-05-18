@@ -169,9 +169,7 @@ class usuarioModelo extends mainModel
         WHERE id_usuario = ?
         ");
 
-        $sql->execute([$idSucursal, $idUsuario]);
-
-        return $sql->rowCount();
+        return $sql->execute([$idSucursal, $idUsuario]);
     }
 
     protected static function obtener_sucursales_modelo()

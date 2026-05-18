@@ -1,5 +1,5 @@
 <?php
-if (!mainModel::tienePermiso('compra.reportes.ver')) {
+if (!mainModel::tienePermiso('reportes.presupuestos_compra.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
@@ -46,9 +46,9 @@ if (!mainModel::tienePermiso('compra.reportes.ver')) {
                     <select name="sucursal" class="form-control">
                         <option value="">Todas</option>
                         <?php
-                        require_once "./controladores/sucursalControlador.php";
-                        $insSucursal = new sucursalControlador();
-                        $sucursales = $insSucursal->listar_sucursales_controlador();
+                        require_once "./controladores/reportesControlador.php";
+                        $rep = new reporteControlador();
+                        $sucursales = $rep->listar_sucursales_controlador();
 
                         foreach ($sucursales as $s): ?>
                             <option value="<?= $s['id_sucursal'] ?>">
