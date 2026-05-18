@@ -305,6 +305,18 @@ class articuloControlador extends articuloModelo
             exit();
         }
 
+        $check_descrip = mainModel::ejecutar_consulta_simple("SELECT desc_articulo FROM articulos WHERE desc_articulo='$descrip'");
+        if ($check_descrip->rowCount() > 0) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "La descripcion del articulo ingresado ya se encuentra registrada!",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
         $datos_articulo = [
             "id_categoria" => $categoria,
             "idunidad_medida" => $umedida,
@@ -497,6 +509,19 @@ class articuloControlador extends articuloModelo
                     "Alerta" => "simple",
                     "Titulo" => "Error",
                     "Texto" => "El código ya existe",
+                    "Tipo" => "error"
+                ]);
+                exit();
+            }
+        }
+
+        if ($desc_articulo != $campos_articulo_up['desc_articulo']) {
+            $check_desc = mainModel::ejecutar_consulta_simple("SELECT desc_articulo FROM articulos WHERE desc_articulo='$desc_articulo'");
+            if ($check_desc->rowCount() > 0) {
+                echo json_encode([
+                    "Alerta" => "simple",
+                    "Titulo" => "Error",
+                    "Texto" => "La descripciÃ³n ya existe",
                     "Tipo" => "error"
                 ]);
                 exit();
