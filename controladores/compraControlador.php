@@ -120,6 +120,7 @@ class compraControlador extends compraModelo
                 "codigo" => $row['codigo'],
                 "descripcion" => $row['desc_articulo'],
                 "cantidad" => $cantidad,
+                "cantidad_pendiente" => $row['cantidad_pendiente'],
                 "precio" => $precio,
                 "subtotal" => $subtotal,
                 "tipo_iva" => $row['idiva'],
@@ -161,6 +162,17 @@ class compraControlador extends compraModelo
         $itemsValidos = [];
         foreach ($_SESSION['Cdatos_articuloCO'] as $item) {
             if ((float)$item['cantidad'] > 0) {
+                if (
+                    isset($_SESSION['id_oc_seleccionado'], $item['cantidad_pendiente']) &&
+                    (float)$item['cantidad'] > (float)$item['cantidad_pendiente']
+                ) {
+                    return [
+                        "Alerta" => "simple",
+                        "Titulo" => "Cantidad excedida",
+                        "Texto" => "La cantidad recibida del artículo " . $item['descripcion'] . " no puede superar la cantidad pendiente de la orden de compra.",
+                        "Tipo" => "error"
+                    ];
+                }
                 $itemsValidos[] = $item;
             }
         }
@@ -567,20 +579,12 @@ class compraControlador extends compraModelo
             $articulo = mainModel::limpiar_string($_POST['buscar_articuloCO']);
             if ($articulo == "") return '<div class="alert alert-warning">Debes introducir código o descripción</div>';
 
-            if (!isset($_SESSION['datos_proveedorCO']['ID'])) {
-                return '<div class="alert alert-danger">No se ha seleccionado un proveedor</div>';
-                exit();
-            }
-            $id_proveedor = $_SESSION['datos_proveedorCO']['ID'];
             $datos_articuloPre = mainModel::ejecutar_consulta_simple("
-                SELECT a.*, ap.precio_compra
+                SELECT a.*
                 FROM articulos a
-                LEFT JOIN articulo_proveedor ap
-                    ON ap.id_articulo = a.id_articulo
-                   AND ap.idproveedores = '$id_proveedor'
-                   AND ap.activo = 1
                 WHERE (a.codigo LIKE '%$articulo%' OR a.desc_articulo LIKE '%$articulo%')
                   AND a.estado = 1
+                  AND a.tipo IN ('producto', 'insumo')
                 ORDER BY a.desc_articulo DESC
                 LIMIT 15
             ");
@@ -605,7 +609,7 @@ class compraControlador extends compraModelo
 
                     <!-- Precio -->
                     <td style="width:100px;">
-                        <input type="number" id="precio_' . $rows['id_articulo'] . '" class="form-control form-control-sm" step="0.01" min="0" value="' . ($rows['precio_compra'] ?? 0) . '">
+                        <input type="number" id="precio_' . $rows['id_articulo'] . '" class="form-control form-control-sm" step="0.01" min="0" value="0">
                     </td>
 
                     <!-- Botón agregar -->
@@ -661,6 +665,8 @@ class compraControlador extends compraModelo
                 FROM articulos a
                 INNER JOIN tipo_impuesto ti ON ti.idiva = a.idiva
                 WHERE a.id_articulo = '$id'
+                  AND a.estado = 1
+                  AND a.tipo IN ('producto', 'insumo')
             ");
             } catch (PDOException $e) {
                 die(json_encode([

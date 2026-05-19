@@ -122,7 +122,7 @@ $razon_social = $_SESSION['razon_social_compra'] ?? '';
         <?php
 require_once "./controladores/compraControlador.php";
         $compra = new compraControlador();
-        echo $compra->paginador_compra_controlador(
+        $compra->paginador_compra_controlador(
             $pagina[1],
             15,
             $pagina[0],

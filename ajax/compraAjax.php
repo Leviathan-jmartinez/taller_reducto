@@ -115,6 +115,18 @@ if (isset($_POST['index'])) {
         $cantidad = floatval($_POST['cantidad']);
         $precio   = floatval($_POST['precio']);
 
+        if (
+            isset($_SESSION['id_oc_seleccionado'], $_SESSION['Cdatos_articuloCO'][$i]['cantidad_pendiente']) &&
+            $cantidad > (float) $_SESSION['Cdatos_articuloCO'][$i]['cantidad_pendiente']
+        ) {
+            echo json_encode([
+                "status" => "error",
+                "msg" => "La cantidad no puede superar la cantidad pendiente de la OC",
+                "cantidad_pendiente" => (float) $_SESSION['Cdatos_articuloCO'][$i]['cantidad_pendiente']
+            ]);
+            exit();
+        }
+
 
         // ✔️ ACTUALIZAR SESIÓN SOLO SI LOS DATOS SON VÁLIDOS
         $_SESSION['Cdatos_articuloCO'][$i]['cantidad'] = $cantidad;

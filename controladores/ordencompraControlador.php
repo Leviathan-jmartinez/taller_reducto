@@ -438,12 +438,6 @@ class ordencompraControlador extends ordencompraModelo
 
                 if ($detalleInsert->rowCount() != 1) {
                     $errores_detalles++;
-                } else {
-                    self::registrar_articulo_proveedor_modelo(
-                        $article['ID'],
-                        $_SESSION['Sdatos_proveedorOC']['ID'],
-                        $article['precio']
-                    );
                 }
             }
 

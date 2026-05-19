@@ -54,7 +54,19 @@
             let index = fila.dataset.index;
 
             // Leer valores
-            let cantidad = parseFloat(fila.querySelector(".cantidad").value) || 0;
+            const cantidadInput = fila.querySelector(".cantidad");
+            let cantidad = parseFloat(cantidadInput.value) || 0;
+            const maxCantidad = parseFloat(cantidadInput.max);
+            if (!Number.isNaN(maxCantidad) && cantidad > maxCantidad) {
+                cantidad = maxCantidad;
+                cantidadInput.value = maxCantidad;
+                Swal.fire({
+                    title: 'Cantidad excedida',
+                    text: 'La cantidad no puede superar la cantidad pendiente de la OC',
+                    type: 'warning',
+                    confirmButtonText: 'Aceptar'
+                });
+            }
             let precioTexto = fila.querySelector(".precio").value;
             let precio = parseFloat(precioTexto.replace(/\./g, '').replace(',', '.')) || 0;
 
@@ -87,6 +99,10 @@
                     .then(r => r.json())
                     .then(data => {
                         console.log("SESSION ACTUALIZADA:", data);
+                        if (data.status === "error" && data.cantidad_pendiente !== undefined) {
+                            fila.querySelector(".cantidad").value = data.cantidad_pendiente;
+                            recalcularYActualizar(fila);
+                        }
                     });
             }, 1000); // 0.5s
         }

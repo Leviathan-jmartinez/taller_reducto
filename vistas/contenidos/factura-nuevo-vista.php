@@ -180,6 +180,7 @@ $tipo = $_SESSION['factura_tipo'];
                                                 name="cantidades[]"
                                                 class="form-control text-center cantidad"
                                                 value="<?= $item['cantidad']; ?>"
+                                                <?= isset($item['cantidad_pendiente']) ? 'max="' . htmlspecialchars($item['cantidad_pendiente']) . '"' : ''; ?>
                                                 <?= $tipo === 'sin_oc' ? 'readonly' : 'required'; ?>>
                                         </td>
                                         <td class="text-center">
