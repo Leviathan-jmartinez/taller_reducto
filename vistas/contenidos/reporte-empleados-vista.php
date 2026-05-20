@@ -96,7 +96,7 @@ $cargos = $rep->listar_cargos_controlador();
 <!-- TABLA -->
 <div class="container-fluid mt-3">
     <div class="table-responsive">
-        <table class="table table-bordered table-sm" id="tablaEmp">
+        <table class="table table-dark table-sm" id="tablaEmp">
             <thead class="text-center">
                 <tr>
                     <th>Cédula</th>

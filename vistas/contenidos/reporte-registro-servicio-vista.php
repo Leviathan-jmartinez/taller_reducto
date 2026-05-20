@@ -18,12 +18,12 @@ $empleados = $rep->listar_empleados_controlador();
             &nbsp; Informe de Registro de Servicios
         </h4>
 
-        <form action="<?= SERVERURL ?>ajax/reportesAjax.php"
-            method="POST"
-            target="_blank"
+        <form id="formPreview"
+            class="form-neon"
+            data-pdf-action="imprimir_reporte_registro_servicio"
             autocomplete="off">
 
-            <input type="hidden" name="accion" value="imprimir_reporte_registro_servicio">
+            <input type="hidden" name="modulo" value="registro_servicio">
 
             <div class="row">
 
@@ -43,6 +43,7 @@ $empleados = $rep->listar_empleados_controlador();
                         <option value="">Todos</option>
                         <option value="1">Registrado</option>
                         <option value="2">Facturado</option>
+                        <option value="3">Con Reclamo</option>
                         <option value="0">Anulado</option>
                     </select>
                 </div>
@@ -74,6 +75,10 @@ $empleados = $rep->listar_empleados_controlador();
 
             <div class="text-center mt-4">
                 <button type="submit" class="btn btn-info">
+                    <i class="fas fa-search"></i> &nbsp; Previsualizar
+                </button>
+
+                <button type="button" id="btnPdf" class="btn btn-secondary d-none">
                     <i class="fas fa-print"></i> &nbsp; Generar PDF
                 </button>
             </div>
@@ -82,3 +87,5 @@ $empleados = $rep->listar_empleados_controlador();
 
     </div>
 </div>
+
+<?php include_once "./vistas/inc/reportePreviewTabla.php"; ?>

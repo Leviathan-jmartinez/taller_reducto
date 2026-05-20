@@ -299,7 +299,7 @@
                                     <?php if (mainModel::tienePermiso('reportes.vehiculos.ver')) { ?>
                                     <li>
                                         <a href="<?= SERVERURL; ?>reporte-vehiculos/">
-                                            <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; VehÃ­culos
+                                            <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; Vehículos
                                         </a>
                                     </li>
                                     <?php } ?>

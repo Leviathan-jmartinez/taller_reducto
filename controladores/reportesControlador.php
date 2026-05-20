@@ -471,6 +471,28 @@ class reporteControlador extends reportesModelo
     /* =========================================
         INFORMES DE COMPRAS 
     ========================================= */
+    private function filtros_movimiento_basico()
+    {
+        return [
+            ($_POST['desde'] ?? '') !== '' ? mainModel::limpiar_string($_POST['desde']) : null,
+            ($_POST['hasta'] ?? '') !== '' ? mainModel::limpiar_string($_POST['hasta']) : null,
+            ($_POST['estado'] ?? '') !== '' ? mainModel::limpiar_string($_POST['estado']) : null,
+            ($_POST['sucursal'] ?? '') !== '' ? mainModel::limpiar_string($_POST['sucursal']) : null
+        ];
+    }
+
+    public function reporte_pedidos_controlador()
+    {
+        if (!mainModel::tienePermiso('reportes.pedidos.ver')) {
+            return $this->acceso_denegado_json();
+        }
+
+        [$desde, $hasta, $estado, $sucursal] = $this->filtros_movimiento_basico();
+        $data = reportesModelo::reporte_pedidos_modelo($desde, $hasta, $estado, $sucursal);
+
+        return json_encode(["data" => $data]);
+    }
+
     public function imprimir_reporte_pedidos_controlador()
     {
         if (session_status() === PHP_SESSION_NONE) {
@@ -509,6 +531,18 @@ class reporteControlador extends reportesModelo
         exit();
     }
 
+
+    public function reporte_presupuestos_controlador()
+    {
+        if (!mainModel::tienePermiso('reportes.presupuestos_compra.ver')) {
+            return $this->acceso_denegado_json();
+        }
+
+        [$desde, $hasta, $estado, $sucursal] = $this->filtros_movimiento_basico();
+        $data = reportesModelo::reporte_presupuestos_modelo($desde, $hasta, $estado, $sucursal);
+
+        return json_encode(["data" => $data]);
+    }
 
     public function imprimir_reporte_presupuestos_controlador()
     {
@@ -549,6 +583,18 @@ class reporteControlador extends reportesModelo
         exit();
     }
 
+    public function reporte_ordenes_compra_controlador()
+    {
+        if (!mainModel::tienePermiso('reportes.ordenes_compra.ver')) {
+            return $this->acceso_denegado_json();
+        }
+
+        [$desde, $hasta, $estado, $sucursal] = $this->filtros_movimiento_basico();
+        $data = reportesModelo::reporte_ordenes_compra_modelo($desde, $hasta, $estado, $sucursal);
+
+        return json_encode(["data" => $data]);
+    }
+
     public function imprimir_reporte_ordenes_compra_controlador()
     {
         if (session_status() === PHP_SESSION_NONE) {
@@ -587,6 +633,18 @@ class reporteControlador extends reportesModelo
         exit();
     }
 
+    public function reporte_compras_controlador()
+    {
+        if (!mainModel::tienePermiso('reportes.compras.ver')) {
+            return $this->acceso_denegado_json();
+        }
+
+        [$desde, $hasta, $estado, $sucursal] = $this->filtros_movimiento_basico();
+        $data = reportesModelo::reporte_compras_modelo($desde, $hasta, $estado, $sucursal);
+
+        return json_encode(["data" => $data]);
+    }
+
     public function imprimir_reporte_compras_controlador()
     {
         if (session_status() === PHP_SESSION_NONE) {
@@ -623,6 +681,23 @@ class reporteControlador extends reportesModelo
         $dompdf->render();
         $dompdf->stream("reporte_compras.pdf", ["Attachment" => false]);
         exit();
+    }
+
+    public function reporte_libro_compras_controlador()
+    {
+        if (!mainModel::tienePermiso('reportes.libro_compras.ver')) {
+            return $this->acceso_denegado_json();
+        }
+
+        $desde     = ($_POST['desde'] ?? '') !== '' ? mainModel::limpiar_string($_POST['desde']) : null;
+        $hasta     = ($_POST['hasta'] ?? '') !== '' ? mainModel::limpiar_string($_POST['hasta']) : null;
+        $proveedor = ($_POST['proveedor'] ?? '') !== '' ? mainModel::limpiar_string($_POST['proveedor']) : null;
+        $estado    = ($_POST['estado'] ?? '') !== '' ? mainModel::limpiar_string($_POST['estado']) : null;
+        $sucursal  = ($_POST['sucursal'] ?? '') !== '' ? mainModel::limpiar_string($_POST['sucursal']) : null;
+
+        $data = reportesModelo::reporte_libro_compras_modelo($desde, $hasta, $proveedor, $estado, $sucursal);
+
+        return json_encode(["data" => $data]);
     }
 
     public function imprimir_reporte_libro_compras_controlador()
@@ -797,6 +872,18 @@ class reporteControlador extends reportesModelo
     /* =========================================
         INFORMES DE SERVICIOS 
     ========================================= */
+    public function reporte_recepcion_servicio_controlador()
+    {
+        if (!mainModel::tienePermiso('reportes.recepcion_servicio.ver')) {
+            return $this->acceso_denegado_json();
+        }
+
+        [$desde, $hasta, $estado, $sucursal] = $this->filtros_movimiento_basico();
+        $data = reportesModelo::reporte_recepcion_servicio_modelo($desde, $hasta, $estado, $sucursal);
+
+        return json_encode(["data" => $data]);
+    }
+
     public function imprimir_reporte_recepcion_servicio_controlador()
     {
         if (session_status() === PHP_SESSION_NONE) {
@@ -833,6 +920,18 @@ class reporteControlador extends reportesModelo
         $dompdf->render();
         $dompdf->stream("reporte_recepcion_servicio.pdf", ["Attachment" => false]);
         exit();
+    }
+
+    public function reporte_presupuesto_servicio_controlador()
+    {
+        if (!mainModel::tienePermiso('reportes.presupuesto_servicio.ver')) {
+            return $this->acceso_denegado_json();
+        }
+
+        [$desde, $hasta, $estado, $sucursal] = $this->filtros_movimiento_basico();
+        $data = reportesModelo::reporte_presupuesto_servicio_modelo($desde, $hasta, $estado, $sucursal);
+
+        return json_encode(["data" => $data]);
     }
 
     public function imprimir_reporte_presupuesto_servicio_controlador()
@@ -876,6 +975,18 @@ class reporteControlador extends reportesModelo
         exit();
     }
 
+    public function reporte_orden_trabajo_controlador()
+    {
+        if (!mainModel::tienePermiso('reportes.orden_trabajo.ver')) {
+            return $this->acceso_denegado_json();
+        }
+
+        [$desde, $hasta, $estado, $sucursal] = $this->filtros_movimiento_basico();
+        $data = reportesModelo::reporte_orden_trabajo_modelo($desde, $hasta, $estado, $sucursal);
+
+        return json_encode(["data" => $data]);
+    }
+
     public function imprimir_reporte_orden_trabajo_controlador()
     {
         if (session_status() === PHP_SESSION_NONE) {
@@ -912,6 +1023,23 @@ class reporteControlador extends reportesModelo
         $dompdf->render();
         $dompdf->stream("reporte_orden_trabajo.pdf", ["Attachment" => false]);
         exit();
+    }
+
+    public function reporte_registro_servicio_controlador()
+    {
+        if (!mainModel::tienePermiso('reportes.registro_servicio.ver')) {
+            return $this->acceso_denegado_json();
+        }
+
+        $desde    = ($_POST['desde'] ?? '') !== '' ? mainModel::limpiar_string($_POST['desde']) : null;
+        $hasta    = ($_POST['hasta'] ?? '') !== '' ? mainModel::limpiar_string($_POST['hasta']) : null;
+        $estado   = ($_POST['estado'] ?? '') !== '' ? mainModel::limpiar_string($_POST['estado']) : null;
+        $sucursal = ($_POST['sucursal'] ?? '') !== '' ? mainModel::limpiar_string($_POST['sucursal']) : null;
+        $empleado = ($_POST['empleado'] ?? '') !== '' ? mainModel::limpiar_string($_POST['empleado']) : null;
+
+        $data = reportesModelo::reporte_registro_servicio_modelo($desde, $hasta, $estado, $empleado, $sucursal);
+
+        return json_encode(["data" => $data]);
     }
 
     public function imprimir_reporte_registro_servicio_controlador()

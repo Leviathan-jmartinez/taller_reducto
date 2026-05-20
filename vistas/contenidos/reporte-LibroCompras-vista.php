@@ -21,12 +21,12 @@ $proveedores = $insProveedor->listar_proveedores_controlador();
             &nbsp; Libro de Compras
         </h4>
 
-        <form action="<?= SERVERURL ?>ajax/reportesAjax.php"
-            method="POST"
-            target="_blank"
+        <form id="formPreview"
+            class="form-neon"
+            data-pdf-action="imprimir_reporte_libro_compras"
             autocomplete="off">
 
-            <input type="hidden" name="accion" value="imprimir_reporte_libro_compras">
+            <input type="hidden" name="modulo" value="libro_compras">
 
             <div class="row">
 
@@ -77,6 +77,10 @@ $proveedores = $insProveedor->listar_proveedores_controlador();
 
             <div class="text-center mt-4">
                 <button type="submit" class="btn btn-info">
+                    <i class="fas fa-search"></i> &nbsp; Previsualizar
+                </button>
+
+                <button type="button" id="btnPdf" class="btn btn-secondary d-none">
                     <i class="fas fa-print"></i> &nbsp; Generar PDF
                 </button>
             </div>
@@ -85,3 +89,5 @@ $proveedores = $insProveedor->listar_proveedores_controlador();
 
     </div>
 </div>
+
+<?php include_once "./vistas/inc/reportePreviewTabla.php"; ?>

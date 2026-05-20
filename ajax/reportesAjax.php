@@ -58,6 +58,51 @@ if ($modulo === "transferencias") {
     exit();
 }
 
+if ($modulo === "pedidos") {
+    echo $inst_reporte->reporte_pedidos_controlador();
+    exit();
+}
+
+if ($modulo === "presupuestos_compra") {
+    echo $inst_reporte->reporte_presupuestos_controlador();
+    exit();
+}
+
+if ($modulo === "ordenes_compra") {
+    echo $inst_reporte->reporte_ordenes_compra_controlador();
+    exit();
+}
+
+if ($modulo === "compras") {
+    echo $inst_reporte->reporte_compras_controlador();
+    exit();
+}
+
+if ($modulo === "libro_compras") {
+    echo $inst_reporte->reporte_libro_compras_controlador();
+    exit();
+}
+
+if ($modulo === "recepcion_servicio") {
+    echo $inst_reporte->reporte_recepcion_servicio_controlador();
+    exit();
+}
+
+if ($modulo === "presupuesto_servicio") {
+    echo $inst_reporte->reporte_presupuesto_servicio_controlador();
+    exit();
+}
+
+if ($modulo === "orden_trabajo") {
+    echo $inst_reporte->reporte_orden_trabajo_controlador();
+    exit();
+}
+
+if ($modulo === "registro_servicio") {
+    echo $inst_reporte->reporte_registro_servicio_controlador();
+    exit();
+}
+
 /* =========================================
    ACCIONES (PDF Y OTROS)
 ========================================= */

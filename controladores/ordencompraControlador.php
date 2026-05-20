@@ -455,8 +455,13 @@ class ordencompraControlador extends ordencompraModelo
                     "Texto" => "La Orden compra se genero correctamente",
                     "Tipo" => "success"
                 ];
-                $_SESSION['tipo_ordencompra'] = "con_presupuesto";
-                unset($_SESSION['Sdatos_proveedorOC'], $_SESSION['Sdatos_articuloOC']);
+                unset(
+                    $_SESSION['tipo_ordencompra'],
+                    $_SESSION['Sdatos_proveedorOC'],
+                    $_SESSION['Sdatos_articuloOC'],
+                    $_SESSION['presupuesto_articulo'],
+                    $_SESSION['total_pre']
+                );
             }
             return json_encode($alerta);
         }

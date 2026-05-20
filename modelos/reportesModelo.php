@@ -1521,7 +1521,7 @@ class reportesModelo extends mainModel
             ON r.idrecepcion = ds.idrecepcion
 
         INNER JOIN sucursales s
-            ON s.id_sucursal = r.id_sucursal
+            ON s.id_sucursal = rs.id_sucursal
 
         INNER JOIN clientes c
             ON c.id_cliente = r.id_cliente

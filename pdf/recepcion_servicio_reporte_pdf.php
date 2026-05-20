@@ -78,8 +78,8 @@
             function estadoRecepcion($estado)
             {
                 return match ((int)$estado) {
-                    1 => 'Activo',
-                    2 => 'En Proceso',
+                    1 => 'Recepcionado',
+                    2 => 'En proceso',
                     3 => 'Finalizado',
                     0 => 'Anulado',
                     default => 'Desconocido',

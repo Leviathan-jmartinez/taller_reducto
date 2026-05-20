@@ -86,7 +86,8 @@
                 return match ((int)$estado) {
                     1 => 'Pendiente',
                     2 => 'Aprobado',
-                    3 => 'Finalizado',
+                    3 => 'OT generada',
+                    4 => 'Facturado',
                     0 => 'Anulado',
                     default => 'Desconocido',
                 };

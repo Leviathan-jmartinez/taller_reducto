@@ -16,12 +16,12 @@ $sucursales = $rep->listar_sucursales_controlador();
             &nbsp; Informe de Presupuesto de Servicios
         </h4>
 
-        <form action="<?= SERVERURL ?>ajax/reportesAjax.php"
-            method="POST"
-            target="_blank"
+        <form id="formPreview"
+            class="form-neon"
+            data-pdf-action="imprimir_reporte_presupuesto_servicio"
             autocomplete="off">
 
-            <input type="hidden" name="accion" value="imprimir_reporte_presupuesto_servicio">
+            <input type="hidden" name="modulo" value="presupuesto_servicio">
 
             <div class="row">
 
@@ -41,6 +41,8 @@ $sucursales = $rep->listar_sucursales_controlador();
                         <option value="">Todos</option>
                         <option value="1">Pendiente</option>
                         <option value="2">Aprobado</option>
+                        <option value="3">OT generada</option>
+                        <option value="4">Facturado</option>
                         <option value="0">Anulado</option>
                     </select>
                 </div>
@@ -61,6 +63,10 @@ $sucursales = $rep->listar_sucursales_controlador();
 
             <div class="text-center mt-4">
                 <button type="submit" class="btn btn-info">
+                    <i class="fas fa-search"></i> &nbsp; Previsualizar
+                </button>
+
+                <button type="button" id="btnPdf" class="btn btn-secondary d-none">
                     <i class="fas fa-print"></i> &nbsp; Generar PDF
                 </button>
             </div>
@@ -69,3 +75,5 @@ $sucursales = $rep->listar_sucursales_controlador();
 
     </div>
 </div>
+
+<?php include_once "./vistas/inc/reportePreviewTabla.php"; ?>

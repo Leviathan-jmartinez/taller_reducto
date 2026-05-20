@@ -13,13 +13,13 @@ if (!mainModel::tienePermiso('reportes.ordenes_compra.ver')) {
             &nbsp; Informe de Órdenes de Compra
         </h4>
 
-        <form action="<?= SERVERURL ?>ajax/reportesAjax.php"
-            method="POST"
-            target="_blank"
+        <form id="formPreview"
+            class="form-neon"
+            data-pdf-action="imprimir_reporte_ordenes_compra"
             autocomplete="off">
 
 
-            <input type="hidden" name="accion" value="imprimir_reporte_ordenes_compra">
+            <input type="hidden" name="modulo" value="ordenes_compra">
             <div class="row">
 
                 <div class="col-md-3">
@@ -36,9 +36,9 @@ if (!mainModel::tienePermiso('reportes.ordenes_compra.ver')) {
                     <label>Estado</label>
                     <select name="estado" class="form-control">
                         <option value="">Todos</option>
-                        <option value="0">Pendiente</option>
-                        <option value="1">Parcial</option>
-                        <option value="2">Cerrada</option>
+                        <option value="1">Pendiente</option>
+                        <option value="2">Procesado</option>
+                        <option value="0">Anulado</option>
                     </select>
                 </div>
 
@@ -62,6 +62,10 @@ if (!mainModel::tienePermiso('reportes.ordenes_compra.ver')) {
 
             <div class="text-center mt-4">
                 <button type="submit" class="btn btn-info">
+                    <i class="fas fa-search"></i> &nbsp; Previsualizar
+                </button>
+
+                <button type="button" id="btnPdf" class="btn btn-secondary d-none">
                     <i class="fas fa-print"></i> &nbsp; Generar PDF
                 </button>
             </div>
@@ -70,3 +74,5 @@ if (!mainModel::tienePermiso('reportes.ordenes_compra.ver')) {
 
     </div>
 </div>
+
+<?php include_once "./vistas/inc/reportePreviewTabla.php"; ?>

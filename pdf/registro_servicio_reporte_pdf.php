@@ -81,8 +81,9 @@
             {
                 return match ((int)$estado) {
                     1 => 'Registrado',
-                    0 => 'Anulado',
                     2 => 'Facturado',
+                    3 => 'Con Reclamo',
+                    0 => 'Anulado',
                     default => 'Desconocido',
                 };
             }

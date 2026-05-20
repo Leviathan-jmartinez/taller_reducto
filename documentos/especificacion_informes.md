@@ -6,10 +6,10 @@
 Caso de uso que describe el proceso de generar informes de articulos registrados en el sistema.
 
 ### Actores Relacionados
-- Administrador
-- Encargado de compras
-- Encargado de deposito
-- Usuario autorizado
+- Encargado de Compras
+- Personal de Recepcion
+- Encargado de dto. de Servicios
+- Gerente general
 
 ### Pre Condicion
 - Conexion a base de datos.
@@ -80,9 +80,10 @@ Este caso de uso se inicia cuando el usuario selecciona la opcion Informes Refer
 Caso de uso que describe el proceso de generar informes de proveedores registrados.
 
 ### Actores Relacionados
-- Administrador
-- Encargado de compras
-- Usuario autorizado
+- Encargado de Compras
+- Personal de Recepcion
+- Encargado de dto. de Servicios
+- Gerente general
 
 ### Pre Condicion
 - Conexion a base de datos.
@@ -141,9 +142,10 @@ Este caso de uso se inicia cuando el usuario selecciona Informes Referenciales, 
 Caso de uso que describe el proceso de generar informes de sucursales registradas.
 
 ### Actores Relacionados
-- Administrador
-- Gerente
-- Usuario autorizado
+- Encargado de Compras
+- Personal de Recepcion
+- Encargado de dto. de Servicios
+- Gerente general
 
 ### Pre Condicion
 - Conexion a base de datos.
@@ -203,10 +205,10 @@ Este caso de uso se inicia cuando el usuario selecciona Informes Referenciales, 
 Caso de uso que describe el proceso de generar informes de clientes registrados.
 
 ### Actores Relacionados
-- Administrador
-- Recepcionista
-- Encargado de servicios
-- Usuario autorizado
+- Encargado de Compras
+- Personal de Recepcion
+- Encargado de dto. de Servicios
+- Gerente general
 
 ### Pre Condicion
 - Conexion a base de datos.
@@ -266,10 +268,10 @@ Este caso de uso se inicia cuando el usuario selecciona Informes Referenciales, 
 Caso de uso que describe el proceso de generar informes de vehiculos registrados.
 
 ### Actores Relacionados
-- Administrador
-- Recepcionista
-- Encargado de servicios
-- Usuario autorizado
+- Encargado de Compras
+- Personal de Recepcion
+- Encargado de dto. de Servicios
+- Gerente general
 
 ### Pre Condicion
 - Conexion a base de datos.
@@ -331,9 +333,10 @@ Este caso de uso se inicia cuando el usuario selecciona Informes Referenciales, 
 Caso de uso que describe el proceso de generar informes de empleados registrados.
 
 ### Actores Relacionados
-- Administrador
-- Gerente
-- Usuario autorizado
+- Encargado de Compras
+- Personal de Recepcion
+- Encargado de dto. de Servicios
+- Gerente general
 
 ### Pre Condicion
 - Conexion a base de datos.
@@ -396,10 +399,10 @@ Este caso de uso se inicia cuando el usuario selecciona Informes Referenciales, 
 Caso de uso que describe el proceso de generar informes de pedidos de compra.
 
 ### Actores Relacionados
-- Administrador
-- Encargado de compras
-- Gerente
-- Usuario autorizado
+- Encargado de Compras
+- Personal de Recepcion
+- Encargado de dto. de Servicios
+- Gerente general
 
 ### Pre Condicion
 - Conexion a base de datos.
@@ -415,13 +418,18 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 #### Generar
 - El sistema valida permiso `reportes.pedidos.ver`.
 - El sistema consulta sucursales para el filtro. Tabla consultada: sucursales.
-- El sistema muestra filtros de fecha desde, fecha hasta, estado y sucursal.
+- El sistema muestra filtros de fecha desde, fecha hasta, estado (Pendiente, Procesado o Anulado) y sucursal.
 - El usuario selecciona o ingresa filtros.
-- El usuario presiona Generar PDF.
-- El sistema envia los filtros al generador del reporte.
+- El usuario presiona Previsualizar.
 - El sistema valida nuevamente permiso `reportes.pedidos.ver`.
 - El sistema consulta pedidos de compra segun los filtros.
 - Tablas consultadas: pedido_cabecera, pedido_detalle, usuarios, sucursales.
+- El sistema carga datos dentro de la grilla.
+- El sistema habilita el boton Generar PDF.
+- El usuario presiona Generar PDF.
+- El sistema envia los filtros al generador del reporte.
+- El sistema valida nuevamente permiso `reportes.pedidos.ver`.
+- El sistema consulta nuevamente los pedidos de compra segun los filtros.
 - El sistema carga la plantilla PDF de pedidos.
 - El sistema genera el PDF del informe.
 
@@ -435,10 +443,11 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 
 ### Flujo Alternativo
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema genera el PDF con todos los pedidos permitidos.
-- Si no existen datos para mostrar, el PDF indica que no existen registros.
+- Si no se ingresan filtros, el sistema consulta todos los pedidos permitidos.
+- Si no existen datos para mostrar, el sistema muestra la grilla sin registros y el PDF indica que no existen registros.
 
 ### Post Condicion
+- El sistema muestra los pedidos encontrados.
 - El sistema genera el PDF de pedidos cuando corresponde.
 - La informacion consultada no se modifica.
 
@@ -456,10 +465,10 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 Caso de uso que describe el proceso de generar informes de presupuestos de compra.
 
 ### Actores Relacionados
-- Administrador
-- Encargado de compras
-- Gerente
-- Usuario autorizado
+- Encargado de Compras
+- Personal de Recepcion
+- Encargado de dto. de Servicios
+- Gerente general
 
 ### Pre Condicion
 - Conexion a base de datos.
@@ -475,13 +484,18 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 #### Generar
 - El sistema valida permiso `reportes.presupuestos_compra.ver`.
 - El sistema consulta sucursales para el filtro. Tabla consultada: sucursales.
-- El sistema muestra filtros de fecha desde, fecha hasta, estado y sucursal.
+- El sistema muestra filtros de fecha desde, fecha hasta, estado (Pendiente, OC generada o Anulado) y sucursal.
 - El usuario selecciona o ingresa filtros.
-- El usuario presiona Generar PDF.
-- El sistema envia los filtros al generador del reporte.
+- El usuario presiona Previsualizar.
 - El sistema valida nuevamente permiso `reportes.presupuestos_compra.ver`.
 - El sistema consulta presupuestos de compra segun los filtros.
 - Tablas consultadas: presupuesto_compra, presupuesto_detalle, proveedores, usuarios, sucursales.
+- El sistema carga datos dentro de la grilla.
+- El sistema habilita el boton Generar PDF.
+- El usuario presiona Generar PDF.
+- El sistema envia los filtros al generador del reporte.
+- El sistema valida nuevamente permiso `reportes.presupuestos_compra.ver`.
+- El sistema consulta nuevamente los presupuestos de compra segun los filtros.
 - El sistema carga la plantilla PDF de presupuestos de compra.
 - El sistema genera el PDF del informe.
 
@@ -495,10 +509,11 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 
 ### Flujo Alternativo
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema genera el PDF con todos los presupuestos permitidos.
-- Si no existen datos para mostrar, el PDF indica que no existen registros.
+- Si no se ingresan filtros, el sistema consulta todos los presupuestos permitidos.
+- Si no existen datos para mostrar, el sistema muestra la grilla sin registros y el PDF indica que no existen registros.
 
 ### Post Condicion
+- El sistema muestra los presupuestos de compra encontrados.
 - El sistema genera el PDF de presupuestos de compra cuando corresponde.
 - La informacion consultada no se modifica.
 
@@ -517,10 +532,10 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 Caso de uso que describe el proceso de generar informes de ordenes de compra.
 
 ### Actores Relacionados
-- Administrador
-- Encargado de compras
-- Gerente
-- Usuario autorizado
+- Encargado de Compras
+- Personal de Recepcion
+- Encargado de dto. de Servicios
+- Gerente general
 
 ### Pre Condicion
 - Conexion a base de datos.
@@ -536,13 +551,18 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 #### Generar
 - El sistema valida permiso `reportes.ordenes_compra.ver`.
 - El sistema consulta sucursales para el filtro. Tabla consultada: sucursales.
-- El sistema muestra filtros de fecha desde, fecha hasta, estado y sucursal.
+- El sistema muestra filtros de fecha desde, fecha hasta, estado (Pendiente, Procesado o Anulado) y sucursal.
 - El usuario selecciona o ingresa filtros.
-- El usuario presiona Generar PDF.
-- El sistema envia los filtros al generador del reporte.
+- El usuario presiona Previsualizar.
 - El sistema valida nuevamente permiso `reportes.ordenes_compra.ver`.
 - El sistema consulta ordenes de compra segun los filtros.
 - Tablas consultadas: orden_compra, orden_compra_detalle, proveedores, usuarios, sucursales.
+- El sistema carga datos dentro de la grilla.
+- El sistema habilita el boton Generar PDF.
+- El usuario presiona Generar PDF.
+- El sistema envia los filtros al generador del reporte.
+- El sistema valida nuevamente permiso `reportes.ordenes_compra.ver`.
+- El sistema consulta nuevamente las ordenes de compra segun los filtros.
 - El sistema carga la plantilla PDF de ordenes de compra.
 - El sistema genera el PDF del informe.
 
@@ -556,10 +576,11 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 
 ### Flujo Alternativo
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema genera el PDF con todas las ordenes permitidas.
-- Si no existen datos para mostrar, el PDF indica que no existen registros.
+- Si no se ingresan filtros, el sistema consulta todas las ordenes permitidas.
+- Si no existen datos para mostrar, el sistema muestra la grilla sin registros y el PDF indica que no existen registros.
 
 ### Post Condicion
+- El sistema muestra las ordenes de compra encontradas.
 - El sistema genera el PDF de ordenes de compra cuando corresponde.
 - La informacion consultada no se modifica.
 
@@ -578,10 +599,10 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 Caso de uso que describe el proceso de generar informes de compras registradas.
 
 ### Actores Relacionados
-- Administrador
-- Encargado de compras
-- Gerente
-- Usuario autorizado
+- Encargado de Compras
+- Personal de Recepcion
+- Encargado de dto. de Servicios
+- Gerente general
 
 ### Pre Condicion
 - Conexion a base de datos.
@@ -597,13 +618,18 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 #### Generar
 - El sistema valida permiso `reportes.compras.ver`.
 - El sistema consulta sucursales para el filtro. Tabla consultada: sucursales.
-- El sistema muestra filtros de fecha desde, fecha hasta, estado y sucursal.
+- El sistema muestra filtros de fecha desde, fecha hasta, estado (Activo, Procesado o Anulado) y sucursal.
 - El usuario selecciona o ingresa filtros.
-- El usuario presiona Generar PDF.
-- El sistema envia los filtros al generador del reporte.
+- El usuario presiona Previsualizar.
 - El sistema valida nuevamente permiso `reportes.compras.ver`.
 - El sistema consulta compras segun los filtros.
 - Tablas consultadas: compra_cabecera, compra_detalle, proveedores, usuarios, sucursales.
+- El sistema carga datos dentro de la grilla.
+- El sistema habilita el boton Generar PDF.
+- El usuario presiona Generar PDF.
+- El sistema envia los filtros al generador del reporte.
+- El sistema valida nuevamente permiso `reportes.compras.ver`.
+- El sistema consulta nuevamente las compras segun los filtros.
 - El sistema carga la plantilla PDF de compras.
 - El sistema genera el PDF del informe.
 
@@ -617,10 +643,11 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 
 ### Flujo Alternativo
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema genera el PDF con todas las compras permitidas.
-- Si no existen datos para mostrar, el PDF indica que no existen registros.
+- Si no se ingresan filtros, el sistema consulta todas las compras permitidas.
+- Si no existen datos para mostrar, el sistema muestra la grilla sin registros y el PDF indica que no existen registros.
 
 ### Post Condicion
+- El sistema muestra las compras encontradas.
 - El sistema genera el PDF de compras cuando corresponde.
 - La informacion consultada no se modifica.
 
@@ -639,11 +666,10 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 Caso de uso que describe el proceso de generar el informe del libro de compras.
 
 ### Actores Relacionados
-- Administrador
-- Encargado de compras
-- Contador
-- Gerente
-- Usuario autorizado
+- Encargado de Compras
+- Personal de Recepcion
+- Encargado de dto. de Servicios
+- Gerente general
 
 ### Pre Condicion
 - Conexion a base de datos.
@@ -659,13 +685,18 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 #### Generar
 - El sistema valida permiso `reportes.libro_compras.ver`.
 - El sistema consulta sucursales para el filtro. Tabla consultada: sucursales.
-- El sistema muestra filtros de fecha desde, fecha hasta, proveedor, estado y sucursal.
+- El sistema muestra filtros de fecha desde, fecha hasta, proveedor, estado (Activo o Anulado) y sucursal.
 - El usuario selecciona o ingresa filtros.
-- El usuario presiona Generar PDF.
-- El sistema envia los filtros al generador del reporte.
+- El usuario presiona Previsualizar.
 - El sistema valida nuevamente permiso `reportes.libro_compras.ver`.
 - El sistema consulta el libro de compras segun los filtros.
 - Tablas consultadas: libro_compra, sucursales.
+- El sistema carga datos dentro de la grilla.
+- El sistema habilita el boton Generar PDF.
+- El usuario presiona Generar PDF.
+- El sistema envia los filtros al generador del reporte.
+- El sistema valida nuevamente permiso `reportes.libro_compras.ver`.
+- El sistema consulta nuevamente el libro de compras segun los filtros.
 - El sistema carga la plantilla PDF de libro de compras.
 - El sistema genera el PDF del informe.
 
@@ -679,10 +710,11 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 
 ### Flujo Alternativo
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema genera el PDF con todos los registros permitidos.
-- Si no existen datos para mostrar, el PDF indica que no existen registros.
+- Si no se ingresan filtros, el sistema consulta todos los registros permitidos.
+- Si no existen datos para mostrar, el sistema muestra la grilla sin registros y el PDF indica que no existen registros.
 
 ### Post Condicion
+- El sistema muestra los registros del libro de compras encontrados.
 - El sistema genera el PDF del libro de compras cuando corresponde.
 - La informacion consultada no se modifica.
 
@@ -698,10 +730,10 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 Caso de uso que describe el proceso de generar informes de stock de articulos por filtros.
 
 ### Actores Relacionados
-- Administrador
-- Encargado de deposito
-- Encargado de compras
-- Usuario autorizado
+- Encargado de Compras
+- Personal de Recepcion
+- Encargado de dto. de Servicios
+- Gerente general
 
 ### Pre Condicion
 - Conexion a base de datos.
@@ -770,10 +802,10 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 Caso de uso que describe el proceso de generar informes de entradas y salidas de stock.
 
 ### Actores Relacionados
-- Administrador
-- Encargado de deposito
-- Encargado de compras
-- Usuario autorizado
+- Encargado de Compras
+- Personal de Recepcion
+- Encargado de dto. de Servicios
+- Gerente general
 
 ### Pre Condicion
 - Conexion a base de datos.
@@ -836,10 +868,10 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 Caso de uso que describe el proceso de generar informes de transferencias entre sucursales.
 
 ### Actores Relacionados
-- Administrador
-- Encargado de deposito
-- Encargado de compras
-- Usuario autorizado
+- Encargado de Compras
+- Personal de Recepcion
+- Encargado de dto. de Servicios
+- Gerente general
 
 ### Pre Condicion
 - Conexion a base de datos.
@@ -901,10 +933,10 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 Caso de uso que describe el proceso de generar informes de recepciones de servicio.
 
 ### Actores Relacionados
-- Administrador
-- Recepcionista
-- Encargado de servicios
-- Usuario autorizado
+- Encargado de Compras
+- Personal de Recepcion
+- Encargado de dto. de Servicios
+- Gerente general
 
 ### Pre Condicion
 - Conexion a base de datos.
@@ -920,13 +952,18 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 #### Generar
 - El sistema valida permiso `reportes.recepcion_servicio.ver`.
 - El sistema consulta sucursales para el filtro. Tabla consultada: sucursales.
-- El sistema muestra filtros de fecha desde, fecha hasta, estado y sucursal.
+- El sistema muestra filtros de fecha desde, fecha hasta, estado (Recepcionado, En proceso, Finalizado o Anulado) y sucursal.
 - El usuario selecciona o ingresa filtros.
-- El usuario presiona Generar PDF.
-- El sistema envia los filtros al generador del reporte.
+- El usuario presiona Previsualizar.
 - El sistema valida nuevamente permiso `reportes.recepcion_servicio.ver`.
 - El sistema consulta recepciones de servicio segun los filtros.
 - Tablas consultadas: recepcion_servicio, clientes, vehiculos, modelo_auto, marcas, usuarios, sucursales.
+- El sistema carga datos dentro de la grilla.
+- El sistema habilita el boton Generar PDF.
+- El usuario presiona Generar PDF.
+- El sistema envia los filtros al generador del reporte.
+- El sistema valida nuevamente permiso `reportes.recepcion_servicio.ver`.
+- El sistema consulta nuevamente las recepciones de servicio segun los filtros.
 - El sistema carga la plantilla PDF de recepcion de servicios.
 - El sistema genera el PDF del informe.
 
@@ -940,10 +977,11 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 
 ### Flujo Alternativo
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema genera el PDF con todas las recepciones permitidas.
-- Si no existen datos para mostrar, el PDF indica que no existen registros.
+- Si no se ingresan filtros, el sistema consulta todas las recepciones permitidas.
+- Si no existen datos para mostrar, el sistema muestra la grilla sin registros y el PDF indica que no existen registros.
 
 ### Post Condicion
+- El sistema muestra las recepciones de servicio encontradas.
 - El sistema genera el PDF de recepciones de servicio cuando corresponde.
 - La informacion consultada no se modifica.
 
@@ -964,11 +1002,10 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 Caso de uso que describe el proceso de generar informes de presupuestos de servicio.
 
 ### Actores Relacionados
-- Administrador
-- Recepcionista
-- Encargado de servicios
-- Gerente
-- Usuario autorizado
+- Encargado de Compras
+- Personal de Recepcion
+- Encargado de dto. de Servicios
+- Gerente general
 
 ### Pre Condicion
 - Conexion a base de datos.
@@ -984,13 +1021,18 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 #### Generar
 - El sistema valida permiso `reportes.presupuesto_servicio.ver`.
 - El sistema consulta sucursales para el filtro. Tabla consultada: sucursales.
-- El sistema muestra filtros de fecha desde, fecha hasta, estado y sucursal.
+- El sistema muestra filtros de fecha desde, fecha hasta, estado (Pendiente, Aprobado, OT generada, Facturado o Anulado) y sucursal.
 - El usuario selecciona o ingresa filtros.
-- El usuario presiona Generar PDF.
-- El sistema envia los filtros al generador del reporte.
+- El usuario presiona Previsualizar.
 - El sistema valida nuevamente permiso `reportes.presupuesto_servicio.ver`.
 - El sistema consulta presupuestos de servicio segun los filtros.
 - Tablas consultadas: presupuesto_servicio, presupuesto_detalleservicio, diagnostico_servicio, recepcion_servicio, usuarios, sucursales, clientes, vehiculos, modelo_auto, marcas.
+- El sistema carga datos dentro de la grilla.
+- El sistema habilita el boton Generar PDF.
+- El usuario presiona Generar PDF.
+- El sistema envia los filtros al generador del reporte.
+- El sistema valida nuevamente permiso `reportes.presupuesto_servicio.ver`.
+- El sistema consulta nuevamente los presupuestos de servicio segun los filtros.
 - El sistema carga la plantilla PDF de presupuestos de servicio.
 - El sistema genera el PDF del informe.
 
@@ -1004,10 +1046,11 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 
 ### Flujo Alternativo
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema genera el PDF con todos los presupuestos permitidos.
-- Si no existen datos para mostrar, el PDF indica que no existen registros.
+- Si no se ingresan filtros, el sistema consulta todos los presupuestos permitidos.
+- Si no existen datos para mostrar, el sistema muestra la grilla sin registros y el PDF indica que no existen registros.
 
 ### Post Condicion
+- El sistema muestra los presupuestos de servicio encontrados.
 - El sistema genera el PDF de presupuestos de servicio cuando corresponde.
 - La informacion consultada no se modifica.
 
@@ -1031,11 +1074,10 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 Caso de uso que describe el proceso de generar informes de ordenes de trabajo.
 
 ### Actores Relacionados
-- Administrador
-- Encargado de servicios
-- Tecnico
-- Gerente
-- Usuario autorizado
+- Encargado de Compras
+- Personal de Recepcion
+- Encargado de dto. de Servicios
+- Gerente general
 
 ### Pre Condicion
 - Conexion a base de datos.
@@ -1051,13 +1093,18 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 #### Generar
 - El sistema valida permiso `reportes.orden_trabajo.ver`.
 - El sistema consulta sucursales para el filtro. Tabla consultada: sucursales.
-- El sistema muestra filtros de fecha desde, fecha hasta, estado y sucursal.
+- El sistema muestra filtros de fecha desde, fecha hasta, estado (Activa, Servicio registrado, Pendiente completar o Anulada) y sucursal.
 - El usuario selecciona o ingresa filtros.
-- El usuario presiona Generar PDF.
-- El sistema envia los filtros al generador del reporte.
+- El usuario presiona Previsualizar.
 - El sistema valida nuevamente permiso `reportes.orden_trabajo.ver`.
 - El sistema consulta ordenes de trabajo segun los filtros.
 - Tablas consultadas: orden_trabajo, orden_trabajo_detalle, presupuesto_servicio, diagnostico_servicio, recepcion_servicio, sucursales, usuarios, equipo_trabajo, clientes, vehiculos, modelo_auto, marcas.
+- El sistema carga datos dentro de la grilla.
+- El sistema habilita el boton Generar PDF.
+- El usuario presiona Generar PDF.
+- El sistema envia los filtros al generador del reporte.
+- El sistema valida nuevamente permiso `reportes.orden_trabajo.ver`.
+- El sistema consulta nuevamente las ordenes de trabajo segun los filtros.
 - El sistema carga la plantilla PDF de ordenes de trabajo.
 - El sistema genera el PDF del informe.
 
@@ -1071,10 +1118,11 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 
 ### Flujo Alternativo
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema genera el PDF con todas las ordenes permitidas.
-- Si no existen datos para mostrar, el PDF indica que no existen registros.
+- Si no se ingresan filtros, el sistema consulta todas las ordenes permitidas.
+- Si no existen datos para mostrar, el sistema muestra la grilla sin registros y el PDF indica que no existen registros.
 
 ### Post Condicion
+- El sistema muestra las ordenes de trabajo encontradas.
 - El sistema genera el PDF de ordenes de trabajo cuando corresponde.
 - La informacion consultada no se modifica.
 
@@ -1100,11 +1148,10 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 Caso de uso que describe el proceso de generar informes de servicios registrados.
 
 ### Actores Relacionados
-- Administrador
-- Encargado de servicios
-- Tecnico
-- Gerente
-- Usuario autorizado
+- Encargado de Compras
+- Personal de Recepcion
+- Encargado de dto. de Servicios
+- Gerente general
 
 ### Pre Condicion
 - Conexion a base de datos.
@@ -1121,13 +1168,19 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 - El sistema valida permiso `reportes.registro_servicio.ver`.
 - El sistema consulta sucursales para el filtro. Tabla consultada: sucursales.
 - El sistema consulta empleados activos para el filtro. Tabla consultada: empleados.
-- El sistema muestra filtros de fecha desde, fecha hasta, estado, tecnico encargado y sucursal.
+- El sistema muestra filtros de fecha desde, fecha hasta, estado (Registrado, Facturado, Con Reclamo o Anulado), tecnico encargado y sucursal.
 - El usuario selecciona o ingresa filtros.
-- El usuario presiona Generar PDF.
-- El sistema envia los filtros al generador del reporte.
+- El usuario presiona Previsualizar.
 - El sistema valida nuevamente permiso `reportes.registro_servicio.ver`.
 - El sistema consulta registros de servicio segun los filtros.
 - Tablas consultadas: registro_servicio, registro_servicio_detalle, orden_trabajo, presupuesto_servicio, diagnostico_servicio, recepcion_servicio, sucursales, clientes, vehiculos, modelo_auto, marcas, usuarios, equipo_trabajo, empleados.
+- La sucursal del informe se obtiene desde `registro_servicio.id_sucursal`; cliente y vehiculo se obtienen desde la recepcion asociada a la orden de trabajo.
+- El sistema carga datos dentro de la grilla.
+- El sistema habilita el boton Generar PDF.
+- El usuario presiona Generar PDF.
+- El sistema envia los filtros al generador del reporte.
+- El sistema valida nuevamente permiso `reportes.registro_servicio.ver`.
+- El sistema consulta nuevamente los registros de servicio segun los filtros.
 - El sistema carga la plantilla PDF de registro de servicios.
 - El sistema genera el PDF del informe.
 
@@ -1141,10 +1194,11 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 
 ### Flujo Alternativo
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema genera el PDF con todos los registros permitidos.
-- Si no existen datos para mostrar, el PDF indica que no existen registros.
+- Si no se ingresan filtros, el sistema consulta todos los registros permitidos.
+- Si no existen datos para mostrar, el sistema muestra la grilla sin registros y el PDF indica que no existen registros.
 
 ### Post Condicion
+- El sistema muestra los registros de servicio encontrados.
 - El sistema genera el PDF de registros de servicio cuando corresponde.
 - La informacion consultada no se modifica.
 

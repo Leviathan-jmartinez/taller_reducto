@@ -16,12 +16,12 @@ $sucursales = $rep->listar_sucursales_controlador();
             &nbsp; Informe de Recepción de Servicios
         </h4>
 
-        <form action="<?= SERVERURL ?>ajax/reportesAjax.php"
-            method="POST"
-            target="_blank"
+        <form id="formPreview"
+            class="form-neon"
+            data-pdf-action="imprimir_reporte_recepcion_servicios"
             autocomplete="off">
 
-            <input type="hidden" name="accion" value="imprimir_reporte_recepcion_servicios">
+            <input type="hidden" name="modulo" value="recepcion_servicio">
 
             <div class="row">
 
@@ -39,9 +39,10 @@ $sucursales = $rep->listar_sucursales_controlador();
                     <label>Estado</label>
                     <select name="estado" class="form-control">
                         <option value="">Todos</option>
-                        <option value="1">Abierto</option>
+                        <option value="1">Recepcionado</option>
                         <option value="2">En proceso</option>
-                        <option value="3">Cerrado</option>
+                        <option value="3">Finalizado</option>
+                        <option value="0">Anulado</option>
                     </select>
                 </div>
 
@@ -61,6 +62,10 @@ $sucursales = $rep->listar_sucursales_controlador();
 
             <div class="text-center mt-4">
                 <button type="submit" class="btn btn-info">
+                    <i class="fas fa-search"></i> &nbsp; Previsualizar
+                </button>
+
+                <button type="button" id="btnPdf" class="btn btn-secondary d-none">
                     <i class="fas fa-print"></i> &nbsp; Generar PDF
                 </button>
             </div>
@@ -69,3 +74,5 @@ $sucursales = $rep->listar_sucursales_controlador();
 
     </div>
 </div>
+
+<?php include_once "./vistas/inc/reportePreviewTabla.php"; ?>

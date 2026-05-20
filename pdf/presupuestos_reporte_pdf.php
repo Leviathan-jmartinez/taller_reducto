@@ -101,7 +101,7 @@
             {
                 return match ((int)$estado) {
                     1 => 'Pendiente',
-                    2 => 'Procesado',
+                    2 => 'OC generada',
                     0 => 'Anulado',
                     default => 'Desconocido',
                 };
