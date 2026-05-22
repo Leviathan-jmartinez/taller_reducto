@@ -1,4 +1,6 @@
 <div class="container-fluid mt-3">
+    <div id="resumenReportePreview" class="row mb-3 d-none"></div>
+
     <div class="table-responsive">
         <table class="table table-dark table-sm" id="tablaReportePreview">
             <thead class="text-center"></thead>
@@ -12,6 +14,7 @@
         const form = document.getElementById("formPreview");
         const btnPdf = document.getElementById("btnPdf");
         const tabla = document.getElementById("tablaReportePreview");
+        const resumenBox = document.getElementById("resumenReportePreview");
 
         if (!form || !btnPdf || !tabla) {
             return;
@@ -89,6 +92,123 @@
             return String(value);
         };
 
+        const resumenLabels = {
+            total: "Total",
+            registrados: "Registrados",
+            facturados: "Facturados",
+            con_reclamo: "Con reclamo",
+            anulados: "Anulados",
+            cantidad_items: "Items",
+            cantidad_repuestos: "Repuestos",
+            cantidad_insumos: "Insumos",
+            total_repuestos: "Total repuestos",
+            total_insumos: "Total insumos",
+            total_importe: "Importe total",
+            promedio_importe: "Promedio"
+        };
+
+        const isMoneyKey = function(key) {
+            return ["total_importe", "promedio_importe", "total_repuestos", "total_insumos"].indexOf(key) !== -1;
+        };
+
+        const formatResumenValue = function(value, key) {
+            const numberValue = Number(value || 0);
+
+            if (isMoneyKey(key)) {
+                return numberValue.toLocaleString("es-PY", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                });
+            }
+
+            return numberValue.toLocaleString("es-PY");
+        };
+
+        const compactColumns = {
+            registro_servicio: [{
+                    key: "idregistro_servicio",
+                    label: "Registro"
+                },
+                {
+                    key: "fecha_ejecucion",
+                    label: "Fecha"
+                },
+                {
+                    key: "estado",
+                    label: "Estado"
+                },
+                {
+                    key: "cliente",
+                    label: "Cliente"
+                },
+                {
+                    key: "vehiculo",
+                    label: "Vehiculo"
+                },
+                {
+                    key: "tecnico",
+                    label: "Tecnico"
+                },
+                {
+                    key: "cantidad_repuestos",
+                    label: "Repuestos"
+                },
+                {
+                    key: "cantidad_insumos",
+                    label: "Insumos"
+                },
+                {
+                    key: "total",
+                    label: "Total"
+                }
+            ]
+        };
+
+        const getColumns = function(data) {
+            const modulo = form.querySelector('[name="modulo"]')?.value || "";
+
+            if (compactColumns[modulo]) {
+                return compactColumns[modulo];
+            }
+
+            return Object.keys(data[0]).map(function(key) {
+                return {
+                    key: key,
+                    label: key.replace(/_/g, " ").toUpperCase()
+                };
+            });
+        };
+
+        const renderResumen = function(resumen) {
+            if (!resumenBox) {
+                return;
+            }
+
+            const modulo = form.querySelector('[name="modulo"]')?.value || "";
+
+            resumenBox.innerHTML = "";
+
+            if (modulo === "registro_servicio" || !resumen || Object.keys(resumen).length === 0) {
+                resumenBox.classList.add("d-none");
+                return;
+            }
+
+            Object.keys(resumen).forEach(function(key) {
+                const col = document.createElement("div");
+                col.className = "col-sm-6 col-md-3 col-lg-2 mb-2";
+
+                col.innerHTML =
+                    '<div class="alert alert-info mb-0 py-2">' +
+                    '<small class="d-block">' + (resumenLabels[key] || key.replace(/_/g, " ")) + '</small>' +
+                    '<strong>' + formatResumenValue(resumen[key], key) + '</strong>' +
+                    '</div>';
+
+                resumenBox.appendChild(col);
+            });
+
+            resumenBox.classList.remove("d-none");
+        };
+
         form.addEventListener("submit", function(e) {
             e.preventDefault();
 
@@ -105,9 +225,11 @@
                     const data = json.data || [];
                     thead.innerHTML = "";
                     tbody.innerHTML = "";
+                    renderResumen(json.resumen || {});
 
                     if (json.error) {
                         tbody.innerHTML = '<tr><td class="text-center text-danger">' + json.error + '</td></tr>';
+                        renderResumen({});
                         btnPdf.classList.add("d-none");
                         return;
                     }
@@ -118,12 +240,12 @@
                         return;
                     }
 
-                    const keys = Object.keys(data[0]);
+                    const columns = getColumns(data);
                     const headerRow = document.createElement("tr");
 
-                    keys.forEach(function(key) {
+                    columns.forEach(function(column) {
                         const th = document.createElement("th");
-                        th.textContent = key.replace(/_/g, " ").toUpperCase();
+                        th.textContent = column.label;
                         headerRow.appendChild(th);
                     });
 
@@ -132,9 +254,9 @@
                     data.forEach(function(row) {
                         const tr = document.createElement("tr");
 
-                        keys.forEach(function(key) {
+                        columns.forEach(function(column) {
                             const td = document.createElement("td");
-                            td.textContent = formatValue(row[key], key);
+                            td.textContent = formatValue(row[column.key], column.key);
                             tr.appendChild(td);
                         });
 
@@ -146,6 +268,7 @@
                 .catch(function() {
                     thead.innerHTML = "";
                     tbody.innerHTML = '<tr><td class="text-center text-danger">No se pudo previsualizar el informe</td></tr>';
+                    renderResumen({});
                     btnPdf.classList.add("d-none");
                 });
         });

@@ -1503,36 +1503,52 @@ class reportesModelo extends mainModel
             s.suc_descri AS sucursal,
             rs.observacion,
 
-            COUNT(rsd.id_articulo) AS cantidad_items,
-            COALESCE(SUM(rsd.subtotal),0) AS total
+            COALESCE(rd.cantidad_items, 0) AS cantidad_items,
+            COALESCE(rd.cantidad_repuestos, 0) AS cantidad_repuestos,
+            COALESCE(rd.cantidad_insumos, 0) AS cantidad_insumos,
+            COALESCE(rd.total_repuestos, 0) AS total_repuestos,
+            COALESCE(rd.total_insumos, 0) AS total_insumos,
+            COALESCE(rd.total, 0) AS total
 
         FROM registro_servicio rs
 
         INNER JOIN orden_trabajo ot
             ON ot.idorden_trabajo = rs.idorden_trabajo
 
-        INNER JOIN presupuesto_servicio ps
+        LEFT JOIN presupuesto_servicio ps
             ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
 
-        INNER JOIN diagnostico_servicio ds
+        LEFT JOIN diagnostico_servicio ds
             ON ds.id_diagnostico = ps.id_diagnostico
 
-        INNER JOIN recepcion_servicio r
-            ON r.idrecepcion = ds.idrecepcion
+        LEFT JOIN recepcion_servicio r_normal
+            ON r_normal.idrecepcion = ds.idrecepcion
+
+        LEFT JOIN (
+            SELECT
+                idreclamo_servicio,
+                MIN(idrecepcion) AS idrecepcion,
+                MIN(id_cliente) AS id_cliente,
+                MIN(id_vehiculo) AS id_vehiculo
+            FROM recepcion_servicio
+            WHERE idreclamo_servicio IS NOT NULL
+            GROUP BY idreclamo_servicio
+        ) r_reclamo
+            ON r_reclamo.idreclamo_servicio = ot.idreclamo_servicio
 
         INNER JOIN sucursales s
             ON s.id_sucursal = rs.id_sucursal
 
-        INNER JOIN clientes c
-            ON c.id_cliente = r.id_cliente
+        LEFT JOIN clientes c
+            ON c.id_cliente = COALESCE(r_normal.id_cliente, r_reclamo.id_cliente)
 
-        INNER JOIN vehiculos v
-            ON v.id_vehiculo = r.id_vehiculo
+        LEFT JOIN vehiculos v
+            ON v.id_vehiculo = COALESCE(r_normal.id_vehiculo, r_reclamo.id_vehiculo)
 
-        INNER JOIN modelo_auto mo
+        LEFT JOIN modelo_auto mo
             ON mo.id_modeloauto = v.id_modeloauto
 
-        INNER JOIN marcas m
+        LEFT JOIN marcas m
             ON m.id_marcas = mo.id_marcas
 
         INNER JOIN usuarios ur
@@ -1541,8 +1557,19 @@ class reportesModelo extends mainModel
         LEFT JOIN equipo_trabajo et
             ON et.id_equipo = ot.idtrabajos
 
-        LEFT JOIN registro_servicio_detalle rsd
-            ON rsd.idregistro_servicio = rs.idregistro_servicio
+        LEFT JOIN (
+            SELECT
+                idregistro_servicio,
+                COUNT(id_articulo) AS cantidad_items,
+                COALESCE(SUM(CASE WHEN origen = 'OT' THEN cantidad ELSE 0 END), 0) AS cantidad_repuestos,
+                COALESCE(SUM(CASE WHEN origen = 'INSUMO' THEN cantidad ELSE 0 END), 0) AS cantidad_insumos,
+                COALESCE(SUM(CASE WHEN origen = 'OT' THEN subtotal ELSE 0 END), 0) AS total_repuestos,
+                COALESCE(SUM(CASE WHEN origen = 'INSUMO' THEN subtotal ELSE 0 END), 0) AS total_insumos,
+                COALESCE(SUM(subtotal), 0) AS total
+            FROM registro_servicio_detalle
+            GROUP BY idregistro_servicio
+        ) rd
+            ON rd.idregistro_servicio = rs.idregistro_servicio
 
         LEFT JOIN empleados em
             ON em.idempleados = ot.tecnico_responsable
@@ -1552,12 +1579,12 @@ class reportesModelo extends mainModel
         $params = [];
 
         if (!empty($desde)) {
-            $sql .= " AND rs.fecha_ejecucion >= :desde";
+            $sql .= " AND DATE(rs.fecha_ejecucion) >= :desde";
             $params[':desde'] = $desde;
         }
 
         if (!empty($hasta)) {
-            $sql .= " AND rs.fecha_ejecucion <= :hasta";
+            $sql .= " AND DATE(rs.fecha_ejecucion) <= :hasta";
             $params[':hasta'] = $hasta;
         }
 
@@ -1576,10 +1603,7 @@ class reportesModelo extends mainModel
             $params[':sucursal'] = (int)$sucursal;
         }
 
-        $sql .= "
-        GROUP BY rs.idregistro_servicio
-        ORDER BY rs.fecha_ejecucion ASC
-        ";
+        $sql .= " ORDER BY rs.fecha_ejecucion ASC";
 
         $stmt = mainModel::conectar()->prepare($sql);
 
@@ -1589,5 +1613,94 @@ class reportesModelo extends mainModel
 
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function resumen_registro_servicio_modelo($desde, $hasta, $estado, $empleado, $sucursal)
+    {
+        $where = " WHERE 1 = 1 ";
+        $params = [];
+
+        if (!empty($desde)) {
+            $where .= " AND DATE(rs.fecha_ejecucion) >= :desde";
+            $params[':desde'] = $desde;
+        }
+
+        if (!empty($hasta)) {
+            $where .= " AND DATE(rs.fecha_ejecucion) <= :hasta";
+            $params[':hasta'] = $hasta;
+        }
+
+        if ($estado !== null) {
+            $where .= " AND rs.estado = :estado";
+            $params[':estado'] = (int)$estado;
+        }
+
+        if ($empleado !== null) {
+            $where .= " AND ot.tecnico_responsable = :tecnico_responsable";
+            $params[':tecnico_responsable'] = $empleado;
+        }
+
+        if ($sucursal !== null) {
+            $where .= " AND rs.id_sucursal = :sucursal";
+            $params[':sucursal'] = (int)$sucursal;
+        }
+
+        $sql = "
+        SELECT
+            COUNT(*) AS total,
+            SUM(CASE WHEN estado = 1 THEN 1 ELSE 0 END) AS registrados,
+            SUM(CASE WHEN estado = 2 THEN 1 ELSE 0 END) AS facturados,
+            SUM(CASE WHEN estado = 3 THEN 1 ELSE 0 END) AS con_reclamo,
+            SUM(CASE WHEN estado = 0 THEN 1 ELSE 0 END) AS anulados,
+            COALESCE(SUM(cantidad_items), 0) AS cantidad_items,
+            COALESCE(SUM(cantidad_repuestos), 0) AS cantidad_repuestos,
+            COALESCE(SUM(cantidad_insumos), 0) AS cantidad_insumos,
+            COALESCE(SUM(total_repuestos), 0) AS total_repuestos,
+            COALESCE(SUM(total_insumos), 0) AS total_insumos,
+            COALESCE(SUM(total), 0) AS total_importe,
+            COALESCE(AVG(total), 0) AS promedio_importe
+        FROM (
+            SELECT
+                rs.idregistro_servicio,
+                rs.estado,
+                COUNT(rsd.id_articulo) AS cantidad_items,
+                COALESCE(SUM(CASE WHEN rsd.origen = 'OT' THEN rsd.cantidad ELSE 0 END), 0) AS cantidad_repuestos,
+                COALESCE(SUM(CASE WHEN rsd.origen = 'INSUMO' THEN rsd.cantidad ELSE 0 END), 0) AS cantidad_insumos,
+                COALESCE(SUM(CASE WHEN rsd.origen = 'OT' THEN rsd.subtotal ELSE 0 END), 0) AS total_repuestos,
+                COALESCE(SUM(CASE WHEN rsd.origen = 'INSUMO' THEN rsd.subtotal ELSE 0 END), 0) AS total_insumos,
+                COALESCE(SUM(rsd.subtotal), 0) AS total
+            FROM registro_servicio rs
+            INNER JOIN orden_trabajo ot
+                ON ot.idorden_trabajo = rs.idorden_trabajo
+            LEFT JOIN registro_servicio_detalle rsd
+                ON rsd.idregistro_servicio = rs.idregistro_servicio
+            $where
+            GROUP BY rs.idregistro_servicio
+        ) registros
+        ";
+
+        $stmt = mainModel::conectar()->prepare($sql);
+
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+
+        $stmt->execute();
+        $resumen = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return [
+            "total" => (int)($resumen['total'] ?? 0),
+            "registrados" => (int)($resumen['registrados'] ?? 0),
+            "facturados" => (int)($resumen['facturados'] ?? 0),
+            "con_reclamo" => (int)($resumen['con_reclamo'] ?? 0),
+            "anulados" => (int)($resumen['anulados'] ?? 0),
+            "cantidad_items" => (int)($resumen['cantidad_items'] ?? 0),
+            "cantidad_repuestos" => (float)($resumen['cantidad_repuestos'] ?? 0),
+            "cantidad_insumos" => (float)($resumen['cantidad_insumos'] ?? 0),
+            "total_repuestos" => (float)($resumen['total_repuestos'] ?? 0),
+            "total_insumos" => (float)($resumen['total_insumos'] ?? 0),
+            "total_importe" => (float)($resumen['total_importe'] ?? 0),
+            "promedio_importe" => (float)($resumen['promedio_importe'] ?? 0)
+        ];
     }
 }

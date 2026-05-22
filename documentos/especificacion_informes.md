@@ -1174,13 +1174,17 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 - El sistema valida nuevamente permiso `reportes.registro_servicio.ver`.
 - El sistema consulta registros de servicio segun los filtros.
 - Tablas consultadas: registro_servicio, registro_servicio_detalle, orden_trabajo, presupuesto_servicio, diagnostico_servicio, recepcion_servicio, sucursales, clientes, vehiculos, modelo_auto, marcas, usuarios, equipo_trabajo, empleados.
-- La sucursal del informe se obtiene desde `registro_servicio.id_sucursal`; cliente y vehiculo se obtienen desde la recepcion asociada a la orden de trabajo.
+- La sucursal del informe se obtiene desde `registro_servicio.id_sucursal`.
+- Cliente y vehiculo se obtienen desde la recepcion asociada a la orden de trabajo. Si la orden proviene de un presupuesto, se consulta la recepcion vinculada al diagnostico; si la orden proviene de un reclamo, se consulta la recepcion vinculada al reclamo.
+- El sistema diferencia los articulos utilizados por origen del detalle: `OT` para repuestos e `INSUMO` para insumos.
+- El sistema calcula cantidad de repuestos, cantidad de insumos e importe total del servicio.
 - El sistema carga datos dentro de la grilla.
 - El sistema habilita el boton Generar PDF.
 - El usuario presiona Generar PDF.
 - El sistema envia los filtros al generador del reporte.
 - El sistema valida nuevamente permiso `reportes.registro_servicio.ver`.
 - El sistema consulta nuevamente los registros de servicio segun los filtros.
+- El sistema vuelve a calcular el resumen de servicios, repuestos e insumos para el PDF.
 - El sistema carga la plantilla PDF de registro de servicios.
 - El sistema genera el PDF del informe.
 

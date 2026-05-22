@@ -108,7 +108,7 @@ class reporteControlador extends reportesModelo
         $dompdf->setPaper('A4', 'landscape'); // 🔥 horizontal
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->render();
-        $dompdf->stream("reporte_articulos.pdf", ["Attachment" => false]);
+        $dompdf->stream("reporte_articulos.pdf", ["Attachment" => true]);
         exit();
     }
 
@@ -169,7 +169,7 @@ class reporteControlador extends reportesModelo
         $dompdf->setPaper('A4', 'landscape');
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->render();
-        $dompdf->stream("reporte_articulos.pdf", ["Attachment" => false]);
+        $dompdf->stream("reporte_articulos.pdf", ["Attachment" => true]);
         exit();
     }
 
@@ -234,7 +234,7 @@ class reporteControlador extends reportesModelo
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->render();
-        $dompdf->stream("reporte_sucursales.pdf", ["Attachment" => false]);
+        $dompdf->stream("reporte_sucursales.pdf", ["Attachment" => true]);
         exit();
     }
 
@@ -291,7 +291,7 @@ class reporteControlador extends reportesModelo
         $dompdf->setPaper('A4', 'landscape');
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->render();
-        $dompdf->stream("reporte_vehiculos.pdf", ["Attachment" => false]);
+        $dompdf->stream("reporte_vehiculos.pdf", ["Attachment" => true]);
         exit();
     }
 
@@ -344,7 +344,7 @@ class reporteControlador extends reportesModelo
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->render();
-        $dompdf->stream("reporte_proveedores.pdf", ["Attachment" => false]);
+        $dompdf->stream("reporte_proveedores.pdf", ["Attachment" => true]);
         exit();
     }
 
@@ -400,7 +400,7 @@ class reporteControlador extends reportesModelo
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->render();
-        $dompdf->stream("reporte_clientes.pdf", ["Attachment" => false]);
+        $dompdf->stream("reporte_clientes.pdf", ["Attachment" => true]);
         exit();
     }
 
@@ -463,7 +463,7 @@ class reporteControlador extends reportesModelo
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->render();
-        $dompdf->stream("reporte_empleados.pdf", ["Attachment" => false]);
+        $dompdf->stream("reporte_empleados.pdf", ["Attachment" => true]);
         exit();
     }
 
@@ -527,7 +527,7 @@ class reporteControlador extends reportesModelo
         $dompdf->setPaper('A4', 'landscape');
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->render();
-        $dompdf->stream("reporte_pedidos.pdf", ["Attachment" => false]);
+        $dompdf->stream("reporte_pedidos.pdf", ["Attachment" => true]);
         exit();
     }
 
@@ -579,7 +579,7 @@ class reporteControlador extends reportesModelo
         $dompdf->setPaper('A4', 'landscape');
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->render();
-        $dompdf->stream("reporte_presupuestos_compra.pdf", ["Attachment" => false]);
+        $dompdf->stream("reporte_presupuestos_compra.pdf", ["Attachment" => true]);
         exit();
     }
 
@@ -629,7 +629,7 @@ class reporteControlador extends reportesModelo
         $dompdf->setPaper('A4', 'landscape');
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->render();
-        $dompdf->stream("reporte_ordenes_compra.pdf", ["Attachment" => false]);
+        $dompdf->stream("reporte_ordenes_compra.pdf", ["Attachment" => true]);
         exit();
     }
 
@@ -679,7 +679,7 @@ class reporteControlador extends reportesModelo
         $dompdf->setPaper('A4', 'landscape');
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->render();
-        $dompdf->stream("reporte_compras.pdf", ["Attachment" => false]);
+        $dompdf->stream("reporte_compras.pdf", ["Attachment" => true]);
         exit();
     }
 
@@ -736,7 +736,7 @@ class reporteControlador extends reportesModelo
         $dompdf->setPaper('A4', 'landscape');
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->render();
-        $dompdf->stream("reporte_libro_compras.pdf", ["Attachment" => false]);
+        $dompdf->stream("reporte_libro_compras.pdf", ["Attachment" => true]);
         exit();
     }
 
@@ -795,7 +795,7 @@ class reporteControlador extends reportesModelo
         $dompdf->setPaper('A4', 'landscape');
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->render();
-        $dompdf->stream("reporte_transferencias.pdf", ["Attachment" => false]);
+        $dompdf->stream("reporte_transferencias.pdf", ["Attachment" => true]);
         exit();
     }
 
@@ -861,7 +861,7 @@ class reporteControlador extends reportesModelo
         $dompdf->setPaper('A4', 'landscape');
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->render();
-        $dompdf->stream("reporte_movimientos_stock.pdf", ["Attachment" => false]);
+        $dompdf->stream("reporte_movimientos_stock.pdf", ["Attachment" => true]);
         exit();
     }
 
@@ -918,7 +918,7 @@ class reporteControlador extends reportesModelo
         $dompdf->setPaper('A4', 'landscape');
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->render();
-        $dompdf->stream("reporte_recepcion_servicio.pdf", ["Attachment" => false]);
+        $dompdf->stream("reporte_recepcion_servicio.pdf", ["Attachment" => true]);
         exit();
     }
 
@@ -970,7 +970,7 @@ class reporteControlador extends reportesModelo
         $dompdf->render();
         $dompdf->stream(
             "reporte_presupuesto_servicio.pdf",
-            ["Attachment" => false]
+            ["Attachment" => true]
         );
         exit();
     }
@@ -1021,7 +1021,7 @@ class reporteControlador extends reportesModelo
         $dompdf->setPaper('A4', 'landscape');
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->render();
-        $dompdf->stream("reporte_orden_trabajo.pdf", ["Attachment" => false]);
+        $dompdf->stream("reporte_orden_trabajo.pdf", ["Attachment" => true]);
         exit();
     }
 
@@ -1038,8 +1038,12 @@ class reporteControlador extends reportesModelo
         $empleado = ($_POST['empleado'] ?? '') !== '' ? mainModel::limpiar_string($_POST['empleado']) : null;
 
         $data = reportesModelo::reporte_registro_servicio_modelo($desde, $hasta, $estado, $empleado, $sucursal);
+        $resumen = reportesModelo::resumen_registro_servicio_modelo($desde, $hasta, $estado, $empleado, $sucursal);
 
-        return json_encode(["data" => $data]);
+        return json_encode([
+            "data" => $data,
+            "resumen" => $resumen
+        ]);
     }
 
     public function imprimir_reporte_registro_servicio_controlador()
@@ -1066,6 +1070,13 @@ class reporteControlador extends reportesModelo
             $empleado,
             $sucursal
         );
+        $resumen = reportesModelo::resumen_registro_servicio_modelo(
+            $desde,
+            $hasta,
+            $estado,
+            $empleado,
+            $sucursal
+        );
 
         $empresa = $_SESSION['empresa_nombre'] ?? 'Empresa';
         $usuario = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
@@ -1078,7 +1089,7 @@ class reporteControlador extends reportesModelo
         $dompdf->setPaper('A4', 'landscape');
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->render();
-        $dompdf->stream("reporte_registro_servicio.pdf", ["Attachment" => false]);
+        $dompdf->stream("reporte_registro_servicio.pdf", ["Attachment" => true]);
         exit();
     }
 
