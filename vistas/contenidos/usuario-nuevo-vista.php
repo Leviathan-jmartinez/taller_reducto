@@ -64,26 +64,26 @@ $busqueda = $_SESSION['busqueda_usuario'] ?? "";
 					<div class="col-12 col-md-4">
 						<div class="form-group">
 							<label for="usuario_dni" class="bmd-label-floating">C.I.</label>
-							<input type="text" pattern="[0-9-]{1,20}" class="form-control" name="<?php echo $editando ? 'usuario_ci_up' : 'usuario_dni_reg'; ?>" id="usuario_dni" maxlength="20" value="<?php echo $editando ? htmlspecialchars($campos['usu_ci'], ENT_QUOTES, 'UTF-8') : ''; ?>" <?php echo $cuentaPropia ? 'readonly' : ''; ?>>
+							<input type="text" pattern="[0-9]{5,10}" class="form-control" name="<?php echo $editando ? 'usuario_ci_up' : 'usuario_dni_reg'; ?>" id="usuario_dni" maxlength="10" inputmode="numeric" value="<?php echo $editando ? htmlspecialchars($campos['usu_ci'], ENT_QUOTES, 'UTF-8') : ''; ?>" <?php echo $cuentaPropia ? 'readonly' : ''; ?>>
 						</div>
 					</div>
 
 					<div class="col-12 col-md-4">
 						<div class="form-group">
 							<label for="usuario_nombre" class="bmd-label-floating">Nombres</label>
-							<input type="text" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{1,35}" class="form-control" name="<?php echo $editando ? 'usuario_nombre_up' : 'usuario_nombre_reg'; ?>" id="usuario_nombre" maxlength="35" value="<?php echo $editando ? htmlspecialchars($campos['usu_nombre'], ENT_QUOTES, 'UTF-8') : ''; ?>" <?php echo $cuentaPropia ? 'readonly' : ''; ?>>
+							<input type="text" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{2,50}" class="form-control" name="<?php echo $editando ? 'usuario_nombre_up' : 'usuario_nombre_reg'; ?>" id="usuario_nombre" maxlength="50" value="<?php echo $editando ? htmlspecialchars($campos['usu_nombre'], ENT_QUOTES, 'UTF-8') : ''; ?>" <?php echo $cuentaPropia ? 'readonly' : ''; ?>>
 						</div>
 					</div>
 					<div class="col-12 col-md-4">
 						<div class="form-group">
 							<label for="usuario_apellido" class="bmd-label-floating">Apellidos</label>
-							<input type="text" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{1,35}" class="form-control" name="<?php echo $editando ? 'usuario_apellido_up' : 'usuario_apellido_reg'; ?>" id="usuario_apellido" maxlength="35" value="<?php echo $editando ? htmlspecialchars($campos['usu_apellido'], ENT_QUOTES, 'UTF-8') : ''; ?>" <?php echo $cuentaPropia ? 'readonly' : ''; ?>>
+							<input type="text" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{2,50}" class="form-control" name="<?php echo $editando ? 'usuario_apellido_up' : 'usuario_apellido_reg'; ?>" id="usuario_apellido" maxlength="50" value="<?php echo $editando ? htmlspecialchars($campos['usu_apellido'], ENT_QUOTES, 'UTF-8') : ''; ?>" <?php echo $cuentaPropia ? 'readonly' : ''; ?>>
 						</div>
 					</div>
 					<div class="col-12 col-md-6">
 						<div class="form-group">
 							<label for="usuario_telefono" class="bmd-label-floating">Teléfono</label>
-							<input type="text" pattern="[0-9()+]{8,20}" class="form-control" name="<?php echo $editando ? 'usuario_telefono_up' : 'usuario_telefono_reg'; ?>" id="usuario_telefono" maxlength="20" value="<?php echo $editando ? htmlspecialchars($campos['usu_telefono'], ENT_QUOTES, 'UTF-8') : ''; ?>">
+							<input type="text" pattern="[0-9()+ -]{6,50}" class="form-control" name="<?php echo $editando ? 'usuario_telefono_up' : 'usuario_telefono_reg'; ?>" id="usuario_telefono" maxlength="50" inputmode="tel" value="<?php echo $editando ? htmlspecialchars($campos['usu_telefono'], ENT_QUOTES, 'UTF-8') : ''; ?>">
 						</div>
 					</div>
 				</div>
@@ -97,13 +97,13 @@ $busqueda = $_SESSION['busqueda_usuario'] ?? "";
 					<div class="col-12 col-md-6">
 						<div class="form-group">
 							<label for="usuario_usuario" class="bmd-label-floating">Nombre de usuario</label>
-							<input type="text" pattern="[a-zA-Z0-9]{1,35}" class="form-control" name="<?php echo $editando ? 'usuario_usuario_up' : 'usuario_usuario_reg'; ?>" id="usuario_usuario" maxlength="35" value="<?php echo $editando ? htmlspecialchars($campos['usu_nick'], ENT_QUOTES, 'UTF-8') : ''; ?>" <?php echo $cuentaPropia ? 'readonly' : ''; ?>>
+							<input type="text" pattern="[a-zA-Z0-9]{3,20}" class="form-control" name="<?php echo $editando ? 'usuario_usuario_up' : 'usuario_usuario_reg'; ?>" id="usuario_usuario" maxlength="20" value="<?php echo $editando ? htmlspecialchars($campos['usu_nick'], ENT_QUOTES, 'UTF-8') : ''; ?>" <?php echo $cuentaPropia ? 'readonly' : ''; ?>>
 						</div>
 					</div>
 					<div class="col-12 col-md-6">
 						<div class="form-group">
 							<label for="usuario_email" class="bmd-label-floating">Email</label>
-							<input type="email" class="form-control" name="<?php echo $editando ? 'usuario_email_up' : 'usuario_email_reg'; ?>" id="usuario_email" maxlength="70" value="<?php echo $editando ? htmlspecialchars($campos['usu_email'], ENT_QUOTES, 'UTF-8') : ''; ?>">
+							<input type="email" class="form-control" name="<?php echo $editando ? 'usuario_email_up' : 'usuario_email_reg'; ?>" id="usuario_email" maxlength="50" value="<?php echo $editando ? htmlspecialchars($campos['usu_email'], ENT_QUOTES, 'UTF-8') : ''; ?>">
 						</div>
 					</div>
                     <?php if ($editando): ?>
@@ -141,13 +141,13 @@ $busqueda = $_SESSION['busqueda_usuario'] ?? "";
 					<div class="col-12 col-md-6">
 						<div class="form-group">
 							<label for="usuario_clave_1" class="bmd-label-floating"><?php echo $editando ? 'Nueva contraseña' : 'Contraseña'; ?></label>
-							<input type="password" class="form-control" name="<?php echo $editando ? 'usuario_clave_nueva_1' : 'usuario_clave_1_reg'; ?>" id="usuario_clave_1" pattern="[a-zA-Z0-9$@._-]{7,18}" maxlength="18" <?php echo $editando ? '' : 'required=""'; ?>>
+							<input type="password" class="form-control" name="<?php echo $editando ? 'usuario_clave_nueva_1' : 'usuario_clave_1_reg'; ?>" id="usuario_clave_1" pattern="[a-zA-Z0-9$@._-]{7,18}" maxlength="18">
 						</div>
 					</div>
 					<div class="col-12 col-md-6">
 						<div class="form-group">
 							<label for="usuario_clave_2" class="bmd-label-floating">Repetir contraseña</label>
-							<input type="password" class="form-control" name="<?php echo $editando ? 'usuario_clave_nueva_2' : 'usuario_clave_2_reg'; ?>" id="usuario_clave_2" pattern="[a-zA-Z0-9$@._-]{7,18}" maxlength="18" <?php echo $editando ? '' : 'required=""'; ?>>
+							<input type="password" class="form-control" name="<?php echo $editando ? 'usuario_clave_nueva_2' : 'usuario_clave_2_reg'; ?>" id="usuario_clave_2" pattern="[a-zA-Z0-9$@._-]{7,18}" maxlength="18">
 						</div>
 					</div>
 				</div>
@@ -162,13 +162,13 @@ $busqueda = $_SESSION['busqueda_usuario'] ?? "";
 						<div class="col-12 col-md-6">
 							<div class="form-group">
 								<label for="usuario_admin" class="bmd-label-floating">Nombre de usuario</label>
-								<input type="text" pattern="[a-zA-Z0-9]{1,35}" class="form-control" name="usuario_admin" id="usuario_admin" maxlength="35" required="">
+								<input type="text" pattern="[a-zA-Z0-9]{3,20}" class="form-control" name="usuario_admin" id="usuario_admin" maxlength="20">
 							</div>
 						</div>
 						<div class="col-12 col-md-6">
 							<div class="form-group">
 								<label for="clave_admin" class="bmd-label-floating">Contraseña</label>
-								<input type="password" class="form-control" name="clave_admin" id="clave_admin" pattern="[a-zA-Z0-9$@.-]{7,100}" maxlength="100" required="">
+								<input type="password" class="form-control" name="clave_admin" id="clave_admin" pattern="[a-zA-Z0-9$@._-]{7,100}" maxlength="100">
 							</div>
 						</div>
 					</div>

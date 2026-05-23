@@ -171,19 +171,54 @@ class vehiculoControlador extends vehiculoModelo
             exit();
         }
 
-        $cliente = mainModel::limpiar_string($_POST['cliente_reg']);
-        $modelo  = mainModel::limpiar_string($_POST['modelo_reg']);
-        $color   = mainModel::limpiar_string($_POST['color_reg']);
-        $placa   = mainModel::limpiar_string($_POST['placa_reg']);
-        $anho    = mainModel::limpiar_string($_POST['anho_reg']);
-        $serie   = mainModel::limpiar_string($_POST['serie_reg']);
-        $estado  = mainModel::limpiar_string($_POST['estado_reg']);
+        $cliente = mainModel::limpiar_string($_POST['cliente_reg'] ?? "");
+        $modelo  = mainModel::limpiar_string($_POST['modelo_reg'] ?? "");
+        $color   = mainModel::limpiar_string($_POST['color_reg'] ?? "");
+        $placa   = strtoupper(mainModel::limpiar_string($_POST['placa_reg'] ?? ""));
+        $anho    = mainModel::limpiar_string($_POST['anho_reg'] ?? "");
+        $serie   = strtoupper(mainModel::limpiar_string($_POST['serie_reg'] ?? ""));
+        $estado  = mainModel::limpiar_string($_POST['estado_reg'] ?? "");
 
         if ($cliente == "" || $modelo == "" || $color == "" || $placa == "") {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Error",
                 "Texto" => "Debe completar los campos obligatorios",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if (
+            mainModel::verificarDatos("[0-9]{1,10}", $cliente) ||
+            mainModel::verificarDatos("[0-9]{1,10}", $modelo) ||
+            mainModel::verificarDatos("[a-zA-Z0-9-]{3,20}", $placa) ||
+            mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{3,45}", $color)
+        ) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Uno de los campos no tiene un formato valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($anho != "" && mainModel::verificarDatos("[0-9]{4}", $anho)) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El año debe tener 4 digitos",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($serie != "" && mainModel::verificarDatos("[a-zA-Z0-9-]{3,50}", $serie)) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El numero de serie no tiene un formato valido",
                 "Tipo" => "error"
             ]);
             exit();
@@ -279,13 +314,13 @@ class vehiculoControlador extends vehiculoModelo
 
         $datos = [
             "id_vehiculo" => $id,
-            "id_cliente" => mainModel::limpiar_string($_POST['cliente_up']),
-            "id_modeloauto" => mainModel::limpiar_string($_POST['modelo_up']),
-            "color" => mainModel::limpiar_string($_POST['color_up']),
-            "placa" => mainModel::limpiar_string($_POST['placa_up']),
-            "anho" => mainModel::limpiar_string($_POST['anho_up']),
-            "nro_serie" => mainModel::limpiar_string($_POST['serie_up']),
-            "estado" => mainModel::limpiar_string($_POST['estado_up'])
+            "id_cliente" => mainModel::limpiar_string($_POST['cliente_up'] ?? ""),
+            "id_modeloauto" => mainModel::limpiar_string($_POST['modelo_up'] ?? ""),
+            "color" => mainModel::limpiar_string($_POST['color_up'] ?? ""),
+            "placa" => strtoupper(mainModel::limpiar_string($_POST['placa_up'] ?? "")),
+            "anho" => mainModel::limpiar_string($_POST['anho_up'] ?? ""),
+            "nro_serie" => strtoupper(mainModel::limpiar_string($_POST['serie_up'] ?? "")),
+            "estado" => mainModel::limpiar_string($_POST['estado_up'] ?? "")
         ];
 
         $check_vehiculo = mainModel::ejecutar_consulta_simple(
@@ -307,6 +342,41 @@ class vehiculoControlador extends vehiculoModelo
                 "Alerta" => "simple",
                 "Titulo" => "Error",
                 "Texto" => "Debe completar los campos obligatorios",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if (
+            mainModel::verificarDatos("[0-9]{1,10}", $datos['id_cliente']) ||
+            mainModel::verificarDatos("[0-9]{1,10}", $datos['id_modeloauto']) ||
+            mainModel::verificarDatos("[a-zA-Z0-9-]{3,20}", $datos['placa']) ||
+            mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{3,45}", $datos['color'])
+        ) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Uno de los campos no tiene un formato valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($datos['anho'] != "" && mainModel::verificarDatos("[0-9]{4}", $datos['anho'])) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El año debe tener 4 digitos",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($datos['nro_serie'] != "" && mainModel::verificarDatos("[a-zA-Z0-9-]{3,50}", $datos['nro_serie'])) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El numero de serie no tiene un formato valido",
                 "Tipo" => "error"
             ]);
             exit();

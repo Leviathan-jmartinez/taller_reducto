@@ -41,7 +41,8 @@ $busqueda = $_SESSION['busqueda_empleado'] ?? "";
     <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/empleadoAjax.php"
         method="POST"
-        data-form="<?php echo $editando ? 'update' : 'save'; ?>">
+        data-form="<?php echo $editando ? 'update' : 'save'; ?>"
+        autocomplete="off">
 
         <?php if ($editando) { ?>
             <input type="hidden" name="empleado_id_up" value="<?php echo $id; ?>">
@@ -100,7 +101,10 @@ foreach ($sucursales as $s) { ?>
                     <input type="text" class="form-control"
                         placeholder="Cédula"
                         name="<?php echo $editando ? 'cedula_up' : 'cedula_reg'; ?>"
-                        value="<?php echo $editando ? $campos['nro_cedula'] : ''; ?>">
+                        value="<?php echo $editando ? $campos['nro_cedula'] : ''; ?>"
+                        pattern="[0-9]{5,10}"
+                        maxlength="10"
+                        inputmode="numeric">
                 </div>
             </div>
 
@@ -110,7 +114,9 @@ foreach ($sucursales as $s) { ?>
                     <input type="text" class="form-control"
                         placeholder="Nombre"
                         name="<?php echo $editando ? 'nombre_up' : 'nombre_reg'; ?>"
-                        value="<?php echo $editando ? $campos['nombre'] : ''; ?>">
+                        value="<?php echo $editando ? $campos['nombre'] : ''; ?>"
+                        pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{2,70}"
+                        maxlength="70">
                 </div>
             </div>
 
@@ -120,7 +126,9 @@ foreach ($sucursales as $s) { ?>
                     <input type="text" class="form-control"
                         placeholder="Apellido"
                         name="<?php echo $editando ? 'apellido_up' : 'apellido_reg'; ?>"
-                        value="<?php echo $editando ? $campos['apellido'] : ''; ?>">
+                        value="<?php echo $editando ? $campos['apellido'] : ''; ?>"
+                        pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{2,70}"
+                        maxlength="70">
                 </div>
             </div>
 
@@ -130,7 +138,10 @@ foreach ($sucursales as $s) { ?>
                     <input type="text" class="form-control"
                         placeholder="Celular"
                         name="<?php echo $editando ? 'celular_up' : 'celular_reg'; ?>"
-                        value="<?php echo $editando ? $campos['celular'] : ''; ?>">
+                        value="<?php echo $editando ? $campos['celular'] : ''; ?>"
+                        pattern="[0-9()+ -]{6,30}"
+                        maxlength="30"
+                        inputmode="tel">
                 </div>
             </div>
 
@@ -140,7 +151,9 @@ foreach ($sucursales as $s) { ?>
                     <input type="text" class="form-control"
                         placeholder="Dirección"
                         name="<?php echo $editando ? 'direccion_up' : 'direccion_reg'; ?>"
-                        value="<?php echo $editando ? $campos['direccion'] : ''; ?>">
+                        value="<?php echo $editando ? $campos['direccion'] : ''; ?>"
+                        pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,#°\/-]{3,120}"
+                        maxlength="120">
                 </div>
             </div>
 

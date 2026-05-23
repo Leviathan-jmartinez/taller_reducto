@@ -41,13 +41,14 @@ $empresas = $ins->listar_empresas_controlador();
     <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/sucursalAjax.php"
         method="POST"
-        data-form="<?php echo $editando ? 'update' : 'save'; ?>">
+        data-form="<?php echo $editando ? 'update' : 'save'; ?>"
+        autocomplete="off">
 
         <?php if ($editando) { ?>
             <input type="hidden" name="sucursal_id_up" value="<?php echo $id; ?>">
         <?php
-} ?>
-        <legend><i class="fas fa-info-circle"></i> &nbsp; Información básica</legend>   
+        } ?>
+        <legend><i class="fas fa-info-circle"></i> &nbsp; Información básica</legend>
         <div class="row">
 
             <div class="col-md-4">
@@ -55,43 +56,61 @@ $empresas = $ins->listar_empresas_controlador();
                     name="<?php echo $editando ? 'empresa_up' : 'empresa_reg'; ?>">
                     <option value="">Seleccione empresa</option>
                     <?php
-foreach ($empresas as $e) { ?>
+                    foreach ($empresas as $e) { ?>
                         <option value="<?php echo $e['id_empresa']; ?>"
                             <?php if ($editando && $campos['id_empresa'] == $e['id_empresa']) echo "selected"; ?>>
                             <?php echo $e['razon_social']; ?>
                         </option>
                     <?php
-} ?>
+                    } ?>
                 </select>
             </div>
 
             <div class="col-md-4">
-                <input class="form-control"
+                <input type="text"
+                    class="form-control"
                     name="<?php echo $editando ? 'sucursal_descri_up' : 'sucursal_descri_reg'; ?>"
                     value="<?php echo $editando ? $campos['suc_descri'] : ''; ?>"
+                    pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,#°-]{3,80}"
+                    maxlength="80"
+                    title="Use de 3 a 80 caracteres: letras, numeros, espacios, punto, coma, numeral, guion o grado"
                     placeholder="Descripción">
             </div>
 
             <div class="col-md-4">
-                <input class="form-control"
+                <input type="text"
+                    class="form-control"
                     name="<?php echo $editando ? 'nro_establecimiento_up' : 'nro_establecimiento_reg'; ?>"
                     value="<?php echo $editando ? $campos['nro_establecimiento'] : ''; ?>"
+                    pattern="[0-9]{1,3}"
+                    maxlength="3"
+                    inputmode="numeric"
+                    title="Ingrese de 1 a 3 digitos"
                     placeholder="Nro Establecimiento">
             </div>
 
             <div class="w-100 mt-2"></div>
 
             <div class="col-md-6">
-                <input class="form-control"
+                <input type="text"
+                    class="form-control"
                     name="<?php echo $editando ? 'sucursal_direccion_up' : 'sucursal_direccion_reg'; ?>"
                     value="<?php echo $editando ? $campos['suc_direccion'] : ''; ?>"
+                    pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,#°\/-]{3,120}"
+                    maxlength="120"
+                    title="Use de 3 a 120 caracteres validos para direccion"
                     placeholder="Dirección">
             </div>
 
             <div class="col-md-3">
-                <input class="form-control"
+                <input type="text"
+                    class="form-control"
                     name="<?php echo $editando ? 'sucursal_telefono_up' : 'sucursal_telefono_reg'; ?>"
                     value="<?php echo $editando ? $campos['suc_telefono'] : ''; ?>"
+                    pattern="[0-9()+ -]{6,20}"
+                    maxlength="20"
+                    inputmode="tel"
+                    title="Use de 6 a 20 caracteres: numeros, espacios, parentesis, mas o guion"
                     placeholder="Teléfono">
             </div>
 
@@ -116,8 +135,12 @@ foreach ($empresas as $e) { ?>
             <a href="<?php echo SERVERURL; ?>sucursal-nuevo/" class="btn btn-secondary">
                 Cancelar
             </a>
+        <?php } else { ?>
+            <button type="reset" class="btn btn-secondary">
+                Cancelar
+            </button>
         <?php
-} ?>
+        } ?>
 
     </form>
 </div>
@@ -160,7 +183,7 @@ foreach ($empresas as $e) { ?>
                         </button>
                     </form>
                 <?php
-} ?>
+                } ?>
             </div>
         </div>
 
@@ -171,7 +194,7 @@ foreach ($empresas as $e) { ?>
 <!-- LISTA -->
 <div class="container-fluid mt-4">
     <?php
-$pag_actual = 1;
+    $pag_actual = 1;
     if (isset($pagina[1]) && is_numeric($pagina[1])) {
         $pag_actual = (int)$pagina[1];
     }

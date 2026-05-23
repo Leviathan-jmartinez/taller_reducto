@@ -26,19 +26,79 @@ class proveedorControlador extends proveedorModelo
             exit();
         }
 
-        $razon   = mainModel::limpiar_string($_POST['razon_social_reg']);
-        $ruc     = mainModel::limpiar_string($_POST['ruc_reg']);
-        $telefono = mainModel::limpiar_string($_POST['telefono_reg']);
-        $direccion = mainModel::limpiar_string($_POST['direccion_reg']);
-        $correo  = mainModel::limpiar_string($_POST['correo_reg']);
-        $ciudad  = mainModel::limpiar_string($_POST['ciudad_reg']);
-        $estado  = mainModel::limpiar_string($_POST['estado_reg']);
+        $razon   = mainModel::limpiar_string($_POST['razon_social_reg'] ?? "");
+        $ruc     = mainModel::limpiar_string($_POST['ruc_reg'] ?? "");
+        $telefono = mainModel::limpiar_string($_POST['telefono_reg'] ?? "");
+        $direccion = mainModel::limpiar_string($_POST['direccion_reg'] ?? "");
+        $correo  = mainModel::limpiar_string($_POST['correo_reg'] ?? "");
+        $ciudad  = mainModel::limpiar_string($_POST['ciudad_reg'] ?? "");
+        $estado  = mainModel::limpiar_string($_POST['estado_reg'] ?? "");
 
         if ($razon == "" || $ruc == "" || $ciudad == "" || $estado == "") {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Error",
                 "Texto" => "Debe completar los campos obligatorios",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if (mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,&-]{3,70}", $razon)) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "La razon social no tiene un formato valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if (mainModel::verificarDatos("[0-9-]{6,15}", $ruc)) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El RUC no tiene un formato valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($telefono != "" && mainModel::verificarDatos("[0-9()+ -]{6,30}", $telefono)) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El telefono no tiene un formato valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($direccion != "" && mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,#°\/-]{3,120}", $direccion)) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "La direccion no tiene un formato valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if (mainModel::verificarDatos("[0-9]{1,10}", $ciudad)) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "La ciudad seleccionada no corresponde",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($estado != "0" && $estado != "1") {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El estado seleccionado no es valido",
                 "Tipo" => "error"
             ]);
             exit();
@@ -351,13 +411,13 @@ class proveedorControlador extends proveedorModelo
         }
 
         /* === recibir datos === */
-        $razon     = mainModel::limpiar_string($_POST['razon_social_up']);
-        $ruc       = mainModel::limpiar_string($_POST['ruc_up']);
-        $telefono  = mainModel::limpiar_string($_POST['telefono_up']);
-        $correo    = mainModel::limpiar_string($_POST['correo_up']);
-        $direccion = mainModel::limpiar_string($_POST['direccion_up']);
-        $ciudad    = mainModel::limpiar_string($_POST['ciudad_up']);
-        $estado    = mainModel::limpiar_string($_POST['estado_up']);
+        $razon     = mainModel::limpiar_string($_POST['razon_social_up'] ?? "");
+        $ruc       = mainModel::limpiar_string($_POST['ruc_up'] ?? "");
+        $telefono  = mainModel::limpiar_string($_POST['telefono_up'] ?? "");
+        $correo    = mainModel::limpiar_string($_POST['correo_up'] ?? "");
+        $direccion = mainModel::limpiar_string($_POST['direccion_up'] ?? "");
+        $ciudad    = mainModel::limpiar_string($_POST['ciudad_up'] ?? "");
+        $estado    = mainModel::limpiar_string($_POST['estado_up'] ?? "");
 
         /* === campos obligatorios === */
         if ($razon == "" || $ruc == "" || $ciudad == "" || $estado == "") {
@@ -365,6 +425,56 @@ class proveedorControlador extends proveedorModelo
                 "Alerta" => "simple",
                 "Titulo" => "Error",
                 "Texto" => "Debe completar los campos obligatorios",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if (mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,&-]{3,70}", $razon)) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "La razon social no tiene un formato valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if (mainModel::verificarDatos("[0-9-]{6,15}", $ruc)) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El RUC no tiene un formato valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($telefono != "" && mainModel::verificarDatos("[0-9()+ -]{6,30}", $telefono)) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El telefono no tiene un formato valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($direccion != "" && mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,#°\/-]{3,120}", $direccion)) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "La direccion no tiene un formato valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if (mainModel::verificarDatos("[0-9]{1,10}", $ciudad)) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "La ciudad seleccionada no corresponde",
                 "Tipo" => "error"
             ]);
             exit();

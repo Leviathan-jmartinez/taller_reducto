@@ -35,20 +35,87 @@ class sucursalControlador extends sucursalModelo
             exit();
         }
 
-        $empresa   = mainModel::limpiar_string($_POST['empresa_reg']);
-        $descri    = mainModel::limpiar_string($_POST['sucursal_descri_reg']);
-        $direccion = mainModel::limpiar_string($_POST['sucursal_direccion_reg']);
-        $telefono  = mainModel::limpiar_string($_POST['sucursal_telefono_reg']);
-        $nro_est   = mainModel::limpiar_string($_POST['nro_establecimiento_reg']);
-        $estado    = mainModel::limpiar_string($_POST['estado_reg']);
+        $empresa   = mainModel::limpiar_string($_POST['empresa_reg'] ?? "");
+        $descri    = mainModel::limpiar_string($_POST['sucursal_descri_reg'] ?? "");
+        $direccion = mainModel::limpiar_string($_POST['sucursal_direccion_reg'] ?? "");
+        $telefono  = mainModel::limpiar_string($_POST['sucursal_telefono_reg'] ?? "");
+        $nro_est   = mainModel::limpiar_string($_POST['nro_establecimiento_reg'] ?? "");
+        $estado    = mainModel::limpiar_string($_POST['estado_reg'] ?? "");
 
-        if ($empresa == "" || $descri == "" || $estado == "") {
-            echo json_encode([
+        if ($empresa == "" || $descri == "" || $nro_est == "" || $estado == "") {
+            $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Error",
                 "Texto" => "Campos obligatorios incompletos",
                 "Tipo" => "error"
-            ]);
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if (mainModel::verificarDatos("[0-9]{1,10}", $empresa)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Debe seleccionar una empresa valida",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if (mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,#°-]{3,80}", $descri)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "La descripcion de la sucursal no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($direccion != "" && mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,#°\/-]{3,120}", $direccion)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "La direccion no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($telefono != "" && mainModel::verificarDatos("[0-9()+ -]{6,20}", $telefono)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El telefono no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if (mainModel::verificarDatos("[0-9]{1,3}", $nro_est)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El numero de establecimiento debe contener de 1 a 3 digitos",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($estado != "0" && $estado != "1") {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Estado invalido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
             exit();
         }
 
@@ -247,14 +314,98 @@ class sucursalControlador extends sucursalModelo
             exit();
         }
 
+        $empresa   = mainModel::limpiar_string($_POST['empresa_up'] ?? "");
+        $descri    = mainModel::limpiar_string($_POST['sucursal_descri_up'] ?? "");
+        $direccion = mainModel::limpiar_string($_POST['sucursal_direccion_up'] ?? "");
+        $telefono  = mainModel::limpiar_string($_POST['sucursal_telefono_up'] ?? "");
+        $nro_est   = mainModel::limpiar_string($_POST['nro_establecimiento_up'] ?? "");
+        $estado    = mainModel::limpiar_string($_POST['estado_up'] ?? "");
+
+        if ($empresa == "" || $descri == "" || $nro_est == "" || $estado == "") {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Campos obligatorios incompletos",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if (mainModel::verificarDatos("[0-9]{1,10}", $empresa)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Debe seleccionar una empresa valida",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if (mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,#°-]{3,80}", $descri)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "La descripcion de la sucursal no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($direccion != "" && mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,#°\/-]{3,120}", $direccion)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "La direccion no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($telefono != "" && mainModel::verificarDatos("[0-9()+ -]{6,20}", $telefono)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El telefono no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if (mainModel::verificarDatos("[0-9]{1,3}", $nro_est)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El numero de establecimiento debe contener de 1 a 3 digitos",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($estado != "0" && $estado != "1") {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Estado invalido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
         $datos = [
             "id_sucursal" => $id,
-            "id_empresa" => mainModel::limpiar_string($_POST['empresa_up']),
-            "suc_descri" => mainModel::limpiar_string($_POST['sucursal_descri_up']),
-            "suc_direccion" => mainModel::limpiar_string($_POST['sucursal_direccion_up']),
-            "suc_telefono" => mainModel::limpiar_string($_POST['sucursal_telefono_up']),
-            "nro_establecimiento" => mainModel::limpiar_string($_POST['nro_establecimiento_up']),
-            "estado" => mainModel::limpiar_string($_POST['estado_up'])
+            "id_empresa" => $empresa,
+            "suc_descri" => $descri,
+            "suc_direccion" => $direccion,
+            "suc_telefono" => $telefono,
+            "nro_establecimiento" => $nro_est,
+            "estado" => $estado
         ];
 
         sucursalModelo::actualizar_sucursal_modelo($datos);

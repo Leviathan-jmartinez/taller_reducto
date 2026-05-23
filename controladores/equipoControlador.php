@@ -38,15 +38,29 @@ class equipoControlador extends equipoModelo
             exit();
         }
 
-        $sucursal    = mainModel::limpiar_string($_POST['sucursal']);
-        $nombre      = mainModel::limpiar_string($_POST['nombre']);
-        $descripcion = mainModel::limpiar_string($_POST['descripcion']);
+        $sucursal    = mainModel::limpiar_string($_POST['sucursal'] ?? "");
+        $nombre      = mainModel::limpiar_string($_POST['nombre'] ?? "");
+        $descripcion = mainModel::limpiar_string($_POST['descripcion'] ?? "");
 
-        if ($sucursal == "" || $nombre == "") {
+        if ($sucursal == "" || $nombre == "" || $descripcion == "") {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Error",
                 "Texto" => "Debe completar los campos obligatorios",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if (
+            mainModel::verificarDatos("[0-9]{1,10}", $sucursal) ||
+            mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 ._-]{3,80}", $nombre) ||
+            mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,#\/_-]{3,100}", $descripcion)
+        ) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Uno de los campos no tiene un formato valido",
                 "Tipo" => "error"
             ]);
             exit();
@@ -109,15 +123,30 @@ class equipoControlador extends equipoModelo
 
         $id = mainModel::decryption($_POST['equipo_id_up'] ?? '');
         $id = mainModel::limpiar_string($id);
-        $sucursal = mainModel::limpiar_string($_POST['sucursal']);
-        $nombre = mainModel::limpiar_string($_POST['nombre']);
-        $descripcion = mainModel::limpiar_string($_POST['descripcion']);
+        $sucursal = mainModel::limpiar_string($_POST['sucursal'] ?? "");
+        $nombre = mainModel::limpiar_string($_POST['nombre'] ?? "");
+        $descripcion = mainModel::limpiar_string($_POST['descripcion'] ?? "");
 
-        if ($id == "" || $sucursal == "" || $nombre == "") {
+        if ($id == "" || $sucursal == "" || $nombre == "" || $descripcion == "") {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Error",
                 "Texto" => "Debe completar los campos obligatorios",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if (
+            mainModel::verificarDatos("[0-9]{1,10}", $id) ||
+            mainModel::verificarDatos("[0-9]{1,10}", $sucursal) ||
+            mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 ._-]{3,80}", $nombre) ||
+            mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,#\/_-]{3,100}", $descripcion)
+        ) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Uno de los campos no tiene un formato valido",
                 "Tipo" => "error"
             ]);
             exit();
@@ -191,10 +220,10 @@ class equipoControlador extends equipoModelo
             exit();
         }
 
-        $id_equipo = mainModel::limpiar_string($_POST['id_equipo']);
+        $id_equipo = mainModel::limpiar_string($_POST['id_equipo'] ?? "");
         $empleados = $_POST['empleados'] ?? [];
 
-        if ($id_equipo == "" || empty($empleados)) {
+        if ($id_equipo == "" || mainModel::verificarDatos("[0-9]{1,10}", $id_equipo) || empty($empleados)) {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Error",
@@ -217,6 +246,16 @@ class equipoControlador extends equipoModelo
 
         foreach ($empleados as $id_empleado) {
             $id_empleado = mainModel::limpiar_string($id_empleado);
+
+            if (mainModel::verificarDatos("[0-9]{1,10}", $id_empleado)) {
+                echo json_encode([
+                    "Alerta" => "simple",
+                    "Titulo" => "Error",
+                    "Texto" => "Uno de los empleados seleccionados no es valido",
+                    "Tipo" => "error"
+                ]);
+                exit();
+            }
 
             $check_empleado = mainModel::ejecutar_consulta_simple(
                 "SELECT idempleados FROM empleados WHERE idempleados='$id_empleado' AND id_sucursal='{$equipo['id_sucursal']}' AND estado=1"

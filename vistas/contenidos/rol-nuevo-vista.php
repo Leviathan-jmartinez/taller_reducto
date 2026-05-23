@@ -63,7 +63,8 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
     <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/rolesAjax.php"
         method="POST"
-        data-form="<?php echo $editando ? 'update' : 'save'; ?>">
+        data-form="<?php echo $editando ? 'update' : 'save'; ?>"
+        autocomplete="off">
 
         <?php if ($editando) { ?>
             <input type="hidden" name="rol_id_up" value="<?php echo $id; ?>">
@@ -77,7 +78,9 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
                     <input type="text" class="form-control"
                         placeholder="Nombre del rol"
                         name="<?php echo $editando ? 'rol_nombre_up' : 'rol_nombre_reg'; ?>"
-                        value="<?php echo $editando ? $campos['nombre'] : ''; ?>">
+                        value="<?php echo $editando ? $campos['nombre'] : ''; ?>"
+                        pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 _.-]{3,50}"
+                        maxlength="50">
                 </div>
             </div>
 
@@ -86,7 +89,9 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
                     <input type="text" class="form-control"
                         placeholder="Descripción del rol"
                         name="<?php echo $editando ? 'rol_descripcion_up' : 'rol_descripcion_reg'; ?>"
-                        value="<?php echo $editando ? $campos['descripcion'] : ''; ?>">
+                        value="<?php echo $editando ? $campos['descripcion'] : ''; ?>"
+                        pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,#\/_-]{3,150}"
+                        maxlength="150">
                 </div>
             </div>
 

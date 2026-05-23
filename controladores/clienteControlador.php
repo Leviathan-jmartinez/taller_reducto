@@ -20,12 +20,12 @@ class clienteControlador extends clienteModelo
             exit();
         }
 
-        $doc = mainModel::limpiar_string($_POST['cliente_doc_reg']);
-        $nombre = mainModel::limpiar_string($_POST['cliente_nombre_reg']);
-        $apellido = mainModel::limpiar_string($_POST['cliente_apellido_reg']);
-        $telefono = mainModel::limpiar_string($_POST['cliente_telefono_reg']);
-        $email = mainModel::limpiar_string($_POST['cliente_email_reg']);
-        $direccion = mainModel::limpiar_string($_POST['cliente_direccion_reg']);
+        $doc = mainModel::limpiar_string($_POST['cliente_doc_reg'] ?? "");
+        $nombre = mainModel::limpiar_string($_POST['cliente_nombre_reg'] ?? "");
+        $apellido = mainModel::limpiar_string($_POST['cliente_apellido_reg'] ?? "");
+        $telefono = mainModel::limpiar_string($_POST['cliente_telefono_reg'] ?? "");
+        $email = mainModel::limpiar_string($_POST['cliente_email_reg'] ?? "");
+        $direccion = mainModel::limpiar_string($_POST['cliente_direccion_reg'] ?? "");
 
         $ciudad = isset($_POST['ciudad_reg']) ? (int) $_POST['ciudad_reg'] : 0;
 
@@ -36,11 +36,176 @@ class clienteControlador extends clienteModelo
 
         $estado = "1";
 
-        if ($doc == "" || $nombre == "" || $direccion == "" || $ciudad <= 0) {
+        if ($doc == "" || $nombre == "" || $ciudad <= 0 || $tipo_documento == "" || ($tipo_documento != "RUC" && $apellido == "")) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
                 "Texto" => "Debe completar los campos obligatorios",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($tipo_documento != "CI" && $tipo_documento != "RUC" && $tipo_documento != "PASAPORTE" && $tipo_documento != "CC" && $tipo_documento != "CD" && $tipo_documento != "OF") {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El tipo de documento seleccionado no corresponde",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($tipo_documento == "CI" && mainModel::verificarDatos("[0-9]{5,10}", $doc)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "La CI no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($tipo_documento == "RUC" && mainModel::verificarDatos("[0-9]{6,12}", $doc)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El RUC debe cargarse sin digito verificador y con 6 a 12 digitos",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($tipo_documento == "PASAPORTE" && mainModel::verificarDatos("[a-zA-Z0-9]{3,20}", $doc)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El pasaporte no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if (($tipo_documento == "CC" || $tipo_documento == "CD" || $tipo_documento == "OF") && mainModel::verificarDatos("[a-zA-Z0-9-]{3,20}", $doc)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El documento no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($tipo_documento == "RUC" && $dv == "") {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "Debe ingresar el digito verificador para RUC",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($dv != "" && mainModel::verificarDatos("[0-9]{1}", $dv)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El digito verificador no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($tipo_documento == "RUC" && mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,&-]{2,30}", $nombre)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "La razon social no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($tipo_documento != "RUC" && mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{2,30}", $nombre)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El nombre no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($apellido != "" && mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{2,30}", $apellido)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El apellido no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($telefono != "" && mainModel::verificarDatos("[0-9()+ -]{6,15}", $telefono)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El telefono no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($email != "" && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El email no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if (strlen($email) > 50) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El email no puede superar 50 caracteres",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($direccion != "" && mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,#°\/-]{3,50}", $direccion)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "La direccion no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($estado_civil != "" && !in_array($estado_civil, ["Soltero", "Casado", "Viudo", "Divorciado"], true)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El estado civil seleccionado no corresponde",
                 "Tipo" => "error"
             ];
             echo json_encode($alerta);
@@ -57,6 +222,24 @@ class clienteControlador extends clienteModelo
             ];
             echo json_encode($alerta);
             exit();
+        }
+
+        if ($email != "") {
+            $check_email = mainModel::ejecutar_consulta_simple("SELECT email_cliente FROM clientes WHERE email_cliente='$email'");
+            if ($check_email->rowCount() > 0) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrio un error inesperado!",
+                    "Texto" => "El email ya se encuentra registrado",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
+        }
+
+        if ($tipo_documento == "RUC" && $apellido == "") {
+            $apellido = null;
         }
 
         $datos_cliente = [
@@ -353,18 +536,20 @@ class clienteControlador extends clienteModelo
         $id = mainModel::decryption($_POST['cliente_id_up']);
         $id = mainModel::limpiar_string($id);
 
-        $doc = mainModel::limpiar_string($_POST['cliente_doc_up']);
-        $nombre = mainModel::limpiar_string($_POST['cliente_nombre_up']);
-        $apellido = mainModel::limpiar_string($_POST['cliente_apellido_up']);
-        $telefono = mainModel::limpiar_string($_POST['cliente_telefono_up']);
-        $email = mainModel::limpiar_string($_POST['cliente_email_up']);
-        $direccion = mainModel::limpiar_string($_POST['cliente_direccion_up']);
+        $doc = mainModel::limpiar_string($_POST['cliente_doc_up'] ?? "");
+        $nombre = mainModel::limpiar_string($_POST['cliente_nombre_up'] ?? "");
+        $apellido = mainModel::limpiar_string($_POST['cliente_apellido_up'] ?? "");
+        $telefono = mainModel::limpiar_string($_POST['cliente_telefono_up'] ?? "");
+        $email = mainModel::limpiar_string($_POST['cliente_email_up'] ?? "");
+        $direccion = mainModel::limpiar_string($_POST['cliente_direccion_up'] ?? "");
         $ciudad = isset($_POST['ciudad_up']) ? (int) $_POST['ciudad_up'] : 0;
 
         $tipo_documento = isset($_POST['tipo_documento_up']) ? mainModel::limpiar_string($_POST['tipo_documento_up']) : "CI";
         $dv = isset($_POST['cliente_dv_up']) ? mainModel::limpiar_string($_POST['cliente_dv_up']) : "";
         $estado_civil = isset($_POST['cliente_estadoC_up']) ? mainModel::limpiar_string($_POST['cliente_estadoC_up']) : "";
-        $estado = isset($_POST['usuario_estado_up']) ? mainModel::limpiar_string($_POST['usuario_estado_up']) : "1";
+        $estado = isset($_POST['cliente_estado_up'])
+            ? mainModel::limpiar_string($_POST['cliente_estado_up'])
+            : (isset($_POST['usuario_estado_up']) ? mainModel::limpiar_string($_POST['usuario_estado_up']) : "1");
 
         /* ===== VALIDAR EXISTENCIA ===== */
         $check = mainModel::ejecutar_consulta_simple("SELECT * FROM clientes WHERE id_cliente='$id'");
@@ -382,7 +567,7 @@ class clienteControlador extends clienteModelo
         $datos_actuales = $check->fetch();
 
         /* ===== VALIDACIONES ===== */
-        if ($doc == "" || $nombre == "" || $direccion == "" || $ciudad == "") {
+        if ($doc == "" || $nombre == "" || $ciudad <= 0 || $tipo_documento == "" || ($tipo_documento != "RUC" && $apellido == "")) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
@@ -393,7 +578,172 @@ class clienteControlador extends clienteModelo
             exit();
         }
 
-        if ($ciudad < 0 || $ciudad == "") {
+        if ($tipo_documento != "CI" && $tipo_documento != "RUC" && $tipo_documento != "PASAPORTE" && $tipo_documento != "CC" && $tipo_documento != "CD" && $tipo_documento != "OF") {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El tipo de documento seleccionado no corresponde",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($tipo_documento == "CI" && mainModel::verificarDatos("[0-9]{5,10}", $doc)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "La CI no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($tipo_documento == "RUC" && mainModel::verificarDatos("[0-9]{6,12}", $doc)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El RUC debe cargarse sin digito verificador y con 6 a 12 digitos",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($tipo_documento == "PASAPORTE" && mainModel::verificarDatos("[a-zA-Z0-9]{3,20}", $doc)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El pasaporte no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if (($tipo_documento == "CC" || $tipo_documento == "CD" || $tipo_documento == "OF") && mainModel::verificarDatos("[a-zA-Z0-9-]{3,20}", $doc)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El documento no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($tipo_documento == "RUC" && $dv == "") {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "Debe ingresar el digito verificador para RUC",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($dv != "" && mainModel::verificarDatos("[0-9]{1}", $dv)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El digito verificador no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($tipo_documento == "RUC" && mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,&-]{2,30}", $nombre)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "La razon social no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($tipo_documento != "RUC" && mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{2,30}", $nombre)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El nombre no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($apellido != "" && mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{2,30}", $apellido)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El apellido no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($telefono != "" && mainModel::verificarDatos("[0-9()+ -]{6,15}", $telefono)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El telefono no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($email != "" && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El email no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if (strlen($email) > 50) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El email no puede superar 50 caracteres",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($direccion != "" && mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,#°\/-]{3,50}", $direccion)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "La direccion no tiene un formato valido",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($estado_civil != "" && !in_array($estado_civil, ["Soltero", "Casado", "Viudo", "Divorciado"], true)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Ocurrio un error inesperado!",
+                "Texto" => "El estado civil seleccionado no corresponde",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if ($ciudad <= 0) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
@@ -422,6 +772,24 @@ class clienteControlador extends clienteModelo
                 echo json_encode($alerta);
                 exit();
             }
+        }
+
+        if ($email != $datos_actuales['email_cliente'] && $email != "") {
+            $check_email = mainModel::ejecutar_consulta_simple("SELECT email_cliente FROM clientes WHERE email_cliente='$email'");
+            if ($check_email->rowCount() > 0) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrio un error inesperado!",
+                    "Texto" => "El email ya se encuentra registrado",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
+        }
+
+        if ($tipo_documento == "RUC" && $apellido == "") {
+            $apellido = null;
         }
 
         /* ===== DATA ===== */

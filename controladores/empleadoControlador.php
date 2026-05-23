@@ -40,14 +40,14 @@ class empleadoControlador extends empleadoModelo
         }
 
         $datos = [
-            "cargo"        => mainModel::limpiar_string($_POST['cargo_reg']),
-            "sucursal"     => mainModel::limpiar_string($_POST['sucursal_reg']),
-            "nombre"       => mainModel::limpiar_string($_POST['nombre_reg']),
-            "apellido"     => mainModel::limpiar_string($_POST['apellido_reg']),
-            "direccion"    => mainModel::limpiar_string($_POST['direccion_reg']),
-            "celular"      => mainModel::limpiar_string($_POST['celular_reg']),
-            "cedula"       => mainModel::limpiar_string($_POST['cedula_reg']),
-            "estado_civil" => mainModel::limpiar_string($_POST['estado_civil_reg']),
+            "cargo"        => mainModel::limpiar_string($_POST['cargo_reg'] ?? ""),
+            "sucursal"     => mainModel::limpiar_string($_POST['sucursal_reg'] ?? ""),
+            "nombre"       => mainModel::limpiar_string($_POST['nombre_reg'] ?? ""),
+            "apellido"     => mainModel::limpiar_string($_POST['apellido_reg'] ?? ""),
+            "direccion"    => mainModel::limpiar_string($_POST['direccion_reg'] ?? ""),
+            "celular"      => mainModel::limpiar_string($_POST['celular_reg'] ?? ""),
+            "cedula"       => mainModel::limpiar_string($_POST['cedula_reg'] ?? ""),
+            "estado_civil" => mainModel::limpiar_string($_POST['estado_civil_reg'] ?? ""),
             "estado"       => 1
         ];
 
@@ -56,6 +56,52 @@ class empleadoControlador extends empleadoModelo
                 "Alerta" => "simple",
                 "Titulo" => "Error",
                 "Texto" => "Campos obligatorios incompletos",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if (
+            mainModel::verificarDatos("[0-9]{1,10}", $datos['cargo']) ||
+            mainModel::verificarDatos("[0-9]{1,10}", $datos['sucursal']) ||
+            mainModel::verificarDatos("[0-9]{5,10}", $datos['cedula']) ||
+            mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{2,70}", $datos['nombre']) ||
+            mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{2,70}", $datos['apellido'])
+        ) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Uno de los campos obligatorios no tiene un formato valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($datos['celular'] != "" && mainModel::verificarDatos("[0-9()+ -]{6,30}", $datos['celular'])) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El celular no tiene un formato valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($datos['direccion'] != "" && mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,#°\/-]{3,120}", $datos['direccion'])) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "La direccion no tiene un formato valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($datos['estado_civil'] != "" && !in_array($datos['estado_civil'], ["Soltero/a", "Casado/a", "Viudo/a", "Divorciado/a"], true)) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El estado civil seleccionado no corresponde",
                 "Tipo" => "error"
             ]);
             exit();
@@ -128,15 +174,15 @@ class empleadoControlador extends empleadoModelo
 
         $datos = [
             "id"           => $id,
-            "cargo"        => mainModel::limpiar_string($_POST['cargo_up']),
-            "sucursal"     => mainModel::limpiar_string($_POST['sucursal_up']),
-            "nombre"       => mainModel::limpiar_string($_POST['nombre_up']),
-            "apellido"     => mainModel::limpiar_string($_POST['apellido_up']),
-            "direccion"    => mainModel::limpiar_string($_POST['direccion_up']),
-            "celular"      => mainModel::limpiar_string($_POST['celular_up']),
-            "cedula"       => mainModel::limpiar_string($_POST['cedula_up']),
-            "estado_civil" => mainModel::limpiar_string($_POST['estado_civil_up']),
-            "estado"       => mainModel::limpiar_string($_POST['estado_up'])
+            "cargo"        => mainModel::limpiar_string($_POST['cargo_up'] ?? ""),
+            "sucursal"     => mainModel::limpiar_string($_POST['sucursal_up'] ?? ""),
+            "nombre"       => mainModel::limpiar_string($_POST['nombre_up'] ?? ""),
+            "apellido"     => mainModel::limpiar_string($_POST['apellido_up'] ?? ""),
+            "direccion"    => mainModel::limpiar_string($_POST['direccion_up'] ?? ""),
+            "celular"      => mainModel::limpiar_string($_POST['celular_up'] ?? ""),
+            "cedula"       => mainModel::limpiar_string($_POST['cedula_up'] ?? ""),
+            "estado_civil" => mainModel::limpiar_string($_POST['estado_civil_up'] ?? ""),
+            "estado"       => mainModel::limpiar_string($_POST['estado_up'] ?? "")
         ];
 
         $check_empleado = mainModel::ejecutar_consulta_simple(
@@ -151,7 +197,6 @@ class empleadoControlador extends empleadoModelo
             ]);
             exit();
         }
-        $empleado_actual = $check_empleado->fetch();
 
         if ($datos['cargo'] == "" || $datos['sucursal'] == "" || $datos['nombre'] == "" || $datos['apellido'] == "" || $datos['cedula'] == "") {
             echo json_encode([
@@ -162,6 +207,53 @@ class empleadoControlador extends empleadoModelo
             ]);
             exit();
         }
+
+        if (
+            mainModel::verificarDatos("[0-9]{1,10}", $datos['cargo']) ||
+            mainModel::verificarDatos("[0-9]{1,10}", $datos['sucursal']) ||
+            mainModel::verificarDatos("[0-9]{5,10}", $datos['cedula']) ||
+            mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{2,70}", $datos['nombre']) ||
+            mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{2,70}", $datos['apellido'])
+        ) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Uno de los campos obligatorios no tiene un formato valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($datos['celular'] != "" && mainModel::verificarDatos("[0-9()+ -]{6,30}", $datos['celular'])) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El celular no tiene un formato valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($datos['direccion'] != "" && mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,#°\/-]{3,120}", $datos['direccion'])) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "La direccion no tiene un formato valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($datos['estado_civil'] != "" && !in_array($datos['estado_civil'], ["Soltero/a", "Casado/a", "Viudo/a", "Divorciado/a"], true)) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El estado civil seleccionado no corresponde",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+        $empleado_actual = $check_empleado->fetch();
 
         if ($datos['estado'] != "0" && $datos['estado'] != "1") {
             echo json_encode([

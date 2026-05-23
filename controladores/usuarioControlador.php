@@ -21,18 +21,18 @@ class usuarioControlador extends usuarioModelo
         }
 
         /**inicio */
-        $ci = mainModel::limpiar_string($_POST['usuario_dni_reg']);
-        $nombre = mainModel::limpiar_string($_POST['usuario_nombre_reg']);
-        $apellido = mainModel::limpiar_string($_POST['usuario_apellido_reg']);
-        $telefono = mainModel::limpiar_string($_POST['usuario_telefono_reg']);
-        $nick = mainModel::limpiar_string($_POST['usuario_usuario_reg']);
-        $email = mainModel::limpiar_string($_POST['usuario_email_reg']);
+        $ci = mainModel::limpiar_string($_POST['usuario_dni_reg'] ?? "");
+        $nombre = mainModel::limpiar_string($_POST['usuario_nombre_reg'] ?? "");
+        $apellido = mainModel::limpiar_string($_POST['usuario_apellido_reg'] ?? "");
+        $telefono = mainModel::limpiar_string($_POST['usuario_telefono_reg'] ?? "");
+        $nick = mainModel::limpiar_string($_POST['usuario_usuario_reg'] ?? "");
+        $email = mainModel::limpiar_string($_POST['usuario_email_reg'] ?? "");
 
-        $clave1 = mainModel::limpiar_string($_POST['usuario_clave_1_reg']);
-        $clave2 = mainModel::limpiar_string($_POST['usuario_clave_2_reg']);
+        $clave1 = mainModel::limpiar_string($_POST['usuario_clave_1_reg'] ?? "");
+        $clave2 = mainModel::limpiar_string($_POST['usuario_clave_2_reg'] ?? "");
 
         /** Comprobar campos vacios */
-        if ($nombre == "" || $apellido == "" || $nick == "" || $clave1 == "" || $clave2 == "") {
+        if ($ci == "" || $nombre == "" || $apellido == "" || $nick == "" || $clave1 == "" || $clave2 == "") {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
@@ -43,7 +43,7 @@ class usuarioControlador extends usuarioModelo
             exit();
         }
         /**verificar integridad de datos  */
-        if (mainModel::verificarDatos("[0-9-]{7,20}", $ci)) {
+        if (mainModel::verificarDatos("[0-9]{5,10}", $ci)) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
@@ -53,7 +53,7 @@ class usuarioControlador extends usuarioModelo
             echo json_encode($alerta);
             exit();
         }
-        if (mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{1,35}", $nombre)) {
+        if (mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{2,50}", $nombre)) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
@@ -63,7 +63,7 @@ class usuarioControlador extends usuarioModelo
             echo json_encode($alerta);
             exit();
         }
-        if (mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{1,35}", $apellido)) {
+        if (mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{2,50}", $apellido)) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
@@ -74,7 +74,7 @@ class usuarioControlador extends usuarioModelo
             exit();
         }
         if ($telefono != "") {
-            if (mainModel::verificarDatos("[0-9()+]{8,20}", $telefono)) {
+            if (mainModel::verificarDatos("[0-9()+ -]{6,50}", $telefono)) {
                 $alerta = [
                     "Alerta" => "simple",
                     "Titulo" => "Ocurrio un error inesperado!",
@@ -85,7 +85,7 @@ class usuarioControlador extends usuarioModelo
                 exit();
             }
         }
-        if (mainModel::verificarDatos("[a-zA-Z0-9]{1,35}", $nick)) {
+        if (mainModel::verificarDatos("[a-zA-Z0-9]{3,20}", $nick)) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
@@ -131,6 +131,16 @@ class usuarioControlador extends usuarioModelo
         }
         /**comprobar email */
         if ($email != "") {
+            if (strlen($email) > 50) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrio un error inesperado!",
+                    "Texto" => "El EMAIL no puede superar 50 caracteres",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
             if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $check_email = mainModel::ejecutar_consulta_simple("SELECT usu_email from usuarios where usu_email='$email'");
                 if ($check_email->rowCount() > 0) {
@@ -499,21 +509,21 @@ class usuarioControlador extends usuarioModelo
         } else {
             $campos_usuario_up = $checkUser->fetch();
         }
-        $ci = mainModel::limpiar_string($_POST['usuario_ci_up']);
-        $nombre = mainModel::limpiar_string($_POST['usuario_nombre_up']);
-        $apellido = mainModel::limpiar_string($_POST['usuario_apellido_up']);
-        $telefono = mainModel::limpiar_string($_POST['usuario_telefono_up']);
-        $nick = mainModel::limpiar_string($_POST['usuario_usuario_up']);
-        $email = mainModel::limpiar_string($_POST['usuario_email_up']);
+        $ci = mainModel::limpiar_string($_POST['usuario_ci_up'] ?? "");
+        $nombre = mainModel::limpiar_string($_POST['usuario_nombre_up'] ?? "");
+        $apellido = mainModel::limpiar_string($_POST['usuario_apellido_up'] ?? "");
+        $telefono = mainModel::limpiar_string($_POST['usuario_telefono_up'] ?? "");
+        $nick = mainModel::limpiar_string($_POST['usuario_usuario_up'] ?? "");
+        $email = mainModel::limpiar_string($_POST['usuario_email_up'] ?? "");
         /**validar estado si viene definido */
         if (isset($_POST['usuario_estado_up'])) {
             $estado = mainModel::limpiar_string($_POST['usuario_estado_up']);
         } else {
             $estado = $campos_usuario_up['usu_estado'];
         }
-        $admin_user = mainModel::limpiar_string($_POST['usuario_admin']);
-        $admin_clave = mainModel::limpiar_string($_POST['clave_admin']);
-        $tipo_cuenta = mainModel::limpiar_string($_POST['tipo_cuenta']);
+        $admin_user = mainModel::limpiar_string($_POST['usuario_admin'] ?? "");
+        $admin_clave = mainModel::limpiar_string($_POST['clave_admin'] ?? "");
+        $tipo_cuenta = mainModel::limpiar_string($_POST['tipo_cuenta'] ?? "");
 
         if ($tipo_cuenta != "propia" && $tipo_cuenta != "impropia") {
             $alerta = [
@@ -551,7 +561,7 @@ class usuarioControlador extends usuarioModelo
             $estado = $campos_usuario_up['usu_estado'];
         }
 
-        if ($nombre == "" || $apellido == "" || $nick == "" || $admin_user == "" || $admin_clave == "") {
+        if ($ci == "" || $nombre == "" || $apellido == "" || $nick == "" || $admin_user == "" || $admin_clave == "") {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
@@ -562,7 +572,7 @@ class usuarioControlador extends usuarioModelo
             exit();
         }
         /**verificar integridad de datos  */
-        if (mainModel::verificarDatos("[0-9-]{7,20}", $ci)) {
+        if (mainModel::verificarDatos("[0-9]{5,10}", $ci)) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
@@ -572,7 +582,7 @@ class usuarioControlador extends usuarioModelo
             echo json_encode($alerta);
             exit();
         }
-        if (mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{1,35}", $nombre)) {
+        if (mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{2,50}", $nombre)) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
@@ -582,7 +592,7 @@ class usuarioControlador extends usuarioModelo
             echo json_encode($alerta);
             exit();
         }
-        if (mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{1,35}", $apellido)) {
+        if (mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{2,50}", $apellido)) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
@@ -593,7 +603,7 @@ class usuarioControlador extends usuarioModelo
             exit();
         }
         if ($telefono != "") {
-            if (mainModel::verificarDatos("[0-9()+]{8,20}", $telefono)) {
+            if (mainModel::verificarDatos("[0-9()+ -]{6,50}", $telefono)) {
                 $alerta = [
                     "Alerta" => "simple",
                     "Titulo" => "Ocurrio un error inesperado!",
@@ -604,7 +614,7 @@ class usuarioControlador extends usuarioModelo
                 exit();
             }
         }
-        if (mainModel::verificarDatos("[a-zA-Z0-9]{1,35}", $nick)) {
+        if (mainModel::verificarDatos("[a-zA-Z0-9]{3,20}", $nick)) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
@@ -615,7 +625,7 @@ class usuarioControlador extends usuarioModelo
             exit();
         }
 
-        if (mainModel::verificarDatos("[a-zA-Z0-9]{1,35}", $admin_user)) {
+        if (mainModel::verificarDatos("[a-zA-Z0-9]{3,20}", $admin_user)) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
@@ -625,7 +635,7 @@ class usuarioControlador extends usuarioModelo
             echo json_encode($alerta);
             exit();
         }
-        if (mainModel::verificarDatos("[a-zA-Z0-9$@.-]{7,100}", $admin_clave)) {
+        if (mainModel::verificarDatos("[a-zA-Z0-9$@._-]{7,100}", $admin_clave)) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
@@ -676,6 +686,16 @@ class usuarioControlador extends usuarioModelo
         }
         /**comprobar email */
         if ($email != $campos_usuario_up['usu_email'] && $email  != "") {
+            if (strlen($email) > 50) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Ocurrio un error inesperado!",
+                    "Texto" => "El email no puede superar 50 caracteres",
+                    "Tipo" => "error"
+                ];
+                echo json_encode($alerta);
+                exit();
+            }
             if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $check_email = mainModel::ejecutar_consulta_simple("SELECT usu_email from usuarios where usu_email='$email'");
                 if ($check_email->rowCount() > 0) {

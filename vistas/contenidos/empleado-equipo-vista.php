@@ -74,7 +74,7 @@ if (!$permisoNecesario) {
                 <div class="col-md-4">
                     <div class="form-group">
                         <label>Sucursal</label>
-                        <select class="form-control" name="sucursal" required>
+                        <select class="form-control" name="sucursal">
                             <option value="">Seleccione</option>
                             <?php
                             require_once "./controladores/empleadoControlador.php";
@@ -92,14 +92,14 @@ if (!$permisoNecesario) {
                 <div class="col-md-4">
                     <div class="form-group">
                         <label>Nombre del equipo</label>
-                        <input type="text" class="form-control" name="nombre" value="<?php echo $editando ? htmlspecialchars($camposEquipo['nombre'], ENT_QUOTES, 'UTF-8') : ''; ?>" required>
+                        <input type="text" class="form-control" name="nombre" value="<?php echo $editando ? htmlspecialchars($camposEquipo['nombre'], ENT_QUOTES, 'UTF-8') : ''; ?>" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 ._-]{3,80}" maxlength="80">
                     </div>
                 </div>
 
                 <div class="col-md-4">
                     <div class="form-group">
                         <label>Descripción</label>
-                        <input type="text" class="form-control" name="descripcion" value="<?php echo $editando ? htmlspecialchars($camposEquipo['descripcion'] ?? '', ENT_QUOTES, 'UTF-8') : ''; ?>">
+                        <input type="text" class="form-control" name="descripcion" value="<?php echo $editando ? htmlspecialchars($camposEquipo['descripcion'] ?? '', ENT_QUOTES, 'UTF-8') : ''; ?>" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,#\/_-]{3,100}" maxlength="100">
                     </div>
                 </div>
             </div>

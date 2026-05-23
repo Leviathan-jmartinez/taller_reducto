@@ -38,7 +38,8 @@ $busqueda = $_SESSION['busqueda_cliente'] ?? "";
     <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/clienteAjax.php"
         method="POST"
-        data-form="<?php echo $editando ? 'update' : 'save'; ?>">
+        data-form="<?php echo $editando ? 'update' : 'save'; ?>"
+        autocomplete="off">
 
         <?php if ($editando) { ?>
             <input type="hidden" name="cliente_id_up" value="<?php echo $id; ?>">
@@ -49,6 +50,7 @@ $busqueda = $_SESSION['busqueda_cliente'] ?? "";
 
             <div class="col-md-4">
                 <select class="form-control select2"
+                    id="cliente_tipo_documento"
                     name="<?php echo $editando ? 'tipo_documento_up' : 'tipo_documento_reg'; ?>">
 
                     <option value="">Tipo de documento</option>
@@ -63,51 +65,76 @@ $busqueda = $_SESSION['busqueda_cliente'] ?? "";
             <br><br>
             <div class="col-md-4">
                 <input type="text" class="form-control"
+                    id="cliente_documento"
                     placeholder="Documento (Ej: 1234567)"
                     name="<?php echo $editando ? 'cliente_doc_up' : 'cliente_doc_reg'; ?>"
-                    value="<?php echo $editando ? $campos['doc_number'] : ''; ?>">
+                    value="<?php echo $editando ? $campos['doc_number'] : ''; ?>"
+                    pattern="[a-zA-Z0-9-]{3,20}"
+                    maxlength="20"
+                    title="Use de 3 a 20 caracteres: letras, numeros o guion">
             </div>
             <br><br>
             <div class="col-md-4">
                 <input type="text" class="form-control"
+                    id="cliente_dv"
                     placeholder="DV (Ej: 5)"
                     name="<?php echo $editando ? 'cliente_dv_up' : 'cliente_dv_reg'; ?>"
-                    value="<?php echo $editando ? $campos['digito_v'] : ''; ?>">
+                    value="<?php echo $editando ? $campos['digito_v'] : ''; ?>"
+                    pattern="[0-9]{1}"
+                    maxlength="1"
+                    inputmode="numeric"
+                    title="Ingrese un solo digito">
             </div>
             <br><br>
             <div class="col-md-4">
                 <input type="text" class="form-control"
+                    id="cliente_nombre"
                     placeholder="Nombre del cliente"
                     name="<?php echo $editando ? 'cliente_nombre_up' : 'cliente_nombre_reg'; ?>"
-                    value="<?php echo $editando ? $campos['nombre_cliente'] : ''; ?>">
+                    value="<?php echo $editando ? $campos['nombre_cliente'] : ''; ?>"
+                    pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{2,30}"
+                    maxlength="30"
+                    title="Use de 2 a 30 letras">
             </div>
             <br><br>
             <div class="col-md-4">
                 <input type="text" class="form-control"
+                    id="cliente_apellido"
                     placeholder="Apellido del cliente"
                     name="<?php echo $editando ? 'cliente_apellido_up' : 'cliente_apellido_reg'; ?>"
-                    value="<?php echo $editando ? $campos['apellido_cliente'] : ''; ?>">
+                    value="<?php echo $editando ? $campos['apellido_cliente'] : ''; ?>"
+                    pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{2,30}"
+                    maxlength="30"
+                    title="Use de 2 a 30 letras">
             </div>
             <br><br>
             <div class="col-md-4">
                 <input type="text" class="form-control"
                     placeholder="Teléfono (Ej: 0981...)"
                     name="<?php echo $editando ? 'cliente_telefono_up' : 'cliente_telefono_reg'; ?>"
-                    value="<?php echo $editando ? $campos['celular_cliente'] : ''; ?>">
+                    value="<?php echo $editando ? $campos['celular_cliente'] : ''; ?>"
+                    pattern="[0-9()+ -]{6,15}"
+                    maxlength="15"
+                    inputmode="tel"
+                    title="Use de 6 a 15 caracteres: numeros, espacios, parentesis, mas o guion">
             </div>
             <br><br>
             <div class="col-md-4">
                 <input type="email" class="form-control"
                     placeholder="Email (Ej: correo@mail.com)"
                     name="<?php echo $editando ? 'cliente_email_up' : 'cliente_email_reg'; ?>"
-                    value="<?php echo $editando ? $campos['email_cliente'] : ''; ?>">
+                    value="<?php echo $editando ? $campos['email_cliente'] : ''; ?>"
+                    maxlength="50">
             </div>
             <br><br>
             <div class="col-md-4">
                 <input type="text" class="form-control"
                     placeholder="Dirección del cliente"
                     name="<?php echo $editando ? 'cliente_direccion_up' : 'cliente_direccion_reg'; ?>"
-                    value="<?php echo $editando ? $campos['direccion_cliente'] : ''; ?>">
+                    value="<?php echo $editando ? $campos['direccion_cliente'] : ''; ?>"
+                    pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,#°\/-]{3,50}"
+                    maxlength="50"
+                    title="Use de 3 a 50 caracteres validos para direccion">
             </div>
             <br><br>
             <div class="col-md-4">
@@ -166,6 +193,16 @@ $estadoCivil = $editando ? trim($campos['estado_civil']) : ""; ?>
 
                 </select>
             </div>
+            <?php if ($editando) { ?>
+                <br><br>
+                <div class="col-md-4">
+                    <select class="form-control" name="cliente_estado_up">
+                        <option value="">Estado</option>
+                        <option value="1" <?php if (($campos['estado_cliente'] ?? 1) == 1) echo 'selected'; ?>>Activo</option>
+                        <option value="0" <?php if (($campos['estado_cliente'] ?? 1) == 0) echo 'selected'; ?>>Inactivo</option>
+                    </select>
+                </div>
+            <?php } ?>
         </div>
         <br><br>
         <p class="text-center mt-4">
@@ -179,12 +216,75 @@ $estadoCivil = $editando ? trim($campos['estado_civil']) : ""; ?>
                     class="btn btn-raised btn-secondary">
                     CANCELAR
                 </a>
+            <?php } else { ?>
+                <button type="reset" class="btn btn-raised btn-secondary">
+                    CANCELAR
+                </button>
             <?php
 } ?>
         </p>
 
     </form>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var tipo = document.getElementById('cliente_tipo_documento');
+        var documento = document.getElementById('cliente_documento');
+        var dv = document.getElementById('cliente_dv');
+        var nombre = document.getElementById('cliente_nombre');
+        var apellido = document.getElementById('cliente_apellido');
+
+        function actualizarDocumentoCliente() {
+            if (!tipo || !documento || !dv) {
+                return;
+            }
+            if (apellido) {
+                apellido.placeholder = 'Apellido del cliente';
+            }
+            if (nombre) {
+                nombre.pattern = '[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{2,30}';
+                nombre.title = 'Use de 2 a 30 letras';
+                nombre.placeholder = 'Nombre del cliente';
+            }
+
+            if (tipo.value === 'CI') {
+                documento.pattern = '[0-9]{5,10}';
+                documento.maxLength = 10;
+                documento.title = 'Ingrese de 5 a 10 digitos';
+                documento.placeholder = 'Documento (Ej: 1234567)';
+            } else if (tipo.value === 'RUC') {
+                documento.pattern = '[0-9]{6,12}';
+                documento.maxLength = 12;
+                documento.title = 'Ingrese el RUC sin digito verificador';
+                documento.placeholder = 'RUC sin DV (Ej: 80012345)';
+                if (apellido) {
+                    apellido.placeholder = 'Apellido (opcional para RUC)';
+                }
+                if (nombre) {
+                    nombre.pattern = '[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,&-]{2,30}';
+                    nombre.title = 'Use hasta 30 caracteres para la razon social';
+                    nombre.placeholder = 'Razon social';
+                }
+            } else if (tipo.value === 'PASAPORTE') {
+                documento.pattern = '[a-zA-Z0-9]{3,20}';
+                documento.maxLength = 20;
+                documento.title = 'Ingrese de 3 a 20 letras o numeros';
+                documento.placeholder = 'Pasaporte';
+            } else {
+                documento.pattern = '[a-zA-Z0-9-]{3,20}';
+                documento.maxLength = 20;
+                documento.title = 'Use de 3 a 20 caracteres: letras, numeros o guion';
+                documento.placeholder = 'Documento';
+            }
+        }
+
+        if (tipo) {
+            tipo.addEventListener('change', actualizarDocumentoCliente);
+            actualizarDocumentoCliente();
+        }
+    });
+</script>
 
 <!-- ================= BUSCADOR ================= -->
 <div class="container-fluid mb-3">

@@ -41,7 +41,8 @@ $ciudades = $ins_proveedor->listar_ciudades_controlador();
     <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/proveedorAjax.php"
         method="POST"
-        data-form="<?php echo $editando ? 'update' : 'save'; ?>">
+        data-form="<?php echo $editando ? 'update' : 'save'; ?>"
+        autocomplete="off">
 
         <?php if ($editando) { ?>
             <input type="hidden" name="proveedor_id_up" value="<?php echo $id; ?>">
@@ -54,32 +55,48 @@ $ciudades = $ins_proveedor->listar_ciudades_controlador();
             <div class="row">
 
                 <div class="col-12 col-md-6">
-                    <input class="form-control"
+                    <input type="text"
+                        class="form-control"
                         name="<?php echo $editando ? 'razon_social_up' : 'razon_social_reg'; ?>"
                         value="<?php echo $editando ? $campos['razon_social'] : ''; ?>"
+                        pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,&-]{3,70}"
+                        maxlength="70"
+                        title="Use de 3 a 70 caracteres: letras, numeros, espacios, punto, coma, ampersand o guion"
                         placeholder="Razón Social">
                 </div>
 
                 <div class="col-12 col-md-6">
-                    <input class="form-control"
+                    <input type="text"
+                        class="form-control"
                         name="<?php echo $editando ? 'ruc_up' : 'ruc_reg'; ?>"
                         value="<?php echo $editando ? $campos['ruc'] : ''; ?>"
+                        pattern="[0-9-]{6,15}"
+                        maxlength="15"
+                        inputmode="numeric"
+                        title="Ingrese de 6 a 15 caracteres, solo numeros y guion"
                         placeholder="RUC">
                 </div>
 
                 <div class="w-100 mt-2"></div>
 
                 <div class="col-12 col-md-4">
-                    <input class="form-control"
+                    <input type="text"
+                        class="form-control"
                         name="<?php echo $editando ? 'telefono_up' : 'telefono_reg'; ?>"
                         value="<?php echo $editando ? $campos['telefono'] : ''; ?>"
+                        pattern="[0-9()+ -]{6,30}"
+                        maxlength="30"
+                        inputmode="tel"
+                        title="Use de 6 a 30 caracteres: numeros, espacios, parentesis, mas o guion"
                         placeholder="Teléfono">
                 </div>
 
                 <div class="col-12 col-md-4">
-                    <input class="form-control"
+                    <input type="email"
+                        class="form-control"
                         name="<?php echo $editando ? 'correo_up' : 'correo_reg'; ?>"
                         value="<?php echo $editando ? $campos['correo'] : ''; ?>"
+                        maxlength="100"
                         placeholder="Correo">
                 </div>
 
@@ -103,9 +120,13 @@ foreach ($ciudades as $c) { ?>
                 <div class="w-100 mt-2"></div>
 
                 <div class="col-12">
-                    <input class="form-control"
+                    <input type="text"
+                        class="form-control"
                         name="<?php echo $editando ? 'direccion_up' : 'direccion_reg'; ?>"
                         value="<?php echo $editando ? $campos['direccion'] : ''; ?>"
+                        pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,#°\/-]{3,120}"
+                        maxlength="120"
+                        title="Use de 3 a 120 caracteres validos para direccion"
                         placeholder="Dirección">
                 </div>
 
@@ -135,6 +156,10 @@ foreach ($ciudades as $c) { ?>
             <a href="<?php echo SERVERURL; ?>proveedor-nuevo/" class="btn btn-secondary">
                 Cancelar
             </a>
+        <?php } else { ?>
+            <button type="reset" class="btn btn-secondary">
+                Cancelar
+            </button>
         <?php
 } ?>
 

@@ -44,7 +44,8 @@ $modelos  = $ins_vehiculo->listar_modelos_controlador();
     <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/vehiculoAjax.php"  
         method="POST"
-        data-form="<?php echo $editando ? 'update' : 'save'; ?>">
+        data-form="<?php echo $editando ? 'update' : 'save'; ?>"
+        autocomplete="off">
 
         <?php if ($editando) { ?>
             <input type="hidden" name="vehiculo_id_up" value="<?php echo $id; ?>">
@@ -95,7 +96,9 @@ foreach ($modelos as $m) { ?>
                         class="form-control"
                         placeholder="Color"
                         name="<?php echo $editando ? 'color_up' : 'color_reg'; ?>"
-                        value="<?php echo $editando ? $campos['color'] : ''; ?>">
+                        value="<?php echo $editando ? $campos['color'] : ''; ?>"
+                        pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{3,45}"
+                        maxlength="45">
                 </div>
             </div>
 
@@ -106,7 +109,9 @@ foreach ($modelos as $m) { ?>
                         class="form-control"
                         placeholder="Placa *"
                         name="<?php echo $editando ? 'placa_up' : 'placa_reg'; ?>"
-                        value="<?php echo $editando ? $campos['placa'] : ''; ?>">
+                        value="<?php echo $editando ? $campos['placa'] : ''; ?>"
+                        pattern="[a-zA-Z0-9-]{3,20}"
+                        maxlength="20">
                 </div>
             </div>
 
@@ -117,7 +122,10 @@ foreach ($modelos as $m) { ?>
                         class="form-control"
                         placeholder="Año"
                         name="<?php echo $editando ? 'anho_up' : 'anho_reg'; ?>"
-                        value="<?php echo $editando ? $campos['anho'] : ''; ?>">
+                        value="<?php echo $editando ? $campos['anho'] : ''; ?>"
+                        pattern="[0-9]{4}"
+                        maxlength="4"
+                        inputmode="numeric">
                 </div>
             </div>
 
@@ -128,7 +136,9 @@ foreach ($modelos as $m) { ?>
                         class="form-control"
                         placeholder="Nro Serie"
                         name="<?php echo $editando ? 'serie_up' : 'serie_reg'; ?>"
-                        value="<?php echo $editando ? $campos['nro_serie'] : ''; ?>">
+                        value="<?php echo $editando ? $campos['nro_serie'] : ''; ?>"
+                        pattern="[a-zA-Z0-9-]{3,50}"
+                        maxlength="50">
                 </div>
             </div>
 

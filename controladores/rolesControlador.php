@@ -20,8 +20,8 @@ class rolesControlador extends rolesModelo
             exit();
         }
 
-        $nombre = mainModel::limpiar_string($_POST['rol_nombre_reg']);
-        $descripcion = mainModel::limpiar_string($_POST['rol_descripcion_reg']);
+        $nombre = mainModel::limpiar_string($_POST['rol_nombre_reg'] ?? "");
+        $descripcion = mainModel::limpiar_string($_POST['rol_descripcion_reg'] ?? "");
 
         /* ===== VALIDAR ===== */
         if ($nombre == "") {
@@ -29,6 +29,26 @@ class rolesControlador extends rolesModelo
                 "Alerta" => "simple",
                 "Titulo" => "Campo requerido",
                 "Texto" => "Debe ingresar el nombre del rol",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if (mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 _.-]{3,50}", $nombre)) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El nombre del rol no tiene un formato valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($descripcion != "" && mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,#\/_-]{3,150}", $descripcion)) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "La descripcion del rol no tiene un formato valido",
                 "Tipo" => "error"
             ]);
             exit();
@@ -221,9 +241,9 @@ class rolesControlador extends rolesModelo
         $id = mainModel::decryption($_POST['rol_id_up']);
         $id = mainModel::limpiar_string($id);
 
-        $nombre = mainModel::limpiar_string($_POST['rol_nombre_up']);
-        $descripcion = mainModel::limpiar_string($_POST['rol_descripcion_up']);
-        $estado = mainModel::limpiar_string($_POST['rol_estado_up']);
+        $nombre = mainModel::limpiar_string($_POST['rol_nombre_up'] ?? "");
+        $descripcion = mainModel::limpiar_string($_POST['rol_descripcion_up'] ?? "");
+        $estado = mainModel::limpiar_string($_POST['rol_estado_up'] ?? "");
 
         $check_rol = mainModel::ejecutar_consulta_simple(
             "SELECT id_rol, nombre FROM roles WHERE id_rol='$id'"
@@ -233,6 +253,26 @@ class rolesControlador extends rolesModelo
                 "Alerta" => "simple",
                 "Titulo" => "Error",
                 "Texto" => "El rol no existe en el sistema",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if (mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 _.-]{3,50}", $nombre)) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El nombre del rol no tiene un formato valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($descripcion != "" && mainModel::verificarDatos("[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,#\/_-]{3,150}", $descripcion)) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "La descripcion del rol no tiene un formato valido",
                 "Tipo" => "error"
             ]);
             exit();
