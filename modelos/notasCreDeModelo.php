@@ -203,7 +203,7 @@ class notasCreDeModelo extends mainModel
         ]);
     }
 
-    protected static function paginarNotasCompraModelo($inicio, $registros, $filtros)
+    protected static function paginarNotasCompraModelo($inicio, $registros, $filtros, $orderSQL = "ORDER BY nc.fecha_creacion DESC")
     {
         $where = ["nc.id_sucursal = :sucursal"];
         $params = [
@@ -252,7 +252,7 @@ class notasCreDeModelo extends mainModel
             u.usu_nombre,
             u.usu_apellido
         $fromSql
-        ORDER BY nc.fecha_creacion ASC
+        $orderSQL
         LIMIT :inicio, :registros
         ";
 

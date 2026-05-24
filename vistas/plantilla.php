@@ -36,10 +36,9 @@
 
         if (
             isset($_SESSION['cambiar_clave_str']) &&
-            (int)$_SESSION['cambiar_clave_str'] === 1 &&
-            ($pagina[0] ?? '') !== 'cambiar-clave'
+            (int)$_SESSION['cambiar_clave_str'] === 1
         ) {
-            echo "<script> window.location.href='" . SERVERURL . "cambiar-clave/'; </script>";
+            echo "<script> window.location.href='" . SERVERURL . "login/?cambiar=1'; </script>";
             exit();
         }
     ?>

@@ -20,6 +20,8 @@ if (isset($_GET['estado_presupuesto_compra']) && in_array((string)$_GET['estado_
     $estado_presupuesto_compra = (string)$_GET['estado_presupuesto_compra'];
 }
 
+$ordenPresupuesto = mainModel::cargar_ordenamiento_sesion('presupuesto', ['fecha', 'estado'], 'fecha', 'DESC');
+
 $estadosPresupuesto = [
     '' => 'Todos',
     '0' => 'Anulado',
@@ -160,7 +162,9 @@ if (!isset($pagina) || !is_array($pagina)) {
             $_SESSION['fecha_final_presupuesto'] ?? '',
             $_SESSION['nro_presupuesto'] ?? '',
             $_SESSION['proveedor_presupuesto'] ?? '',
-            $_SESSION['estado_presupuesto_compra'] ?? ''
+            $_SESSION['estado_presupuesto_compra'] ?? '',
+            $ordenPresupuesto['orden'],
+            $ordenPresupuesto['direccion']
         );
         ?>
     </div>

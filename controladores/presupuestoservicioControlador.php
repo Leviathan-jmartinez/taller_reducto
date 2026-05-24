@@ -248,11 +248,13 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
         ]);
     }
 
-    public function paginador_presupuestoservi_controlador($pagina, $registros, $url, $busqueda1, $busqueda2)
+    public function paginador_presupuestoservi_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $orden = 'fecha', $direccion = 'DESC')
     {
 
         $pagina    = (int) mainModel::limpiar_string($pagina);
         $registros = (int) mainModel::limpiar_string($registros);
+        $orden = mainModel::limpiar_string($orden);
+        $direccion = strtoupper(mainModel::limpiar_string($direccion));
         $estado = $_SESSION['estado_presupuesto'] ?? '';
         $url = SERVERURL . $url . "/";
         $tabla = "";
@@ -283,10 +285,17 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
 
 
         $filtrosSQL = mainModel::construirFiltros($filtros);
+        $columnasOrdenSql = [
+            'fecha' => 'ps.fecha',
+            'estado' => 'ps.estado'
+        ];
+        $ordenamiento = mainModel::preparar_ordenamiento($orden, $direccion, $columnasOrdenSql, 'fecha', 'DESC');
+        $orden = $ordenamiento['orden'];
+        $direccion = $ordenamiento['direccion'];
 
         /* ================= DATOS ================= */
 
-        $res = presupuestoServicioModelo::listar_presupuestos_modelo($inicio, $registros, $filtrosSQL);
+        $res = presupuestoServicioModelo::listar_presupuestos_modelo($inicio, $registros, $filtrosSQL, "ORDER BY " . $ordenamiento['sql'] . ", ps.idpresupuesto_servicio DESC");
 
         $datos = $res['datos'];
         $total = $res['total'];
@@ -312,10 +321,10 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
                     <th>#</th>
                     <th>Cliente</th>
                     <th>Vehículo</th>
-                    <th>Fecha</th>
+                    <th>' . mainModel::link_orden_tabla($url, 'fecha', 'Fecha', $orden, $direccion, 'presupuesto_servicio_orden', 'presupuesto_servicio_direccion') . '</th>
                     <th>Total</th>
                     <th>Creado por</th>
-                    <th>Estado</th>
+                    <th>' . mainModel::link_orden_tabla($url, 'estado', 'Estado', $orden, $direccion, 'presupuesto_servicio_orden', 'presupuesto_servicio_direccion') . '</th>
                     <th>PDF</th>';
 
         if ($mostrarAcciones) {

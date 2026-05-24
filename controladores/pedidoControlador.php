@@ -212,13 +212,15 @@ class pedidoControlador extends pedidoModelo
     }
     /**fin controlador */
     /**Controlador paginar articulos */
-    public function paginador_pedidos_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $estado_pedido = '')
+    public function paginador_pedidos_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $estado_pedido = '', $orden = 'fecha', $direccion = 'DESC')
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
         $busqueda1 = mainModel::limpiar_string($busqueda1);
         $busqueda2 = mainModel::limpiar_string($busqueda2);
         $estado_pedido = mainModel::limpiar_string($estado_pedido);
+        $orden = mainModel::limpiar_string($orden);
+        $direccion = strtoupper(mainModel::limpiar_string($direccion));
 
         $url = mainModel::limpiar_string($url);
         $url = SERVERURL . $url . "/";
@@ -230,66 +232,47 @@ class pedidoControlador extends pedidoModelo
         $reg_inicio = $inicio + 1;
         $reg_final = $inicio;
 
-        $filtros = "";
+        $filtros = [];
+
+        $busquedaPorFecha = !empty($busqueda1) && !empty($busqueda2);
+
+        if ($busquedaPorFecha) {
+            $filtros[] = [
+                "campo" => "pc.fecha",
+                "tipo"  => "DATE_RANGE",
+                "desde" => $busqueda1,
+                "hasta" => $busqueda2
+            ];
+        }
+
         if ($estado_pedido !== '') {
-            $filtros .= " AND pc.estado = '$estado_pedido'";
+            $filtros[] = [
+                "campo" => "pc.estado",
+                "tipo"  => "=",
+                "valor" => $estado_pedido
+            ];
+        } elseif (!$busquedaPorFecha) {
+            $filtros[] = [
+                "campo" => "pc.estado",
+                "tipo"  => "!=",
+                "valor" => 0
+            ];
         }
 
-        if (!empty($busqueda1) && !empty($busqueda2)) {
-            $consulta = "
-            SELECT SQL_CALC_FOUND_ROWS
-                pc.idpedido_cabecera,
-                pc.id_sucursal,
-                pc.id_usuario,
-                pc.fecha,
-                pc.estado AS estadoPe,
-                pc.updated,
-                pc.updatedby,
+        $columnasOrdenSql = [
+            'fecha' => 'pc.fecha',
+            'estado' => 'pc.estado'
+        ];
 
-                u.usu_nombre,
-                u.usu_apellido,
-                u.usu_estado,
-                u.usu_nick
+        $ordenamiento = mainModel::preparar_ordenamiento($orden, $direccion, $columnasOrdenSql, 'fecha', 'DESC');
+        $orden = $ordenamiento['orden'];
+        $direccion = $ordenamiento['direccion'];
+        $orderBy = $ordenamiento['sql'] . ', pc.idpedido_cabecera DESC';
+        $filtrosSQL = mainModel::construirFiltros($filtros);
+        $resultado = pedidoModelo::listar_pedidos_modelo($inicio, $registros, $filtrosSQL, "ORDER BY $orderBy");
 
-            FROM pedido_cabecera pc
-            INNER JOIN usuarios u ON u.id_usuario = pc.id_usuario
-            WHERE DATE(pc.fecha) >= '$busqueda1'
-              AND DATE(pc.fecha) <= '$busqueda2'
-              AND pc.id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
-              $filtros
-            ORDER BY pc.fecha DESC
-            LIMIT $inicio,$registros
-        ";
-        } else {
-            $consulta = "
-            SELECT SQL_CALC_FOUND_ROWS
-                pc.idpedido_cabecera,
-                pc.id_sucursal,
-                pc.id_usuario,
-                pc.fecha,
-                pc.estado AS estadoPe,
-                pc.updated,
-                pc.updatedby,
-
-                u.usu_nombre,
-                u.usu_apellido,
-                u.usu_estado,
-                u.usu_nick
-
-            FROM pedido_cabecera pc
-            INNER JOIN usuarios u ON u.id_usuario = pc.id_usuario
-            WHERE pc.id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
-              " . ($estado_pedido === '' ? "AND pc.estado != 0" : "") . "
-              $filtros
-            ORDER BY pc.fecha DESC
-            LIMIT $inicio,$registros
-        ";
-        }
-
-        $conexion = mainModel::conectar();
-        $datos = $conexion->query($consulta)->fetchAll();
-
-        $total = (int)$conexion->query("SELECT FOUND_ROWS()")->fetchColumn();
+        $datos = $resultado['datos'];
+        $total = $resultado['total'];
         $Npaginas = ceil($total / $registros);
 
         $tabla .= '
@@ -298,10 +281,10 @@ class pedidoControlador extends pedidoModelo
             <thead>
                 <tr class="text-center roboto-medium">
                     <th>#</th>
-                    <th>CÓDIGO PEDIDO</th>
-                    <th>FECHA</th>
+                    <th>CODIGO PEDIDO</th>
+                    <th>' . mainModel::link_orden_tabla($url, 'fecha', 'FECHA', $orden, $direccion, 'pedido_orden', 'pedido_direccion') . '</th>
                     <th>CREADO POR</th>
-                    <th>ESTADO</th>
+                    <th>' . mainModel::link_orden_tabla($url, 'estado', 'ESTADO', $orden, $direccion, 'pedido_orden', 'pedido_direccion') . '</th>
                     <th>PDF</th>';
 
         if (mainModel::tienePermiso('compra.pedido.anular')) {

@@ -4,7 +4,7 @@ class vistasModelo
     /** Modelo para obtener vistas  */
     protected static function obtenVista_modelo($vistas)
     {
-        $lista_blanca = ["home", "cambiar-clave", "articulo-actualizar", "articulo-buscar", "articulo-lista", "articulo-nuevo",
+        $lista_blanca = ["home", "articulo-actualizar", "articulo-buscar", "articulo-lista", "articulo-nuevo",
         "cliente-actualizar", "cliente-buscar", "cliente-lista", "cliente-nuevo", "company",  "proveedor-actualizar", "proveedor-buscar", "proveedor-lista", "proveedor-nuevo",      
         "usuario-actualizar", "usuario-buscar", "usuario-lista", "rol-permisos", "rol-nuevo","rol-actualizar","usuario-nuevo","pedido-lista","pedido-nuevo","pedido-buscar",
         "sucursal-nuevo","sucursal-lista","sucursal-actualizar","sucursal-buscar", "vehiculo-lista","vehiculo-nuevo","vehiculo-actualizar","vehiculo-buscar",

@@ -10,6 +10,7 @@ if (!mainModel::tienePermiso('servicio.registro.ver')) {
 $fecha_inicio = $_SESSION['fecha_inicio_registro_servicio'] ?? '';
 $fecha_final  = $_SESSION['fecha_final_registro_servicio'] ?? '';
 $estado = $_SESSION['estado_regSer'] ?? '';
+$ordenRegistroServicio = mainModel::cargar_ordenamiento_sesion('registro_servicio', ['fecha', 'estado'], 'fecha', 'DESC');
 $busqueda_activa = isset($_SESSION['filtro_registro_servicio_activo']);
 ?>
 
@@ -97,7 +98,9 @@ $busqueda_activa = isset($_SESSION['filtro_registro_servicio_activo']);
             15,
             $pagina[0],
             $fecha_inicio,
-            $fecha_final
+            $fecha_final,
+            $ordenRegistroServicio['orden'],
+            $ordenRegistroServicio['direccion']
         );
     } else {
         echo '<div class="alert alert-info text-center">Ingrese filtros y presione Buscar para ver registros.</div>';

@@ -471,7 +471,7 @@ class presupuestoservicioModelo extends mainModel
         }
     }
 
-    protected static function listar_presupuestos_modelo($inicio, $registros, $filtrosSQL)
+    protected static function listar_presupuestos_modelo($inicio, $registros, $filtrosSQL, $orderSQL = "ORDER BY ps.fecha DESC, ps.idpresupuesto_servicio DESC")
     {
         $conexion = mainModel::conectar();
 
@@ -500,8 +500,6 @@ class presupuestoservicioModelo extends mainModel
             u.usu_nombre,
             u.usu_apellido
         ";
-
-        $orderSQL = "ORDER BY ps.idpresupuesto_servicio DESC";
 
         return mainModel::ejecutarPaginador(
             $conexion,

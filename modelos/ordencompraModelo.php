@@ -317,7 +317,7 @@ class ordencompraModelo extends mainModel
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    protected static function listar_oc_modelo($inicio, $registros, $filtrosSQL)
+    protected static function listar_oc_modelo($inicio, $registros, $filtrosSQL, $orderSQL = "ORDER BY oc.idorden_compra DESC")
     {
         $conexion = mainModel::conectar();
 
@@ -339,8 +339,6 @@ class ordencompraModelo extends mainModel
             u.usu_nombre,
             u.usu_apellido
      ";
-
-        $orderSQL = "ORDER BY oc.idorden_compra DESC";
 
         return mainModel::ejecutarPaginador(
             $conexion,

@@ -10,6 +10,7 @@ if (!mainModel::tienePermiso('servicio.ot.ver')) {
 $fecha_inicio = $_SESSION['fecha_inicio_orden_trabajo'] ?? '';
 $fecha_final  = $_SESSION['fecha_final_orden_trabajo'] ?? '';
 $estado = $_SESSION['estado_ot'] ?? '';
+$ordenOT = mainModel::cargar_ordenamiento_sesion('ot', ['fecha', 'estado'], 'fecha', 'DESC');
 
 if (isset($_GET['estado_ot']) && in_array((string)$_GET['estado_ot'], ['0', '1', '2', '3'], true)) {
     $_SESSION['estado_ot'] = (string)$_GET['estado_ot'];
@@ -130,7 +131,9 @@ $busqueda_activa = isset($_SESSION['filtro_orden_trabajo_activo']);
             15,
             $pagina[0],
             $fecha_inicio,
-            $fecha_final
+            $fecha_final,
+            $ordenOT['orden'],
+            $ordenOT['direccion']
         );
     } else {
         echo '<div class="alert alert-info text-center">Ingrese un criterio de busqueda para ver ordenes de trabajo.</div>';

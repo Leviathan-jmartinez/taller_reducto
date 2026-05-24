@@ -144,9 +144,9 @@
             if (!condicion || !intervalo || !cuotas) return;
 
             if (condicion.value === "contado") {
-                intervalo.value = 0;
+                intervalo.readOnly = false;
+                if (parseInt(intervalo.value, 10) <= 0 || intervalo.value === "") intervalo.value = 7;
                 cuotas.value = 1;
-                intervalo.readOnly = true;
                 cuotas.readOnly = true;
             } else {
                 intervalo.readOnly = false;
@@ -343,7 +343,7 @@
             e.preventDefault();
 
             $.ajax({
-                url: "<?php echo SERVERURL; ?>ajax/compraAjax.php", // reemplaza con tu ruta real
+                url: "<?php echo SERVERURL; ?>ajax/compraAjax.php",
                 method: "POST",
                 data: {
                     cancelar: true
@@ -351,7 +351,7 @@
                 success: function(resp) {
                     var data = JSON.parse(resp);
                     if (data.Alerta === "recargar") {
-                        // Redirigir a página de inicio o limpiar vista
+
                         window.location.href = "<?php echo SERVERURL; ?>factura-nuevo";
                     } else {
                         alert(data.Texto);

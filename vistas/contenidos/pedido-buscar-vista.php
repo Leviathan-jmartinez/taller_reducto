@@ -9,9 +9,13 @@ if (isset($_GET['estado_pedido']) && in_array((string)$_GET['estado_pedido'], ['
     $_SESSION['estado_pedido'] = (string)$_GET['estado_pedido'];
 }
 
+$ordenPedido = mainModel::cargar_ordenamiento_sesion('pedido', ['fecha', 'estado'], 'fecha', 'DESC');
+
 $fecha_inicio = $_SESSION['fecha_inicio_pedido'] ?? '';
 $fecha_final = $_SESSION['fecha_final_pedido'] ?? '';
 $estado_pedido = $_SESSION['estado_pedido'] ?? '';
+$pedido_orden = $ordenPedido['orden'];
+$pedido_direccion = $ordenPedido['direccion'];
 $busqueda_activa = $fecha_inicio !== '' || $fecha_final !== '' || isset($_SESSION['estado_pedido']);
 $estadosPedido = [
     '' => 'Todos',
@@ -121,7 +125,7 @@ $estadosPedido = [
         <?php
         require_once "./controladores/pedidoControlador.php";
         $ins_pedido = new pedidoControlador();
-        $ins_pedido->paginador_pedidos_controlador($pagina[1], 15, $pagina[0], $fecha_inicio, $fecha_final, $estado_pedido);
+        $ins_pedido->paginador_pedidos_controlador($pagina[1], 15, $pagina[0], $fecha_inicio, $fecha_final, $estado_pedido, $pedido_orden, $pedido_direccion);
         ?>
     </div>
 <?php

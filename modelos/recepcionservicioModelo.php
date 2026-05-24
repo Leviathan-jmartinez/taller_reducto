@@ -523,10 +523,12 @@ class recepcionservicioModelo extends mainModel
     }
 
 
-    protected static function listar_recepcion_modelo($inicio, $registros, $filtrosSQL)
+    protected static function listar_recepcion_modelo($inicio, $registros, $filtrosSQL, $orderSQL = "ORDER BY rs.fecha_ingreso DESC, rs.idrecepcion DESC")
     {
-        $sql = "
-        SELECT 
+        $pdo = self::conectar();
+
+        $selectSQL = "
+        SELECT
             rs.idrecepcion,
             rs.fecha_ingreso,
             rs.kilometraje,
@@ -545,23 +547,9 @@ class recepcionservicioModelo extends mainModel
                 FROM recepcion_fotos rf
                 WHERE rf.id_recepcion = rs.idrecepcion
             ) AS total_fotos
-        FROM recepcion_servicio rs
-        INNER JOIN clientes c ON c.id_cliente = rs.id_cliente
-        INNER JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
-        INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
-        INNER JOIN marcas ma ON ma.id_marcas = m.id_marcas
-        INNER JOIN usuarios u ON u.id_usuario = rs.id_usuario
-        WHERE 1=1 $filtrosSQL
-        ORDER BY rs.fecha_ingreso DESC
-        LIMIT $inicio, $registros
         ";
 
-        $pdo = self::conectar();
-
-        $datos = $pdo->query($sql)->fetchAll();
-
-        $total = $pdo->query("
-        SELECT COUNT(*) 
+        $baseSQL = "
         FROM recepcion_servicio rs
         INNER JOIN clientes c ON c.id_cliente = rs.id_cliente
         INNER JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
@@ -569,12 +557,16 @@ class recepcionservicioModelo extends mainModel
         INNER JOIN marcas ma ON ma.id_marcas = m.id_marcas
         INNER JOIN usuarios u ON u.id_usuario = rs.id_usuario
         WHERE 1=1 $filtrosSQL
-        ")->fetchColumn();
+        ";
 
-        return [
-            "datos" => $datos,
-            "total" => $total
-        ];
+        return mainModel::ejecutarPaginador(
+            $pdo,
+            $baseSQL,
+            $selectSQL,
+            $orderSQL,
+            $inicio,
+            $registros
+        );
     }
 
     protected static function fotos_recepcion_modelo($idRecepcion, $idSucursal)

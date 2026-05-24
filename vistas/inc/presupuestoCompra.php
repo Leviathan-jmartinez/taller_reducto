@@ -77,7 +77,7 @@
         } else {
             Swal.fire({
                 title: 'Ocurrio un error',
-                text: 'Debes introducir el numero de pedido',
+                text: 'Debes introducir el parámetro de búsqueda',
                 type: 'error',
                 confirmButtonText: 'Aceptar'
             });

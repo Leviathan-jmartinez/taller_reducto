@@ -63,6 +63,43 @@ class pedidoModelo extends mainModel
         return $sql;
     }
     /**fin modelo */
+
+    protected static function listar_pedidos_modelo($inicio, $registros, $filtrosSQL, $orderSQL)
+    {
+        $conexion = mainModel::conectar();
+
+        $selectSQL = "
+            SELECT
+                pc.idpedido_cabecera,
+                pc.id_sucursal,
+                pc.id_usuario,
+                pc.fecha,
+                pc.estado AS estadoPe,
+                pc.updated,
+                pc.updatedby,
+                u.usu_nombre,
+                u.usu_apellido,
+                u.usu_estado,
+                u.usu_nick
+        ";
+
+        $baseSQL = "
+            FROM pedido_cabecera pc
+            INNER JOIN usuarios u ON u.id_usuario = pc.id_usuario
+            WHERE pc.id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
+            $filtrosSQL
+        ";
+
+        return mainModel::ejecutarPaginador(
+            $conexion,
+            $baseSQL,
+            $selectSQL,
+            $orderSQL,
+            $inicio,
+            $registros
+        );
+    }
+
     /** modelo obtener datos para PDF */
     protected static function obtener_pedido_cabecera($id)
     {

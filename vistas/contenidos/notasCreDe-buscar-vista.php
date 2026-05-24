@@ -13,6 +13,7 @@ $fecha_inicio_dt = $fecha_inicio ? $fecha_inicio . ' 00:00:00' : '';
 $fecha_final_dt  = $fecha_final  ? $fecha_final  . ' 23:59:59' : '';
 $nro_documento = $_SESSION['nro_documento_notasCreDe'] ?? '';
 $tipo_nota     = $_SESSION['tipo_nota_notasCreDe'] ?? '';
+$ordenNota = mainModel::cargar_ordenamiento_sesion('nota', ['fecha', 'estado'], 'fecha', 'DESC');
 
 if (!isset($pagina)) {
     $url = $_GET['views'] ?? "notasCreDe-buscar/1";
@@ -138,7 +139,9 @@ if (!isset($pagina)) {
             $fecha_inicio,
             $fecha_final,
             $nro_documento,
-            $tipo_nota
+            $tipo_nota,
+            $ordenNota['orden'],
+            $ordenNota['direccion']
         );
 
         ?>

@@ -286,7 +286,7 @@ class diagnosticoControlador extends diagnosticoModelo
         ]);
     }
 
-    public function paginador_diagnostico_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $cliente = '', $placa = '', $nro_diagnostico = '', $nro_recepcion = '', $estado_filtro = '', $origen = '', $busqueda_general = '')
+    public function paginador_diagnostico_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $cliente = '', $placa = '', $nro_diagnostico = '', $nro_recepcion = '', $estado_filtro = '', $origen = '', $busqueda_general = '', $orden = 'fecha', $direccion = 'DESC')
     {
         $pagina    = (int) mainModel::limpiar_string($pagina);
         $registros = (int) mainModel::limpiar_string($registros);
@@ -297,6 +297,8 @@ class diagnosticoControlador extends diagnosticoModelo
         $estado_filtro = mainModel::limpiar_string($estado_filtro);
         $origen = mainModel::limpiar_string($origen);
         $busqueda_general = mainModel::limpiar_string($busqueda_general);
+        $orden = mainModel::limpiar_string($orden);
+        $direccion = strtoupper(mainModel::limpiar_string($direccion));
 
         $url = SERVERURL . $url . "/";
         $tabla = "";
@@ -362,9 +364,23 @@ class diagnosticoControlador extends diagnosticoModelo
 
         $filtrosSQL = mainModel::construirFiltros($filtros);
 
+        $columnasOrdenSql = [
+            'fecha' => 'd.fecha_diagnostico',
+            'estado' => 'd.estado'
+        ];
+
+        $ordenamiento = mainModel::preparar_ordenamiento($orden, $direccion, $columnasOrdenSql, 'fecha', 'DESC');
+        $orden = $ordenamiento['orden'];
+        $direccion = $ordenamiento['direccion'];
+
         /* ================= DATOS ================= */
 
-        $res = diagnosticoModelo::listar_diagnosticos_modelo($inicio, $registros, $filtrosSQL);
+        $res = diagnosticoModelo::listar_diagnosticos_modelo(
+            $inicio,
+            $registros,
+            $filtrosSQL,
+            "ORDER BY " . $ordenamiento['sql'] . ", d.id_diagnostico DESC"
+        );
 
         $datos = $res['datos'];
         $total = $res['total'];
@@ -383,13 +399,13 @@ class diagnosticoControlador extends diagnosticoModelo
         <tr class="text-center">
             <th>Diag.</th>
             <th>Recep.</th>
-            <th>Fecha</th>
+            <th>' . mainModel::link_orden_tabla($url, 'fecha', 'Fecha', $orden, $direccion, 'diagnostico_orden', 'diagnostico_direccion') . '</th>
             <th>Cliente</th>
             <th>Vehiculo</th>
             <th>Servicio</th>
             <th>Origen</th>
             <th>Equipo</th>
-            <th>Estado</th>
+            <th>' . mainModel::link_orden_tabla($url, 'estado', 'Estado', $orden, $direccion, 'diagnostico_orden', 'diagnostico_direccion') . '</th>
             <th>Acciones</th>
         </tr></thead><tbody>';
 

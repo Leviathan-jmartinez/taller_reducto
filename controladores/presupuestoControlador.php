@@ -240,25 +240,28 @@ class presupuestoControlador extends presupuestoModelo
             return '        <div class="alert alert-warning" role="alert">
                                 <p class="text-center mb-0">
                                     <i class="fas fa-exclamation-triangle fa-2x"></i><br>
-                                    Debes introducir el RUC, RAZON SOCIAL o NUMERO DE PEDIDO
+                                    Debes introducir el parámetro de búsqueda
                                 </p>
                             </div>';
             exit();
         }
         /**seleccionar proveedor */
         $datosPedido = mainModel::ejecutar_consulta_simple("select pc.idpedido_cabecera as idpedido_cabecera, pc.id_sucursal as id_sucursal,pc.id_usuario as id_usuario, 
-        pc.fecha as fecha, pc.estado as estadoPe, pc.updated as updated, pc.updatedby as updatedby
+        pc.fecha as fecha, pc.estado as estadoPe, pc.updated as updated, pc.updatedby as updatedby, concat(u.usu_nombre, ' ',u.usu_apellido ) as usuario
         from pedido_cabecera pc 
-        where (idpedido_cabecera like '%$pedidoCompra%') and pc.estado = '1'
+        inner join usuarios u on u.id_usuario = pc.id_usuario
+        where (pc.idpedido_cabecera like '%$pedidoCompra%' or pc.fecha like '%$pedidoCompra%' or 
+        concat(u.usu_nombre, ' ',u.usu_apellido ) like '%$pedidoCompra%') and pc.estado = '1'
         and pc.id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
-        order by idpedido_cabecera desc");
+        order by pc.fecha desc");
 
         if ($datosPedido->rowCount() >= 1) {
             $datosPedido = $datosPedido->fetchAll();
-            $tabla = '<div class="table-responsive"><table class="table table-hover table-bordered table-sm"><tbody>
+            $tabla = '<div class="table-responsive"><table class="table table-dark table-sm"><tbody>
                         <tr class="text-center">
                             <th>Número de Pedido</th>
-                            <th>Fecha</th>
+                            <th>Fecha Creación</th>
+                            <th>Creado Por</th>
                             <th></th>
                         </tr>';
             foreach ($datosPedido as $rows) {
@@ -266,6 +269,7 @@ class presupuestoControlador extends presupuestoModelo
                         <tr class="text-center">
                             <td>' . $rows['idpedido_cabecera'] . '</td>
                             <td>' . date("d-m-Y", strtotime($rows['fecha'])) . '</td>
+                            <td>' . $rows['usuario'] . '</td>
                             <td>
                                 <button type="button" class="btn btn-primary" onclick="agregar_pedidoPre(' . $rows['idpedido_cabecera'] . ')"><i class="fas fa-user-plus"></i></button>
                             </td>
@@ -329,7 +333,7 @@ class presupuestoControlador extends presupuestoModelo
     /**fin controlador */
 
     /**Controlador paginar presupuestos */
-    public function paginador_presupuestos_controlador($pagina, $registros,  $url, $busqueda1, $busqueda2, $nro_presupuesto = '', $proveedor = '', $estado_presupuesto = '')
+    public function paginador_presupuestos_controlador($pagina, $registros,  $url, $busqueda1, $busqueda2, $nro_presupuesto = '', $proveedor = '', $estado_presupuesto = '', $orden = 'fecha', $direccion = 'DESC')
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
@@ -338,6 +342,8 @@ class presupuestoControlador extends presupuestoModelo
         $nro_presupuesto = mainModel::limpiar_string($nro_presupuesto);
         $proveedor = mainModel::limpiar_string($proveedor);
         $estado_presupuesto = mainModel::limpiar_string($estado_presupuesto);
+        $orden = mainModel::limpiar_string($orden);
+        $direccion = strtoupper(mainModel::limpiar_string($direccion));
 
         $url = mainModel::limpiar_string($url);
         $url = SERVERURL . $url . "/";
@@ -349,46 +355,51 @@ class presupuestoControlador extends presupuestoModelo
         $reg_inicio = $inicio + 1;
         $reg_final = $inicio;
 
-        $filtros = "";
+        $filtros = [];
+        if (!empty($busqueda1) && !empty($busqueda2)) {
+            $filtros[] = [
+                "campo" => "pc.fecha",
+                "tipo"  => "DATE_RANGE",
+                "desde" => $busqueda1,
+                "hasta" => $busqueda2
+            ];
+        }
+
         if ($nro_presupuesto != "") {
-            $filtros .= " AND pc.idpresupuesto_compra = '$nro_presupuesto'";
+            $filtros[] = [
+                "campo" => "pc.idpresupuesto_compra",
+                "tipo"  => "=",
+                "valor" => $nro_presupuesto
+            ];
         }
         if ($proveedor != "") {
-            $filtros .= " AND p.razon_social LIKE '%$proveedor%'";
+            $filtros[] = [
+                "campo" => "p.razon_social",
+                "tipo"  => "LIKE",
+                "valor" => $proveedor
+            ];
         }
         if ($estado_presupuesto !== "") {
-            $filtros .= " AND pc.estado = '$estado_presupuesto'";
+            $filtros[] = [
+                "campo" => "pc.estado",
+                "tipo"  => "=",
+                "valor" => $estado_presupuesto
+            ];
         }
 
-        if (!empty($busqueda1) && !empty($busqueda2)) {
-            $consulta = "SELECT  SQL_CALC_FOUND_ROWS pc.idpresupuesto_compra as idpresupuesto_compra, pc.id_sucursal as id_sucursal,pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPre, 
-            pc.idproveedores as idproveedores, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
-            p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick, pc.updated as updated,
-            pc.updatedby as updatedby
-            FROM presupuesto_compra pc
-            INNER JOIN proveedores p on p.idproveedores = pc.idproveedores
-            INNER JOIN usuarios u on u.id_usuario = pc.id_usuario
-            WHERE date(fecha) >= '$busqueda1' AND date(fecha) <='$busqueda2' and pc.id_sucursal = '" . $_SESSION['nick_sucursal'] . "' 
-            $filtros 
-            ORDER BY fecha ASC LIMIT $inicio,$registros";
-        } else {
-            $consulta = "SELECT  SQL_CALC_FOUND_ROWS pc.idpresupuesto_compra as idpresupuesto_compra, pc.id_sucursal as id_sucursal, pc.id_usuario as id_usuario, pc.fecha as fecha, pc.estado as estadoPre, 
-            pc.idproveedores as idproveedores, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
-            p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick, pc.updated as updated,
-            pc.updatedby as updatedby
-            FROM presupuesto_compra pc
-            INNER JOIN proveedores p on p.idproveedores = pc.idproveedores
-            INNER JOIN usuarios u on u.id_usuario = pc.id_usuario
-            WHERE pc.id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
-            $filtros
-            ORDER BY pc.idpresupuesto_compra ASC LIMIT $inicio,$registros";
-        }
-        $conexion = mainModel::conectar();
-        $datos = $conexion->query($consulta);
-        $datos = $datos->fetchAll();
+        $columnasOrdenSql = [
+            'fecha' => 'pc.fecha',
+            'estado' => 'pc.estado'
+        ];
 
-        $total = $conexion->query("SELECT FOUND_ROWS()");
-        $total = (int) $total->fetchColumn();
+        $ordenamiento = mainModel::preparar_ordenamiento($orden, $direccion, $columnasOrdenSql, 'fecha', 'DESC');
+        $orden = $ordenamiento['orden'];
+        $direccion = $ordenamiento['direccion'];
+        $filtrosSQL = mainModel::construirFiltros($filtros);
+        $resultado = presupuestoModelo::listar_presupuestos_modelo($inicio, $registros, $filtrosSQL, "ORDER BY " . $ordenamiento['sql'] . ", pc.idpresupuesto_compra DESC");
+
+        $datos = $resultado['datos'];
+        $total = $resultado['total'];
 
         $Npaginas = ceil($total / $registros);
 
@@ -399,9 +410,9 @@ class presupuestoControlador extends presupuestoModelo
 								<th>#</th>
 								<th>CÓDIGO PRESUPUESTO</th>
                                 <th>PROVEEDOR</th>
-                                <th>FECHA</th>
+                                <th>' . mainModel::link_orden_tabla($url, 'fecha', 'FECHA', $orden, $direccion, 'presupuesto_orden', 'presupuesto_direccion') . '</th>
                                 <th>CREADO POR</th>
-                                <th>ESTADO</th>';
+                                <th>' . mainModel::link_orden_tabla($url, 'estado', 'ESTADO', $orden, $direccion, 'presupuesto_orden', 'presupuesto_direccion') . '</th>';
         if (mainModel::tienePermiso('compra.presupuesto.anular')) {
             $tabla .=           '<th>ANULAR</th>';
         }

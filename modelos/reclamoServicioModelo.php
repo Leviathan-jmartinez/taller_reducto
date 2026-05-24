@@ -158,7 +158,7 @@ class reclamoServicioModelo extends mainModel
     }
 
     /* ================= LISTAR / BUSCAR RECLAMOS ================= */
-    protected static function listar_reclamos_modelo($inicio, $registros, $filtrosSQL)
+    protected static function listar_reclamos_modelo($inicio, $registros, $filtrosSQL, $orderSQL = "ORDER BY rs.fecha_reclamo DESC, rs.idreclamo_servicio DESC")
     {
         $pdo = self::conectar();
 
@@ -178,7 +178,7 @@ class reclamoServicioModelo extends mainModel
         LEFT JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
         WHERE 1=1 $filtrosSQL
         GROUP BY rs.idreclamo_servicio
-        ORDER BY rs.idreclamo_servicio DESC
+        $orderSQL
         LIMIT $inicio, $registros
         ";
 

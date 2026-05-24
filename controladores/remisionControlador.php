@@ -286,7 +286,7 @@ class remisionControlador extends remisionModelo
     /**fin controlador */
 
     /**controlador paginador remision */
-    public function paginador_remision_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $nro_factura = '', $estado = '')
+    public function paginador_remision_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $nro_factura = '', $estado = '', $orden = 'fecha', $direccion = 'DESC')
     {
         if (!mainModel::tienePermiso('compra.remision.ver')) {
             echo '<div class="alert alert-danger">Acceso no autorizado</div>';
@@ -299,6 +299,8 @@ class remisionControlador extends remisionModelo
         $busqueda2  = mainModel::limpiar_string($busqueda2);
         $nro_factura = mainModel::limpiar_string($nro_factura);
         $estado      = mainModel::limpiar_string($estado);
+        $orden = mainModel::limpiar_string($orden);
+        $direccion = strtoupper(mainModel::limpiar_string($direccion));
 
         $url = mainModel::limpiar_string($url);
         $url = SERVERURL . $url . "/";
@@ -345,7 +347,15 @@ class remisionControlador extends remisionModelo
         }
 
         $filtrosSQL = mainModel::construirFiltros($filtros);
-        $res = remisionModelo::listar_remisiones_modelo($inicio, $registros, $filtrosSQL);
+        $columnasOrdenSql = [
+            'fecha' => 'r.fecha_emision',
+            'estado' => 'r.estado'
+        ];
+        $ordenamiento = mainModel::preparar_ordenamiento($orden, $direccion, $columnasOrdenSql, 'fecha', 'DESC');
+        $orden = $ordenamiento['orden'];
+        $direccion = $ordenamiento['direccion'];
+
+        $res = remisionModelo::listar_remisiones_modelo($inicio, $registros, $filtrosSQL, "ORDER BY " . $ordenamiento['sql'] . ", r.idnota_remision DESC");
         $datos = $res['datos'];
         $total = $res['total'];
         $Npaginas = ceil($total / $registros);
@@ -358,11 +368,11 @@ class remisionControlador extends remisionModelo
                     <th>#</th>
                     <th>N° REMISIÓN</th>
                     <th>FACTURA</th>
-                    <th>FECHA</th>
+                    <th>' . mainModel::link_orden_tabla($url, 'fecha', 'FECHA', $orden, $direccion, 'remision_orden', 'remision_direccion') . '</th>
                     <th>TRANSPORTISTA</th>
                     <th>MOTIVO</th>
                     <th>GENERADO POR</th>
-                    <th>ESTADO</th>';
+                    <th>' . mainModel::link_orden_tabla($url, 'estado', 'ESTADO', $orden, $direccion, 'remision_orden', 'remision_direccion') . '</th>';
 
         if (mainModel::tienePermiso('compra.remision.anular')) {
             $tabla .=           '<th>ANULAR</th>';

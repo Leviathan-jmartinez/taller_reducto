@@ -194,11 +194,13 @@ class registroServicioControlador extends registroServicioModelo
         return $html;
     }
 
-    public function listar_registro_servicio_controlador($pagina, $registros, $url, $busqueda1, $busqueda2)
+    public function listar_registro_servicio_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $orden = 'fecha', $direccion = 'DESC')
     {
         $pagina    = (int) mainModel::limpiar_string($pagina);
         $registros = (int) mainModel::limpiar_string($registros);
         $url       = SERVERURL . mainModel::limpiar_string($url) . "/";
+        $orden = mainModel::limpiar_string($orden);
+        $direccion = strtoupper(mainModel::limpiar_string($direccion));
         $estadoFiltro = $_SESSION['estado_regSer'] ?? '';
         $pagina = ($pagina > 0) ? $pagina : 1;
         $inicio = ($pagina - 1) * $registros;
@@ -223,11 +225,19 @@ class registroServicioControlador extends registroServicioModelo
         }
 
         $filtrosSQL = mainModel::construirFiltros($filtros);
+        $columnasOrdenSql = [
+            'fecha' => 'rs.fecha_ejecucion',
+            'estado' => 'rs.estado'
+        ];
+        $ordenamiento = mainModel::preparar_ordenamiento($orden, $direccion, $columnasOrdenSql, 'fecha', 'DESC');
+        $orden = $ordenamiento['orden'];
+        $direccion = $ordenamiento['direccion'];
 
         $res = registroServicioModelo::listar_registro_servicio_modelo(
             $inicio,
             $registros,
-            $filtrosSQL
+            $filtrosSQL,
+            "ORDER BY " . $ordenamiento['sql'] . ", rs.idregistro_servicio DESC"
         );
 
         $datos = $res['datos'];
@@ -242,9 +252,9 @@ class registroServicioControlador extends registroServicioModelo
                 <th>OT</th>
                 <th>Cliente</th>
                 <th>Vehículo</th>
-                <th>Fecha ejecución</th>
+                <th>' . mainModel::link_orden_tabla($url, 'fecha', 'Fecha ejecucion', $orden, $direccion, 'registro_servicio_orden', 'registro_servicio_direccion') . '</th>
                 <th>Registrado por</th>
-                <th>Estado</th>
+                <th>' . mainModel::link_orden_tabla($url, 'estado', 'Estado', $orden, $direccion, 'registro_servicio_orden', 'registro_servicio_direccion') . '</th>
                 <th>Acciones</th>
             </tr>
         </thead>

@@ -207,6 +207,54 @@
             return $sql;
         }
 
+        protected static function listar_compras_modelo($inicio, $registros, $filtrosSQL, $orderSQL)
+        {
+            $conexion = mainModel::conectar();
+
+            $selectSQL = "
+                SELECT
+                    co.idcompra_cabecera,
+                    co.id_usuario,
+                    co.id_sucursal,
+                    co.fecha_creacion,
+                    co.estado AS estadoCO,
+                    co.nro_factura,
+                    co.condicion,
+                    co.fecha_factura,
+                    co.total_compra,
+                    co.idproveedores,
+                    co.updated,
+                    co.updatedby,
+                    p.razon_social,
+                    p.ruc,
+                    p.telefono,
+                    p.direccion,
+                    p.correo,
+                    p.estado AS estadoPro,
+                    u.usu_nombre,
+                    u.usu_apellido,
+                    u.usu_estado,
+                    u.usu_nick
+            ";
+
+            $baseSQL = "
+                FROM compra_cabecera co
+                INNER JOIN proveedores p ON p.idproveedores = co.idproveedores
+                INNER JOIN usuarios u ON u.id_usuario = co.id_usuario
+                WHERE co.id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
+                $filtrosSQL
+            ";
+
+            return mainModel::ejecutarPaginador(
+                $conexion,
+                $baseSQL,
+                $selectSQL,
+                $orderSQL,
+                $inicio,
+                $registros
+            );
+        }
+
         /** modelo actualizar OC y restar cantidad pendiente */
         protected static function actualizar_oc_modelo($datos)
         {

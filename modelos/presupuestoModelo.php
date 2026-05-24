@@ -118,6 +118,50 @@ class presupuestoModelo extends mainModel
     }
     /**fin modelo */
 
+    protected static function listar_presupuestos_modelo($inicio, $registros, $filtrosSQL, $orderSQL)
+    {
+        $conexion = mainModel::conectar();
+
+        $selectSQL = "
+            SELECT
+                pc.idpresupuesto_compra,
+                pc.id_sucursal,
+                pc.id_usuario,
+                pc.fecha,
+                pc.estado AS estadoPre,
+                pc.idproveedores,
+                pc.updated,
+                pc.updatedby,
+                p.razon_social,
+                p.ruc,
+                p.telefono,
+                p.direccion,
+                p.correo,
+                p.estado AS estadoPro,
+                u.usu_nombre,
+                u.usu_apellido,
+                u.usu_estado,
+                u.usu_nick
+        ";
+
+        $baseSQL = "
+            FROM presupuesto_compra pc
+            INNER JOIN proveedores p ON p.idproveedores = pc.idproveedores
+            INNER JOIN usuarios u ON u.id_usuario = pc.id_usuario
+            WHERE pc.id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
+            $filtrosSQL
+        ";
+
+        return mainModel::ejecutarPaginador(
+            $conexion,
+            $baseSQL,
+            $selectSQL,
+            $orderSQL,
+            $inicio,
+            $registros
+        );
+    }
+
     /**modelo datos presupuesto detalle*/
     protected static function datos_presupuesto_modelo($tipo, $id = null)
     {

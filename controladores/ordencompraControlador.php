@@ -161,7 +161,7 @@ class ordencompraControlador extends ordencompraModelo
                 continue;
             }
 
-            $cantidad = (int) $cantidad;
+            $cantidad = (float) $cantidad;
             if ($cantidad > 0) {
                 $cantidades_validas[$idArticulo] = $cantidad;
             }
@@ -301,12 +301,12 @@ class ordencompraControlador extends ordencompraModelo
         $idpresupuesto = mainModel::limpiar_string((string) $idpresupuesto);
 
         if ($idpresupuesto === "" || !is_numeric($idpresupuesto)) {
-            return '<tr><td colspan="4" class="text-center">Presupuesto invalido</td></tr>';
+            return '<tr><td colspan="5" class="text-center">Presupuesto invalido</td></tr>';
         }
 
         $conexion = mainModel::conectar();
         $consulta = $conexion->prepare("
-            SELECT d.id_articulo, a.codigo, a.desc_articulo, d.precio
+            SELECT d.id_articulo, a.codigo, a.desc_articulo, d.cantidad, d.precio
             FROM presupuesto_detalle d
             INNER JOIN presupuesto_compra c
                 ON c.idpresupuesto_compra = d.idpresupuesto_compra
@@ -323,7 +323,7 @@ class ordencompraControlador extends ordencompraModelo
         $datos = $consulta->fetchAll(PDO::FETCH_ASSOC);
 
         if (empty($datos)) {
-            return '<tr><td colspan="4" class="text-center">No se encontraron articulos para este presupuesto</td></tr>';
+            return '<tr><td colspan="5" class="text-center">No se encontraron articulos para este presupuesto</td></tr>';
         }
 
         $html = "";
@@ -332,15 +332,22 @@ class ordencompraControlador extends ordencompraModelo
             $idArticulo = htmlspecialchars($row['id_articulo'], ENT_QUOTES, 'UTF-8');
             $codigo = htmlspecialchars($row['codigo'], ENT_QUOTES, 'UTF-8');
             $descripcion = htmlspecialchars($row['desc_articulo'], ENT_QUOTES, 'UTF-8');
+            $cantidad = (float) $row['cantidad'];
+            $cantidadTexto = rtrim(rtrim(number_format($cantidad, 2, '.', ''), '0'), '.');
+            if ($cantidadTexto === '') {
+                $cantidadTexto = '0';
+            }
+            $cantidadPresupuesto = htmlspecialchars($cantidadTexto, ENT_QUOTES, 'UTF-8');
             $precio = htmlspecialchars($row['precio'], ENT_QUOTES, 'UTF-8');
 
             $html .= '
                 <tr>
                     <td>' . $codigo . '</td>
                     <td>' . $descripcion . '</td>
+                    <td>' . $cantidadPresupuesto . '</td>
                     <td>' . $precio . '</td>
                     <td>
-                        <input type="number" name="cantidades[' . $idArticulo . ']" min="1" class="form-control">
+                        <input type="number" name="cantidades[' . $idArticulo . ']" min="0.01" step="0.01" value="' . $cantidadPresupuesto . '" class="form-control">
                     </td>
                 </tr>';
         }
@@ -498,13 +505,15 @@ class ordencompraControlador extends ordencompraModelo
     }
 
     /**Controlador paginar ordencompra */
-    public function paginador_ordencompra_controlador($pagina, $registros, $url, $busqueda1, $busqueda2)
+    public function paginador_ordencompra_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $orden = 'fecha', $direccion = 'DESC')
     {
         $pagina    = (int) mainModel::limpiar_string($pagina);
         $registros = (int) mainModel::limpiar_string($registros);
         $url       = SERVERURL . mainModel::limpiar_string($url) . "/";
         $busqueda1 = mainModel::limpiar_string($busqueda1);
         $busqueda2 = mainModel::limpiar_string($busqueda2);
+        $orden = mainModel::limpiar_string($orden);
+        $direccion = strtoupper(mainModel::limpiar_string($direccion));
 
         $pagina = ($pagina > 0) ? $pagina : 1;
         $registros = ($registros > 0) ? $registros : 15;
@@ -554,10 +563,17 @@ class ordencompraControlador extends ordencompraModelo
         }
 
         $filtrosSQL = mainModel::construirFiltros($filtros);
+        $columnasOrdenSql = [
+            'fecha' => 'oc.fecha',
+            'estado' => 'oc.estado'
+        ];
+        $ordenamiento = mainModel::preparar_ordenamiento($orden, $direccion, $columnasOrdenSql, 'fecha', 'DESC');
+        $orden = $ordenamiento['orden'];
+        $direccion = $ordenamiento['direccion'];
 
         /* ================= DATOS ================= */
 
-        $res = ordencompraModelo::listar_oc_modelo($inicio, $registros, $filtrosSQL);
+        $res = ordencompraModelo::listar_oc_modelo($inicio, $registros, $filtrosSQL, "ORDER BY " . $ordenamiento['sql'] . ", oc.idorden_compra DESC");
 
         $datos = $res['datos'];
         $total = $res['total'];
@@ -574,10 +590,10 @@ class ordencompraControlador extends ordencompraModelo
                 <th>#</th>
                 <th>CÓDIGO OC</th>
                 <th>PROVEEDOR</th>
-                <th>FECHA CREACION</th>
+                <th>' . mainModel::link_orden_tabla($url, 'fecha', 'FECHA CREACION', $orden, $direccion, 'oc_orden', 'oc_direccion') . '</th>
                 <th>FECHA ENTREGA</th>
                 <th>CREADO POR</th>
-                <th>ESTADO</th>
+                <th>' . mainModel::link_orden_tabla($url, 'estado', 'ESTADO', $orden, $direccion, 'oc_orden', 'oc_direccion') . '</th>
                 <th>PDF</th>';
 
         $puedeAnular = mainModel::tienePermiso('compra.oc.anular');

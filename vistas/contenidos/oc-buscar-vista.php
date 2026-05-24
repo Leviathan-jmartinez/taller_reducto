@@ -23,6 +23,7 @@ $fecha_inicio = $_SESSION['fecha_inicio_ordencompra2'] ?? null;
 $fecha_final  = $_SESSION['fecha_final_ordencompra2'] ?? null;
 $proveedor    = $_SESSION['proveedor_oc'] ?? '';
 $estado_oc    = $_SESSION['estado_oc'] ?? '';
+$ordenOC = mainModel::cargar_ordenamiento_sesion('oc', ['fecha', 'estado'], 'fecha', 'DESC');
 $busqueda_activa = !empty($fecha_inicio) || !empty($fecha_final) || !empty($proveedor) || isset($_SESSION['estado_oc']);
 ?>
 
@@ -198,7 +199,9 @@ $busqueda_activa = !empty($fecha_inicio) || !empty($fecha_final) || !empty($prov
             15,
             $pagina[0],
             $fecha_inicio,
-            $fecha_final
+            $fecha_final,
+            $ordenOC['orden'],
+            $ordenOC['direccion']
         );
         ?>
     </div>

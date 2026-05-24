@@ -314,8 +314,9 @@ $busqueda_ordencompra = $_SESSION['busqueda_ordencompra'] ?? '';
                                 <tr>
                                     <th>Código</th>
                                     <th>Descripción</th>
+                                    <th>Cant. Presup.</th>
                                     <th>Precio</th>
-                                    <th>Cargar Cantidad</th>
+                                    <th>Cant. OC</th>
                                 </tr>
                             </thead>
                             <tbody id="tbodyDetallePresupuesto">

@@ -18,6 +18,7 @@ $tipo_servicio = $_SESSION['tipo_servicio_recepcion'] ?? '';
 $prioridad = $_SESSION['prioridad_recepcion'] ?? '';
 $filtro_activo = $_SESSION['filtro_recepcion_activo'] ?? '';
 $busqueda_general = $_SESSION['busqueda_recepcion'] ?? '';
+$ordenRecepcion = mainModel::cargar_ordenamiento_sesion('recepcion', ['fecha', 'estado'], 'fecha', 'DESC');
 
 if (isset($_GET['estado_recepcion']) && in_array((string)$_GET['estado_recepcion'], ['0', '1', '2', '3'], true)) {
     $_SESSION['estado_recepcion'] = (string)$_GET['estado_recepcion'];
@@ -189,7 +190,9 @@ if (!isset($pagina)) {
             $origen_recepcion,
             $usuario,
             $tipo_servicio,
-            $prioridad
+            $prioridad,
+            $ordenRecepcion['orden'],
+            $ordenRecepcion['direccion']
         );
     } else {
         echo '<div class="alert alert-info text-center" role="alert">

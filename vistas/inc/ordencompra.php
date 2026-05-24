@@ -178,7 +178,7 @@
 
         form.querySelectorAll('input[name^="cantidades["]').forEach(input => {
             let cantidad = input.value.trim();
-            if (cantidad !== "" && !isNaN(cantidad) && parseInt(cantidad, 10) > 0) {
+            if (cantidad !== "" && !isNaN(cantidad) && parseFloat(cantidad) > 0) {
                 tieneCantidad = true;
             }
         });

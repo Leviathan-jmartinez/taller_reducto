@@ -26,30 +26,32 @@ $fecha_inicio_dt = $fecha_inicio ? $fecha_inicio . ' 00:00:00' : '';
 $fecha_final_dt  = $fecha_final  ? $fecha_final  . ' 23:59:59' : '';
 $nro_factura  = $_SESSION['nro_factura_compra'] ?? '';
 $razon_social = $_SESSION['razon_social_compra'] ?? '';
+$ordenCompra = mainModel::cargar_ordenamiento_sesion('compra', ['fecha', 'estado'], 'fecha', 'DESC');
 
 
 
 ?>
 
 <?php if (!$fecha_inicio && !$fecha_final && !$nro_factura && !$razon_social) { ?>
-    <div class="container-fluid">
-        <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="default" autocomplete="off">
+    <div class="container-fluid form-neon">
+        <h3 class="text-left">
+            <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR FACTURA DE COMPRA
+        </h3>
+        <ul class="full-box list-unstyled page-nav-tabs">
+            <li>
+                <a href="<?php echo SERVERURL; ?>factura-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; INGRESO DE FACTURA DE COMPRA</a>
+            </li>
+            <li>
+                <a class="active" href="<?php echo SERVERURL; ?>factura-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR FACTURAS DE COMPRA</a>
+            </li>
+        </ul>
+        <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
             <input type="hidden" name="modulo" value="compra">
 
             <!-- Inputs ocultos para enviar datetime completo -->
             <input type="hidden" name="fecha_inicio_dt" value="">
             <input type="hidden" name="fecha_final_dt" value="">
-            <h3 class="text-left">
-                <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR FACTURA DE COMPRA
-            </h3>
-            <ul class="full-box list-unstyled page-nav-tabs">
-                <li>
-                    <a href="<?php echo SERVERURL; ?>factura-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; INGRESO DE FACTURA DE COMPRA</a>
-                </li>
-                <li>
-                    <a class="active" href="<?php echo SERVERURL; ?>factura-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR FACTURAS DE COMPRA</a>
-                </li>
-            </ul>
+
             <div class="container-fluid">
                 <div class="row justify-content-md-center">
                     <div class="col-12 col-md-4">
@@ -88,7 +90,18 @@ $razon_social = $_SESSION['razon_social_compra'] ?? '';
     </div>
 
 <?php } else { ?>
-    <div class="container-fluid">
+    <div class="container-fluid form-neon">
+        <h3 class="text-left">
+            <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR FACTURA DE COMPRA
+        </h3>
+        <ul class="full-box list-unstyled page-nav-tabs">
+            <li>
+                <a href="<?php echo SERVERURL; ?>factura-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; INGRESO DE FACTURA DE COMPRA</a>
+            </li>
+            <li>
+                <a class="active" href="<?php echo SERVERURL; ?>factura-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR FACTURAS DE COMPRA</a>
+            </li>
+        </ul>
         <form class="FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
             <input type="hidden" name="modulo" value="compra">
             <input type="hidden" name="eliminar_busqueda" value="eliminar">
@@ -123,11 +136,11 @@ $razon_social = $_SESSION['razon_social_compra'] ?? '';
                 </div>
             </div>
         </form>
-    </div>
 
 
 
-    <div class="container-fluid">
+
+
         <?php
         require_once "./controladores/compraControlador.php";
         $compra = new compraControlador();
@@ -138,7 +151,9 @@ $razon_social = $_SESSION['razon_social_compra'] ?? '';
             $_SESSION['fecha_inicio_compra'] ?? '',
             $_SESSION['fecha_final_compra'] ?? '',
             $_SESSION['nro_factura_compra'] ?? '',
-            $_SESSION['razon_social_compra'] ?? ''
+            $_SESSION['razon_social_compra'] ?? '',
+            $ordenCompra['orden'],
+            $ordenCompra['direccion']
         );
         ?>
     </div>

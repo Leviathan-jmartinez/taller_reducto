@@ -148,7 +148,9 @@ class loginControlador extends loginModelo
 
         loginModelo::reiniciar_intentos_login_modelo($row['id_usuario']);
 
-        session_start(['name' => 'STR']);
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start(['name' => 'STR']);
+        }
         $_SESSION['id_str'] = $row['id_usuario'];
         $_SESSION['nombre_str'] = $row['usu_nombre'];
         $_SESSION['apellido_str'] = $row['usu_apellido'];
@@ -172,7 +174,7 @@ class loginControlador extends loginModelo
         /**procesar con md5 */
         $_SESSION['token_str'] = md5(uniqid(mt_rand(), true));
         if ($_SESSION['cambiar_clave_str'] === 1) {
-            return header("Location: " . SERVERURL . "cambiar-clave/");
+            return header("Location: " . SERVERURL . "login/?cambiar=1");
         }
         return header("Location: " . SERVERURL . "home/");
     }

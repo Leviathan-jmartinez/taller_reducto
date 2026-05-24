@@ -14,6 +14,7 @@ $placa = $_SESSION['placa_diag'] ?? '';
 $estado = $_SESSION['estado_diag'] ?? '';
 $origen = $_SESSION['origen_diag'] ?? '';
 $busqueda_general = $_SESSION['busqueda_general_diag'] ?? '';
+$ordenDiagnostico = mainModel::cargar_ordenamiento_sesion('diagnostico', ['fecha', 'estado'], 'fecha', 'DESC');
 
 if (isset($_GET['estado_diag']) && in_array((string)$_GET['estado_diag'], ['0', '1', '2', '3'], true)) {
     $_SESSION['estado_diag'] = (string)$_GET['estado_diag'];
@@ -144,7 +145,9 @@ if (isset($_GET['estado_diag']) && in_array((string)$_GET['estado_diag'], ['0', 
         $_SESSION['nro_recepcion_diag'] ?? '',
         $_SESSION['estado_diag'] ?? '',
         $_SESSION['origen_diag'] ?? '',
-        $_SESSION['busqueda_general_diag'] ?? ''
+        $_SESSION['busqueda_general_diag'] ?? '',
+        $ordenDiagnostico['orden'],
+        $ordenDiagnostico['direccion']
     );
     ?>
 </div>

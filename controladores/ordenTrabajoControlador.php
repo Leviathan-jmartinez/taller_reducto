@@ -5,11 +5,13 @@ require_once __DIR__ . "/../modelos/ordenTrabajoModelo.php";
 class ordenTrabajoControlador extends ordenTrabajoModelo
 {
 
-    public function listar_ot_controlador($pagina, $registros, $url, $busqueda1, $busqueda2)
+    public function listar_ot_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $orden = 'fecha', $direccion = 'DESC')
     {
         $pagina    = (int) mainModel::limpiar_string($pagina);
         $registros = (int) mainModel::limpiar_string($registros);
         $url       = SERVERURL . mainModel::limpiar_string($url) . "/";
+        $orden = mainModel::limpiar_string($orden);
+        $direccion = strtoupper(mainModel::limpiar_string($direccion));
 
         $estadoFiltro = $_SESSION['estado_ot'] ?? '';
 
@@ -40,10 +42,17 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
         }
 
         $filtrosSQL = mainModel::construirFiltros($filtros);
+        $columnasOrdenSql = [
+            'fecha' => 'ot.fecha_inicio',
+            'estado' => 'ot.estado'
+        ];
+        $ordenamiento = mainModel::preparar_ordenamiento($orden, $direccion, $columnasOrdenSql, 'fecha', 'DESC');
+        $orden = $ordenamiento['orden'];
+        $direccion = $ordenamiento['direccion'];
 
         /* ================= DATOS ================= */
 
-        $res = ordenTrabajoModelo::listar_ot_modelo($inicio, $registros, $filtrosSQL);
+        $res = ordenTrabajoModelo::listar_ot_modelo($inicio, $registros, $filtrosSQL, "ORDER BY " . $ordenamiento['sql'] . ", ot.idorden_trabajo DESC");
 
         $datos = $res['datos'];
         $total = $res['total'];
@@ -56,10 +65,10 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
                 <th>#</th>
                 <th>Cliente</th>
                 <th>Vehículo</th>
-                <th>Fecha</th>
+                <th>' . mainModel::link_orden_tabla($url, 'fecha', 'Fecha', $orden, $direccion, 'ot_orden', 'ot_direccion') . '</th>
                 <th>Presupuesto</th>
                 <th>Creado por</th>
-                <th>Estado</th>
+                <th>' . mainModel::link_orden_tabla($url, 'estado', 'Estado', $orden, $direccion, 'ot_orden', 'ot_direccion') . '</th>
                 <th>Acciones</th>
             </tr>
         </thead>

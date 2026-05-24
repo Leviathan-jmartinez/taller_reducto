@@ -152,11 +152,13 @@ class reclamoServicioControlador extends reclamoServicioModelo
         return $html . '</tbody></table>';
     }
 
-    public function listar_reclamo_controlador($pagina, $registros, $url, $busqueda = "")
+    public function listar_reclamo_controlador($pagina, $registros, $url, $busqueda = "", $orden = 'fecha', $direccion = 'DESC')
     {
         $pagina    = (int) mainModel::limpiar_string($pagina);
         $registros = (int) mainModel::limpiar_string($registros);
         $url       = SERVERURL . mainModel::limpiar_string($url) . "/";
+        $orden = mainModel::limpiar_string($orden);
+        $direccion = strtoupper(mainModel::limpiar_string($direccion));
 
         $pagina = ($pagina > 0) ? $pagina : 1;
         $inicio = ($pagina - 1) * $registros;
@@ -197,12 +199,20 @@ class reclamoServicioControlador extends reclamoServicioModelo
         }
 
         $filtrosSQL = mainModel::construirFiltros($filtros);
+        $columnasOrdenSql = [
+            'fecha' => 'rs.fecha_reclamo',
+            'estado' => 'rs.estado'
+        ];
+        $ordenamiento = mainModel::preparar_ordenamiento($orden, $direccion, $columnasOrdenSql, 'fecha', 'DESC');
+        $orden = $ordenamiento['orden'];
+        $direccion = $ordenamiento['direccion'];
 
         /* ================= CONSULTA ================= */
         $res = reclamoServicioModelo::listar_reclamos_modelo(
             $inicio,
             $registros,
-            $filtrosSQL
+            $filtrosSQL,
+            "ORDER BY " . $ordenamiento['sql'] . ", rs.idreclamo_servicio DESC"
         );
 
         $datos = $res['datos'];
@@ -217,9 +227,9 @@ class reclamoServicioControlador extends reclamoServicioModelo
                 <th>Reclamo</th>
                 <th>Cliente</th>
                 <th>Vehículo</th>
-                <th>Fecha</th>
+                <th>' . mainModel::link_orden_tabla($url, 'fecha', 'Fecha', $orden, $direccion, 'reclamo_servicio_orden', 'reclamo_servicio_direccion') . '</th>
                 <th>Descripción</th>
-                <th>Estado</th>';
+                <th>' . mainModel::link_orden_tabla($url, 'estado', 'Estado', $orden, $direccion, 'reclamo_servicio_orden', 'reclamo_servicio_direccion') . '</th>';
 
         if (mainModel::tienePermiso('servicio.reclamo.anular')) {
             $tabla .= '<th>ANULAR</th>';

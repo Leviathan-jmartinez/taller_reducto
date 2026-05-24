@@ -29,7 +29,6 @@ class diagnosticoModelo extends mainModel
         INNER JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
         INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
         INNER JOIN marcas ma ON ma.id_marcas = m.id_marcas
-        LEFT JOIN reclamo_servicio rc ON rc.idregistro_servicio = rs.idrecepcion
         WHERE rs.estado = 1 
           AND (
                 c.nombre_cliente LIKE :b
@@ -228,7 +227,7 @@ class diagnosticoModelo extends mainModel
         }
     }
 
-    protected static function listar_diagnosticos_modelo($inicio, $registros, $filtrosSQL)
+    protected static function listar_diagnosticos_modelo($inicio, $registros, $filtrosSQL, $orderSQL = "ORDER BY d.fecha_diagnostico DESC, d.id_diagnostico DESC")
     {
         $conexion = mainModel::conectar();
 
@@ -275,8 +274,6 @@ class diagnosticoModelo extends mainModel
             u.usu_nombre,
             u.usu_apellido
         ";
-
-        $orderSQL = "ORDER BY d.id_diagnostico DESC";
 
         return mainModel::ejecutarPaginador(
             $conexion,

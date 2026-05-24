@@ -448,7 +448,7 @@ class registroServicioModelo extends mainModel
     }
 
 
-    protected static function listar_registro_servicio_modelo($inicio, $registros, $filtrosSQL)
+    protected static function listar_registro_servicio_modelo($inicio, $registros, $filtrosSQL, $orderSQL = "ORDER BY rs.fecha_ejecucion DESC, rs.idregistro_servicio DESC")
     {
         $pdo = self::conectar();
 
@@ -501,7 +501,7 @@ class registroServicioModelo extends mainModel
 
         WHERE 1=1 $filtrosSQL
 
-        ORDER BY rs.idregistro_servicio DESC
+        $orderSQL
         LIMIT $inicio, $registros
         ";
 
@@ -512,6 +512,7 @@ class registroServicioModelo extends mainModel
         FROM registro_servicio rs
         INNER JOIN orden_trabajo ot 
             ON ot.idorden_trabajo = rs.idorden_trabajo
+        WHERE 1=1 $filtrosSQL
         ")->fetchColumn();
 
         return [

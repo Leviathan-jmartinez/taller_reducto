@@ -8,6 +8,7 @@ if (!mainModel::tienePermiso('servicio.presupuesto.ver')) {
 $fecha_inicio = $_SESSION['fecha_inicio_presupuesto_servicio'] ?? '';
 $fecha_final  = $_SESSION['fecha_final_presupuesto_servicio'] ?? '';
 $estado = $_SESSION['estado_presupuesto'] ?? '';
+$ordenPresupuestoServicio = mainModel::cargar_ordenamiento_sesion('presupuesto_servicio', ['fecha', 'estado'], 'fecha', 'DESC');
 $busqueda_activa = isset($_SESSION['filtro_presupuesto_servicio_activo']);
 ?>
 
@@ -133,7 +134,9 @@ $busqueda_activa = isset($_SESSION['filtro_presupuesto_servicio_activo']);
             15,
             $pagina[0],
             $fecha_inicio,
-            $fecha_final
+            $fecha_final,
+            $ordenPresupuestoServicio['orden'],
+            $ordenPresupuestoServicio['direccion']
         );
     } else {
         echo '<div class="alert alert-info text-center">Ingrese un criterio de busqueda para ver presupuestos.</div>';

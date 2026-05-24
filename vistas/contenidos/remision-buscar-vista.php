@@ -15,6 +15,7 @@
     $fecha_final  = $_SESSION['fecha_final_remision'] ?? '';
     $nro_factura  = $_SESSION['nro_factura_remision'] ?? '';
     $estado       = $_SESSION['estado_remision'] ?? '';
+    $ordenRemision = mainModel::cargar_ordenamiento_sesion('remision', ['fecha', 'estado'], 'fecha', 'DESC');
 
     $fecha_inicio_dt = $fecha_inicio ? $fecha_inicio . ' 00:00:00' : '';
     $fecha_final_dt  = $fecha_final  ? $fecha_final  . ' 23:59:59' : '';
@@ -182,7 +183,9 @@
                 $_SESSION['fecha_inicio_remision'] ?? '',
                 $_SESSION['fecha_final_remision'] ?? '',
                 $_SESSION['nro_factura_remision'] ?? '',
-                $_SESSION['estado_remision'] ?? ''
+                $_SESSION['estado_remision'] ?? '',
+                $ordenRemision['orden'],
+                $ordenRemision['direccion']
             );
             ?>
      </div>

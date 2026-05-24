@@ -174,15 +174,15 @@ if (session_status() == PHP_SESSION_NONE) {
 
 <!-- MODAL BUSCAR PEDIDO -->
 <div class="modal fade" id="ModalBuscarPedido" tabindex="-1" role="dialog" aria-labelledby="ModalBuscarPedido" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="ModalBuscarPedido">Agregar Pedido</h5>
+                <h5 class="modal-title" id="ModalBuscarPedido">Buscar Pedido</h5>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <div class="form-group">
-                        <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" placeholder="Ingrese codigo de pedido" class="form-control" name="input_pedido" id="input_pedido" maxlength="30">
+                        <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ-]{1,30}" placeholder="Ingrese parámetros de búsqueda, código, fecha, o usuario del pedido" class="form-control" name="input_pedido" id="input_pedido" maxlength="30">
                     </div>
                 </div>
                 <br>

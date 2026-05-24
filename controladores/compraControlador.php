@@ -207,14 +207,22 @@ class compraControlador extends compraModelo
             ];
         }
 
-        if ($condicion === 'contado') {
-            $intervalo = 0;
-            $cuotas = 1;
-        } elseif ($intervalo <= 0 || $cuotas <= 0) {
+        if ($intervalo <= 0) {
             return [
                 "Alerta" => "simple",
                 "Titulo" => "Error",
-                "Texto" => "Para compras a credito debe indicar intervalo y cuotas mayores a 0.",
+                "Texto" => "Para compras debe indicar un intervalo mayor a 0.",
+                "Tipo" => "error"
+            ];
+        }
+
+        if ($condicion === 'contado') {
+            $cuotas = 1;
+        } elseif ($cuotas <= 0) {
+            return [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Para compras a credito debe indicar cuotas mayores a 0.",
                 "Tipo" => "error"
             ];
         }
@@ -392,7 +400,7 @@ class compraControlador extends compraModelo
         ================================ */
             $total     = $totalReal;
 
-            if ($condicion === 'credito') {
+            if ($condicion === 'credito' || $condicion === 'contado') {
                 $monto_cuota = round($total / $cuotas, 2);
                 $monto_acumulado = 0;
 
@@ -756,7 +764,7 @@ class compraControlador extends compraModelo
     /**fin controlador */
 
     /** Controlador paginar compras */
-    public function paginador_compra_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $nro_factura = '', $razon_social = '')
+    public function paginador_compra_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $nro_factura = '', $razon_social = '', $orden = 'fecha', $direccion = 'DESC')
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
@@ -764,6 +772,8 @@ class compraControlador extends compraModelo
         $busqueda2 = mainModel::limpiar_string($busqueda2);
         $nro_factura  = mainModel::limpiar_string($nro_factura);
         $razon_social = mainModel::limpiar_string($razon_social);
+        $orden = mainModel::limpiar_string($orden);
+        $direccion = strtoupper(mainModel::limpiar_string($direccion));
 
         $url = mainModel::limpiar_string($url);
         $url = SERVERURL . $url . "/";
@@ -775,69 +785,53 @@ class compraControlador extends compraModelo
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
         $reg_inicio = $inicio + 1;
         $reg_final = $inicio;
-        $filtros = "";
+        $filtros = [];
+
+        $busquedaPorFecha = !empty($busqueda1) && !empty($busqueda2);
+        if ($busquedaPorFecha) {
+            $filtros[] = [
+                "campo" => "co.fecha_creacion",
+                "tipo"  => "DATE_RANGE",
+                "desde" => $busqueda1,
+                "hasta" => $busqueda2
+            ];
+        } else {
+            $filtros[] = [
+                "campo" => "co.estado",
+                "tipo"  => "!=",
+                "valor" => 0
+            ];
+        }
 
         if ($nro_factura != "") {
-            $filtros .= " AND co.nro_factura = '$nro_factura'";
+            $filtros[] = [
+                "campo" => "co.nro_factura",
+                "tipo"  => "=",
+                "valor" => $nro_factura
+            ];
         }
 
         if ($razon_social != "") {
-            $filtros .= " AND p.razon_social LIKE '%$razon_social%'";
+            $filtros[] = [
+                "campo" => "p.razon_social",
+                "tipo"  => "LIKE",
+                "valor" => $razon_social
+            ];
         }
 
-        if (!empty($busqueda1) && !empty($busqueda2)) {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS co.idcompra_cabecera as idcompra_cabecera, co.id_usuario as id_usuario, co.id_sucursal as id_sucursal, co.fecha_creacion as fecha_creacion, co.estado as estadoCO, co.nro_factura AS nro_factura, co.condicion as condicion,
-            co.fecha_factura as fecha_factura, total_compra AS total_compra, co.idproveedores as idproveedores, p.razon_social as razon_social, p.ruc as ruc, p.telefono as telefono, p.direccion as direccion, p.correo as correo, 
-            p.estado as estadoPro, u.usu_nombre as usu_nombre, u.usu_apellido as usu_apellido, u.usu_estado as usu_estado, u.usu_nick as usu_nick, co.updated as updated,
-            co.updatedby as updatedby
-            FROM compra_cabecera co
-            INNER JOIN proveedores p on p.idproveedores = co.idproveedores
-            INNER JOIN usuarios u on u.id_usuario = co.id_usuario
-            WHERE date(co.fecha_creacion) >= '$busqueda1'
-            AND date(co.fecha_creacion) <= '$busqueda2'
-            AND co.id_sucursal = '{$_SESSION['nick_sucursal']}'
-            $filtros
-            ORDER BY fecha_creacion ASC LIMIT $inicio,$registros";
-        } else {
-            $consulta = "SELECT SQL_CALC_FOUND_ROWS
-            co.idcompra_cabecera,
-            co.id_usuario,
-            co.id_sucursal,
-            co.fecha_creacion,
-            co.estado AS estadoCO,
-            co.nro_factura,
-            co.condicion,
-            co.fecha_factura,
-            co.total_compra,
-            p.razon_social,
-            p.ruc,
-            p.telefono,
-            p.direccion,
-            p.correo,
-            p.estado AS estadoPro,
-            u.usu_nombre,
-            u.usu_apellido,
-            u.usu_estado,
-            u.usu_nick,
-            co.updated,
-            co.updatedby
-        FROM compra_cabecera co
-        INNER JOIN proveedores p ON p.idproveedores = co.idproveedores
-        INNER JOIN usuarios u ON u.id_usuario = co.id_usuario
-        WHERE co.estado != 0
-          AND co.id_sucursal = '{$_SESSION['nick_sucursal']}'
-          $filtros
-        ORDER BY co.idcompra_cabecera ASC
-        LIMIT $inicio,$registros
-        ";
-        }
+        $columnasOrdenSql = [
+            'fecha' => 'co.fecha_creacion',
+            'estado' => 'co.estado'
+        ];
 
-        $conexion = mainModel::conectar();
-        $datos = $conexion->query($consulta);
-        $datos = $datos->fetchAll();
+        $ordenamiento = mainModel::preparar_ordenamiento($orden, $direccion, $columnasOrdenSql, 'fecha', 'DESC');
+        $orden = $ordenamiento['orden'];
+        $direccion = $ordenamiento['direccion'];
+        $filtrosSQL = mainModel::construirFiltros($filtros);
+        $resultado = compraModelo::listar_compras_modelo($inicio, $registros, $filtrosSQL, "ORDER BY " . $ordenamiento['sql'] . ", co.idcompra_cabecera DESC");
 
-        $total = $conexion->query("SELECT FOUND_ROWS()");
-        $total = (int) $total->fetchColumn();
+        $datos = $resultado['datos'];
+        $total = $resultado['total'];
 
         $Npaginas = ceil($total / $registros);
 
@@ -848,10 +842,10 @@ class compraControlador extends compraModelo
 								<th>#</th>
                                 <th>PROVEEDOR</th>
                                 <th>FACTURA</th>
-                                <th>FECHA</th>
+                                <th>' . mainModel::link_orden_tabla($url, 'fecha', 'FECHA', $orden, $direccion, 'compra_orden', 'compra_direccion') . '</th>
                                 <th>TOTAL COMPRA</th>
                                 <th>CARGADO POR</th>
-                                <th>ESTADO</th>';
+                                <th>' . mainModel::link_orden_tabla($url, 'estado', 'ESTADO', $orden, $direccion, 'compra_orden', 'compra_direccion') . '</th>';
         $puedeAnular = mainModel::tienePermiso('compra.anular');
 
         if ($puedeAnular) {

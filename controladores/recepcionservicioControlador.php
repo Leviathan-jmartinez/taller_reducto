@@ -338,7 +338,7 @@ class recepcionservicioControlador extends recepcionservicioModelo
         ]);
     }
 
-    public function listar_recepcion_controlador($pagina, $registros, $url, $busqueda = '', $fecha_inicio = '', $fecha_final = '', $nro_recepcion = '', $cliente = '', $documento = '', $placa = '', $estado_recepcion = '', $origen = '', $usuario = '', $tipo_servicio = '', $prioridad = '')
+    public function listar_recepcion_controlador($pagina, $registros, $url, $busqueda = '', $fecha_inicio = '', $fecha_final = '', $nro_recepcion = '', $cliente = '', $documento = '', $placa = '', $estado_recepcion = '', $origen = '', $usuario = '', $tipo_servicio = '', $prioridad = '', $orden = 'fecha', $direccion = 'DESC')
     {
         $pagina    = (int) mainModel::limpiar_string($pagina);
         $registros = (int) mainModel::limpiar_string($registros);
@@ -362,6 +362,8 @@ class recepcionservicioControlador extends recepcionservicioModelo
         $usuario = mainModel::limpiar_string($usuario);
         $tipo_servicio = mainModel::limpiar_string($tipo_servicio);
         $prioridad = mainModel::limpiar_string($prioridad);
+        $orden = mainModel::limpiar_string($orden);
+        $direccion = strtoupper(mainModel::limpiar_string($direccion));
 
         /* ================= FILTROS ================= */
 
@@ -453,10 +455,17 @@ class recepcionservicioControlador extends recepcionservicioModelo
         }
 
         $filtrosSQL = mainModel::construirFiltros($filtros);
+        $columnasOrdenSql = [
+            'fecha' => 'rs.fecha_ingreso',
+            'estado' => 'rs.estado'
+        ];
+        $ordenamiento = mainModel::preparar_ordenamiento($orden, $direccion, $columnasOrdenSql, 'fecha', 'DESC');
+        $orden = $ordenamiento['orden'];
+        $direccion = $ordenamiento['direccion'];
 
         /* ================= MODELO ================= */
 
-        $res = recepcionservicioModelo::listar_recepcion_modelo($inicio, $registros, $filtrosSQL);
+        $res = recepcionservicioModelo::listar_recepcion_modelo($inicio, $registros, $filtrosSQL, "ORDER BY " . $ordenamiento['sql'] . ", rs.idrecepcion DESC");
 
         $datos = $res['datos'];
         $total = $res['total'];
@@ -472,7 +481,7 @@ class recepcionservicioControlador extends recepcionservicioModelo
             <thead>
                 <tr class="text-center roboto-medium">
                     <th>#</th>
-                    <th>Fecha</th>
+                    <th>' . mainModel::link_orden_tabla($url, 'fecha', 'Fecha', $orden, $direccion, 'recepcion_orden', 'recepcion_direccion') . '</th>
                     <th>Cliente</th>
                     <th>CI/RUC</th>
                     <th>Vehículo</th>
@@ -482,7 +491,7 @@ class recepcionservicioControlador extends recepcionservicioModelo
                     <th>Prioridad</th>
                     <th>Fotos</th>
                     <th>Usuario</th>
-                    <th>Estado</th>';
+                    <th>' . mainModel::link_orden_tabla($url, 'estado', 'Estado', $orden, $direccion, 'recepcion_orden', 'recepcion_direccion') . '</th>';
 
         $puedeAnular = mainModel::tienePermiso('servicio.recepcion.anular');
 

@@ -93,7 +93,7 @@ class remisionModelo extends mainModel
         return $sql->execute();
     }
 
-    protected static function listar_remisiones_modelo($inicio, $registros, $filtrosSQL)
+    protected static function listar_remisiones_modelo($inicio, $registros, $filtrosSQL, $orderSQL = "ORDER BY r.idnota_remision DESC")
     {
         $conexion = mainModel::conectar();
         $id_sucursal = mainModel::limpiar_string($_SESSION['nick_sucursal']);
@@ -105,7 +105,7 @@ class remisionModelo extends mainModel
         WHERE r.id_sucursal = '$id_sucursal'
         $filtrosSQL";
 
-        $datos = $conexion->query("
+        $selectSQL = "
         SELECT
             r.idnota_remision,
             r.id_sucursal,
@@ -118,20 +118,16 @@ class remisionModelo extends mainModel
             cc.nro_factura,
             u.usu_nombre,
             u.usu_apellido
-        $baseSQL
-        ORDER BY r.idnota_remision DESC
-        LIMIT $inicio, $registros
-        ")->fetchAll(PDO::FETCH_ASSOC);
+        ";
 
-        $total = (int)$conexion->query("
-        SELECT COUNT(*)
-        $baseSQL
-        ")->fetchColumn();
-
-        return [
-            "datos" => $datos,
-            "total" => $total
-        ];
+        return mainModel::ejecutarPaginador(
+            $conexion,
+            $baseSQL,
+            $selectSQL,
+            $orderSQL,
+            $inicio,
+            $registros
+        );
     }
 
 

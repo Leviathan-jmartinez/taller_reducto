@@ -499,7 +499,7 @@ class notasCreDeControlador extends notasCreDeModelo
     }
 
     /** Controlador paginar compras */
-    public function paginador_notasCreDe_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $nro_documento = '', $tipo_nota = '')
+    public function paginador_notasCreDe_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $nro_documento = '', $tipo_nota = '', $orden = 'fecha', $direccion = 'DESC')
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
@@ -507,6 +507,8 @@ class notasCreDeControlador extends notasCreDeModelo
         $busqueda2 = mainModel::limpiar_string($busqueda2);
         $nro_documento = mainModel::limpiar_string($nro_documento);
         $tipo_nota     = strtolower(mainModel::limpiar_string($tipo_nota));
+        $orden = mainModel::limpiar_string($orden);
+        $direccion = strtoupper(mainModel::limpiar_string($direccion));
 
 
         $url = mainModel::limpiar_string($url);
@@ -520,13 +522,21 @@ class notasCreDeControlador extends notasCreDeModelo
         $reg_inicio = $inicio + 1;
         $reg_final = $inicio;
 
+        $columnasOrdenSql = [
+            'fecha' => 'nc.fecha_creacion',
+            'estado' => 'nc.estado'
+        ];
+        $ordenamiento = mainModel::preparar_ordenamiento($orden, $direccion, $columnasOrdenSql, 'fecha', 'DESC');
+        $orden = $ordenamiento['orden'];
+        $direccion = $ordenamiento['direccion'];
+
         $resultado = notasCreDeModelo::paginarNotasCompraModelo($inicio, $registros, [
             'id_sucursal'   => $_SESSION['nick_sucursal'],
             'fecha_inicio'  => $busqueda1,
             'fecha_final'   => $busqueda2,
             'nro_documento' => $nro_documento,
             'tipo_nota'     => $tipo_nota
-        ]);
+        ], "ORDER BY " . $ordenamiento['sql'] . ", nc.idnota_compra DESC");
 
         $datos = $resultado['datos'];
         $total = $resultado['total'];
@@ -540,12 +550,12 @@ class notasCreDeControlador extends notasCreDeModelo
                                     <th>#</th>
                                     <th>PROVEEDOR</th>
                                     <th>NUMERO DE DOCUMENTO</th>
-                                    <th>FECHA</th>
+                                    <th>' . mainModel::link_orden_tabla($url, 'fecha', 'FECHA', $orden, $direccion, 'nota_orden', 'nota_direccion') . '</th>
                                     <th>TOTAL DOCUMENTO</th>
                                     <th>FACTURA ASOCIADA</th>
                                     <th>TIPO DOCUMENTO</th>
                                     <th>CARGADO POR</th>
-                                    <th>ESTADO</th>';
+                                    <th>' . mainModel::link_orden_tabla($url, 'estado', 'ESTADO', $orden, $direccion, 'nota_orden', 'nota_direccion') . '</th>';
         $puedeAnular = mainModel::tienePermiso('compra.nota.anular');
 
         if ($puedeAnular) {

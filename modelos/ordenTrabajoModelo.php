@@ -424,7 +424,7 @@ class ordenTrabajoModelo extends mainModel
         }
     }
 
-    protected static function listar_ot_modelo($inicio, $registros, $filtrosSQL)
+    protected static function listar_ot_modelo($inicio, $registros, $filtrosSQL, $orderSQL = "ORDER BY ot.fecha_inicio DESC, ot.idorden_trabajo DESC")
     {
         $conexion = mainModel::conectar();
 
@@ -475,8 +475,6 @@ class ordenTrabajoModelo extends mainModel
             COALESCE(v.placa, '') AS placa,
             COALESCE(ma.mod_descri, '') AS modelo
         ";
-
-        $orderSQL = "ORDER BY ot.idorden_trabajo DESC";
 
         return mainModel::ejecutarPaginador(
             $conexion,

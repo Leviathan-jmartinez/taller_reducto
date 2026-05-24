@@ -7,6 +7,7 @@ if (!mainModel::tienePermiso('servicio.reclamo.ver')) {
 
 $busqueda = $_SESSION['busqueda_reclamo_servicio'] ?? '';
 $estado   = $_SESSION['estado_reclamo_servicio'] ?? '';
+$ordenReclamoServicio = mainModel::cargar_ordenamiento_sesion('reclamo_servicio', ['fecha', 'estado'], 'fecha', 'DESC');
 
 if (isset($_GET['estado_reclamo_servicio']) && in_array((string)$_GET['estado_reclamo_servicio'], ['0', '1', '2', '3'], true)) {
     $_SESSION['estado_reclamo_servicio'] = (string)$_GET['estado_reclamo_servicio'];
@@ -145,7 +146,9 @@ $hayFiltro = $busqueda !== '' || $estado !== '';
             $pagina[1],
             15,
             $pagina[0],
-            $busqueda
+            $busqueda,
+            $ordenReclamoServicio['orden'],
+            $ordenReclamoServicio['direccion']
         );
     } else {
         echo '<div class="alert alert-info text-center">

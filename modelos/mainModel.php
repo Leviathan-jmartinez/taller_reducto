@@ -102,6 +102,71 @@ class mainModel
         }
     }
 
+    /** Ordenamiento reutilizable para listados */
+    public static function cargar_ordenamiento_sesion($prefijo, $columnasPermitidas, $ordenDefault = 'fecha', $direccionDefault = 'DESC')
+    {
+        $paramOrden = $prefijo . '_orden';
+        $paramDireccion = $prefijo . '_direccion';
+        $direccionDefault = strtoupper($direccionDefault);
+
+        if (isset($_GET[$paramOrden]) && in_array((string)$_GET[$paramOrden], $columnasPermitidas, true)) {
+            $_SESSION[$paramOrden] = (string)$_GET[$paramOrden];
+        }
+
+        if (isset($_GET[$paramDireccion]) && in_array(strtoupper((string)$_GET[$paramDireccion]), ['ASC', 'DESC'], true)) {
+            $_SESSION[$paramDireccion] = strtoupper((string)$_GET[$paramDireccion]);
+        }
+
+        if (!isset($_SESSION[$paramOrden]) || !in_array((string)$_SESSION[$paramOrden], $columnasPermitidas, true)) {
+            $_SESSION[$paramOrden] = $ordenDefault;
+        }
+
+        if (!isset($_SESSION[$paramDireccion]) || !in_array((string)$_SESSION[$paramDireccion], ['ASC', 'DESC'], true)) {
+            $_SESSION[$paramDireccion] = in_array($direccionDefault, ['ASC', 'DESC'], true) ? $direccionDefault : 'DESC';
+        }
+
+        return [
+            'orden' => $_SESSION[$paramOrden],
+            'direccion' => $_SESSION[$paramDireccion],
+            'param_orden' => $paramOrden,
+            'param_direccion' => $paramDireccion
+        ];
+    }
+
+    public static function preparar_ordenamiento($orden, $direccion, $columnasSql, $ordenDefault = 'fecha', $direccionDefault = 'DESC')
+    {
+        $orden = self::limpiar_string($orden);
+        $direccion = strtoupper(self::limpiar_string($direccion));
+        $direccionDefault = strtoupper($direccionDefault);
+
+        if (!isset($columnasSql[$orden])) {
+            $orden = isset($columnasSql[$ordenDefault]) ? $ordenDefault : array_key_first($columnasSql);
+        }
+
+        if (!in_array($direccion, ['ASC', 'DESC'], true)) {
+            $direccion = in_array($direccionDefault, ['ASC', 'DESC'], true) ? $direccionDefault : 'DESC';
+        }
+
+        return [
+            'orden' => $orden,
+            'direccion' => $direccion,
+            'sql' => $columnasSql[$orden] . ' ' . $direccion
+        ];
+    }
+
+    public static function link_orden_tabla($url, $columna, $texto, $ordenActual, $direccionActual, $paramOrden = 'orden', $paramDireccion = 'direccion')
+    {
+        $siguienteDireccion = ($ordenActual === $columna && $direccionActual === 'ASC') ? 'DESC' : 'ASC';
+        $icono = 'fa-sort';
+
+        if ($ordenActual === $columna) {
+            $icono = $direccionActual === 'ASC' ? 'fa-sort-up' : 'fa-sort-down';
+        }
+
+        return '<a class="text-white" href="' . $url . '1/?' . $paramOrden . '=' . rawurlencode($columna) . '&' . $paramDireccion . '=' . $siguienteDireccion . '">' .
+            htmlspecialchars($texto, ENT_QUOTES, 'UTF-8') . ' <i class="fas ' . $icono . '"></i></a>';
+    }
+
     /**paginador de tablas */
     protected static function paginador($pagina, $Npaginas, $url, $botones)
     {
