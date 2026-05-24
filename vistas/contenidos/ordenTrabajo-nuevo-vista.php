@@ -12,26 +12,26 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
 $id_usuario     = $_SESSION['id_str'];
 ?>
 
-<div class="container-fluid">
+<div class="container-fluid form-neon">
 
-    <div class="container-fluid">
+    
         <h3>
             <i class="fas fa-tools"></i> &nbsp; ORDEN DE TRABAJO
         </h3>
 
         <ul class="full-box list-unstyled page-nav-tabs">
             <li>
-                <a class="active" href="<?php echo SERVERURL; ?>/ordenTrabajo-nuevo/">
-                    <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVA ORDEN DE TRABAJO
+                <a class="active" href="<?php echo SERVERURL; ?>ordenTrabajo-nuevo/">
+                    <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO
                 </a>
             </li>
             <li>
-                <a href="<?php echo SERVERURL; ?>/ordenTrabajo-buscar/">
-                    <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR ORDENES DE TRABAJO
+                <a href="<?php echo SERVERURL; ?>ordenTrabajo-buscar/">
+                    <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR
                 </a>
             </li>
         </ul>
-    </div>
+    
     <!-- ================= FORM OT ================= -->
     <form class="form-neon FormularioAjax"
         action="<?= SERVERURL; ?>ajax/ordenTrabajoAjax.php"

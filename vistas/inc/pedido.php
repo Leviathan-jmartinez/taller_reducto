@@ -14,7 +14,7 @@
                 .then(respuesta => respuesta.text())
                 .then(respuesta => {
                     let tabla_articulo = document.querySelector('#tabla_articulos');
-                    tabla_articulos.innerHTML = respuesta;
+                    tabla_articulo.innerHTML = respuesta;
                 });
         } else {
             Swal.fire({
@@ -38,6 +38,12 @@
     function agregar_articulo(id) {
         $('#ModalArticulo').modal('hide');
         let cantidad = document.querySelector('#cantidad_' + id).value.trim();
+
+        if (cantidad === "" || isNaN(cantidad) || parseInt(cantidad, 10) <= 0) {
+            Swal.fire("Error", "La cantidad debe ser mayor a 0", "error");
+            $('#ModalArticulo').modal('show');
+            return;
+        }
 
         let datos = new FormData();
         datos.append('id_agregar_articulo', id);

@@ -7,30 +7,49 @@ if (!mainModel::tienePermiso('servicio.reclamo.ver')) {
 
 $busqueda = $_SESSION['busqueda_reclamo_servicio'] ?? '';
 $estado   = $_SESSION['estado_reclamo_servicio'] ?? '';
+
+if (isset($_GET['estado_reclamo_servicio']) && in_array((string)$_GET['estado_reclamo_servicio'], ['0', '1', '2', '3'], true)) {
+    $_SESSION['estado_reclamo_servicio'] = (string)$_GET['estado_reclamo_servicio'];
+    $estado = (string)$_GET['estado_reclamo_servicio'];
+}
+
 $hayFiltro = $busqueda !== '' || $estado !== '';
 ?>
+<style>
+    /* Contenedor principal SOLO registro de servicio */
+    .reclamo-servicio {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 6px;
+    }
 
-<div class="container-fluid">
-    <h3 class="text-left">
-        <i class="fas fa-exclamation-circle fa-fw"></i> &nbsp; RECLAMOS DE SERVICIO
+    /* Encabezados */
+    .reclamo-servicio h3 {
+        margin-bottom: 15px;
+    }
+</style>
+<div class="container-fluid reclamo-servicio">
+    <h3>
+        <i class="fas fa-exclamation-circle"></i>
+        &nbsp; RECLAMOS DE SERVICIO
     </h3>
-
     <ul class="full-box list-unstyled page-nav-tabs">
         <li>
-            <a href="<?php echo SERVERURL; ?>reclamo-servicio-nuevo/">
+            <a href="<?php echo SERVERURL; ?>/reclamo-servicio-nuevo/">
                 <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO
             </a>
         </li>
         <li>
-            <a class="active" href="<?php echo SERVERURL; ?>reclamo-servicio-lista/">
-                <i class="fas fa-search fa-fw"></i> &nbsp; LISTADO DE RECLAMOS
+            <a class="active" href="<?php echo SERVERURL; ?>/reclamo-servicio-lista/">
+                <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR
             </a>
         </li>
     </ul>
 </div>
 
 <!-- 🔎 FORMULARIO SIEMPRE VISIBLE -->
-<div class="container-fluid">
+<div class="container-fluid form-neon reclamo-servicio">
+
     <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
         method="POST"
@@ -91,12 +110,21 @@ $hayFiltro = $busqueda !== '' || $estado !== '';
             Estado:
             <strong>
                 <?php
-switch ($estado) {
-                    case "1": echo "Activo"; break;
-                    case "2": echo "En proceso"; break;
-                    case "3": echo "Resuelto"; break;
-                    case "0": echo "Anulado"; break;
-                    default: echo "Todos";
+                switch ($estado) {
+                    case "1":
+                        echo "Activo";
+                        break;
+                    case "2":
+                        echo "En proceso";
+                        break;
+                    case "3":
+                        echo "Resuelto";
+                        break;
+                    case "0":
+                        echo "Anulado";
+                        break;
+                    default:
+                        echo "Todos";
                 }
                 ?>
             </strong>
@@ -129,26 +157,26 @@ switch ($estado) {
 
 <!-- JS LIMPIAR -->
 <script>
-document.addEventListener('click', function(e) {
+    document.addEventListener('click', function(e) {
 
-    const btn = e.target.closest('.btn-limpiar-busqueda');
-    if (!btn) return;
+        const btn = e.target.closest('.btn-limpiar-busqueda');
+        if (!btn) return;
 
-    fetch("<?php echo SERVERURL; ?>ajax/buscadorAjax.php", {
-        method: "POST",
-        body: new URLSearchParams({
-            modulo: "reclamo_servicio",
-            eliminar_busqueda: 1
-        })
-    })
-    .then(r => r.json())
-    .then(res => {
-        if (res.Alerta === "redireccionar") {
-            window.location.href = res.URL;
-        } else {
-            alert(res.Texto);
-        }
+        fetch("<?php echo SERVERURL; ?>ajax/buscadorAjax.php", {
+                method: "POST",
+                body: new URLSearchParams({
+                    modulo: "reclamo_servicio",
+                    eliminar_busqueda: 1
+                })
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.Alerta === "redireccionar") {
+                    window.location.href = res.URL;
+                } else {
+                    alert(res.Texto);
+                }
+            });
+
     });
-
-});
 </script>

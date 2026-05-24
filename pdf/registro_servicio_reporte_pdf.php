@@ -1,4 +1,18 @@
-<!DOCTYPE html>
+<?php
+$pdfVars = get_defined_vars();
+$datos = isset($pdfVars['datos']) && is_array($pdfVars['datos']) ? $pdfVars['datos'] : [];
+$filtros = isset($pdfVars['filtros']) && is_array($pdfVars['filtros']) ? $pdfVars['filtros'] : [];
+$resumen = isset($pdfVars['resumen']) && is_array($pdfVars['resumen']) ? $pdfVars['resumen'] : [];
+$cabecera = isset($pdfVars['cabecera']) && is_array($pdfVars['cabecera']) ? $pdfVars['cabecera'] : [];
+$detalle = isset($pdfVars['detalle']) && is_array($pdfVars['detalle']) ? $pdfVars['detalle'] : [];
+$empresa = isset($pdfVars['empresa']) ? (string)$pdfVars['empresa'] : '';
+$usuario = isset($pdfVars['usuario']) ? (string)$pdfVars['usuario'] : '';
+$desde = isset($pdfVars['desde']) ? (string)$pdfVars['desde'] : '';
+$hasta = isset($pdfVars['hasta']) ? (string)$pdfVars['hasta'] : '';
+$proveedor = isset($pdfVars['proveedor']) ? (string)$pdfVars['proveedor'] : '';
+$estado = isset($pdfVars['estado']) ? (string)$pdfVars['estado'] : '';
+$sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
+?><!DOCTYPE html>
 <html lang="es">
 
 <head>

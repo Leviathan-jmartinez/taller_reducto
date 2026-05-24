@@ -77,7 +77,7 @@
                 .then(respuesta => respuesta.text())
                 .then(respuesta => {
                     let tabla_articulo = document.querySelector('#tabla_articulosOC');
-                    tabla_articulosOC.innerHTML = respuesta;
+                    tabla_articulo.innerHTML = respuesta;
                 });
         } else {
             Swal.fire({
@@ -87,11 +87,6 @@
                 confirmButtonText: 'Aceptar'
             });
         }
-    }
-
-    function modal_agregar_articulo(id) {
-        $('#ModalArticuloOC').modal('hide');
-        document.querySelector('#id_agregar_articulo').setAttribute("value", id);
     }
 
     function modal_buscar_articulo() {
@@ -146,8 +141,9 @@
     }
 
     document.addEventListener("click", function(e) {
-        if (e.target.classList.contains("generar-oc-btn")) {
-            let id = e.target.getAttribute("data-id");
+        const btn = e.target.closest(".generar-oc-btn");
+        if (btn) {
+            let id = btn.getAttribute("data-id");
 
             // Guardar el ID global para usarlo en btnGuardarOC
             window.idPresupuestoActual = id;
@@ -219,6 +215,10 @@
                     Swal.fire("Error", "Debe cargar al menos un articulo con cantidad mayor a 0", "error");
                 } else if (r === "error:precio_invalido") {
                     Swal.fire("Error", "El presupuesto contiene articulos con precio invalido", "error");
+                } else if (r === "error:fecha_entrega_invalida") {
+                    Swal.fire("Error", "La fecha de entrega no es valida", "error");
+                } else if (r === "error:fecha_entrega_menor_hoy") {
+                    Swal.fire("Error", "La fecha de entrega no puede ser menor a hoy", "error");
                 } else {
                     Swal.fire("Error", r, "error");
                 }

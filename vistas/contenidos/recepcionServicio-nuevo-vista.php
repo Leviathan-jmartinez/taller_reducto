@@ -99,7 +99,7 @@ $modelos_recepcion = is_array($modelos_recepcion) ? $modelos_recepcion : [];
     }
 </style>
 
-<div class="container-fluid">
+<div class="container-fluid form-neon">
 
     <div class="container-fluid">
         <h3 class="text-left">

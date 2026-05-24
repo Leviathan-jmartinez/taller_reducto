@@ -21,13 +21,14 @@ class pedidoModelo extends mainModel
     protected static function agregar_pedidoD_modelo($datos)
     {
         $sql = mainModel::conectar()->prepare(
-            "INSERT INTO pedido_detalle (idpedido_cabecera, id_articulo, cantidad)
-         VALUES (:pedidoid, :articulo, :cantidad)"
+            "INSERT INTO pedido_detalle (idpedido_cabecera, id_articulo, cantidad, stock_actual)
+         VALUES (:pedidoid, :articulo, :cantidad, :stock_actual)"
         );
 
         $sql->bindParam(":pedidoid", $datos['pedidoid']);
         $sql->bindParam(":articulo", $datos['articulo']);
         $sql->bindParam(":cantidad", $datos['cantidad']);
+        $sql->bindParam(":stock_actual", $datos['stock_actual']);
         $sql->execute();
         return $sql;
     }
@@ -88,7 +89,8 @@ class pedidoModelo extends mainModel
             SELECT
                 a.codigo,
                 a.desc_articulo,
-                pd.cantidad
+                pd.cantidad,
+                pd.stock_actual
             FROM pedido_detalle pd
             INNER JOIN articulos a ON a.id_articulo = pd.id_articulo
             WHERE pd.idpedido_cabecera = :id

@@ -19,6 +19,13 @@ $prioridad = $_SESSION['prioridad_recepcion'] ?? '';
 $filtro_activo = $_SESSION['filtro_recepcion_activo'] ?? '';
 $busqueda_general = $_SESSION['busqueda_recepcion'] ?? '';
 
+if (isset($_GET['estado_recepcion']) && in_array((string)$_GET['estado_recepcion'], ['0', '1', '2', '3'], true)) {
+    $_SESSION['estado_recepcion'] = (string)$_GET['estado_recepcion'];
+    $_SESSION['filtro_recepcion_activo'] = '1';
+    $estado_recepcion = (string)$_GET['estado_recepcion'];
+    $filtro_activo = '1';
+}
+
 $hayFiltros = $filtro_activo || $fecha_inicio || $fecha_final || $nro_recepcion || $cliente || $documento || $placa || $estado_recepcion !== '' || $origen_recepcion || $usuario || $tipo_servicio || $prioridad || $busqueda_general;
 
 if (!isset($pagina)) {
@@ -28,7 +35,7 @@ if (!isset($pagina)) {
 }
 ?>
 
-<div class="container-fluid">
+<div class="container-fluid form-neon">
     <h3 class="text-left">
         <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR RECEPCIONES
     </h3>
@@ -40,9 +47,6 @@ if (!isset($pagina)) {
             <a class="active" href="<?php echo SERVERURL; ?>recepcionServicio-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR RECEPCION</a>
         </li>
     </ul>
-</div>
-
-<div class="container-fluid">
     <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
         <input type="hidden" name="modulo" value="recepcion">
 

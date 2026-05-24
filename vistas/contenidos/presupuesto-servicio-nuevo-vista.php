@@ -10,7 +10,7 @@ if (session_status() == PHP_SESSION_NONE) {
 $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
 ?>
 
-<div class="container-fluid">
+<div class="container-fluid form-neon">
 
     <div class="container-fluid">
         <h3 class="text-left">
@@ -18,10 +18,10 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
         </h3>
         <ul class="full-box list-unstyled page-nav-tabs">
             <li>
-                <a class="active" href="<?php echo SERVERURL; ?>presupuesto-servicio-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO PRESUPUESTO</a>
+                <a class="active" href="<?php echo SERVERURL; ?>presupuesto-servicio-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO</a>
             </li>
             <li>
-                <a href="<?php echo SERVERURL; ?>presupuesto-servicio-buscar/"><i class="fas fa-search-dollar fa-fw"></i> &nbsp; BUSCAR POR FECHA</a>
+                <a href="<?php echo SERVERURL; ?>presupuesto-servicio-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR</a>
             </li>
         </ul>
     </div>

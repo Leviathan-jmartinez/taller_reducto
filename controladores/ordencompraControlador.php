@@ -125,7 +125,7 @@ class ordencompraControlador extends ordencompraModelo
         // -----------------------------
         $idpresupuesto = $_POST['idpresupuesto'] ?? null;
         $cantidades = $_POST['cantidades'] ?? [];
-        $fecha_entrega = $_POST['fecha_entrega'] ?? null;
+        $fecha_entrega = mainModel::limpiar_string($_POST['fecha_entrega'] ?? '');
 
         if (is_array($idpresupuesto)) {
             $idpresupuesto = $idpresupuesto[0] ?? null;
@@ -138,6 +138,14 @@ class ordencompraControlador extends ordencompraModelo
         // -----------------------------
         if (!$idpresupuesto || $idpresupuesto === "undefined" || !is_numeric($idpresupuesto)) {
             return "error:no_id_valido";
+        }
+
+        if ($fecha_entrega == "" || mainModel::verificarFecha($fecha_entrega)) {
+            return "error:fecha_entrega_invalida";
+        }
+
+        if (strtotime($fecha_entrega) < strtotime(date('Y-m-d'))) {
+            return "error:fecha_entrega_menor_hoy";
         }
 
         if (empty($cantidades)) {
@@ -344,7 +352,7 @@ class ordencompraControlador extends ordencompraModelo
     public function agregar_oc_controlador()
     {
 
-        $fecha_entrega = $_POST['fecha_entrega'] ?? null;
+        $fecha_entrega = mainModel::limpiar_string($_POST['fecha_entrega'] ?? '');
 
         if ($_SESSION['tipo_ordencompra'] == "sin_presupuesto") {
             if (empty($_SESSION['Sdatos_proveedorOC'])) {
@@ -371,6 +379,26 @@ class ordencompraControlador extends ordencompraModelo
                     "Alerta" => "simple",
                     "Titulo" => "Error!",
                     "Texto" => "Debes seleccionar la fecha de entrega",
+                    "Tipo" => "error"
+                ];
+                return json_encode($alerta);
+            }
+
+            if (mainModel::verificarFecha($fecha_entrega)) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Error!",
+                    "Texto" => "La fecha de entrega no es valida",
+                    "Tipo" => "error"
+                ];
+                return json_encode($alerta);
+            }
+
+            if (strtotime($fecha_entrega) < strtotime(date('Y-m-d'))) {
+                $alerta = [
+                    "Alerta" => "simple",
+                    "Titulo" => "Error!",
+                    "Texto" => "La fecha de entrega no puede ser menor a hoy",
                     "Tipo" => "error"
                 ];
                 return json_encode($alerta);

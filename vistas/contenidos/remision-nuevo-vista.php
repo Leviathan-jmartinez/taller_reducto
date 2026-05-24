@@ -12,9 +12,9 @@ if (session_status() == PHP_SESSION_NONE) {
 $id_usuario = $_SESSION['id_usuario'] ?? null;
 ?>
 
-<div class="container-fluid">
+<div class="container-fluid form-neon">
     <h3 class="text-left">
-        <i class="fas fa-search fa-fw"></i> &nbsp; REMISIÓN
+        <i class="fas fa-plus fa-fw"></i> &nbsp; REMISIONES - NUEVA REMISIÓN
     </h3>
     <ul class="full-box list-unstyled page-nav-tabs">
         <li>
@@ -24,14 +24,10 @@ $id_usuario = $_SESSION['id_usuario'] ?? null;
         </li>
         <li>
             <a href="<?php echo SERVERURL; ?>remision-buscar/">
-                <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR
+                <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR REMISIÓN
             </a>
         </li>
     </ul>
-</div>
-
-
-<div class="container-fluid">
     <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/remisionAjax.php"
         method="POST"

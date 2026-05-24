@@ -3,8 +3,8 @@
 $peticionAjax = true;
 require_once "../config/APP.php";
 if (
-    isset($_POST['buscar_proveedorPre']) || isset($_POST['id_agregar_proveedorPre']) || isset($_POST['id_eliminar_proveedorPre']) || isset($_POST['buscar_articuloPre'])
-    || isset($_POST['id_agregar_articuloPre']) || isset($_POST['id_eliminar_articuloPre']) || isset($_POST['agregar_presupuesto']) || isset($_POST['limpiar_presupuesto'])
+    isset($_POST['buscar_proveedorPre']) || isset($_POST['id_agregar_proveedorPre']) || isset($_POST['id_eliminar_proveedorPre'])
+    || isset($_POST['id_eliminar_articuloPre']) || isset($_POST['agregar_presupuesto']) || isset($_POST['limpiar_presupuesto'])
     || isset($_POST['buscar_pedidoPre']) || isset($_POST['id_pedido_seleccionado']) || isset($_POST['id_actualizar_precio']) || isset($_POST['presupuesto_id_del'])
 ) {
     /** Instancia al controlador */
@@ -19,12 +19,6 @@ if (
     }
     if (isset($_POST['id_eliminar_proveedorPre'])) {
         echo $inst_presu->eliminar_proveedor_controlador();
-    }
-    if (isset($_POST['buscar_articuloPre'])) {
-        echo $inst_presu->buscar_articulo_controlador();
-    }
-    if (isset($_POST['id_agregar_articuloPre'])) {
-        echo $inst_presu->articulo_controlador();
     }
     if (isset($_POST['id_eliminar_articuloPre'])) {
         echo $inst_presu->eliminar_articulo_controlador();
@@ -46,13 +40,7 @@ if (
         $idArticulo = (int)$_POST['id_actualizar_precio'];
         $precio     = (float)$_POST['precio'];
 
-        $tipo = $_SESSION['tipo_presupuesto'] ?? 'sin_pedido';
-
-        if ($tipo === 'con_pedido') {
-            $key = 'Cdatos_articuloPre';
-        } else {
-            $key = 'Sdatos_articuloPre';
-        }
+        $key = 'Cdatos_articuloPre';
 
         if (isset($_SESSION[$key][$idArticulo])) {
             $_SESSION[$key][$idArticulo]['precio'] = $precio;
@@ -62,7 +50,7 @@ if (
 
         // recalcular total
         $_SESSION['total_pre'] = 0;
-        foreach ($_SESSION['Cdatos_articuloPre'] as $art) {
+        foreach ($_SESSION['Cdatos_articuloPre'] ?? [] as $art) {
             $_SESSION['total_pre'] += $art['subtotal'];
         }
 
@@ -74,10 +62,7 @@ if (
     }
     if (isset($_POST['limpiar_presupuesto'])) {
         session_start(['name' => 'STR']);
-        unset($_SESSION['tipo_presupuesto']);
-        unset($_SESSION['Sdatos_proveedorPre']);
         unset($_SESSION['Cdatos_proveedorPre']);
-        unset($_SESSION['Sdatos_articuloPre']);
         unset($_SESSION['Cdatos_articuloPre']);
         unset($_SESSION['presupuesto_articulo']);
         unset($_SESSION['total_pre']);

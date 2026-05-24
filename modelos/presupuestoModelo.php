@@ -4,29 +4,6 @@ require_once "mainModel.php";
 class presupuestoModelo extends mainModel
 {
 
-    /** modelo agregar presupuesto cabecera sin pedido*/
-    protected static function agregar_presupuestoC_modelo1($datos)
-    {
-        $conexion = mainModel::conectar();
-        $sql = $conexion->prepare("
-        INSERT INTO presupuesto_compra 
-            (idproveedores, id_usuario, id_sucursal, fecha, estado, fecha_venc, total)
-        VALUES
-            (:proveedor, :usuario, :sucursal, now(), 1, :fechaVe, :total)
-        ");
-
-        $sql->bindParam(":proveedor", $datos['proveedor']);
-        $sql->bindParam(":usuario", $datos['usuario']);
-        $sql->bindParam(":sucursal", $datos['sucursal']);
-        $sql->bindParam(":fechaVe", $datos['fecha_venc']);
-        $sql->bindParam(":total", $datos['total']);
-
-        $sql->execute();
-
-        return $conexion->lastInsertId();
-    }
-
-    /**fin modelo */
     /** modelo agregar presupuesto cabecera con pedido*/
     protected static function agregar_presupuestoC_modelo2($datos)
     {

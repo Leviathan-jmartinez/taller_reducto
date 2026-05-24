@@ -74,6 +74,22 @@ class loginModelo extends mainModel
         return $sql;
     }
 
+    protected static function cambiar_clave_obligatoria_modelo($idUsuario, $clave)
+    {
+        $sql = mainModel::conectar()->prepare("
+        UPDATE usuarios
+        SET usu_clave = :Clave,
+            usu_cambiar_clave = 0,
+            usu_intentos_fallidos = 0,
+            usu_bloqueado = 0
+        WHERE id_usuario = :Usuario
+        ");
+        $sql->bindParam(":Clave", $clave);
+        $sql->bindParam(":Usuario", $idUsuario);
+        $sql->execute();
+        return $sql;
+    }
+
     protected static function obtener_permisos_usuario($idUsuario)
     {
         $sql = self::conectar()->prepare("

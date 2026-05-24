@@ -30,6 +30,6 @@ if (!mainModel::tienePermiso('compra.presupuesto.ver')) {
     <?php
 require_once "./controladores/presupuestoControlador.php";
     $ins_presupuesto = new presupuestoControlador();
-    echo $ins_presupuesto->paginador_presupuestos_controlador($pagina[1], 15, $pagina[0], "", "");
+    $ins_presupuesto->paginador_presupuestos_controlador($pagina[1], 15, $pagina[0], "", "");
     ?>
 </div>

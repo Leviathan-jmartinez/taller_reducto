@@ -14,7 +14,7 @@ $sucursales = mainModel::conectar()
     ->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
-<div class="container-fluid">
+<div class="container-fluid form-neon">
 
     <h3 class="text-left">
         <i class="fas fa-tags"></i> &nbsp; LISTADO DE PROMOCIONES

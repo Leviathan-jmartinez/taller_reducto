@@ -21,7 +21,7 @@ if (isset($_POST['buscar_oc'])) {
    CARGAR ORDEN SELECCIONADA
 ================================ */
 if (isset($_POST['id_oc_seleccionado'])) {
-    echo $inst_compra->cargar_oc_controlador();
+    $inst_compra->cargar_oc_controlador();
     exit();
 }
 
@@ -51,7 +51,7 @@ if (isset($_POST['buscar_proveedorCO'])) {
    AGREGAR PROVEEDOR
 ================================ */
 if (isset($_POST['id_agregar_proveedorCO'])) {
-    echo $inst_compra->agregar_proveedor_controlador();
+    $inst_compra->agregar_proveedor_controlador();
     exit();
 }
 
@@ -59,7 +59,7 @@ if (isset($_POST['id_agregar_proveedorCO'])) {
    ELIMINAR PROVEEDOR
 ================================ */
 if (isset($_POST['id_eliminar_proveedorCO'])) {
-    echo $inst_compra->eliminar_proveedor_controlador();
+    $inst_compra->eliminar_proveedor_controlador();
     exit();
 }
 /* ===============================
@@ -74,7 +74,7 @@ if (isset($_POST['buscar_articuloCO'])) {
    AGREGAR ARTÍCULO
 ================================ */
 if (isset($_POST['id_agregar_articuloCO'])) {
-    echo $inst_compra->articulo_controlador();
+    $inst_compra->articulo_controlador();
     exit();
 }
 
@@ -82,7 +82,7 @@ if (isset($_POST['id_agregar_articuloCO'])) {
    Anular COMPRA
 ================================ */
 if (isset($_POST['compra_id_del'])) {
-    echo $inst_compra->anular_compra_controlador();
+    $inst_compra->anular_compra_controlador();
     exit();
 }
 

@@ -6,8 +6,8 @@ class usuarioModelo extends mainModel
     /** modelo agregar usuario*/
     protected static function agregar_usuario_modelo($datos)
     {
-        $sql = mainModel::conectar()->prepare("INSERT INTO usuarios (usu_nombre, usu_clave, usu_estado, usu_nick, usu_apellido, usu_email, usu_telefono,usu_ci) 
-        VALUES (:nombre, :clave,:estado, :nick, :apellido, :email, :telefono,:ci)");
+        $sql = mainModel::conectar()->prepare("INSERT INTO usuarios (usu_nombre, usu_clave, usu_estado, usu_nick, usu_apellido, usu_email, usu_telefono,usu_ci, usu_cambiar_clave)
+        VALUES (:nombre, :clave,:estado, :nick, :apellido, :email, :telefono,:ci, :cambiar_clave)");
         $sql->bindParam(":ci", $datos['ci']);
         $sql->bindParam(":nombre", $datos['nombre']);
         $sql->bindParam(":clave", $datos['clave']);
@@ -16,6 +16,7 @@ class usuarioModelo extends mainModel
         $sql->bindParam(":apellido", $datos['apellido']);
         $sql->bindParam(":email", $datos['email']);
         $sql->bindParam(":telefono", $datos['telefono']);
+        $sql->bindParam(":cambiar_clave", $datos['cambiar_clave']);
         $sql->execute();
         return $sql;
     }
@@ -170,6 +171,19 @@ class usuarioModelo extends mainModel
         ");
 
         return $sql->execute([$idSucursal, $idUsuario]);
+    }
+
+    protected static function desbloquear_usuario_modelo($idUsuario)
+    {
+        $sql = self::conectar()->prepare("
+        UPDATE usuarios
+        SET usu_bloqueado = 0,
+            usu_intentos_fallidos = 0,
+            usu_cambiar_clave = 1
+        WHERE id_usuario = ?
+        ");
+
+        return $sql->execute([$idUsuario]);
     }
 
     protected static function obtener_sucursales_modelo()

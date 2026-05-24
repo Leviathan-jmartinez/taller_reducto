@@ -72,29 +72,14 @@ class presupuestoControlador extends presupuestoModelo
         session_start(['name' => 'STR']);
 
         // 🔥 CLAVE: detectar tipo
-        $tipo = $_SESSION['tipo_presupuesto'] ?? 'sin_pedido';
+        unset($_SESSION['Cdatos_proveedorPre']);
 
-        if ($tipo === 'con_pedido') {
-
-            unset($_SESSION['Cdatos_proveedorPre']);
-
-            $_SESSION['Cdatos_proveedorPre'] = [
-                "ID" => $campos['idproveedores'],
-                "RUC" => $campos['ruc'],
-                "RAZON" => $campos['razon_social'],
-                "TELEFONO" => $campos['telefono']
-            ];
-        } else {
-
-            unset($_SESSION['Sdatos_proveedorPre']);
-
-            $_SESSION['Sdatos_proveedorPre'] = [
-                "ID" => $campos['idproveedores'],
-                "RUC" => $campos['ruc'],
-                "RAZON" => $campos['razon_social'],
-                "TELEFONO" => $campos['telefono']
-            ];
-        }
+        $_SESSION['Cdatos_proveedorPre'] = [
+            "ID" => $campos['idproveedores'],
+            "RUC" => $campos['ruc'],
+            "RAZON" => $campos['razon_social'],
+            "TELEFONO" => $campos['telefono']
+        ];
 
         echo json_encode([
             "Alerta" => "recargar",
@@ -109,13 +94,7 @@ class presupuestoControlador extends presupuestoModelo
     public function eliminar_proveedor_controlador()
     {
         session_start(['name' => 'STR']);
-        $tipo = $_SESSION['tipo_presupuesto'] ?? 'sin_pedido';
-
-        if ($tipo === 'con_pedido') {
-            unset($_SESSION['Cdatos_proveedorPre']);
-        } else {
-            unset($_SESSION['Sdatos_proveedorPre']);
-        }
+        unset($_SESSION['Cdatos_proveedorPre']);
         if (empty($_SESSION['datos_proveedorPre'])) {
             $alerta = [
                 "Alerta" => "recargar",
@@ -134,116 +113,11 @@ class presupuestoControlador extends presupuestoModelo
         echo json_encode($alerta);
     }
     /**fin controlador */
-
-    /**controlador buscar articulo */
-    public function buscar_articulo_controlador()
-    {
-        // BUSCAR ARTÍCULO (HTML)
-        session_start(['name' => 'STR']);
-        if (isset($_POST['buscar_articuloPre'])) {
-            $articulo = mainModel::limpiar_string($_POST['buscar_articuloPre']);
-            if ($articulo == "") return '<div class="alert alert-warning">Debes introducir código o descripción</div>';
-
-            if (!isset($_SESSION['Sdatos_proveedorPre']['ID'])) {
-                return '<div class="alert alert-danger">No se ha seleccionado un proveedor</div>';
-                exit();
-            }
-            $id_proveedor = $_SESSION['Sdatos_proveedorPre']['ID'];
-            $datos_articuloPre = mainModel::ejecutar_consulta_simple("SELECT * FROM articulos WHERE (codigo like '%$articulo%' OR desc_articulo like '%$articulo%') AND estado=1 ORDER BY desc_articulo DESC");
-
-            if ($datos_articuloPre->rowCount() >= 1) {
-                $tabla = '<div class="table-responsive"><table class="table table-hover table-bordered table-sm"><tbody>';
-                foreach ($datos_articuloPre->fetchAll() as $rows) {
-                    $tabla .= '<tr class="text-center">
-                    <td>' . $rows['codigo'] . ' - ' . $rows['desc_articulo'] . '</td>
-                    
-                    <!-- Cantidad -->
-                    <td style="width:100px;">
-                        <input type="number" id="cantidad_' . $rows['id_articulo'] . '" class="form-control form-control-sm" value="1" min="1">
-                    </td>
-
-                    <!-- Precio -->
-                    <td style="width:100px;">
-                        <input type="number" id="precio_' . $rows['id_articulo'] . '" class="form-control form-control-sm" step="0.01" min="0">
-                    </td>
-
-                    <!-- Botón agregar -->
-                    <td>
-                        <button type="button" class="btn btn-primary btn-sm" onclick="agregar_articuloPre(' . $rows['id_articulo'] . ')">
-                            <i class="fas fa-plus-circle"></i>
-                        </button>
-                    </td>
-                </tr>';
-                }
-                $tabla .= '</tbody></table></div>';
-                return $tabla;
-            } else return '<div class="alert alert-warning">No se encontraron artículos que coincidan</div>';
-        }
-    }
-    /**controlador buscador articulo */
-
-    /**controlador buscador articulo */
-    public function articulo_controlador()
-    {
-        session_start(['name' => 'STR']);
-        // AGREGAR ARTÍCULO
-        if (isset($_POST['id_agregar_articuloPre'])) {
-
-            $id = mainModel::limpiar_string($_POST['id_agregar_articuloPre']);
-            $cantidad = mainModel::limpiar_string($_POST['detalle_cantidad']);
-            $precio = mainModel::limpiar_string($_POST['detalle_precio']); // <-- nuevo
-
-            // Validaciones
-            $check_articulo = mainModel::ejecutar_consulta_simple("SELECT * FROM articulos WHERE id_articulo='$id' AND estado=1");
-            if ($check_articulo->rowCount() <= 0)
-                die(json_encode(["Alerta" => "simple", "Titulo" => "Error!", "Texto" => "No se encontró el artículo", "Tipo" => "error"]));
-
-            $campos = $check_articulo->fetch();
-
-            if ($cantidad == "" || !is_numeric($cantidad) || intval($cantidad) <= 0)
-                die(json_encode(["Alerta" => "simple", "Titulo" => "Error!", "Texto" => "Cantidad inválida", "Tipo" => "error"]));
-
-            if ($precio == "" || !is_numeric($precio) || floatval($precio) < 0)
-                die(json_encode(["Alerta" => "simple", "Titulo" => "Error!", "Texto" => "Precio inválido", "Tipo" => "error"]));
-
-            $cantidad = intval($cantidad);
-            $precio = floatval($precio);
-            $subtotal = $cantidad * $precio; // <-- opcional, para mostrar o guardar
-
-            if (isset($_SESSION['Sdatos_articuloPre'][$id])) {
-                $alerta = [
-                    "Alerta" => "recargar",
-                    "Titulo" => "Ocurrio un error inesperado!",
-                    "Texto" => "El artículo que intenta agregar ya se encuentra agregado",
-                    "Tipo" => "error"
-                ];
-            } else {
-                $_SESSION['Sdatos_articuloPre'][$id] = [
-                    "ID" => $campos['id_articulo'],
-                    "codigo" => $campos['codigo'],
-                    "descripcion" => $campos['desc_articulo'],
-                    "cantidad" => $cantidad,
-                    "precio" => $precio,
-                    "subtotal" => $subtotal
-                ];
-                $alerta = [
-                    "Alerta" => "recargar",
-                    "Titulo" => "Artículo agregado!",
-                    "Texto" => "El artículo ha sido agregado",
-                    "Tipo" => "success"
-                ];
-            }
-            echo json_encode($alerta);
-            exit();
-        }
-    }
-    /**fin controlador */
-
-    /**controlador agregar presupuesto */
+/**controlador agregar presupuesto */
     public function agregar_presupuesto_controlador()
     {
         session_start(['name' => 'STR']);
-        $fecha_venc = $_POST['fecha_vencimientoPre'] ?? null;
+        $fecha_venc = mainModel::limpiar_string($_POST['fecha_vencimientoPre'] ?? '');
         if (!mainModel::tienePermiso('compra.presupuesto.crear')) {
             $alerta = [
                 "Alerta" => "simple",
@@ -254,117 +128,42 @@ class presupuestoControlador extends presupuestoModelo
             echo json_encode($alerta);
             exit();
         }
-        if ($_SESSION['tipo_presupuesto'] == "sin_pedido") {
-            if (empty($_SESSION['Sdatos_proveedorPre'])) {
-                $alerta = [
-                    "Alerta" => "simple",
-                    "Titulo" => "Ocurrió un error!",
-                    "Texto" => "No has seleccionado ningun proveedor",
-                    "Tipo" => "error"
-                ];
-                echo json_encode($alerta);
-                exit();
-            }
-            if (empty($_SESSION['Sdatos_articuloPre'])) {
-                $alerta = [
-                    "Alerta" => "simple",
-                    "Titulo" => "Ocurrió un error!",
-                    "Texto" => "No has seleccionado ningun artículo para el presupuesto",
-                    "Tipo" => "error"
-                ];
-                echo json_encode($alerta);
-                exit();
-            }
 
-            if (empty($fecha_venc) || $fecha_venc == null) {
-                $alerta = [
-                    "Alerta" => "simple",
-                    "Titulo" => "Error!",
-                    "Texto" => "Debes seleccionar la fecha de vencimiento",
-                    "Tipo" => "error"
-                ];
-                echo json_encode($alerta);
-                exit();
-            }
+        if (empty($_SESSION['Cdatos_proveedorPre']) || empty($_SESSION['Cdatos_articuloPre'])) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Datos incompletos para generar el presupuesto",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
 
+        if (empty($fecha_venc)) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error!",
+                "Texto" => "Debes seleccionar la fecha de vencimiento",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
 
-            /** Insertar cabecera */
-            $datos_presu_agg = [
-                "usuario"   => $_SESSION['id_str'],
-                "proveedor" => $_SESSION['Sdatos_proveedorPre']['ID'],
-                "sucursal" => $_SESSION['nick_sucursal'],
-                "total" => $_SESSION['total_pre'],
-                "fecha_venc" => $fecha_venc
-            ];
-
-            $idpresupuestoCab = presupuestoModelo::agregar_presupuestoC_modelo1($datos_presu_agg);
-
-            if ($idpresupuestoCab <= 0) {
-                $alerta = [
-                    "Alerta" => "simple",
-                    "Titulo" => "Ocurrió un error inesperado!",
-                    "Texto" => "No pudimos registrar la cabecera del pedido",
-                    "Tipo" => "error"
-                ];
-                echo json_encode($alerta);
-                exit();
-            }
-
-            /** Insertar detalles */
-            $errores_detalles = 0;
-            foreach ($_SESSION['Sdatos_articuloPre'] as $article) {
-
-                $detalle_reg = [
-                    "presupuestoid" => $idpresupuestoCab,
-                    "articulo" => $article['ID'],
-                    "cantidad" => $article['cantidad'],
-                    "precio" => $article['precio'],
-                    "subtotal" => $article['subtotal']
-                ];
-
-                $detalleInsert = presupuestoModelo::agregar_presupuestoD_modelo($detalle_reg);
-
-                if ($detalleInsert->rowCount() != 1) {
-                    $errores_detalles++;
-                }
-            }
-
-            if ($errores_detalles > 0) {
-                $alerta = [
-                    "Alerta" => "simple",
-                    "Titulo" => "Error parcial",
-                    "Texto" => "El presupuesto se creó, pero algunos artículos no se guardaron",
-                    "Tipo" => "warning"
-                ];
-            } else {
-                $alerta = [
-                    "Alerta" => "recargar",
-                    "Titulo" => "Presupuesto guardado!",
-                    "Texto" => "El presupuesto se registró correctamente",
-                    "Tipo" => "success"
-                ];
-                unset($_SESSION['tipo_presupuesto']);
-                unset($_SESSION['Sdatos_proveedorPre']);
-                unset($_SESSION['Sdatos_articuloPre']);
-            }
-            echo json_encode($alerta);
-        } elseif ($_SESSION['tipo_presupuesto'] == "con_pedido") {
-
-            if (empty($_SESSION['Cdatos_proveedorPre']) || empty($_SESSION['Cdatos_articuloPre'])) {
+            if (mainModel::verificarFecha($fecha_venc)) {
                 echo json_encode([
                     "Alerta" => "simple",
-                    "Titulo" => "Error",
-                    "Texto" => "Datos incompletos para generar el presupuesto",
+                    "Titulo" => "Error!",
+                    "Texto" => "La fecha de vencimiento no es valida",
                     "Tipo" => "error"
                 ]);
                 exit();
             }
 
-            if (empty($fecha_venc)) {
+            if (strtotime($fecha_venc) < strtotime(date('Y-m-d'))) {
                 echo json_encode([
                     "Alerta" => "simple",
                     "Titulo" => "Error!",
-                    "Texto" => "Debes seleccionar la fecha de vencimiento",
+                    "Texto" => "La fecha de vencimiento no puede ser menor a hoy",
                     "Tipo" => "error"
                 ]);
                 exit();
@@ -423,7 +222,6 @@ class presupuestoControlador extends presupuestoModelo
 
             unset($_SESSION['Cdatos_proveedorPre']);
             unset($_SESSION['Cdatos_articuloPre']);
-            unset($_SESSION['tipo_presupuesto']);
 
             echo json_encode([
                 "Alerta" => "recargar",
@@ -431,7 +229,6 @@ class presupuestoControlador extends presupuestoModelo
                 "Texto" => "El presupuesto se registró correctamente",
                 "Tipo" => "success"
             ]);
-        }
     }
     /**fin controlador */
 
@@ -532,7 +329,7 @@ class presupuestoControlador extends presupuestoModelo
     /**fin controlador */
 
     /**Controlador paginar presupuestos */
-    public function paginador_presupuestos_controlador($pagina, $registros,  $url, $busqueda1, $busqueda2, $nro_presupuesto = '', $proveedor = '')
+    public function paginador_presupuestos_controlador($pagina, $registros,  $url, $busqueda1, $busqueda2, $nro_presupuesto = '', $proveedor = '', $estado_presupuesto = '')
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
@@ -540,6 +337,7 @@ class presupuestoControlador extends presupuestoModelo
         $busqueda2 = mainModel::limpiar_string($busqueda2);
         $nro_presupuesto = mainModel::limpiar_string($nro_presupuesto);
         $proveedor = mainModel::limpiar_string($proveedor);
+        $estado_presupuesto = mainModel::limpiar_string($estado_presupuesto);
 
         $url = mainModel::limpiar_string($url);
         $url = SERVERURL . $url . "/";
@@ -557,6 +355,9 @@ class presupuestoControlador extends presupuestoModelo
         }
         if ($proveedor != "") {
             $filtros .= " AND p.razon_social LIKE '%$proveedor%'";
+        }
+        if ($estado_presupuesto !== "") {
+            $filtros .= " AND pc.estado = '$estado_presupuesto'";
         }
 
         if (!empty($busqueda1) && !empty($busqueda2)) {
@@ -759,7 +560,6 @@ class presupuestoControlador extends presupuestoModelo
         session_start(['name' => 'STR']);
 
         $id = $_POST['id_eliminar_articuloPre'] ?? null;
-        $tipo = $_POST['tipo_presupuesto'] ?? ($_SESSION['tipo_presupuesto'] ?? 'sin_pedido');
 
         if (!$id) {
             echo json_encode([
@@ -771,14 +571,8 @@ class presupuestoControlador extends presupuestoModelo
             exit();
         }
 
-        if ($tipo === 'sin_pedido') {
-            if (isset($_SESSION['Sdatos_articuloPre'][$id])) {
-                unset($_SESSION['Sdatos_articuloPre'][$id]);
-            }
-        } else { // con_pedido
-            if (isset($_SESSION['Cdatos_articuloPre'][$id])) {
-                unset($_SESSION['Cdatos_articuloPre'][$id]);
-            }
+        if (isset($_SESSION['Cdatos_articuloPre'][$id])) {
+            unset($_SESSION['Cdatos_articuloPre'][$id]);
         }
 
         echo json_encode([

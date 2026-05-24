@@ -20,23 +20,25 @@ if (isset($_POST['factura_tipo']) && $_POST['factura_tipo'] === "sin_oc") {
 }
 
 $tipo = $_SESSION['factura_tipo'];
+$ocSeleccionada = !empty($_SESSION['id_oc_seleccionado']);
 ?>
 
 <div class="container-fluid">
+
+</div>
+
+<div class="container-fluid form-neon">
     <h3 class="text-left">
-        <i class="fas fa-search fa-fw"></i> &nbsp; INGRESO DE FACTURA
+        <i class="fas fa-search fa-fw"></i> &nbsp; INGRESO DE FACTURA DE COMPRA
     </h3>
     <ul class="full-box list-unstyled page-nav-tabs">
         <li>
-            <a class="active" href="<?php echo SERVERURL; ?>factura-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; INGRESO DE FACTURA</a>
+            <a class="active" href="<?php echo SERVERURL; ?>factura-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; INGRESO DE FACTURA DE COMPRA</a>
         </li>
         <li>
-            <a href="<?php echo SERVERURL; ?>factura-buscar/"><i class="fas fa-search-dollar fa-fw"></i> &nbsp; BUSCAR</a>
+            <a href="<?php echo SERVERURL; ?>factura-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR FACTURAS DE COMPRA</a>
         </li>
     </ul>
-</div>
-
-<div class="container-fluid">
     <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/compraAjax.php"
         method="POST"
@@ -45,212 +47,219 @@ $tipo = $_SESSION['factura_tipo'];
 
         <input type="hidden" name="accion" value="guardar_compra">
 
-        <div class="container-fluid form-neon" style="margin-top: 30px;">
 
-            <!-- 🔹 BOTONES A LA DERECHA -->
 
-            <div style="display: flex; justify-content: flex-end; margin-bottom: 15px; gap: 10px;">
-                <?php if ($tipo === 'con_oc') { ?>
-                    <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#ModalBuscarOC">
-                        <i class="fas fa-search"></i> &nbsp; Cargar con Orden de Compra
-                    </button>
-                <?php } ?>
+        <!-- 🔹 BOTONES A LA DERECHA -->
+
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 15px; gap: 10px;">
+            <?php if ($tipo === 'con_oc' && !$ocSeleccionada) { ?>
+                <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#ModalBuscarOC">
+                    <i class="fas fa-search"></i> &nbsp; Cargar con Orden de Compra
+                </button>
+            <?php } ?>
+            <?php if (!$ocSeleccionada) { ?>
                 <a href="#" id="btnSinOC" class="btn btn-secondary">
                     <i class="fas fa-file"></i> Sin Orden de Compra
                 </a>
-
-            </div>
-
-            <?php if ($tipo === 'sin_oc') { ?>
-                <div class="text-center mb-3">
-                    <?php if (empty($_SESSION['datos_proveedorCO'])) { ?>
-                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalproveedorCO">
-                            <i class="fas fa-user-plus"></i> &nbsp; Agregar Proveedor
-                        </button>
-                    <?php } ?>
-                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalArticuloCO">
-                        <i class="fas fa-box-open"></i> &nbsp; Agregar artículo
-                    </button>
-                </div>
+            <?php } else { ?>
+                <span class="badge badge-info align-self-center">
+                    OC seleccionada N° <?php echo htmlspecialchars($_SESSION['id_oc_seleccionado'], ENT_QUOTES, 'UTF-8'); ?>
+                </span>
             <?php } ?>
 
-            <legend><i class="fas fa-file-invoice-dollar"></i> &nbsp; Registrar nueva factura</legend>
-            <p class="text-muted mb-4">Complete los campos para cargar una nueva factura.</p>
-
-            <!-- FECHAS Y DATOS DE PROVEEDOR -->
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label class="bmd-label-floating">Timbrado</label>
-                        <input class="form-control" name="timbrado" required>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label for="factura_numero" class="bmd-label-floating">Número de factura</label>
-                        <input type="text" class="form-control" name="factura_numero" id="factura_numero" required>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label class="bmd-label-floating">Vencimiento Timbrado</label>
-                        <input type="date" class="form-control" name="vencimiento_timbrado" required>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label class="bmd-label-floating">Fecha de emisión</label>
-                        <input type="date" class="form-control" name="fecha_emision" required>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label class="bmd-label-floating">Proveedor</label>
-                        <?php if (empty($_SESSION['datos_proveedorCO'])) { ?>
-                            <div class="d-flex align-items-center text-danger mt-3">
-                                <i class="fas fa-exclamation-triangle mr-2"></i>
-                                <span>Seleccione un proveedor</span>
-                            </div>
-                        <?php } else { ?>
-                            <div class="d-flex align-items-center mt-3">
-                                <span>
-                                    <?php echo $_SESSION['datos_proveedorCO']['RAZON'] . " (" . $_SESSION['datos_proveedorCO']['RUC'] . ")"; ?>
-                                </span>
-                                <?php if ($tipo === 'sin_oc') { ?>
-                                    <button type="button" class="btn btn-danger ml-2" onclick="eliminar_proveedorCO('<?php echo $_SESSION['datos_proveedorCO']['ID']; ?>')">
-                                        <i class="fas fa-user-times"></i>
-                                    </button>
-                                <?php } ?>
-                            </div>
-                        <?php } ?>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="form-group">
-                        <label for="condicion" class="bmd-label-floating">Condición de Venta</label>
-                        <select class="form-control" name="condicion" id="condicion" required>
-                            <option value="" selected disabled>Seleccione condición</option>
-                            <option value="contado">Contado</option>
-                            <option value="credito">Crédito</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="form-group">
-                        <label for="intervalo" class="bmd-label-floating">Intervalo</label>
-                        <input type="number" min="0" step="1" class="form-control" name="intervalo" id="intervalo" required>
-                    </div>
-                </div>
-                <div class="col-md-1">
-                    <div class="form-group">
-                        <label for="cuotas" class="bmd-label-floating">Cuotas</label>
-                        <input type="number" min="1" step="1" class="form-control" name="cuotas" id="cuotas" required>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TABLA DETALLE DE ARTICULOS -->
-            <div class="row" style="margin-top:20px;">
-                <div class="col-12">
-                    <h5>Detalle de articulos</h5>
-                    <table class="table table-dark table-sm" id="tabla-detalle">
-                        <thead>
-                            <tr>
-                                <th style="width:35%;">Articulo</th>
-                                <th class="text-center" style="width:10%;">Cantidad</th>
-                                <th class="text-center" style="width:15%;">Precio unit.</th>
-                                <th class="text-center" style="width:12%;">Subtotal</th>
-                                <th class="text-center" style="width:10%;">IVA</th>
-                                <th class="text-center" style="width:12%;">IVA monto</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if (!empty($_SESSION['Cdatos_articuloCO'])): ?>
-                                <?php foreach ($_SESSION['Cdatos_articuloCO'] as $i => $item): ?>
-                                    <tr
-                                        data-index="<?= $i; ?>"
-                                        data-rate="<?= $item['ratevalueiva']; ?>"
-                                        data-divisor="<?= $item['divisor']; ?>">
-                                        <td class="text-left"><?= htmlspecialchars($item['descripcion']); ?></td>
-                                        <td class="text-center">
-                                            <input type="number" min="0" step="1"
-                                                name="cantidades[]"
-                                                class="form-control text-center cantidad"
-                                                value="<?= $item['cantidad']; ?>"
-                                                <?= isset($item['cantidad_pendiente']) ? 'max="' . htmlspecialchars($item['cantidad_pendiente']) . '"' : ''; ?>
-                                                <?= $tipo === 'sin_oc' ? 'readonly' : 'required'; ?>>
-                                        </td>
-                                        <td class="text-center">
-                                            <input type="number"
-                                                name="precios[]"
-                                                class="form-control text-center precio"
-                                                value="<?= number_format($item['precio'], 2, '.', ''); ?>"
-                                                step="0.01"
-                                                min="0"
-                                                <?= $tipo === 'sin_oc' ? 'readonly' : 'required'; ?>>
-                                        </td>
-                                        <td class="text-center subtotal"><?= number_format($item['subtotal'], 0, '.', '.'); ?></td>
-                                        <td class="text-center"><?= htmlspecialchars($item['iva_descri']); ?></td>
-                                        <td class="text-center iva-monto"><?= number_format($item['iva'], 0, ',', '.'); ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- RESUMEN DE IVA -->
-            <div class="row mt-3">
-                <div class="col-12">
-                    <div class="d-flex align-items-start justify-content-between p-3 border rounded">
-                        <div class="text-center mx-2">
-                            <small class="text-muted">IVA 5%</small><br>
-                            <span id="iva5">0.00</span>
-                        </div>
-                        <div class="text-center mx-2">
-                            <small class="text-muted">IVA 10%</small><br>
-                            <span id="iva10">0.00</span>
-                        </div>
-                        <div class="text-center mx-2 font-weight-bold">
-                            <small class="text-muted">Total IVA</small><br>
-                            <span id="total-iva">0.00</span>
-                        </div>
-                        <div class="text-center mx-2 font-weight-bold">
-                            <small class="text-muted">Subtotal</small><br>
-                            <span id="subtotal-general">0.00</span>
-                        </div>
-                        <div class="text-center mx-2 font-weight-bold">
-                            <small class="text-muted">Total Factura</small><br>
-                            <span id="total-factura">0.00</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Hidden inputs -->
-            <input type="hidden" name="subtotal_general" id="input-subtotal-general" value="0.00">
-            <input type="hidden" name="iva_total" id="input-iva-total" value="0.00">
-            <input type="hidden" name="total_factura" id="input-total-factura" value="0.00">
-            <input type="hidden" name="base10" id="input-base10" value="0.00">
-            <input type="hidden" name="iva10" id="input-iva10" value="0.00">
-            <input type="hidden" name="base5" id="input-base5" value="0.00">
-            <input type="hidden" name="iva5" id="input-iva5" value="0.00">
-            <input type="hidden" name="base0" id="input-base0" value="0.00">
-
-            <div class="text-center" style="margin-top: 40px; display: flex; justify-content: center; gap: 15px;">
-                <button type="submit" class="btn btn-info btn-raised">
-                    <i class="fas fa-save"></i> &nbsp; Guardar
-                </button>
-                <button type="button" id="btnCancelarCompra" class="btn btn-secondary btn-raised">
-                    <i class="fas fa-times"></i> &nbsp; Cancelar
-                </button>
-            </div>
-
         </div>
+
+        <?php if ($tipo === 'sin_oc') { ?>
+            <div class="text-center mb-3">
+                <?php if (empty($_SESSION['datos_proveedorCO'])) { ?>
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalproveedorCO">
+                        <i class="fas fa-user-plus"></i> &nbsp; Agregar Proveedor
+                    </button>
+                <?php } ?>
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalArticuloCO">
+                    <i class="fas fa-box-open"></i> &nbsp; Agregar artículo
+                </button>
+            </div>
+        <?php } ?>
+
+        <legend><i class="fas fa-file-invoice-dollar"></i> &nbsp; Registrar nueva factura</legend>
+        <p class="text-muted mb-4">Complete los campos para cargar una nueva factura.</p>
+
+        <!-- FECHAS Y DATOS DE PROVEEDOR -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label class="bmd-label-floating">Timbrado</label>
+                    <input class="form-control" name="timbrado" required>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="factura_numero" class="bmd-label-floating">Número de factura</label>
+                    <input type="text" class="form-control" name="factura_numero" id="factura_numero" required>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label class="bmd-label-floating">Vencimiento Timbrado</label>
+                    <input type="date" class="form-control" name="vencimiento_timbrado" min="<?php echo date('Y-m-d'); ?>" required>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label class="bmd-label-floating">Fecha de emisión</label>
+                    <input type="date" class="form-control" name="fecha_emision" required>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label class="bmd-label-floating">Proveedor</label>
+                    <?php if (empty($_SESSION['datos_proveedorCO'])) { ?>
+                        <div class="d-flex align-items-center text-danger mt-3">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            <span>Seleccione un proveedor</span>
+                        </div>
+                    <?php } else { ?>
+                        <div class="d-flex align-items-center mt-3">
+                            <span>
+                                <?php echo $_SESSION['datos_proveedorCO']['RAZON'] . " (" . $_SESSION['datos_proveedorCO']['RUC'] . ")"; ?>
+                            </span>
+                            <?php if ($tipo === 'sin_oc') { ?>
+                                <button type="button" class="btn btn-danger ml-2" onclick="eliminar_proveedorCO('<?php echo $_SESSION['datos_proveedorCO']['ID']; ?>')">
+                                    <i class="fas fa-user-times"></i>
+                                </button>
+                            <?php } ?>
+                        </div>
+                    <?php } ?>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-group">
+                    <label for="condicion" class="bmd-label-floating">Condición de Venta</label>
+                    <select class="form-control" name="condicion" id="condicion" required>
+                        <option value="" selected disabled>Seleccione condición</option>
+                        <option value="contado">Contado</option>
+                        <option value="credito">Crédito</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-group">
+                    <label for="intervalo" class="bmd-label-floating">Intervalo</label>
+                    <input type="number" min="0" step="1" class="form-control" name="intervalo" id="intervalo" required>
+                </div>
+            </div>
+            <div class="col-md-1">
+                <div class="form-group">
+                    <label for="cuotas" class="bmd-label-floating">Cuotas</label>
+                    <input type="number" min="1" step="1" class="form-control" name="cuotas" id="cuotas" required>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLA DETALLE DE ARTICULOS -->
+        <div class="row" style="margin-top:20px;">
+            <div class="col-12">
+                <h5>Detalle de articulos</h5>
+                <table class="table table-dark table-sm" id="tabla-detalle">
+                    <thead>
+                        <tr>
+                            <th style="width:35%;">Articulo</th>
+                            <th class="text-center" style="width:10%;">Cantidad Pendiente</th>
+                            <th class="text-center" style="width:10%;">Cantidad Recibida</th>
+                            <th class="text-center" style="width:15%;">Precio unit.</th>
+                            <th class="text-center" style="width:12%;">Subtotal</th>
+                            <th class="text-center" style="width:10%;">IVA</th>
+                            <th class="text-center" style="width:12%;">IVA monto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($_SESSION['Cdatos_articuloCO'])): ?>
+                            <?php foreach ($_SESSION['Cdatos_articuloCO'] as $i => $item): ?>
+                                <tr
+                                    data-index="<?= $i; ?>"
+                                    data-rate="<?= $item['ratevalueiva']; ?>"
+                                    data-divisor="<?= $item['divisor']; ?>">
+                                    <td class="text-left"><?= htmlspecialchars($item['descripcion']); ?></td>
+                                    <td class="text-center"><?= htmlspecialchars($item['cantidad']); ?></td>
+                                    <td class="text-center">
+                                        <input type="number" min="0" step="1"
+                                            name="cantidades[]"
+                                            class="form-control text-center cantidad"
+                                            value="<?= $item['cantidad']; ?>"
+                                            <?= isset($item['cantidad_pendiente']) ? 'max="' . htmlspecialchars($item['cantidad_pendiente']) . '"' : ''; ?>
+                                            <?= $tipo === 'sin_oc' ? 'readonly' : 'required'; ?>>
+                                    </td>
+                                    <td class="text-center">
+                                        <input type="number"
+                                            name="precios[]"
+                                            class="form-control text-center precio"
+                                            value="<?= number_format($item['precio'], 2, '.', ''); ?>"
+                                            step="0.01"
+                                            min="0"
+                                            <?= $tipo === 'sin_oc' ? 'readonly' : 'required'; ?>>
+                                    </td>
+                                    <td class="text-center subtotal"><?= number_format($item['subtotal'], 0, '.', '.'); ?></td>
+                                    <td class="text-center"><?= htmlspecialchars($item['iva_descri']); ?></td>
+                                    <td class="text-center iva-monto"><?= number_format($item['iva'], 0, ',', '.'); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- RESUMEN DE IVA -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="d-flex align-items-start justify-content-between p-3 border rounded">
+                    <div class="text-center mx-2">
+                        <small class="text-muted">IVA 5%</small><br>
+                        <span id="iva5">0.00</span>
+                    </div>
+                    <div class="text-center mx-2">
+                        <small class="text-muted">IVA 10%</small><br>
+                        <span id="iva10">0.00</span>
+                    </div>
+                    <div class="text-center mx-2 font-weight-bold">
+                        <small class="text-muted">Total IVA</small><br>
+                        <span id="total-iva">0.00</span>
+                    </div>
+                    <div class="text-center mx-2 font-weight-bold">
+                        <small class="text-muted">Subtotal</small><br>
+                        <span id="subtotal-general">0.00</span>
+                    </div>
+                    <div class="text-center mx-2 font-weight-bold">
+                        <small class="text-muted">Total Factura</small><br>
+                        <span id="total-factura">0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden inputs -->
+        <input type="hidden" name="subtotal_general" id="input-subtotal-general" value="0.00">
+        <input type="hidden" name="iva_total" id="input-iva-total" value="0.00">
+        <input type="hidden" name="total_factura" id="input-total-factura" value="0.00">
+        <input type="hidden" name="base10" id="input-base10" value="0.00">
+        <input type="hidden" name="iva10" id="input-iva10" value="0.00">
+        <input type="hidden" name="base5" id="input-base5" value="0.00">
+        <input type="hidden" name="iva5" id="input-iva5" value="0.00">
+        <input type="hidden" name="base0" id="input-base0" value="0.00">
+
+        <div class="text-center" style="margin-top: 40px; display: flex; justify-content: center; gap: 15px;">
+            <button type="submit" class="btn btn-info btn-raised">
+                <i class="fas fa-save"></i> &nbsp; Guardar
+            </button>
+            <button type="button" id="btnCancelarCompra" class="btn btn-secondary btn-raised">
+                <i class="fas fa-times"></i> &nbsp; Cancelar
+            </button>
+        </div>
+
     </form>
 </div>
 

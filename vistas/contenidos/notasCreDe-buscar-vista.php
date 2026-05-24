@@ -5,20 +5,6 @@ if (!mainModel::tienePermiso('compra.nota.ver')) {
     return;
 } ?>
 
-<div class="container-fluid">
-    <h3 class="text-left">
-        <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR NOTA DE CREDITO/DEBITO
-    </h3>
-    <ul class="full-box list-unstyled page-nav-tabs">
-        <li>
-            <a href="<?php echo SERVERURL; ?>notasCreDe-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; INGRESO DE FACTURA</a>
-        </li>
-        <li>
-            <a class="active" href="<?php echo SERVERURL; ?>notasCreDe-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR</a>
-        </li>
-    </ul>
-</div>
-
 <?php
 // Preparar datetime completos para enviar
 $fecha_inicio = $_SESSION['fecha_inicio_notasCreDe'] ?? '';
@@ -41,7 +27,17 @@ if (!isset($pagina)) {
     <div class="container-fluid">
         <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
             <input type="hidden" name="modulo" value="notasCreDe">
-
+            <h3 class="text-left">
+                <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR NOTA DE CREDITO/DEBITO
+            </h3>
+            <ul class="full-box list-unstyled page-nav-tabs">
+                <li>
+                    <a href="<?php echo SERVERURL; ?>notasCreDe-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO</a>
+                </li>
+                <li>
+                    <a class="active" href="<?php echo SERVERURL; ?>notasCreDe-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR</a>
+                </li>
+            </ul>
             <!-- Inputs ocultos para enviar datetime completo -->
             <input type="hidden" name="fecha_inicio_dt" value="">
             <input type="hidden" name="fecha_final_dt" value="">
@@ -59,7 +55,7 @@ if (!isset($pagina)) {
                         </div>
                     </div>
                     <div class="col-12 col-md-4">
-                        <div class="form-group">                            
+                        <div class="form-group">
                             <input type="text" class="form-control" placeholder="Número de documento" name="nro_documento">
                         </div>
                     </div>
@@ -83,7 +79,7 @@ if (!isset($pagina)) {
     </div>
 
 <?php } else { ?>
-    <div class="container-fluid">
+    <div class="container-fluid form-neon">
         <form class="FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
             <input type="hidden" name="modulo" value="notasCreDe">
             <input type="hidden" name="eliminar_busqueda" value="eliminar">
@@ -91,7 +87,17 @@ if (!isset($pagina)) {
             <!-- Inputs ocultos con datetime completo -->
             <input type="hidden" name="fecha_inicio_dt" value="<?php echo $fecha_inicio_dt; ?>">
             <input type="hidden" name="fecha_final_dt" value="<?php echo $fecha_final_dt; ?>">
-
+            <h3 class="text-left">
+                <i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; INGRESO DE NOTA (CREDITO/DEBITO)
+            </h3>
+            <ul class="full-box list-unstyled page-nav-tabs">
+                <li>
+                    <a class="active" href="<?php echo SERVERURL; ?>notasCreDe-nuevo-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; INGRESO DE NOTA (CREDITO/DEBITO)</a>
+                </li>
+                <li>
+                    <a href="<?php echo SERVERURL; ?>notasCreDe-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR</a>
+                </li>
+            </ul>
             <div class="container-fluid">
                 <div class="row justify-content-md-center">
                     <div class="col-12 col-md-6">
@@ -99,15 +105,15 @@ if (!isset($pagina)) {
                             <?php if ($fecha_inicio && $fecha_final) { ?>
                                 Fecha: <strong><?= htmlspecialchars($fecha_inicio, ENT_QUOTES, 'UTF-8') ?> a <?= htmlspecialchars($fecha_final, ENT_QUOTES, 'UTF-8') ?></strong>
                             <?php
-} ?>
+                            } ?>
                             <?php if ($nro_documento) { ?>
                                 | Documento: <strong><?= htmlspecialchars($nro_documento, ENT_QUOTES, 'UTF-8') ?></strong>
                             <?php
-} ?>
+                            } ?>
                             <?php if ($tipo_nota) { ?>
                                 | Tipo: <strong><?= htmlspecialchars($tipo_nota, ENT_QUOTES, 'UTF-8') ?></strong>
                             <?php
-} ?>
+                            } ?>
                         </p>
 
                     </div>
@@ -121,9 +127,9 @@ if (!isset($pagina)) {
 
 
 
-    <div class="container-fluid">
+    <div class="container-fluid form-neon">
         <?php
-require_once "./controladores/notasCreDeControlador.php";
+        require_once "./controladores/notasCreDeControlador.php";
         $notas = new notasCreDeControlador();
         $notas->paginador_notasCreDe_controlador(
             $pagina[1],

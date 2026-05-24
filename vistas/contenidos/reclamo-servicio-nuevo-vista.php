@@ -43,7 +43,7 @@ if (!mainModel::tienePermiso('servicio.reclamo.crear')) {
         </li>
         <li>
             <a href="<?php echo SERVERURL; ?>/reclamo-servicio-lista/">
-                <i class="fas fa-search fa-fw"></i> &nbsp; LISTADO DE RECLAMOS
+                <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR
             </a>
         </li>
     </ul>

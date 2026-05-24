@@ -34,11 +34,11 @@
                         </a>
                         <ul>
                             <?php if (mainModel::tienePermiso('compra.pedido.ver')) { ?>
-                                <li><a href="<?= SERVERURL; ?>pedido-lista/"><i class="fas fa-file-alt fa-fw"></i> &nbsp; Pedidos</a></li>
+                                <li><a href="<?= SERVERURL; ?>pedido-nuevo/"><i class="fas fa-file-alt fa-fw"></i> &nbsp; Pedidos</a></li>
                             <?php } ?>
 
                             <?php if (mainModel::tienePermiso('compra.presupuesto.ver')) { ?>
-                                <li><a href="<?= SERVERURL; ?>presupuesto-lista/"><i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; Presupuestos</a></li>
+                                <li><a href="<?= SERVERURL; ?>presupuesto-nuevo/"><i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; Presupuestos</a></li>
                             <?php } ?>
 
                             <?php if (mainModel::tienePermiso('compra.oc.ver')) { ?>

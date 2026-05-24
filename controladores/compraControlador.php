@@ -194,6 +194,7 @@ class compraControlador extends compraModelo
         $totalReal = round($totalReal, 2);
 
         $condicion = mainModel::limpiar_string($_POST['condicion'] ?? '');
+        $vencimiento_timbrado = mainModel::limpiar_string($_POST['vencimiento_timbrado'] ?? '');
         $intervalo = isset($_POST['intervalo']) ? (int) $_POST['intervalo'] : 0;
         $cuotas = isset($_POST['cuotas']) ? (int) $_POST['cuotas'] : 0;
 
@@ -218,6 +219,24 @@ class compraControlador extends compraModelo
             ];
         }
 
+        if ($vencimiento_timbrado == "" || mainModel::verificarFecha($vencimiento_timbrado)) {
+            return [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El vencimiento del timbrado no es valido.",
+                "Tipo" => "error"
+            ];
+        }
+
+        if (strtotime($vencimiento_timbrado) < strtotime(date('Y-m-d'))) {
+            return [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El vencimiento del timbrado no puede ser menor a hoy.",
+                "Tipo" => "error"
+            ];
+        }
+
         $pdo = null;
 
         try {
@@ -234,7 +253,7 @@ class compraControlador extends compraModelo
                 "nro_factura"          => $_POST['factura_numero'],
                 "fecha_factura"        => $_POST['fecha_emision'],
                 "timbrado"             => $_POST['timbrado'],
-                "vencimiento_timbrado" => $_POST['vencimiento_timbrado'],
+                "vencimiento_timbrado" => $vencimiento_timbrado,
                 "estado"               => "1",
                 "total"                => $totalReal,
                 "condicion"            => $condicion,

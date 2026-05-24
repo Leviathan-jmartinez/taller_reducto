@@ -15,6 +15,10 @@ if (!isset($pagina)) {
     $pagina = [$url[0], $url[1] ?? 1];
 }
 
+if (isset($_GET['estado_oc']) && in_array((string)$_GET['estado_oc'], ['0', '1', '2'], true)) {
+    $_SESSION['estado_oc'] = (string)$_GET['estado_oc'];
+}
+
 $fecha_inicio = $_SESSION['fecha_inicio_ordencompra2'] ?? null;
 $fecha_final  = $_SESSION['fecha_final_ordencompra2'] ?? null;
 $proveedor    = $_SESSION['proveedor_oc'] ?? '';
@@ -23,35 +27,28 @@ $busqueda_activa = !empty($fecha_inicio) || !empty($fecha_final) || !empty($prov
 ?>
 
 <!-- Page header -->
-<div class="full-box page-header">
-    <h3 class="text-left">
-        <i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; LISTADO DE ORDENES DE COMPRA
-    </h3>
-</div>
 
-<div class="container-fluid">
-    <ul class="full-box list-unstyled page-nav-tabs">
-        <li>
-            <a href="<?= SERVERURL; ?>oc-nuevo/">
-                <i class="fas fa-plus fa-fw"></i> &nbsp; GENERAR ORDEN DE COMPRA
-            </a>
-        </li>
-        <li>
-            <a href="<?= SERVERURL; ?>oc-lista/">
-                <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTADOS DE ORDENES
-            </a>
-        </li>
-        <li>
-            <a class="active" href="<?= SERVERURL; ?>oc-buscar/">
-                <i class="fas fa-search-dollar fa-fw"></i> &nbsp; BUSCAR POR FECHA
-            </a>
-        </li>
-    </ul>
-</div>
 
 <?php if (!$busqueda_activa) { ?>
 
-    <div class="container-fluid">
+    <div class="container-fluid form-neon">
+
+        <h3 class="text-left">
+            <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR ORDENES DE COMPRA
+        </h3>
+        <ul class="full-box list-unstyled page-nav-tabs">
+            <li>
+                <a href="<?= SERVERURL; ?>oc-nuevo/">
+                    <i class="fas fa-plus fa-fw"></i> &nbsp; GENERAR ORDEN DE COMPRA
+                </a>
+            </li>
+            <li>
+                <a class="active" href="<?= SERVERURL; ?>oc-buscar/">
+                    <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR ORDEN DE COMPRA
+                </a>
+            </li>
+        </ul>
+
         <form class="form-neon FormularioAjax"
             action="<?= SERVERURL; ?>ajax/buscadorAjax.php"
             method="POST"
@@ -118,7 +115,22 @@ $busqueda_activa = !empty($fecha_inicio) || !empty($fecha_final) || !empty($prov
 
 <?php } else { ?>
 
-    <div class="container-fluid">
+    <div class="container-fluid form-neon">
+        <h3 class="text-left">
+            <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR ORDENES DE COMPRA
+        </h3>
+        <ul class="full-box list-unstyled page-nav-tabs">
+            <li>
+                <a href="<?= SERVERURL; ?>oc-nuevo/">
+                    <i class="fas fa-plus fa-fw"></i> &nbsp; GENERAR ORDEN DE COMPRA
+                </a>
+            </li>
+            <li>
+                <a class="active" href="<?= SERVERURL; ?>oc-buscar/">
+                    <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR ORDEN DE COMPRA
+                </a>
+            </li>
+        </ul>
         <form class="FormularioAjax"
             action="<?= SERVERURL; ?>ajax/buscadorAjax.php"
             method="POST"

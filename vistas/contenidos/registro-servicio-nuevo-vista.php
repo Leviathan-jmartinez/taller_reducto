@@ -30,10 +30,10 @@ if (!mainModel::tienePermiso('servicio.registro.crear')) {
     }
 </style>
 
-<div class="container-fluid registro-servicio-bg">
+<div class="container-fluid form-neon registro-servicio-bg">
 
     <!-- ================= TÍTULO ================= -->
-    <div class="container-fluid mb-3">
+
         <h3>
             <i class="fas fa-clipboard-check"></i>
             &nbsp; REGISTRO DE SERVICIO
@@ -42,16 +42,16 @@ if (!mainModel::tienePermiso('servicio.registro.crear')) {
         <ul class="full-box list-unstyled page-nav-tabs">
             <li>
                 <a class="active" href="<?php echo SERVERURL; ?>/registro-servicio-nuevo/">
-                    <i class="fas fa-plus fa-fw"></i> &nbsp; REGISTRO DE SERVICIO
+                    <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO
                 </a>
             </li>
             <li>
                 <a href="<?php echo SERVERURL; ?>registro-servicio-buscar/">
-                    <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR REGISTRO DE SERVICIO
+                    <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR
                 </a>
             </li>
         </ul>
-    </div>
+
 
     <!-- ================= BUSCAR OT ================= -->
     <fieldset class="border p-3 mb-3">

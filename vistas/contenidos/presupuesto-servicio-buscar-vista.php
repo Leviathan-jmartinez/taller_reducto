@@ -11,30 +11,22 @@ $estado = $_SESSION['estado_presupuesto'] ?? '';
 $busqueda_activa = isset($_SESSION['filtro_presupuesto_servicio_activo']);
 ?>
 
-<div class="container-fluid">
-    <h3 class="text-left">
-        <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR PRESUPUESTO DE SERVICIO
-    </h3>
-</div>
 
-<div class="container-fluid">
-    <ul class="full-box list-unstyled page-nav-tabs">
-        <li>
-            <a href="<?php echo SERVERURL; ?>presupuesto-servicio-nuevo/">
-                <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO PRESUPUESTO
-            </a>
-        </li>
-        <li>
-            <a class="active" href="<?php echo SERVERURL; ?>presupuesto-servicio-buscar/">
-                <i class="fas fa-search-dollar fa-fw"></i> &nbsp; BUSCAR POR FECHA
-            </a>
-        </li>
-    </ul>
-</div>
 
-<!-- ================= FILTRO ================= -->
-
-<div class="container-fluid">
+<div class="container-fluid form-neon">
+    <div class="container-fluid">
+        <h3 class="text-left">
+            <i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; PRESUPUESTO DE SERVICIOS
+        </h3>
+        <ul class="full-box list-unstyled page-nav-tabs">
+            <li>
+                <a href="<?php echo SERVERURL; ?>presupuesto-servicio-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO</a>
+            </li>
+            <li>
+                <a class="active" href="<?php echo SERVERURL; ?>presupuesto-servicio-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR</a>
+            </li>
+        </ul>
+    </div>
     <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
         method="POST"
@@ -43,7 +35,7 @@ $busqueda_activa = isset($_SESSION['filtro_presupuesto_servicio_activo']);
 
         <input type="hidden" name="modulo" value="presupuesto_servicio">
 
-        <div class="row justify-content-md-center">
+        <div class="row justify-content-md-center align-items-end">
 
             <div class="col-12 col-md-4">
                 <div class="form-group">
@@ -64,14 +56,21 @@ $busqueda_activa = isset($_SESSION['filtro_presupuesto_servicio_activo']);
                         value="<?php echo $fecha_final; ?>">
                 </div>
             </div>
-            <select name="estado_presupuesto" class="form-control">
-                <option value="">Todos</option>
-                <option value="1" <?php if ($estado == "1") echo "selected"; ?>>Pendiente</option>
-                <option value="2" <?php if ($estado == "2") echo "selected"; ?>>Aprobado</option>
-                <option value="3" <?php if ($estado == "3") echo "selected"; ?>>OT generada</option>
-                <option value="4" <?php if ($estado == "4") echo "selected"; ?>>Facturado</option>
-                <option value="0" <?php if ($estado === "0") echo "selected"; ?>>Anulado</option>
-            </select>
+
+            <div class="col-12 col-md-4">
+                <div class="form-group">
+                    <label>Estado</label>
+                    <select name="estado_presupuesto" class="form-control">
+                        <option value="">Todos</option>
+                        <option value="1" <?php if ($estado == "1") echo "selected"; ?>>Pendiente</option>
+                        <option value="2" <?php if ($estado == "2") echo "selected"; ?>>Aprobado</option>
+                        <option value="3" <?php if ($estado == "3") echo "selected"; ?>>OT generada</option>
+                        <option value="4" <?php if ($estado == "4") echo "selected"; ?>>Facturado</option>
+                        <option value="0" <?php if ($estado === "0") echo "selected"; ?>>Anulado</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="col-12 text-center mt-4">
 
                 <button type="submit" class="btn btn-raised btn-info">
@@ -99,11 +98,11 @@ $busqueda_activa = isset($_SESSION['filtro_presupuesto_servicio_activo']);
             <?php if ($fecha_inicio) { ?>
                 desde <strong><?php echo $fecha_inicio; ?></strong>
             <?php
-} ?>
+            } ?>
             <?php if ($fecha_final) { ?>
                 hasta <strong><?php echo $fecha_final; ?></strong>
             <?php
-} ?>
+            } ?>
             <?php if ($estado !== '') {
                 $estados = [
                     '1' => 'Pendiente',
@@ -114,7 +113,7 @@ $busqueda_activa = isset($_SESSION['filtro_presupuesto_servicio_activo']);
                 ]; ?>
                 estado <strong><?php echo $estados[$estado] ?? $estado; ?></strong>
             <?php
-} ?>
+            } ?>
         </p>
     </div>
 

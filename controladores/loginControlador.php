@@ -154,6 +154,7 @@ class loginControlador extends loginModelo
         $_SESSION['apellido_str'] = $row['usu_apellido'];
         $_SESSION['nick_str'] = $row['usu_nick'];
         $_SESSION['nick_sucursal'] = $row['sucursalid'];
+        $_SESSION['cambiar_clave_str'] = isset($row['usu_cambiar_clave']) ? (int)$row['usu_cambiar_clave'] : 0;
         $_SESSION['roles'] = loginModelo::obtener_roles_usuario($row['id_usuario']);
         $_SESSION['permisos'] = loginModelo::obtener_permisos_usuario($row['id_usuario']);
         $empresa = mainModel::ejecutar_consulta_simple("
@@ -170,6 +171,9 @@ class loginControlador extends loginModelo
         }
         /**procesar con md5 */
         $_SESSION['token_str'] = md5(uniqid(mt_rand(), true));
+        if ($_SESSION['cambiar_clave_str'] === 1) {
+            return header("Location: " . SERVERURL . "cambiar-clave/");
+        }
         return header("Location: " . SERVERURL . "home/");
     }
     /**Fin controlador */
@@ -214,4 +218,102 @@ class loginControlador extends loginModelo
         echo json_encode($alerta);
     }
     /**fin controlador */
+
+    public function cambiar_clave_obligatoria_controlador()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start(['name' => 'STR']);
+        }
+
+        if (!isset($_SESSION['id_str'])) {
+            echo json_encode([
+                "Alerta" => "redireccionar",
+                "URL" => SERVERURL . "login/"
+            ]);
+            exit();
+        }
+
+        $claveActual = mainModel::limpiar_string($_POST['clave_actual'] ?? "");
+        $claveNueva1 = mainModel::limpiar_string($_POST['clave_nueva_1'] ?? "");
+        $claveNueva2 = mainModel::limpiar_string($_POST['clave_nueva_2'] ?? "");
+
+        if ($claveActual == "" || $claveNueva1 == "" || $claveNueva2 == "") {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Datos incompletos",
+                "Texto" => "Debe ingresar la contraseña actual y la nueva contraseña",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if (
+            mainModel::verificarDatos("[a-zA-Z0-9$@._-]{7,100}", $claveActual) ||
+            mainModel::verificarDatos("[a-zA-Z0-9$@._-]{7,18}", $claveNueva1) ||
+            mainModel::verificarDatos("[a-zA-Z0-9$@._-]{7,18}", $claveNueva2)
+        ) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Formato no valido",
+                "Texto" => "Las contraseñas deben tener entre 7 y 18 caracteres y solo pueden contener letras, numeros y $ @ . _ -",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($claveNueva1 !== $claveNueva2) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Contraseñas distintas",
+                "Texto" => "La nueva contraseña y su confirmacion no coinciden",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($claveActual === $claveNueva1) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Cambio requerido",
+                "Texto" => "La nueva contraseña debe ser distinta a la contraseña actual",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        $claveActualEnc = mainModel::encryption($claveActual);
+        $check = loginModelo::obtener_usuario_login_modelo($_SESSION['nick_str']);
+        $row = $check->fetch(PDO::FETCH_ASSOC);
+
+        if (!$row || $row['usu_clave'] !== $claveActualEnc || (int)$row['id_usuario'] !== (int)$_SESSION['id_str']) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Contraseña incorrecta",
+                "Texto" => "La contraseña actual no es correcta",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        $claveNuevaEnc = mainModel::encryption($claveNueva1);
+        $actualizar = loginModelo::cambiar_clave_obligatoria_modelo($_SESSION['id_str'], $claveNuevaEnc);
+
+        if ($actualizar->rowCount() >= 1) {
+            $_SESSION['cambiar_clave_str'] = 0;
+            echo json_encode([
+                "Alerta" => "redireccionar_confirmado",
+                "Titulo" => "Contraseña actualizada",
+                "Texto" => "Ya puede continuar usando el sistema",
+                "Tipo" => "success",
+                "URL" => SERVERURL . "home/"
+            ]);
+        } else {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Sin cambios",
+                "Texto" => "No se pudo actualizar la contraseña",
+                "Tipo" => "error"
+            ]);
+        }
+    }
 }

@@ -14,10 +14,15 @@ $sucursales = mainModel::conectar()->query("SELECT id_sucursal, suc_descri FROM 
 
 <div class="container-fluid">
 
-    <h3 class="text-left">
-        <i class="fas fa-percent"></i> &nbsp; LISTADO DE DESCUENTOS
-    </h3>
+
     <div class="container-fluid">
+
+    </div>
+    <form method="GET" class="form-neon mb-3">
+
+        <h3 class="text-left">
+            <i class="fas fa-percent"></i> &nbsp; LISTADO DE DESCUENTOS
+        </h3>
         <ul class="full-box list-unstyled page-nav-tabs">
             <li>
                 <a href="<?php echo SERVERURL; ?>descuento-nuevo/">
@@ -30,8 +35,6 @@ $sucursales = mainModel::conectar()->query("SELECT id_sucursal, suc_descri FROM 
                 </a>
             </li>
         </ul>
-    </div>
-    <form method="GET" class="form-neon mb-3">
         <div class="row">
             <div class="col-md-3">
                 <label>Buscar</label>

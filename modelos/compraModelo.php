@@ -6,6 +6,7 @@
         /* ===============================
         INSERTAR COMPRA CABECERA
         ================================= */
+        
         protected static function insertar_compra_cabecera_modelo($datos)
         {
             $conexion = mainModel::conectar();

@@ -13,13 +13,24 @@ class pedidoControlador extends pedidoModelo
             $articulo = mainModel::limpiar_string($_POST['buscar_articulo']);
             if ($articulo == "") return '<div class="alert alert-warning">Debes introducir código o descripción</div>';
 
-            $datos_articulo = mainModel::ejecutar_consulta_simple("SELECT * FROM articulos WHERE (codigo like '%$articulo%' OR desc_articulo like '%$articulo%') AND estado=1 ORDER BY desc_articulo DESC");
+            $datos_articulo = mainModel::ejecutar_consulta_simple("
+                SELECT a.*, COALESCE(s.stockDisponible, 0) AS stock_actual
+                FROM articulos a
+                LEFT JOIN stock s
+                    ON s.id_articulo = a.id_articulo
+                    AND s.id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
+                WHERE (a.codigo like '%$articulo%' OR a.desc_articulo like '%$articulo%')
+                AND a.estado=1
+                AND a.tipo !='servicio'
+                ORDER BY a.desc_articulo DESC
+            ");
 
             if ($datos_articulo->rowCount() >= 1) {
                 $tabla = '<div class="table-responsive"><table class="table table-hover table-bordered table-sm"><tbody>';
                 foreach ($datos_articulo->fetchAll() as $rows) {
                     $tabla .= '<tr class="text-center">
                     <td>' . $rows['codigo'] . ' - ' . $rows['desc_articulo'] . '</td>
+                    <td>Stock: ' . number_format((float)$rows['stock_actual'], 0, ',', '.') . '</td>
                     <td style="width:100px;"><input type="number" id="cantidad_' . $rows['id_articulo'] . '" class="form-control form-control-sm" value="1" min="1"></td>
                     <td><button type="button" class="btn btn-primary btn-sm" onclick="agregar_articulo(' . $rows['id_articulo'] . ')"><i class="fas fa-plus-circle"></i></button></td>
                 </tr>';
@@ -39,7 +50,16 @@ class pedidoControlador extends pedidoModelo
             $id = mainModel::limpiar_string($_POST['id_agregar_articulo']);
             $cantidad = mainModel::limpiar_string($_POST['detalle_cantidad']);
 
-            $check_articulo = mainModel::ejecutar_consulta_simple("SELECT * FROM articulos WHERE id_articulo='$id' AND estado=1");
+            $check_articulo = mainModel::ejecutar_consulta_simple("
+                SELECT a.*, COALESCE(s.stockDisponible, 0) AS stock_actual
+                FROM articulos a
+                LEFT JOIN stock s
+                    ON s.id_articulo = a.id_articulo
+                    AND s.id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
+                WHERE a.id_articulo='$id'
+                AND a.estado=1
+                LIMIT 1
+            ");
             if ($check_articulo->rowCount() <= 0)
                 die(json_encode(["Alerta" => "simple", "Titulo" => "Error!", "Texto" => "No se encontró el artículo", "Tipo" => "error"]));
 
@@ -59,7 +79,8 @@ class pedidoControlador extends pedidoModelo
                     "ID" => $campos['id_articulo'],
                     "codigo" => $campos['codigo'],
                     "descripcion" => $campos['desc_articulo'],
-                    "cantidad" => $cantidad
+                    "cantidad" => $cantidad,
+                    "stock_actual" => (int)$campos['stock_actual']
                 ];
                 $alerta = [
                     "Alerta" => "recargar",
@@ -160,7 +181,8 @@ class pedidoControlador extends pedidoModelo
             $detalle_reg = [
                 "pedidoid" => $idPedidoCabecera,
                 "articulo" => $article['ID'],
-                "cantidad" => $article['cantidad']
+                "cantidad" => $article['cantidad'],
+                "stock_actual" => $article['stock_actual'] ?? 0
             ];
 
             $detalleInsert = pedidoModelo::agregar_pedidoD_modelo($detalle_reg);
@@ -190,12 +212,13 @@ class pedidoControlador extends pedidoModelo
     }
     /**fin controlador */
     /**Controlador paginar articulos */
-    public function paginador_pedidos_controlador($pagina, $registros, $url, $busqueda1, $busqueda2)
+    public function paginador_pedidos_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $estado_pedido = '')
     {
         $pagina = mainModel::limpiar_string($pagina);
         $registros = mainModel::limpiar_string($registros);
         $busqueda1 = mainModel::limpiar_string($busqueda1);
         $busqueda2 = mainModel::limpiar_string($busqueda2);
+        $estado_pedido = mainModel::limpiar_string($estado_pedido);
 
         $url = mainModel::limpiar_string($url);
         $url = SERVERURL . $url . "/";
@@ -206,6 +229,11 @@ class pedidoControlador extends pedidoModelo
         $inicio = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
         $reg_inicio = $inicio + 1;
         $reg_final = $inicio;
+
+        $filtros = "";
+        if ($estado_pedido !== '') {
+            $filtros .= " AND pc.estado = '$estado_pedido'";
+        }
 
         if (!empty($busqueda1) && !empty($busqueda2)) {
             $consulta = "
@@ -228,7 +256,8 @@ class pedidoControlador extends pedidoModelo
             WHERE DATE(pc.fecha) >= '$busqueda1'
               AND DATE(pc.fecha) <= '$busqueda2'
               AND pc.id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
-            ORDER BY pc.fecha ASC
+              $filtros
+            ORDER BY pc.fecha DESC
             LIMIT $inicio,$registros
         ";
         } else {
@@ -249,9 +278,10 @@ class pedidoControlador extends pedidoModelo
 
             FROM pedido_cabecera pc
             INNER JOIN usuarios u ON u.id_usuario = pc.id_usuario
-            WHERE pc.estado != 0
-              AND pc.id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
-            ORDER BY pc.idpedido_cabecera ASC
+            WHERE pc.id_sucursal = '" . $_SESSION['nick_sucursal'] . "'
+              " . ($estado_pedido === '' ? "AND pc.estado != 0" : "") . "
+              $filtros
+            ORDER BY pc.fecha DESC
             LIMIT $inicio,$registros
         ";
         }

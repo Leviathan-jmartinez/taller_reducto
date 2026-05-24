@@ -6,26 +6,6 @@ if (!mainModel::tienePermiso('compra.presupuesto.ver')) {
 } ?>
 
 <!-- Page header -->
-<div class="full-box page-header">
-    <h3 class="text-left">
-        <i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; BUSCADOR DE PRESUPUESTOS DE COMPRA
-    </h3>
-</div>
-
-<div class="container-fluid">
-    <ul class="full-box list-unstyled page-nav-tabs">
-        <li>
-            <a href="<?php echo SERVERURL; ?>presupuesto-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO PRESUPUESTO</a>
-        </li>
-        <li>
-            <a href="<?php echo SERVERURL; ?>presupuesto-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTADOS DE PRESUPUESTOS</a>
-        </li>
-        <li>
-            <a class="active" href="<?php echo SERVERURL; ?>presupuesto-buscar/"><i class="fas fa-search-dollar fa-fw"></i> &nbsp; BUSCAR</a>
-        </li>
-    </ul>
-</div>
-
 <?php
 $fecha_inicio = $_SESSION['fecha_inicio_presupuesto'] ?? '';
 $fecha_final  = $_SESSION['fecha_final_presupuesto'] ?? '';
@@ -33,6 +13,19 @@ $fecha_inicio_dt = $fecha_inicio ? $fecha_inicio . ' 00:00:00' : '';
 $fecha_final_dt  = $fecha_final  ? $fecha_final  . ' 23:59:59' : '';
 $nro_presupuesto = $_SESSION['nro_presupuesto'] ?? '';
 $proveedor_presupuesto = $_SESSION['proveedor_presupuesto'] ?? '';
+$estado_presupuesto_compra = $_SESSION['estado_presupuesto_compra'] ?? '';
+
+if (isset($_GET['estado_presupuesto_compra']) && in_array((string)$_GET['estado_presupuesto_compra'], ['0', '1', '2'], true)) {
+    $_SESSION['estado_presupuesto_compra'] = (string)$_GET['estado_presupuesto_compra'];
+    $estado_presupuesto_compra = (string)$_GET['estado_presupuesto_compra'];
+}
+
+$estadosPresupuesto = [
+    '' => 'Todos',
+    '0' => 'Anulado',
+    '1' => 'Pendiente',
+    '2' => 'Procesado'
+];
 
 if (!isset($pagina) || !is_array($pagina)) {
     $url = $_GET['views'] ?? 'presupuesto-buscar/1';
@@ -41,8 +34,19 @@ if (!isset($pagina) || !is_array($pagina)) {
 }
 ?>
 
-<?php if (!$fecha_inicio && !$fecha_final && !$nro_presupuesto && !$proveedor_presupuesto) { ?>
-    <div class="container-fluid">
+<?php if (!$fecha_inicio && !$fecha_final && !$nro_presupuesto && !$proveedor_presupuesto && !isset($_SESSION['estado_presupuesto_compra'])) { ?>
+    <div class="container-fluid form-neon">
+        <h3 class="text-left">
+            <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR PRESUPUESTOS
+        </h3>
+        <ul class="full-box list-unstyled page-nav-tabs">
+            <li>
+                <a href="<?php echo SERVERURL; ?>presupuesto-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO PRESUPUESTO</a>
+            </li>
+            <li>
+                <a class="active" href="<?php echo SERVERURL; ?>presupuesto-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR PRESUPUESTOS</a>
+            </li>
+        </ul>
         <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
             <input type="hidden" name="modulo" value="presupuesto">
             <input type="hidden" name="fecha_inicio_dt" value="">
@@ -74,6 +78,17 @@ if (!isset($pagina) || !is_array($pagina)) {
                             <input type="text" class="form-control" name="proveedor_presupuesto" id="proveedor_presupuesto">
                         </div>
                     </div>
+                    <div class="col-12 col-md-4">
+                        <div class="form-group">
+                            <label for="estado_presupuesto_compra">Estado</label>
+                            <select class="form-control" name="estado_presupuesto_compra" id="estado_presupuesto_compra">
+                                <option value="">Todos</option>
+                                <option value="1">Pendiente</option>
+                                <option value="2">Procesado</option>
+                                <option value="0">Anulado</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="col-12 text-center" style="margin-top: 40px;">
                         <button type="submit" class="btn btn-raised btn-info"><i class="fas fa-search"></i> &nbsp; BUSCAR</button>
                     </div>
@@ -82,7 +97,18 @@ if (!isset($pagina) || !is_array($pagina)) {
         </form>
     </div>
 <?php } else { ?>
-    <div class="container-fluid">
+    <div class="container-fluid form-neon">
+        <h3 class="text-left">
+            <i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; PRESUPUESTO DE SERVICIOS
+        </h3>
+        <ul class="full-box list-unstyled page-nav-tabs">
+            <li>
+                <a href="<?php echo SERVERURL; ?>presupuesto-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO PRESUPUESTO</a>
+            </li>
+            <li>
+                <a class="active" href="<?php echo SERVERURL; ?>presupuesto-buscar/"><i class="fas fa-search-dollar fa-fw"></i> &nbsp; BUSCAR POR FECHA</a>
+            </li>
+        </ul>
         <form class="FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
             <input type="hidden" name="modulo" value="presupuesto">
             <input type="hidden" name="eliminar_busqueda" value="eliminar">
@@ -93,19 +119,25 @@ if (!isset($pagina) || !is_array($pagina)) {
                 <div class="row justify-content-md-center">
                     <div class="col-12 col-md-6">
                         <p class="text-center" style="font-size: 20px;">
-                            <?php if ($fecha_inicio && $fecha_final) { ?>
-                                Fecha de busqueda:
-                                <strong><?php echo $fecha_inicio ?> &nbsp; a &nbsp; <?php echo $fecha_final ?></strong>
-                            <?php
-} elseif ($nro_presupuesto) { ?>
-                                Busqueda por Nro. Presupuesto:
-                                <strong><?php echo $nro_presupuesto; ?></strong>
-                            <?php
-} elseif ($proveedor_presupuesto) { ?>
-                                Busqueda por Proveedor:
-                                <strong><?php echo $proveedor_presupuesto; ?></strong>
-                            <?php
-} ?>
+                            Busqueda:
+                            <strong>
+                                <?php
+                                $criterios = [];
+                                if ($fecha_inicio || $fecha_final) {
+                                    $criterios[] = 'Fecha: ' . ($fecha_inicio ?: 'inicio') . ' a ' . ($fecha_final ?: 'final');
+                                }
+                                if ($nro_presupuesto) {
+                                    $criterios[] = 'Nro. Presupuesto: ' . $nro_presupuesto;
+                                }
+                                if ($proveedor_presupuesto) {
+                                    $criterios[] = 'Proveedor: ' . $proveedor_presupuesto;
+                                }
+                                if (isset($_SESSION['estado_presupuesto_compra'])) {
+                                    $criterios[] = 'Estado: ' . ($estadosPresupuesto[(string)$estado_presupuesto_compra] ?? $estado_presupuesto_compra);
+                                }
+                                echo htmlspecialchars(implode(' | ', $criterios), ENT_QUOTES, 'UTF-8');
+                                ?>
+                            </strong>
                         </p>
                     </div>
                     <div class="col-12 text-center" style="margin-top: 20px;">
@@ -118,7 +150,7 @@ if (!isset($pagina) || !is_array($pagina)) {
 
     <div class="container-fluid">
         <?php
-require_once "./controladores/presupuestoControlador.php";
+        require_once "./controladores/presupuestoControlador.php";
         $ins_presupuesto = new presupuestoControlador();
         $ins_presupuesto->paginador_presupuestos_controlador(
             $pagina[1],
@@ -127,7 +159,8 @@ require_once "./controladores/presupuestoControlador.php";
             $_SESSION['fecha_inicio_presupuesto'] ?? '',
             $_SESSION['fecha_final_presupuesto'] ?? '',
             $_SESSION['nro_presupuesto'] ?? '',
-            $_SESSION['proveedor_presupuesto'] ?? ''
+            $_SESSION['proveedor_presupuesto'] ?? '',
+            $_SESSION['estado_presupuesto_compra'] ?? ''
         );
         ?>
     </div>

@@ -39,62 +39,54 @@ $busqueda_ordencompra = $_SESSION['busqueda_ordencompra'] ?? '';
 
 ?>
 
-<!-- Page header -->
-<div class="full-box page-header">
+<!-- Menú superior -->
+<div class="container-fluid form-neon">
     <h3 class="text-left">
         <i class="fas fa-plus fa-fw"></i> &nbsp; ORDENES DE COMPRA
-        <?php if ($tipo == 'con_pedido') echo "(a partir de pedido)"; ?>
     </h3>
-</div>
-
-<!-- Menú superior -->
-<div class="container-fluid">
     <ul class="full-box list-unstyled page-nav-tabs">
         <li>
             <a class="active" href="<?php echo SERVERURL; ?>oc-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; GENERAR ORDEN DE COMPRA</a>
         </li>
         <li>
-            <a href="<?php echo SERVERURL; ?>oc-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTADOS DE ORDENES DE COMPRA</a>
-        </li>
-        <li>
-            <a href="<?php echo SERVERURL; ?>oc-buscar/"><i class="fas fa-search-dollar fa-fw"></i> &nbsp; BUSCAR POR FECHA</a>
+            <a href="<?php echo SERVERURL; ?>oc-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR ORDEN DE COMPRA</a>
         </li>
     </ul>
-</div>
 
 
-<!-- Contenido según tipo de presupuesto -->
-<?php if ($tipo === 'sin_presupuesto') { ?>
-    <!-- SIN PEDIDO: agregar proveedor y artículos manualmente -->
-    <div class="text-center mb-3">
-        <?php if (empty($_SESSION['Sdatos_proveedorOC'])) { ?>
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalproveedorOC">
-                <i class="fas fa-user-plus"></i> &nbsp; Agregar Proveedor
+
+    <!-- Contenido según tipo de presupuesto -->
+    <?php if ($tipo === 'sin_presupuesto') { ?>
+        <!-- SIN PEDIDO: agregar proveedor y artículos manualmente -->
+        <div class="text-center mb-3">
+            <?php if (empty($_SESSION['Sdatos_proveedorOC'])) { ?>
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalproveedorOC">
+                    <i class="fas fa-user-plus"></i> &nbsp; Agregar Proveedor
+                </button>
+            <?php
+            } ?>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalArticuloOC">
+                <i class="fas fa-box-open"></i> &nbsp; Agregar artículo
             </button>
-        <?php
-} ?>
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalArticuloOC">
-            <i class="fas fa-box-open"></i> &nbsp; Agregar artículo
-        </button>
-    </div>
-    <div class="col-12 col-md-6">
-        <span class="roboto-medium">PROVEEDOR:</span>
-        <?php if (empty($_SESSION['Sdatos_proveedorOC'])) { ?>
-            <span class="text-danger">&nbsp;
-                <i class="fas fa-exclamation-triangle"></i> Seleccione un Proveedor
-            </span>
-        <?php } else { ?>
-            <form class="FormularioAjax d-inline-block" action="<?php echo SERVERURL ?>ajax/ordencompraAjax.php" method="POST" data-form="loans">
-                <input type="hidden" name="id_eliminar_proveedorOC" value="<?php echo $_SESSION['Sdatos_proveedorOC']['ID']; ?>">
-                <?php echo $_SESSION['Sdatos_proveedorOC']['RAZON'] . " (" . $_SESSION['Sdatos_proveedorOC']['RUC'] . ")"; ?>
-                <button type="submit" class="btn btn-danger"><i class="fas fa-user-times"></i></button>
-            </form>
-        <?php
-} ?>
-    </div>
-<?php
-} ?>
-
+        </div>
+        <div class="col-12 col-md-6">
+            <span class="roboto-medium">PROVEEDOR:</span>
+            <?php if (empty($_SESSION['Sdatos_proveedorOC'])) { ?>
+                <span class="text-danger">&nbsp;
+                    <i class="fas fa-exclamation-triangle"></i> Seleccione un Proveedor
+                </span>
+            <?php } else { ?>
+                <form class="FormularioAjax d-inline-block" action="<?php echo SERVERURL ?>ajax/ordencompraAjax.php" method="POST" data-form="loans">
+                    <input type="hidden" name="id_eliminar_proveedorOC" value="<?php echo $_SESSION['Sdatos_proveedorOC']['ID']; ?>">
+                    <?php echo $_SESSION['Sdatos_proveedorOC']['RAZON'] . " (" . $_SESSION['Sdatos_proveedorOC']['RUC'] . ")"; ?>
+                    <button type="submit" class="btn btn-danger"><i class="fas fa-user-times"></i></button>
+                </form>
+            <?php
+            } ?>
+        </div>
+    <?php
+    } ?>
+</div>
 
 
 <style>
@@ -107,81 +99,81 @@ $busqueda_ordencompra = $_SESSION['busqueda_ordencompra'] ?? '';
     }
 </style>
 
-<div class="container-fluid oc-wrapper">
-
-    <!-- HEADER / BARRA SUPERIOR -->
-
-    <?php if ($tipo === 'con_presupuesto') { ?>
-        <!-- <form id="formSearch" autocomplete="off">-->
-        <?php if (empty($busqueda_ordencompra)) { ?>
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <div class="oc-header">
-                        <form id="formBuscarPresupuestoOC" class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off" style="flex: 1; min-width: 250px;">
-                            <input type="hidden" name="modulo" value="ordencompra">
-                            <label for="inputSearch" class="bmd-label-floating">
-                                Que proveedor estas buscando?
-                            </label>
-                            <input type="text"
-                                class="form-control"
-                                name="busqueda_inicial"
-                                id="inputSearch"
-                                placeholder="Ej: Ejemplo SRL">
-                        </form>
-
-                        <div class="oc-actions">
-                            <button type="submit" class="btn btn-dark" form="formBuscarPresupuestoOC">Filtrar</button>
-
-                            <form action="" method="POST" class="d-inline-block">
-                                <input type="hidden" name="tipo_ordencompra" value="sin_presupuesto">
-                                <button class="btn btn-primary btn-lg" type="submit">
-                                    + OC sin presupuesto
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
 
+<!-- HEADER / BARRA SUPERIOR -->
 
-<?php } else { ?>
-    <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
-        <input type="hidden" name="modulo" value="ordencompra">
-        <input type="hidden" name="eliminar_busqueda" value="eliminar">
+<?php if ($tipo === 'con_presupuesto') { ?>
+    <!-- <form id="formSearch" autocomplete="off">-->
+    <?php if (empty($busqueda_ordencompra)) { ?>
         <div class="card shadow-sm mb-4">
             <div class="card-body">
                 <div class="oc-header">
-
-                    <div style="flex: 1; min-width: 250px;">
+                    <form id="formBuscarPresupuestoOC" class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off" style="flex: 1; min-width: 250px;">
+                        <input type="hidden" name="modulo" value="ordencompra">
                         <label for="inputSearch" class="bmd-label-floating">
-                            Resultado de Búsqueda &nbsp;
+                            Que proveedor estas buscando?
                         </label>
-                        <input
+                        <input type="text"
                             class="form-control"
-                            value="<?php echo htmlspecialchars($busqueda_ordencompra, ENT_QUOTES, 'UTF-8'); ?>"
-                            readonly>
-                    </div>
+                            name="busqueda_inicial"
+                            id="inputSearch"
+                            placeholder="Ej: Ejemplo SRL">
+                    </form>
 
                     <div class="oc-actions">
-                        <button type="submit" class="btn btn-raised btn-danger"><i class="far fa-trash-alt"></i> &nbsp; ELIMINAR BÚSQUEDA</button>
-                    </div>
+                        <button type="submit" class="btn btn-dark" form="formBuscarPresupuestoOC">Filtrar</button>
 
+                        <form action="" method="POST" class="d-inline-block">
+                            <input type="hidden" name="tipo_ordencompra" value="sin_presupuesto">
+                            <button class="btn btn-primary btn-lg" type="submit">
+                                + OC sin presupuesto
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
-    </form>
 
-    <div class="container-fluid">
+
+
+    <?php } else { ?>
+        <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
+            <input type="hidden" name="modulo" value="ordencompra">
+            <input type="hidden" name="eliminar_busqueda" value="eliminar">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="oc-header">
+
+                        <div style="flex: 1; min-width: 250px;">
+                            <label for="inputSearch" class="bmd-label-floating">
+                                Resultado de Búsqueda &nbsp;
+                            </label>
+                            <input
+                                class="form-control"
+                                value="<?php echo htmlspecialchars($busqueda_ordencompra, ENT_QUOTES, 'UTF-8'); ?>"
+                                readonly>
+                        </div>
+
+                        <div class="oc-actions">
+                            <button type="submit" class="btn btn-raised btn-danger"><i class="far fa-trash-alt"></i> &nbsp; ELIMINAR BÚSQUEDA</button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </form>
+
+
         <?php
-require_once "./controladores/ordencompraControlador.php";
-            $ins_ordencompra = new ordencompraControlador();
-            $ins_ordencompra->paginador_presupuestos_controlador($pagina[1], 15, $pagina[0], $busqueda_ordencompra);
+        require_once "./controladores/ordencompraControlador.php";
+        $ins_ordencompra = new ordencompraControlador();
+        $ins_ordencompra->paginador_presupuestos_controlador($pagina[1], 15, $pagina[0], $busqueda_ordencompra);
         ?>
-    </div>
-<?php
-}
-?>
+
+    <?php
+    }
+    ?>
 <?php } else { ?>
     <div class="table-responsive mt-3">
         <table class="table table-dark table-sm">
@@ -220,7 +212,7 @@ require_once "./controladores/ordencompraControlador.php";
                             </td>
                         </tr>
                     <?php
-endforeach; ?>
+                    endforeach; ?>
                     <tr class="text-center bg-light total-fila">
                         <td><strong>TOTAL</strong></td>
                         <td colspan="2"></td>
@@ -230,48 +222,43 @@ endforeach; ?>
                         <td></td>
                     </tr>
                 <?php
-} else {
+                } else {
                     $_SESSION['oc_articulo'] = 0;
                 ?>
                     <tr class="text-center bg-light">
-                        <td colspan="8">No has seleccionado articulos</td>
+                        <td colspan="7">No has seleccionado articulos</td>
                     </tr>
                 <?php
-} ?>
+                } ?>
             </tbody>
         </table>
     </div>
-    <div class="container-fluid mt-3">
+    <div class="container-fluid form-neon">
 
         <!-- FECHA (dentro del form GUARDAR) -->
-        <form class="FormularioAjax" action="<?php echo SERVERURL ?>ajax/ordencompraAjax.php"
+        <form id="formGuardarOCSinPresupuesto" class="FormularioAjax" action="<?php echo SERVERURL ?>ajax/ordencompraAjax.php"
             method="POST" data-form="save" autocomplete="off">
 
             <div class="row">
                 <div class="col-12 text-md-left mb-3">
                     <label for="fecha_entrega_sin_presupuesto">Fecha Entrega:</label>
-                            <input type="date" class="form-control d-inline-block"
-                                name="fecha_entrega" id="fecha_entrega_sin_presupuesto" value="<?php echo date('Y-m-d'); ?>"
-                                style="width: 180px;" required>
+                    <input type="date" class="form-control d-inline-block"
+                        name="fecha_entrega" id="fecha_entrega_sin_presupuesto" value="<?php echo date('Y-m-d'); ?>"
+                        min="<?php echo date('Y-m-d'); ?>" style="width: 180px;" required>
 
                 </div>
             </div>
 
             <input type="hidden" name="agregar_ordencompra" value="1">
 
-            <!-- BOTONES ABAJO CENTRADOS -->
-            <div class="text-center mt-3">
-                <button type="submit" class="btn btn-raised btn-info btn-sm">
-                    <i class="far fa-save"></i> &nbsp; GUARDAR
-                </button>
-            </div>
-
         </form>
 
-        <!-- BOTON CANCELAR (separado, como en tu version original) -->
-        <div class="text-center mt-3">
-            <form action="<?php echo SERVERURL ?>ajax/ordencompraAjax.php" method="POST"
-                data-form="loans" autocomplete="off">
+        <div class="d-flex justify-content-center align-items-center mt-3" style="gap: 25px;">
+            <button type="submit" form="formGuardarOCSinPresupuesto" class="btn btn-raised btn-info btn-sm">
+                <i class="far fa-save"></i> &nbsp; GUARDAR
+            </button>
+
+            <form action="<?php echo SERVERURL ?>ajax/ordencompraAjax.php" method="POST" data-form="loans" autocomplete="off" style="margin:0;">
                 <input type="hidden" name="limpiar_ordencompra" value="1">
                 <button type="submit" class="btn btn-raised btn-secondary btn-sm">
                     <i class="fas fa-times"></i> &nbsp; Cancelar
@@ -283,7 +270,7 @@ endforeach; ?>
 <?php
 }
 ?>
-</div>
+
 
 
 
@@ -317,6 +304,7 @@ endforeach; ?>
                             <input type="date" class="form-control"
                                 name="fecha_entrega" id="fecha_entrega_presupuesto"
                                 value="<?php echo date('Y-m-d'); ?>"
+                                min="<?php echo date('Y-m-d'); ?>"
                                 required>
                         </div>
                     </div>

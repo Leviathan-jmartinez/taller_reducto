@@ -42,7 +42,7 @@ $botonTexto = $esEditar ? 'Actualizar' : 'Guardar';
 $botonClase = $esEditar ? 'btn-primary' : 'btn-info btn-raised';
 ?>
 
-<div class="container-fluid">
+<div class="container-fluid form-neon">
 
     <h3 class="text-left">
         <i class="fas fa-tags"></i> &nbsp; <?= $titulo ?>

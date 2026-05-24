@@ -17,21 +17,22 @@ $inventarioCargado = !empty($_SESSION['id_inv_seleccionado']) || !empty($_SESSIO
 ?>
 
 <div class="container-fluid">
-    <h3 class="text-left">
-        <i class="fas fa-boxes fa-fw"></i> &nbsp; MÓDULO DE INVENTARIO
-    </h3>
-    <ul class="full-box list-unstyled page-nav-tabs">
-        <li>
-            <a class="active" href="<?php echo SERVERURL; ?>inventario/"><i class="fas fa-list fa-fw"></i> &nbsp; Inventario</a>
-        </li>
-        <li>
-            <a href="<?php echo SERVERURL; ?>inventario-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar Inventario</a>
-        </li>
-    </ul>
+
 </div>
 
 <div class="container-fluid">
     <div class="form-neon">
+        <h3 class="text-left">
+            <i class="fas fa-boxes fa-fw"></i> &nbsp; MÓDULO DE INVENTARIO
+        </h3>
+        <ul class="full-box list-unstyled page-nav-tabs">
+            <li>
+                <a class="active" href="<?php echo SERVERURL; ?>inventario/"><i class="fas fa-list fa-fw"></i> &nbsp; Inventario</a>
+            </li>
+            <li>
+                <a href="<?php echo SERVERURL; ?>inventario-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar Inventario</a>
+            </li>
+        </ul>
         <!-- Botones de acción -->
 
         <div class="container-fluid">
@@ -40,20 +41,20 @@ $inventarioCargado = !empty($_SESSION['id_inv_seleccionado']) || !empty($_SESSIO
 
 
             <?php if (!$inventarioCargado) { ?>
-            <div style="display: flex; justify-content: flex-end; margin-bottom: 15px; gap: 10px;">
-                <?php
-                if (mainModel::tienePermiso('inventario.crear')) { ?>
-                    <button class="btn btn-success" data-toggle="modal" data-target="#modalInventario">
-                        <i class="fas fa-plus"></i> &nbsp; Generar Inventario
-                    </button>
-                <?php } ?>
-                <?php
-                if (mainModel::tienePermiso('inventario.editar')) { ?>
-                    <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#ModalBuscarINV">
-                        <i class="fas fa-search"></i> &nbsp; Cargar Inventario
-                    </button>
-                <?php } ?>
-            </div>
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 15px; gap: 10px;">
+                    <?php
+                    if (mainModel::tienePermiso('inventario.crear')) { ?>
+                        <button class="btn btn-success" data-toggle="modal" data-target="#modalInventario">
+                            <i class="fas fa-plus"></i> &nbsp; Generar Inventario
+                        </button>
+                    <?php } ?>
+                    <?php
+                    if (mainModel::tienePermiso('inventario.editar')) { ?>
+                        <button class="btn btn-primary" type="button" data-toggle="modal" data-target="#ModalBuscarINV">
+                            <i class="fas fa-search"></i> &nbsp; Cargar Inventario
+                        </button>
+                    <?php } ?>
+                </div>
             <?php } ?>
         </div>
 

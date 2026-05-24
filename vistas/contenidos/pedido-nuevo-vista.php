@@ -5,25 +5,20 @@ if (!mainModel::tienePermiso('compra.pedido.crear')) {
 } ?>
 
 <!-- Page header -->
-<div class="full-box page-header">
-    <h3 class="text-left">
-        <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO PEDIDO
-    </h3>
-</div>
-
-<div class="container-fluid">
-    <ul class="full-box list-unstyled page-nav-tabs">
-        <li>
-            <a class="active" href="<?php echo SERVERURL; ?>pedido-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO PEDIDO </a>
-        </li>
-        <li>
-            <a href="<?php echo SERVERURL; ?>pedido-lista/"><i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTADOS DE PEDIDOS</a>
-        </li>
-    </ul>
-</div>
 
 <div class="container-fluid">
     <div class="container-fluid form-neon">
+        <h3 class="text-left">
+            <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO PEDIDO
+        </h3>
+        <ul class="full-box list-unstyled page-nav-tabs">
+            <li>
+                <a class="active" href="<?php echo SERVERURL; ?>pedido-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO PEDIDO </a>
+            </li>
+            <li>
+                <a href="<?php echo SERVERURL; ?>pedido-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR PEDIDOS</a>
+            </li>
+        </ul>
         <div class="container-fluid">
             <p class="text-center">
                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalArticulo"><i class="fas fa-box-open"></i> &nbsp; Agregar articulo</button>
@@ -35,7 +30,8 @@ if (!mainModel::tienePermiso('compra.pedido.crear')) {
                             <th>#</th>
                             <th>CODIGO</th>
                             <th>DESCRIPCION</th>
-                            <th>CANTIDAD</th>
+                            <th>STOCK ACTUAL</th>
+                            <th>CANTIDAD SOLICITADA</th>
                             <th>ELIMINAR</th>
                         </tr>
                     </thead>
@@ -51,6 +47,7 @@ if (!mainModel::tienePermiso('compra.pedido.crear')) {
                                     <td><?php echo $contador ?></td>
                                     <td><?php echo $article['codigo'] ?></td>
                                     <td><?php echo $article['descripcion'] ?></td>
+                                    <td><?php echo number_format((float)($article['stock_actual'] ?? 0), 0, ',', '.') ?></td>
                                     <td><?php echo $article['cantidad'] ?></td>
                                     <td>
                                         <form class="FormularioAjax" action="<?php echo SERVERURL; ?>ajax/pedidoAjax.php" method="POST" data-form="loans" autocomplete="off">
@@ -65,7 +62,7 @@ if (!mainModel::tienePermiso('compra.pedido.crear')) {
                                 $_SESSION['pedido_articulo'] += $article['cantidad'];
                             } ?>
                             <tr class="text-center bg-light">
-                                <td colspan="2"></td>
+                                <td colspan="3"></td>
                                 <td><strong>TOTAL</strong></td>
                                 <td><strong><?php echo $_SESSION['pedido_articulo'] ?> articulos</strong></td>
                                 <td colspan="1"></td>
@@ -75,7 +72,7 @@ if (!mainModel::tienePermiso('compra.pedido.crear')) {
                             $_SESSION['pedido_articulo'] = 0;
                         ?>
                             <tr class="text-center bg-light">
-                                <td colspan="5 ">No has seleccionado articulos</td>
+                                <td colspan="6">No has seleccionado articulos</td>
                             </tr>
                         <?php
 
@@ -119,7 +116,7 @@ if (!mainModel::tienePermiso('compra.pedido.crear')) {
             <div class="modal-body">
                 <div class="container-fluid">
                     <div class="form-group">
-                        
+
                         <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ ]{1,30}" placeholder="Código o descripción del artículo" class="form-control" name="input_articulo" id="input_articulo" maxlength="30">
 
                     </div>

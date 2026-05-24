@@ -24,23 +24,23 @@ if (!isset($pagina)) {
 ?>
 
 <div class="container-fluid">
-    <h3 class="text-left">
-        <i class="fas fa-boxes fa-fw"></i> &nbsp; MODULO DE INVENTARIO
-    </h3>
-    <ul class="full-box list-unstyled page-nav-tabs">
-        <li>
-            <a href="<?php echo SERVERURL; ?>inventario/"><i class="fas fa-list fa-fw"></i> &nbsp; Inventario</a>
-        </li>
-        <li>
-            <a class="active" href="<?php echo SERVERURL; ?>inventario-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar inventario</a>
-        </li>
-    </ul>
+
 </div>
 
 <div class="container-fluid">
     <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
         <input type="hidden" name="modulo" value="inventario">
-
+        <h3 class="text-left">
+            <i class="fas fa-boxes fa-fw"></i> &nbsp; MÓDULO DE INVENTARIO
+        </h3>
+        <ul class="full-box list-unstyled page-nav-tabs">
+            <li>
+                <a href="<?php echo SERVERURL; ?>inventario/"><i class="fas fa-list fa-fw"></i> &nbsp; Inventario</a>
+            </li>
+            <li>
+                <a class="active" href="<?php echo SERVERURL; ?>inventario-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; Buscar inventario</a>
+            </li>
+        </ul>
         <div class="row">
             <div class="col-12 col-md-3">
                 <div class="form-group">
@@ -150,50 +150,50 @@ if (!isset($pagina)) {
 </div>
 
 <?php if ($hayFiltros) { ?>
-<div class="modal fade" id="modalDetalleInventario" tabindex="-1" role="dialog" aria-labelledby="modalDetalleInventarioLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-info text-white">
-                <h5 class="modal-title" id="modalDetalleInventarioLabel">
-                    <i class="fas fa-eye"></i> &nbsp; Detalle de inventario
-                </h5>
-                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div id="detalleInventarioCabecera"></div>
-
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <input type="text" class="form-control" id="detalleInventarioBuscar" placeholder="Buscar por codigo o articulo">
-                    </div>
-                    <div class="col-md-3">
-                        <select class="form-control" id="detalleInventarioFiltro">
-                            <option value="todos">Todos</option>
-                            <option value="diferencias">Con diferencia</option>
-                            <option value="sobrantes">Sobrantes</option>
-                            <option value="faltantes">Faltantes</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <select class="form-control" id="detalleInventarioRegistros">
-                            <option value="50">50 por pagina</option>
-                            <option value="100" selected>100 por pagina</option>
-                            <option value="200">200 por pagina</option>
-                        </select>
-                    </div>
+    <div class="modal fade" id="modalDetalleInventario" tabindex="-1" role="dialog" aria-labelledby="modalDetalleInventarioLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="modalDetalleInventarioLabel">
+                        <i class="fas fa-eye"></i> &nbsp; Detalle de inventario
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
+                <div class="modal-body">
+                    <div id="detalleInventarioCabecera"></div>
 
-                <div id="detalleInventarioBody"></div>
-                <div id="detalleInventarioPaginacion"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" id="detalleInventarioBuscar" placeholder="Buscar por codigo o articulo">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-control" id="detalleInventarioFiltro">
+                                <option value="todos">Todos</option>
+                                <option value="diferencias">Con diferencia</option>
+                                <option value="sobrantes">Sobrantes</option>
+                                <option value="faltantes">Faltantes</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-control" id="detalleInventarioRegistros">
+                                <option value="50">50 por pagina</option>
+                                <option value="100" selected>100 por pagina</option>
+                                <option value="200">200 por pagina</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="detalleInventarioBody"></div>
+                    <div id="detalleInventarioPaginacion"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 <?php } ?>
 
 <?php include "./vistas/inc/inventario.php"; ?>

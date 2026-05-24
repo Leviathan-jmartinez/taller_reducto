@@ -33,6 +33,15 @@
             $lc->forzarCierre_sesion_controlador();
             exit();
         }
+
+        if (
+            isset($_SESSION['cambiar_clave_str']) &&
+            (int)$_SESSION['cambiar_clave_str'] === 1 &&
+            ($pagina[0] ?? '') !== 'cambiar-clave'
+        ) {
+            echo "<script> window.location.href='" . SERVERURL . "cambiar-clave/'; </script>";
+            exit();
+        }
     ?>
         <!-- Main container -->
         <main class="full-box main-container">

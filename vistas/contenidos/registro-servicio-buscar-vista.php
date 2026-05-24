@@ -6,26 +6,6 @@ if (!mainModel::tienePermiso('servicio.registro.ver')) {
 }
 ?>
 
-<div class="container-fluid mb-3">
-    <h3>
-        <i class="fas fa-clipboard-check"></i>
-        &nbsp; REGISTROS DE SERVICIO
-    </h3>
-
-    <ul class="full-box list-unstyled page-nav-tabs">
-        <li>
-            <a href="<?php echo SERVERURL; ?>/registro-servicio-nuevo/">
-                <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO REGISTRO
-            </a>
-        </li>
-        <li>
-            <a class="active" href="<?php echo SERVERURL; ?>registro-servicio-buscar/">
-                <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR REGISTROS
-            </a>
-        </li>
-    </ul>
-</div>
-
 <?php
 $fecha_inicio = $_SESSION['fecha_inicio_registro_servicio'] ?? '';
 $fecha_final  = $_SESSION['fecha_final_registro_servicio'] ?? '';
@@ -34,7 +14,24 @@ $busqueda_activa = isset($_SESSION['filtro_registro_servicio_activo']);
 ?>
 
 <!-- 🔎 FORMULARIO SIEMPRE VISIBLE -->
-<div class="container-fluid">
+<div class="container-fluid form-neon">
+    <h3>
+        <i class="fas fa-clipboard-check"></i>
+        &nbsp; REGISTRO DE SERVICIO
+    </h3>
+
+    <ul class="full-box list-unstyled page-nav-tabs">
+        <li>
+            <a href="<?php echo SERVERURL; ?>/registro-servicio-nuevo/">
+                <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO
+            </a>
+        </li>
+        <li>
+            <a class="active" href="<?php echo SERVERURL; ?>registro-servicio-buscar/">
+                <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR
+            </a>
+        </li>
+    </ul>
     <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
         method="POST"

@@ -103,7 +103,8 @@ if (in_array($modulo, $modulos_con_fecha)) {
                 "fecha_final"  => "fecha_final_presupuesto",
                 "extra" => [
                     "nro_presupuesto" => "nro_presupuesto",
-                    "proveedor_presupuesto" => "proveedor_presupuesto"
+                    "proveedor_presupuesto" => "proveedor_presupuesto",
+                    "estado_presupuesto_compra" => "estado_presupuesto_compra"
                 ]
             ],
             "orden_trabajo" => [
@@ -228,7 +229,9 @@ if (in_array($modulo, $modulos_con_fecha)) {
             $fecha_ini == '' &&
             $fecha_fin == '' &&
             ($_SESSION['nro_presupuesto'] ?? '') == '' &&
-            ($_SESSION['proveedor_presupuesto'] ?? '') == ''
+            ($_SESSION['proveedor_presupuesto'] ?? '') == '' &&
+            ($_SESSION['estado_presupuesto_compra'] ?? '') == '' &&
+            !isset($_POST['estado_presupuesto_compra'])
         ) {
             echo json_encode([
                 "Alerta" => "simple",
@@ -269,6 +272,11 @@ if (in_array($modulo, $modulos_con_fecha)) {
         if ($modulo == "presupuesto") {
             unset($_SESSION['nro_presupuesto']);
             unset($_SESSION['proveedor_presupuesto']);
+            unset($_SESSION['estado_presupuesto_compra']);
+        }
+
+        if ($modulo == "pedido") {
+            unset($_SESSION['estado_pedido']);
         }
 
         if ($modulo == "notasCreDe") {
@@ -301,9 +309,48 @@ if (in_array($modulo, $modulos_con_fecha)) {
     } else {
 
         /* ===============================
+           PEDIDO (FECHA OPCIONAL + ESTADO)
+           =============================== */
+        if ($modulo == "pedido") {
+
+            $fecha_ini = $_POST['fecha_inicio'] ?? '';
+            $fecha_fin = $_POST['fecha_final'] ?? '';
+
+            if ($fecha_ini != '' && $fecha_fin != '' && $fecha_ini > $fecha_fin) {
+                echo json_encode([
+                    "Alerta" => "simple",
+                    "Titulo" => "Error en fechas",
+                    "Texto" => "La fecha de inicio no puede ser mayor a la fecha final",
+                    "Tipo" => "error"
+                ]);
+                exit();
+            }
+
+            $_SESSION['estado_pedido'] = $_POST['estado_pedido'] ?? '';
+
+            if ($fecha_ini == '' && $fecha_fin == '' && $_SESSION['estado_pedido'] == '' && !isset($_POST['estado_pedido'])) {
+                echo json_encode([
+                    "Alerta" => "simple",
+                    "Titulo" => "Busqueda invalida",
+                    "Texto" => "Debe ingresar al menos un criterio de busqueda",
+                    "Tipo" => "error"
+                ]);
+                exit();
+            }
+
+            if ($fecha_ini != '' && $fecha_fin != '') {
+                $_SESSION[$fecha_inicio_key] = $fecha_ini;
+                $_SESSION[$fecha_final_key]  = $fecha_fin;
+            } else {
+                unset($_SESSION[$fecha_inicio_key]);
+                unset($_SESSION[$fecha_final_key]);
+            }
+        }
+
+        /* ===============================
            INVENTARIO (FILTROS OPCIONALES)
            =============================== */
-        if ($modulo == "inventario") {
+        elseif ($modulo == "inventario") {
 
             $fecha_ini = $_POST['fecha_inicio'] ?? '';
             $fecha_fin = $_POST['fecha_final'] ?? '';

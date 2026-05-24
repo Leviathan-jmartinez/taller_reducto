@@ -222,17 +222,9 @@ $busqueda = $_SESSION['busqueda_usuario'] ?? "";
 				</button>
 
 				<?php if (isset($_SESSION['busqueda_usuario'])) { ?>
-					<form class="FormularioAjax d-inline"
-						action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
-						method="POST">
-
-						<input type="hidden" name="modulo" value="usuario">
-						<input type="hidden" name="eliminar_busqueda" value="1">
-
-						<button type="submit" class="btn btn-danger">
+					<button type="submit" name="eliminar_busqueda" value="1" class="btn btn-danger">
 							Cancelar
 						</button>
-					</form>
 				<?php
 } ?>
 

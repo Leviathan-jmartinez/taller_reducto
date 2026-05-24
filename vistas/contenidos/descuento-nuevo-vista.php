@@ -48,24 +48,7 @@ $botonClase = $esEditar ? 'btn-primary' : 'btn-info btn-raised';
 
 <div class="container-fluid">
 
-    <h3 class="text-left">
-        <i class="fas fa-percent"></i> &nbsp; <?= $titulo ?>
-    </h3>
 
-    <div class="container-fluid">
-        <ul class="full-box list-unstyled page-nav-tabs">
-            <li>
-                <a class="<?= !$esEditar ? 'active' : '' ?>" href="<?php echo SERVERURL; ?>descuento-nuevo/">
-                    <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO DESCUENTO
-                </a>
-            </li>
-            <li>
-                <a href="<?php echo SERVERURL; ?>descuento-lista/">
-                    <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTA DE DESCUENTOS
-                </a>
-            </li>
-        </ul>
-    </div>
 
     <?php if (!$esEditar || $puedeEditar): ?>
         <form class="form-neon FormularioAjax"
@@ -74,6 +57,22 @@ $botonClase = $esEditar ? 'btn-primary' : 'btn-info btn-raised';
             data-form="<?= $dataForm ?>"
             autocomplete="off">
 
+            <h3 class="text-left">
+                <i class="fas fa-percent"></i> &nbsp; <?= $titulo ?>
+            </h3>
+
+            <ul class="full-box list-unstyled page-nav-tabs">
+                <li>
+                    <a class="<?= !$esEditar ? 'active' : '' ?>" href="<?php echo SERVERURL; ?>descuento-nuevo/">
+                        <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO DESCUENTO
+                    </a>
+                </li>
+                <li>
+                    <a href="<?php echo SERVERURL; ?>descuento-lista/">
+                        <i class="fas fa-clipboard-list fa-fw"></i> &nbsp; LISTA DE DESCUENTOS
+                    </a>
+                </li>
+            </ul>
             <input type="hidden" name="accion" value="<?= $accion ?>">
             <input type="hidden" name="es_reutilizable" value="<?= htmlspecialchars($descuento['es_reutilizable'] ?? '1', ENT_QUOTES, 'UTF-8') ?>">
             <?php if ($esEditar): ?>

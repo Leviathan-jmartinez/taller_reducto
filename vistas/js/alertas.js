@@ -7,6 +7,9 @@ function enviar_formulario_ajax(e) {
     e.preventDefault();
     e.stopImmediatePropagation();
     let data = new FormData(this);
+    if (e.submitter && e.submitter.name) {
+        data.append(e.submitter.name, e.submitter.value);
+    }
     let method = this.getAttribute("method");
     let action = this.getAttribute("action");
     let tipo = this.getAttribute("data-form");

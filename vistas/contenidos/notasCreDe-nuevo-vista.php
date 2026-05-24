@@ -13,47 +13,44 @@ $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
 ?>
 
 <div class="container-fluid">
-    <h3 class="text-left">
-        <i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; INGRESO DE NOTA (CREDITO/DEBITO)
-    </h3>
-    <ul class="full-box list-unstyled page-nav-tabs">
-        <li>
-            <a class="active" href="<?php echo SERVERURL; ?>notasCreDe-nuevo-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; INGRESO DE NOTA</a>
-        </li>
-        <li>
-            <a href="<?php echo SERVERURL; ?>notasCreDe-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR</a>
-        </li>
-    </ul>
-</div>
-<?php if (empty($facturaNC)): ?>
-    <div class="col-md-4 mt-3">
-        <label>Factura asociada</label>
-
-        <div class="input-group">
-            <input type="hidden" name="idcompra_cabecera"
-                value="<?= $facturaNC['idcompra_cabecera'] ?? '' ?>">
-
-            <input type="text" class="form-control"
-                value="<?= $facturaNC['nro_factura'] ?? '' ?>"
-                placeholder="Seleccione factura"
-                readonly>
-
-            <div class="input-group-append">
-                <button type="button" class="btn btn-info"
-                    onclick="abrirModalFactura()">
-                    <i class="fas fa-search"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-<?php endif; ?>
-<div class="container-fluid">
     <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/notasCreDeAjax.php"
         method="POST"
         data-form="save"
         autocomplete="off">
+        <h3 class="text-left">
+            <i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; INGRESO DE NOTA (CREDITO/DEBITO)
+        </h3>
+        <ul class="full-box list-unstyled page-nav-tabs">
+            <li>
+                <a class="active" href="<?php echo SERVERURL; ?>notasCreDe-nuevo-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp;  NUEVO</a>
+            </li>
+            <li>
+                <a href="<?php echo SERVERURL; ?>notasCreDe-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR</a>
+            </li>
+        </ul>
+        <?php if (empty($facturaNC)): ?>
+            <div class="col-md-6 mt-3">
+                <label>Factura asociada</label>
 
+                <div class="input-group">
+                    <input type="hidden" name="idcompra_cabecera"
+                        value="<?= $facturaNC['idcompra_cabecera'] ?? '' ?>">
+
+                    <input type="text" class="form-control"
+                        value="<?= $facturaNC['nro_factura'] ?? '' ?>"
+                        placeholder="Seleccione factura"
+                        readonly>
+
+                    <div class="input-group-append">
+                        <button type="button" class="btn btn-info"
+                            onclick="abrirModalFactura()">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
         <input type="hidden" name="accion" value="guardar_nota_compra">
 
         <!-- ================= CABECERA ================= -->
@@ -239,7 +236,7 @@ $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
 
                 <input type="text" id="buscarFactura"
                     class="form-control mb-3"
-                    placeholder="Nro factura o proveedor">
+                    placeholder="Nro factura">
 
                 <div id="resultadoFacturas"></div>
 

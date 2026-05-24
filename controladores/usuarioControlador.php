@@ -185,7 +185,8 @@ class usuarioControlador extends usuarioModelo
             "email" => $email,
             "telefono" => $telefono,
             "clave" => $clave,
-            "estado" => "1"
+            "estado" => "1",
+            "cambiar_clave" => "1"
         ];
         $agregar_usuario = usuarioModelo::agregar_usuario_modelo($datos_usuario_reg);
         if ($agregar_usuario->rowCount() == 1) {
@@ -293,12 +294,13 @@ class usuarioControlador extends usuarioModelo
                 if ($puede_ver_seguridad) {
                     $intentosFallidos = isset($rows['usu_intentos_fallidos']) ? (int)$rows['usu_intentos_fallidos'] : 0;
                     $bloqueado = isset($rows['usu_bloqueado']) ? (int)$rows['usu_bloqueado'] : 0;
+                    $cambiarClave = isset($rows['usu_cambiar_clave']) ? (int)$rows['usu_cambiar_clave'] : 0;
 
                     $tabla .= '
                 <td>
                     <span class="badge badge-' . ($intentosFallidos >= 3 ? 'danger' : ($intentosFallidos > 0 ? 'warning' : 'success')) . '">' . $intentosFallidos . '/3</span>
                 </td>
-                <td>' . ($bloqueado == 1 ? '<span class="badge badge-danger">Bloqueada</span>' : '<span class="badge badge-success">Libre</span>') . '</td>';
+                <td>' . ($bloqueado == 1 ? '<span class="badge badge-danger">Bloqueada</span>' : '<span class="badge badge-success">Libre</span>') . ($cambiarClave == 1 ? '<br><span class="badge badge-warning">Debe cambiar clave</span>' : '') . '</td>';
                 }
 
                 /* ========= ACCIONES ========= */
@@ -313,6 +315,22 @@ class usuarioControlador extends usuarioModelo
                     class="btn btn-success btn-sm" data-toggle="tooltip" title="Editar usuario">
                         <i class="fas fa-sync-alt"></i>
                     </a> ';
+
+                        if (isset($rows['usu_bloqueado']) && (int)$rows['usu_bloqueado'] === 1) {
+                            $tabla .= '
+                    <form class="FormularioAjax d-inline"
+                        action="' . SERVERURL . 'ajax/usuarioAjax.php"
+                        method="POST"
+                        data-form="update">
+
+                        <input type="hidden" name="accion" value="desbloquear_usuario">
+                        <input type="hidden" name="id_usuario" value="' . mainModel::encryption($rows['id_usuario']) . '">
+
+                        <button type="submit" class="btn btn-primary btn-sm" data-toggle="tooltip" title="Desbloquear usuario">
+                            <i class="fas fa-unlock"></i>
+                        </button>
+                    </form> ';
+                        }
                     }
 
                     // ROLES
@@ -1041,5 +1059,58 @@ class usuarioControlador extends usuarioModelo
     public function listar_sucursales_select_controlador()
     {
         return usuarioModelo::obtener_sucursales_modelo();
+    }
+
+    public function desbloquear_usuario_controlador()
+    {
+        if (!mainModel::tienePermiso('usuarios.editar')) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso denegado",
+                "Texto" => "No posee permisos para desbloquear usuarios",
+                "Tipo" => "error"
+            ]);
+        }
+
+        $idUsuario = mainModel::decryption($_POST['id_usuario'] ?? '');
+        $idUsuario = mainModel::limpiar_string($idUsuario);
+
+        if ($idUsuario == "" || $idUsuario == "1") {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Usuario no valido",
+                "Texto" => "No se puede desbloquear el usuario seleccionado",
+                "Tipo" => "error"
+            ]);
+        }
+
+        $checkUsuario = mainModel::ejecutar_consulta_simple(
+            "SELECT id_usuario FROM usuarios WHERE id_usuario='$idUsuario'"
+        );
+
+        if ($checkUsuario->rowCount() <= 0) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Usuario no encontrado",
+                "Texto" => "El usuario seleccionado no existe",
+                "Tipo" => "error"
+            ]);
+        }
+
+        if (usuarioModelo::desbloquear_usuario_modelo($idUsuario)) {
+            return json_encode([
+                "Alerta" => "recargar",
+                "Titulo" => "Usuario desbloqueado",
+                "Texto" => "El usuario fue desbloqueado y debera cambiar su contraseña al ingresar",
+                "Tipo" => "success"
+            ]);
+        }
+
+        return json_encode([
+            "Alerta" => "simple",
+            "Titulo" => "Error",
+            "Texto" => "No se pudo desbloquear el usuario",
+            "Tipo" => "error"
+        ]);
     }
 }

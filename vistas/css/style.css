@@ -434,7 +434,7 @@ table form {
 /*----------  Home Styles  ----------*/
 
 .page-content {
-	background-image: url('../assets/img/homefondo.png');
+	background-image: url('../assets/img/home-dashboard-bg.png');
 	background-size: cover;
 	background-position: center;
 }

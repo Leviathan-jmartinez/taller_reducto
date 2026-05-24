@@ -5,34 +5,39 @@ if (!mainModel::tienePermiso('servicio.ot.ver')) {
     return;
 } ?>
 
-<div class="container-fluid">
-    <h3 class="text-left">
-        <i class="fas fa-tools fa-fw"></i> &nbsp; ÓRDENES DE TRABAJO
-    </h3>
-
-    <ul class="full-box list-unstyled page-nav-tabs">
-        <li>
-            <a href="<?php echo SERVERURL; ?>/ordenTrabajo-nuevo/">
-                <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVA ORDEN DE TRABAJO
-            </a>
-        </li>
-        <li>
-            <a class="active" href="<?php echo SERVERURL; ?>/ordenTrabajo-buscar/">
-                <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR ORDENES DE TRABAJO POR FECHA
-            </a>
-        </li>
-    </ul>
-</div>
 
 <?php
 $fecha_inicio = $_SESSION['fecha_inicio_orden_trabajo'] ?? '';
 $fecha_final  = $_SESSION['fecha_final_orden_trabajo'] ?? '';
 $estado = $_SESSION['estado_ot'] ?? '';
+
+if (isset($_GET['estado_ot']) && in_array((string)$_GET['estado_ot'], ['0', '1', '2', '3'], true)) {
+    $_SESSION['estado_ot'] = (string)$_GET['estado_ot'];
+    $_SESSION['filtro_orden_trabajo_activo'] = '1';
+    $estado = (string)$_GET['estado_ot'];
+}
+
 $busqueda_activa = isset($_SESSION['filtro_orden_trabajo_activo']);
 ?>
 
 <!-- SIEMPRE MOSTRAR FORMULARIO -->
-<div class="container-fluid">
+<div class="container-fluid form-neon">
+    <h3 class="text-left">
+        <i class="fas fa-tools fa-fw"></i> &nbsp; ORDEN DE TRABAJO
+    </h3>
+
+    <ul class="full-box list-unstyled page-nav-tabs">
+        <li>
+            <a href="<?php echo SERVERURL; ?>ordenTrabajo-nuevo/">
+                <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO
+            </a>
+        </li>
+        <li>
+            <a class="active" href="<?php echo SERVERURL; ?>ordenTrabajo-buscar/">
+                <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR
+            </a>
+        </li>
+    </ul>
     <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
         method="POST"
@@ -88,11 +93,11 @@ $busqueda_activa = isset($_SESSION['filtro_orden_trabajo_activo']);
             <?php if ($fecha_inicio) { ?>
                 desde <strong><?php echo $fecha_inicio; ?></strong>
             <?php
-} ?>
+            } ?>
             <?php if ($fecha_final) { ?>
                 hasta <strong><?php echo $fecha_final; ?></strong>
             <?php
-} ?>
+            } ?>
             <?php
             $estados = [
                 '1' => 'Activa',

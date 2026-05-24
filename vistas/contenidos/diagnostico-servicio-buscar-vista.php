@@ -14,25 +14,15 @@ $placa = $_SESSION['placa_diag'] ?? '';
 $estado = $_SESSION['estado_diag'] ?? '';
 $origen = $_SESSION['origen_diag'] ?? '';
 $busqueda_general = $_SESSION['busqueda_general_diag'] ?? '';
+
+if (isset($_GET['estado_diag']) && in_array((string)$_GET['estado_diag'], ['0', '1', '2', '3'], true)) {
+    $_SESSION['estado_diag'] = (string)$_GET['estado_diag'];
+    $estado = (string)$_GET['estado_diag'];
+}
 ?>
 
 <div class="container-fluid">
-    <h3>
-        <i class="fas fa-tools"></i> &nbsp; DIAGNÓSTICO DE SERVICIO
-    </h3>
 
-    <ul class="full-box list-unstyled page-nav-tabs">
-        <li>
-            <a href="<?php echo SERVERURL; ?>/diagnostico-servicio-nuevo/">
-                <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO DIAGNÓSTICO
-            </a>
-        </li>
-        <li>
-            <a class="active" href="<?php echo SERVERURL; ?>/diagnostico-servicio-buscar/">
-                <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR DIAGNÓSTICOS
-            </a>
-        </li>
-    </ul>
 </div>
 
 <div class="container-fluid">
@@ -42,7 +32,22 @@ $busqueda_general = $_SESSION['busqueda_general_diag'] ?? '';
         data-form="search">
 
         <input type="hidden" name="modulo" value="diagnostico">
+        <h3>
+            <i class="fas fa-tools"></i> &nbsp; DIAGNÓSTICO DE SERVICIO
+        </h3>
 
+        <ul class="full-box list-unstyled page-nav-tabs">
+            <li>
+                <a href="<?php echo SERVERURL; ?>/diagnostico-servicio-nuevo/">
+                    <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO DIAGNÓSTICO
+                </a>
+            </li>
+            <li>
+                <a class="active" href="<?php echo SERVERURL; ?>/diagnostico-servicio-buscar/">
+                    <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR DIAGNÓSTICOS
+                </a>
+            </li>
+        </ul>
         <div class="row">
 
             <div class="col-md-3">
@@ -124,7 +129,7 @@ $busqueda_general = $_SESSION['busqueda_general_diag'] ?? '';
 
 <div class="container-fluid mt-4">
     <?php
-require_once "./controladores/diagnosticoControlador.php";
+    require_once "./controladores/diagnosticoControlador.php";
     $diag = new diagnosticoControlador();
 
     echo $diag->paginador_diagnostico_controlador(

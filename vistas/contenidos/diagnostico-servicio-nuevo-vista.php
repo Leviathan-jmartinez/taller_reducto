@@ -116,25 +116,6 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
     }
 </style>
 
-<div class="container-fluid">
-    <h3>
-        <i class="fas fa-tools"></i> &nbsp; DIAGNOSTICO DE SERVICIO
-    </h3>
-
-    <ul class="full-box list-unstyled page-nav-tabs">
-        <li>
-            <a class="active" href="<?php echo SERVERURL; ?>/diagnostico-servicio-nuevo/">
-                <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO DIAGNOSTICO
-            </a>
-        </li>
-        <li>
-            <a href="<?php echo SERVERURL; ?>/diagnostico-servicio-buscar/">
-                <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR DIAGNOSTICOS
-            </a>
-        </li>
-    </ul>
-</div>
-
 <div id="alerta_reclamo" class="alert alert-warning" style="display:none;">
     <i class="fas fa-exclamation-triangle"></i>
     Recepcion generada desde reclamo
@@ -179,7 +160,22 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
         data-form="save"
         data-modulo="diagnostico"
         autocomplete="off">
+        <h3>
+            <i class="fas fa-tools"></i> &nbsp; DIAGNÓSTICO DE SERVICIO
+        </h3>
 
+        <ul class="full-box list-unstyled page-nav-tabs">
+            <li>
+                <a class="active" href="<?php echo SERVERURL; ?>/diagnostico-servicio-nuevo/">
+                    <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO DIAGNÓSTICO
+                </a>
+            </li>
+            <li>
+                <a href="<?php echo SERVERURL; ?>/diagnostico-servicio-buscar/">
+                    <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR DIAGNÓSTICOS
+                </a>
+            </li>
+        </ul>
         <input type="hidden" name="accion" value="guardar_diagnostico">
         <input type="hidden" name="id_sucursal" id="id_sucursal">
 

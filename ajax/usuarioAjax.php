@@ -42,6 +42,11 @@ if (isset($_POST['usuario_nombre_reg']) || isset($_POST['usuario_id_del']) || is
         echo $inst_usuario->asignar_sucursal_controlador();
         exit();
     }
+
+    if ($accion === 'desbloquear_usuario') {
+        echo $inst_usuario->desbloquear_usuario_controlador();
+        exit();
+    }
 } else {
     session_start(['name' => 'STR']);
     session_unset();
