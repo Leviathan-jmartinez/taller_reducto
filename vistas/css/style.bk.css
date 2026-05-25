@@ -36,12 +36,6 @@
 	--accent-color: #253556;
 	/*--accent-color: #455A64;*/
 	--border-color: #D8D8D8;
-	--nav-bg: #111827;
-	--nav-panel: rgba(17, 24, 39, .94);
-	--nav-text: #F8FAFC;
-	--nav-muted: #CBD5E1;
-	--nav-hover: rgba(255, 255, 255, .08);
-	--nav-active: #EC5252;
 }
 
 body,
@@ -306,13 +300,9 @@ table form {
 	left: 0;
 	z-index: 1;
 	transition: all .2s ease-in-out;
-	background-color: var(--nav-bg);
-	background-image:
-		linear-gradient(180deg, rgba(17, 24, 39, .88), rgba(17, 24, 39, .98)),
-		url('../assets/img/nav-font.jpg');
+	background-image: url('../assets/img/nav-font.jpg');
 	background-position: center center;
 	background-size: cover;
-	box-shadow: 12px 0 28px rgba(15, 23, 42, .18);
 }
 
 .nav-lateral-bg {
@@ -322,20 +312,16 @@ table form {
 .nav-lateral-content {
 	max-width: 300px;
 	height: 100%;
-	background-color: var(--nav-panel);
-	backdrop-filter: blur(2px);
+	background-color: rgba(36, 41, 46, .8);
 }
 
 .nav-lateral-bar {
-	width: calc(100% - 34px);
-	height: 1px;
-	margin: 0 auto 10px;
-	background-color: rgba(255, 255, 255, .16);
+	height: 3px;
+	background-color: var(--color-three);
 }
 
 .nav-lateral-avatar {
-	padding: 28px 18px 20px;
-	margin: 0;
+	padding: 40px 0;
 }
 
 .nav-lateral-avatar i {
@@ -351,73 +337,12 @@ table form {
 }
 
 .nav-lateral-avatar figcaption {
-	margin-top: 0;
-	color: var(--nav-text);
-	font-size: 16px;
-	line-height: 1.25;
-}
-
-.nav-user-card {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	min-height: 74px;
-	padding: 12px;
-	border-radius: 8px;
-	background-color: rgba(255, 255, 255, .08);
-	border: 1px solid rgba(255, 255, 255, .10);
-	box-shadow: 0 10px 24px rgba(0, 0, 0, .16);
-}
-
-.nav-user-initials {
-	flex: 0 0 46px;
-	width: 46px;
-	height: 46px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	border-radius: 8px;
+	margin-top: 20px;
 	color: #FFF;
-	font-family: 'roboto_medium_regular';
-	font-size: 16px;
-	letter-spacing: 0;
-	background: linear-gradient(135deg, #EC5252 0%, #F59E0B 100%);
-}
-
-.nav-user-info {
-	min-width: 0;
-	text-align: left;
-}
-
-.nav-user-name,
-.nav-user-company {
-	display: block;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.nav-user-name {
-	color: var(--nav-text);
-	font-family: 'roboto_medium_regular';
-	font-size: 15px;
-	line-height: 1.2;
-}
-
-.nav-user-company {
-	margin-top: 4px;
-	color: var(--nav-muted);
-	font-size: 13px;
-	line-height: 1.2;
-}
-
-.nav-user-legacy-name {
-	display: none;
 }
 
 .nav-lateral-menu {
 	height: auto;
-	padding: 0 12px 18px;
 }
 
 .nav-lateral-menu ul {
@@ -429,62 +354,39 @@ table form {
 .nav-lateral-menu ul li {
 	width: 100%;
 	height: auto;
-	margin: 2px 0;
 }
 
 .nav-lateral-menu ul li a {
 	display: block;
 	width: 100%;
-	min-height: 42px;
-	height: auto;
-	line-height: 1.2;
+	height: 45px;
+	line-height: 45px;
 	text-decoration: none;
-	color: var(--nav-muted);
-	font-size: 15px;
+	color: #FFF;
+	font-size: 17px;
 	box-sizing: border-box;
-	padding: 13px 12px;
-	border-radius: 8px;
+	padding-left: 20px;
 	transition: all .2s ease-in-out;
 }
 
 .nav-lateral-menu ul li a.active {
-	color: var(--nav-text);
-	background-color: var(--nav-active);
-	box-shadow: 0 10px 22px rgba(236, 82, 82, .20);
-	font-family: 'roboto_medium_regular';
-}
-
-.nav-lateral-menu ul li ul a.active {
 	color: #FFF;
-	background-color: rgba(236, 82, 82, .88);
-	border-left: 3px solid #FFF;
-	padding-left: 9px;
+	background-color: var(--color-three);
 }
 
 .nav-lateral-menu ul li a:hover {
 	color: #fff;
-	text-decoration: none;
-	background-color: var(--nav-hover);
-	background-image: none;
-	transform: translateX(2px);
+	background-image: linear-gradient(to right, transparent, rgba(255, 255, 255, .1) 50%, transparent);
 }
 
 .nav-lateral-menu ul li ul {
 	display: none;
-	margin: 4px 0 8px 13px;
-	padding: 4px 0 4px 8px;
-	border-left: 1px solid rgba(255, 255, 255, .14);
-	border-top: none;
-	border-right: none;
-	border-bottom: none;
-	background: transparent;
+	border: 1px solid var(--color-three);
+	background: rgba(20, 30, 48, .5);
 }
 
 .nav-lateral-menu ul li ul a {
-	min-height: 36px;
-	padding: 10px 12px;
-	font-size: 14px;
-	color: rgba(248, 250, 252, .74);
+	padding-left: 45px;
 }
 
 .show-nav-lateral-submenu {
@@ -494,17 +396,10 @@ table form {
 .nav-lateral-menu .fa-chevron-down,
 .nav-lateral-menu .fa-chevron-up {
 	float: right;
-	height: auto;
-	line-height: 1.2;
+	height: 45px;
+	line-height: 45px;
 	margin-right: 7px;
 	transition: all .2s ease-in-out;
-}
-
-.nav-lateral-menu a>i:first-child {
-	width: 20px;
-	text-align: center;
-	color: inherit;
-	opacity: .92;
 }
 
 /*  Page content */

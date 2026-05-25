@@ -15,7 +15,17 @@ class loginModelo extends mainModel
 
     protected static function obtener_usuario_login_modelo($usuario)
     {
-        $sql = mainModel::conectar()->prepare("SELECT * FROM usuarios WHERE usu_nick = :Usuario LIMIT 1");
+        $sql = mainModel::conectar()->prepare("
+        SELECT
+            u.*,
+            s.suc_descri,
+            e.razon_social AS empresa_razon_social
+        FROM usuarios u
+        LEFT JOIN sucursales s ON s.id_sucursal = u.sucursalid
+        LEFT JOIN empresa e ON e.id_empresa = s.id_empresa
+        WHERE u.usu_nick = :Usuario
+        LIMIT 1
+        ");
         $sql->bindParam(":Usuario", $usuario);
         $sql->execute();
         return $sql;
@@ -80,8 +90,7 @@ class loginModelo extends mainModel
         UPDATE usuarios
         SET usu_clave = :Clave,
             usu_cambiar_clave = 0,
-            usu_intentos_fallidos = 0,
-            usu_bloqueado = 0
+            usu_intentos_fallidos = 0
         WHERE id_usuario = :Usuario
         ");
         $sql->bindParam(":Clave", $clave);

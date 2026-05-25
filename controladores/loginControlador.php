@@ -159,20 +159,9 @@ class loginControlador extends loginModelo
         $_SESSION['cambiar_clave_str'] = isset($row['usu_cambiar_clave']) ? (int)$row['usu_cambiar_clave'] : 0;
         $_SESSION['roles'] = loginModelo::obtener_roles_usuario($row['id_usuario']);
         $_SESSION['permisos'] = loginModelo::obtener_permisos_usuario($row['id_usuario']);
-        $empresa = mainModel::ejecutar_consulta_simple("
-            SELECT razon_social 
-            FROM empresa 
-            LIMIT 1
-            ");
-
-        if ($empresa && $empresa->rowCount() > 0) {
-            $rowEmp = $empresa->fetch(PDO::FETCH_ASSOC);
-            $_SESSION['empresa_nombre'] = $rowEmp['razon_social'];
-        } else {
-            $_SESSION['empresa_nombre'] = 'Empresa';
-        }
-        /**procesar con md5 */
-        $_SESSION['token_str'] = md5(uniqid(mt_rand(), true));
+        $_SESSION['empresa_nombre'] = !empty($row['empresa_razon_social'])
+            ? $row['empresa_razon_social']
+            : 'Empresa';
         if ($_SESSION['cambiar_clave_str'] === 1) {
             return header("Location: " . SERVERURL . "login/?cambiar=1");
         }
@@ -199,10 +188,9 @@ class loginControlador extends loginModelo
     public function cierre_sesion_controlador()
     {
         session_start(['name' => 'STR']);
-        $token = mainModel::decryption($_POST['token']);
         $usuario = mainModel::decryption($_POST['usuario']);
 
-        if ($token == $_SESSION['token_str'] && $usuario == $_SESSION['nick_str']) {
+        if (isset($_SESSION['nick_str']) && $usuario == $_SESSION['nick_str']) {
             session_unset();
             session_destroy();
             $alerta = [

@@ -26,7 +26,6 @@
         $lc = new loginControlador();
         /** verificamos si no vinene definidos ninguna de estas variables, en ese caso se cierra la sesion */
         if (
-            !isset($_SESSION['token_str']) ||
             !isset($_SESSION['nick_str']) ||
             !isset($_SESSION['id_str'])
         ) {

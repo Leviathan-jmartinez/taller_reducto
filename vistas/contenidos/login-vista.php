@@ -9,7 +9,7 @@ $mostrarCambioClave = (
 );
 
 if (
-    isset($_SESSION['id_str'], $_SESSION['token_str']) &&
+    isset($_SESSION['id_str']) &&
     !$mostrarCambioClave
 ) {
     echo "<script> window.location.href='" . SERVERURL . "home/'; </script>";

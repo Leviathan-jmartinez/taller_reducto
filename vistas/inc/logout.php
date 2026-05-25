@@ -14,11 +14,9 @@
 		}).then((result) => {
 			if (result.value) {
 				let url ='<?php echo SERVERURL; ?>ajax/loginAjax.php';
-                let token = '<?php echo $lc->encryption($_SESSION['token_str'])?>';
                 let usuario = '<?php echo $lc->encryption($_SESSION['nick_str'])?>';
 
                 let  datos = new FormData();
-                datos.append("token",token);
                 datos.append("usuario",usuario);
 
                 fetch(url, {
