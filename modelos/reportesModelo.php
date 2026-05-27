@@ -304,7 +304,7 @@ class reportesModelo extends mainModel
         if (!empty($f['buscar'])) {
             $where .= " AND (
                 v.placa LIKE :buscar OR
-                v.nro_serie LIKE :buscar OR
+                v.version LIKE :buscar OR
                 v.color LIKE :buscar OR
                 c.doc_number LIKE :buscar OR
                 c.nombre_cliente LIKE :buscar OR
@@ -317,7 +317,7 @@ class reportesModelo extends mainModel
         SELECT
             v.id_vehiculo,
             v.placa,
-            v.nro_serie,
+            v.version,
             v.anho,
             v.color,
             v.estado,

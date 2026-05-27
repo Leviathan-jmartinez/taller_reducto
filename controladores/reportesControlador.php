@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . "/../modelos/reportesModelo.php";
 require_once __DIR__ . "/../vendor/autoload.php";
+require_once __DIR__ . "/../pdf/ReporteMpdf.php";
 
 use Dompdf\Dompdf;
 
@@ -481,6 +482,35 @@ class reporteControlador extends reportesModelo
         ];
     }
 
+    private function texto_estado_pedido($estado)
+    {
+        return match ((int)$estado) {
+            0 => 'Anulado',
+            1 => 'Pendiente',
+            2 => 'Procesado',
+            default => 'Desconocido',
+        };
+    }
+
+    private function filtros_reporte_pedidos_texto($desde, $hasta, $estado, $sucursal)
+    {
+        $sucursalTexto = 'Todas';
+
+        if ($sucursal !== null) {
+            $sql = mainModel::conectar()->prepare("SELECT suc_descri FROM sucursales WHERE id_sucursal = :id LIMIT 1");
+            $sql->bindParam(':id', $sucursal, PDO::PARAM_INT);
+            $sql->execute();
+            $sucursalTexto = $sql->fetchColumn() ?: 'Sucursal #' . $sucursal;
+        }
+
+        return [
+            'Desde' => !empty($desde) ? date('d/m/Y', strtotime($desde)) : 'Sin filtro',
+            'Hasta' => !empty($hasta) ? date('d/m/Y', strtotime($hasta)) : 'Sin filtro',
+            'Estado' => $estado !== null ? $this->texto_estado_pedido($estado) : 'Todos',
+            'Sucursal' => $sucursalTexto
+        ];
+    }
+
     public function reporte_pedidos_controlador()
     {
         if (!mainModel::tienePermiso('reportes.pedidos.ver')) {
@@ -519,16 +549,51 @@ class reporteControlador extends reportesModelo
         $empresa = $_SESSION['empresa_nombre'] ?? 'Empresa';
         $usuario = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
 
-        ob_start();
-        require_once __DIR__ . "/../pdf/pedidos_reporte_pdf.php";
-        $html = ob_get_clean();
-
-        $dompdf = new Dompdf();
-        $dompdf->setPaper('A4', 'landscape');
-        $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->render();
-        $dompdf->stream("reporte_pedidos.pdf", ["Attachment" => true]);
-        exit();
+        ReporteMpdf::generar([
+            'titulo' => 'Informe de Pedidos de Compra',
+            'subtitulo' => 'Listado de pedidos segun filtros seleccionados',
+            'empresa' => $empresa,
+            'usuario' => $usuario,
+            'archivo' => 'reporte_pedidos.pdf',
+            'orientacion' => 'L',
+            'salida' => 'D',
+            'datos' => $datos,
+            'columnas' => [
+                [
+                    'label' => '#',
+                    'align' => 'center',
+                    'valor' => fn($row, $index) => $index + 1
+                ],
+                [
+                    'label' => 'Pedido',
+                    'key' => 'idpedido_cabecera',
+                    'align' => 'center'
+                ],
+                [
+                    'label' => 'Fecha',
+                    'align' => 'center',
+                    'valor' => fn($row) => !empty($row['fecha']) ? date('d/m/Y', strtotime($row['fecha'])) : '-'
+                ],
+                [
+                    'label' => 'Usuario',
+                    'key' => 'usuario'
+                ],
+                [
+                    'label' => 'Items',
+                    'key' => 'cantidad_items',
+                    'align' => 'center'
+                ],
+                [
+                    'label' => 'Estado',
+                    'align' => 'center',
+                    'valor' => fn($row) => $this->texto_estado_pedido($row['estado'] ?? null)
+                ],
+                [
+                    'label' => 'Sucursal',
+                    'key' => 'sucursal'
+                ]
+            ]
+        ]);
     }
 
 

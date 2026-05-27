@@ -112,14 +112,13 @@ class diagnosticoModelo extends mainModel
                 INSERT INTO diagnostico_servicio
                 (idrecepcion,id_usuario,id_equipo,id_sucursal,fecha_diagnostico,observaciones,estado,es_garantia,es_reclamo_valido,requiere_cobro)
                 VALUES
-                (:recepcion, :usuario, :equipo, :sucursal, :fecha, :obs, :estado, :garantia, :reclamo, :cobro)
+                (:recepcion, :usuario, :equipo, :sucursal, NOW(), :obs, :estado, :garantia, :reclamo, :cobro)
             ");
 
             $sql->bindParam(":recepcion", $d['idrecepcion'], PDO::PARAM_INT);
             $sql->bindParam(":usuario",   $d['id_usuario'], PDO::PARAM_INT);
             $sql->bindParam(":equipo",    $d['id_equipo'], PDO::PARAM_INT);
             $sql->bindParam(":sucursal", $d['id_sucursal'], PDO::PARAM_INT);
-            $sql->bindParam(":fecha",     $d['fecha']);
             $sql->bindParam(":obs",       $d['observacion']);
             $sql->bindParam(":estado",    $d['estado'], PDO::PARAM_INT);
             $sql->bindParam(":garantia",  $d['es_garantia'], PDO::PARAM_INT);

@@ -1,6 +1,6 @@
 <?php
 const SERVER = "localhost";
-const DB = "bd_reduc";
+const DB = "bd_reduc_test";
 const USER = "root";
 const PASS="8520123";
 

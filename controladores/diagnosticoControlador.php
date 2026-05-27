@@ -180,11 +180,11 @@ class diagnosticoControlador extends diagnosticoModelo
                 "Tipo"   => "error"
             ]);
         }
-        if (empty($_POST['idrecepcion']) || empty($_POST['fecha'])) {
+        if (empty($_POST['idrecepcion'])) {
             return json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Datos incompletos",
-                "Texto"  => "Debe seleccionar una recepción y fecha",
+                "Texto"  => "Debe seleccionar una recepcion",
                 "Tipo"   => "warning"
             ]);
         }
@@ -215,8 +215,6 @@ class diagnosticoControlador extends diagnosticoModelo
                 "Tipo" => "warning"
             ]);
         }
-        $fecha = str_replace("T", " ", $_POST['fecha']);
-
         /* ================= DETALLES ================= */
 
         $datos = [
@@ -224,7 +222,6 @@ class diagnosticoControlador extends diagnosticoModelo
             "id_usuario"  => $_SESSION['id_str'],
             "id_equipo"   => $_POST['id_equipo'],
             "id_sucursal" => $_POST['id_sucursal'],
-            "fecha" => $fecha,
             "observacion" => $_POST['observacion'],
             "estado"      => 1, // En proceso
             "es_garantia" => $_POST['es_garantia'] ?? 0,

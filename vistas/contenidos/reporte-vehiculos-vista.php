@@ -41,7 +41,7 @@ $modelos = $rep->listar_modelos_controlador();
 
             <div class="col-md-7">
                 <label>Buscar</label>
-                <input type="text" name="buscar" class="form-control" placeholder="Placa, serie, color, documento o cliente">
+                <input type="text" name="buscar" class="form-control" placeholder="Placa, version, color, documento o cliente">
             </div>
         </div>
 
@@ -85,7 +85,7 @@ $modelos = $rep->listar_modelos_controlador();
                     <th>Modelo</th>
                     <th>Cliente</th>
                     <th>Documento</th>
-                    <th>Serie</th>
+                    <th>Version</th>
                     <th>Anho</th>
                     <th>Color</th>
                     <th>Estado</th>
@@ -123,7 +123,7 @@ $modelos = $rep->listar_modelos_controlador();
                         <td>${it.modelo ?? '-'}</td>
                         <td>${it.cliente ?? '-'}</td>
                         <td>${it.doc_number ?? '-'}</td>
-                        <td>${it.nro_serie ?? '-'}</td>
+                        <td>${it.version ?? '-'}</td>
                         <td class="text-center">${it.anho ?? '-'}</td>
                         <td>${it.color ?? '-'}</td>
                         <td class="text-center">${it.estado == 1 ? 'Activo' : 'Inactivo'}</td>

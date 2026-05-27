@@ -31,6 +31,22 @@ $busqueda = $_SESSION['busqueda_vehiculo'] ?? "";
 /* LISTAS */
 
 $modelos  = $ins_vehiculo->listar_modelos_controlador();
+$tiposVehiculo = [
+    'Automovil',
+    'Camioneta',
+    'SUV',
+    'Motocicleta',
+    'Camion',
+    'Omnibus',
+    'Furgon',
+    'Pickup',
+    'Tractor',
+    'Maquinaria Pesada',
+    'Van',
+    'Minibus',
+    'Remolque',
+    'Acoplado'
+];
 ?>
 
 <div class="full-box page-header">
@@ -129,16 +145,58 @@ foreach ($modelos as $m) { ?>
                 </div>
             </div>
 
-            <!-- SERIE -->
+            <!-- VERSION -->
             <div class="col-md-4">
                 <div class="form-group">
                     <input type="text"
                         class="form-control"
-                        placeholder="Nro Serie"
-                        name="<?php echo $editando ? 'serie_up' : 'serie_reg'; ?>"
-                        value="<?php echo $editando ? $campos['nro_serie'] : ''; ?>"
-                        pattern="[a-zA-Z0-9-]{3,50}"
-                        maxlength="50">
+                        placeholder="Version"
+                        name="<?php echo $editando ? 'version_up' : 'version_reg'; ?>"
+                        value="<?php echo $editando ? ($campos['version'] ?? '') : ''; ?>"
+                        pattern="[a-zA-Z0-9 .-]{1,60}"
+                        maxlength="60">
+                </div>
+            </div>
+
+            <!-- TRANSMISION -->
+            <div class="col-md-4">
+                <div class="form-group">
+                    <input type="text"
+                        class="form-control"
+                        placeholder="Transmision"
+                        name="<?php echo $editando ? 'transmision_up' : 'transmision_reg'; ?>"
+                        value="<?php echo $editando ? ($campos['transmision'] ?? '') : ''; ?>"
+                        pattern="[a-zA-Z0-9 .-]{1,30}"
+                        maxlength="30">
+                </div>
+            </div>
+
+            <!-- MOTOR -->
+            <div class="col-md-4">
+                <div class="form-group">
+                    <input type="text"
+                        class="form-control"
+                        placeholder="Motor"
+                        name="<?php echo $editando ? 'motor_up' : 'motor_reg'; ?>"
+                        value="<?php echo $editando ? ($campos['motor'] ?? '') : ''; ?>"
+                        pattern="[a-zA-Z0-9 .()/-]{1,80}"
+                        maxlength="80">
+                </div>
+            </div>
+
+            <!-- TIPO VEHICULO -->
+            <div class="col-md-4">
+                <div class="form-group">
+                    <select class="form-control select2"
+                        name="<?php echo $editando ? 'tipo_vehiculo_up' : 'tipo_vehiculo_reg'; ?>">
+                        <option value="">Seleccione tipo de vehiculo</option>
+                        <?php foreach ($tiposVehiculo as $tipoVehiculo) { ?>
+                            <option value="<?php echo $tipoVehiculo; ?>"
+                                <?php if ($editando && ($campos['tipo_vehiculo'] ?? '') === $tipoVehiculo) echo "selected"; ?>>
+                                <?php echo $tipoVehiculo; ?>
+                            </option>
+                        <?php } ?>
+                    </select>
                 </div>
             </div>
 

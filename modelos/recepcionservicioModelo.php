@@ -61,6 +61,25 @@ class recepcionservicioModelo extends mainModel
         $pdo = mainModel::conectar();
 
         try {
+            if (empty($datos['id_ciudad'])) {
+                $ciudad = $pdo->query("
+                    SELECT id_ciudad
+                    FROM ciudades
+                    WHERE estado = 1
+                    ORDER BY id_ciudad ASC
+                    LIMIT 1
+                ")->fetchColumn();
+
+                if (!$ciudad) {
+                    return [
+                        "error" => true,
+                        "msg" => "No existe una ciudad activa para registrar el cliente rapido"
+                    ];
+                }
+
+                $datos['id_ciudad'] = $ciudad;
+            }
+
             $sql = $pdo->prepare("
                 INSERT INTO clientes (
                     doc_number,
@@ -128,17 +147,18 @@ class recepcionservicioModelo extends mainModel
         try {
             $sql = $pdo->prepare("
                 INSERT INTO vehiculos
-                (id_cliente,id_modeloauto,color,nro_serie,placa,anho,estado)
+                (id_cliente,id_modeloauto,color,placa,anho,version,tipo_vehiculo,estado)
                 VALUES
-                (:cliente,:modelo,:color,:serie,:placa,:anho,:estado)
+                (:cliente,:modelo,:color,:placa,:anho,:version,:tipo_vehiculo,:estado)
             ");
 
             $sql->bindValue(":cliente", (int) $datos['id_cliente'], PDO::PARAM_INT);
             $sql->bindValue(":modelo", (int) $datos['id_modeloauto'], PDO::PARAM_INT);
             $sql->bindValue(":color", $datos['color']);
-            $sql->bindValue(":serie", $datos['nro_serie']);
             $sql->bindValue(":placa", $datos['placa']);
             $sql->bindValue(":anho", $datos['anho']);
+            $sql->bindValue(":version", $datos['version']);
+            $sql->bindValue(":tipo_vehiculo", $datos['tipo_vehiculo']);
             $sql->bindValue(":estado", (int) $datos['estado'], PDO::PARAM_INT);
 
             if (!$sql->execute()) {

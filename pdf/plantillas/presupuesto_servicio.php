@@ -20,24 +20,27 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
     <title>Presupuesto de Servicio</title>
     <style>
         body {
+            color: #25313b;
             font-family: DejaVu Sans, sans-serif;
-            font-size: 11px;
+            font-size: 10.5px;
         }
 
         table {
-            width: 100%;
             border-collapse: collapse;
+            width: 100%;
         }
 
         th,
         td {
-            border: 1px solid #ddd;
-            padding: 6px;
+            border: 1px solid #dbe3ea;
+            padding: 7px;
         }
 
         th {
-            background: #2f6f6f;
+            background: #245f63;
             color: #fff;
+            font-size: 10px;
+            text-transform: uppercase;
         }
 
         .right {
@@ -47,38 +50,155 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
         .center {
             text-align: center;
         }
+
+        .muted {
+            color: #66717c;
+        }
+
+        .header {
+            background: #245f63;
+            color: #fff;
+            margin-bottom: 14px;
+        }
+
+        .header td {
+            border: none;
+            padding: 10px;
+        }
+
+        .doc-title {
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: .5px;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .doc-meta {
+            font-size: 10px;
+            line-height: 1.7;
+            text-align: right;
+        }
+
+        .box-table {
+            margin-bottom: 12px;
+        }
+
+        .box-table td {
+            background: #f8fafc;
+            border: 1px solid #dbe3ea;
+            vertical-align: top;
+        }
+
+        .box-title {
+            color: #245f63;
+            display: block;
+            font-size: 10px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .items td {
+            border-left: none;
+            border-right: none;
+        }
+
+        .items tbody tr:nth-child(even) td {
+            background: #f8fafc;
+        }
+
+        .totales {
+            margin-top: 12px;
+            width: 42%;
+        }
+
+        .totales td {
+            border: 1px solid #dbe3ea;
+        }
+
+        .total-final td {
+            background: #245f63;
+            color: #fff;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .condiciones {
+            background: #f8fafc;
+            border: 1px solid #dbe3ea;
+            margin-top: 24px;
+            padding: 9px 10px;
+        }
+
+        .condiciones h4 {
+            color: #245f63;
+            font-size: 11px;
+            margin: 0 0 6px 0;
+            text-transform: uppercase;
+        }
+
+        .condiciones p {
+            color: #46535f;
+            font-size: 9.5px;
+            line-height: 1.45;
+            margin: 0 0 5px 0;
+            text-align: justify;
+        }
+
+        .firmas td {
+            border: none;
+            padding-top: 34px;
+        }
+
+        .firma-linea {
+            border-top: 1px solid #25313b;
+            display: inline-block;
+            padding-top: 6px;
+            width: 78%;
+        }
     </style>
 </head>
 
 <body>
-    <table width="100%" style="background:#2f6f6f; color:#fff; margin-bottom:10px;">
+    <table class="header">
         <tr>
-            <td width="20%" align="left" style="padding:8px;">
+            <td width="20%" align="left">
                 <img src="<?= __DIR__ . '/../assets/logo.png' ?>" height="50">
             </td>
             <td width="50%" align="center">
-                <h2 style="margin:0;">PRESUPUESTO DE SERVICIO</h2>
+                <p class="doc-title">Presupuesto de Servicio</p>
+                <span style="color:#dce8ea;">Taller de reparacion y mantenimiento</span>
             </td>
-            <td align="right">
-                N° <?= str_pad($cabecera['idpresupuesto_servicio'], 6, '0', STR_PAD_LEFT) ?><br>
-                Fecha: <?= date('d/m/Y', strtotime($cabecera['fecha'])) ?><br>
-                Vence: <?= date('d/m/Y', strtotime($cabecera['fecha_venc'])) ?>
+            <td class="doc-meta" width="30%">
+                <strong>Nro.</strong> <?= str_pad($cabecera['idpresupuesto_servicio'], 6, '0', STR_PAD_LEFT) ?><br>
+                <strong>Fecha:</strong> <?= date('d/m/Y', strtotime($cabecera['fecha'])) ?><br>
+                <strong>Valido hasta:</strong> <?= date('d/m/Y', strtotime($cabecera['fecha_venc'])) ?>
             </td>
         </tr>
     </table>
 
-    <strong>Cliente</strong><br>
-    <?= $cabecera['nombre_cliente'] . ' ' . $cabecera['apellido_cliente'] ?><br>
-    Tel: <?= $cabecera['celular_cliente'] ?><br>
-    Dirección: <?= $cabecera['direccion_cliente'] ?><br><br>
+    <table class="box-table">
+        <tr>
+            <td width="50%">
+                <span class="box-title">Cliente</span>
+                <strong><?= $cabecera['nombre_cliente'] . ' ' . $cabecera['apellido_cliente'] ?></strong><br>
+                <span class="muted">Telefono:</span> <?= $cabecera['celular_cliente'] ?: '-' ?><br>
+                <span class="muted">Direccion:</span> <?= $cabecera['direccion_cliente'] ?: '-' ?>
+            </td>
+            <td width="50%">
+                <span class="box-title">Vehiculo</span>
+                <strong><?= $cabecera['modelo'] ?: '-' ?></strong><br>
+                <span class="muted">Placa:</span> <?= $cabecera['placa'] ?: '-' ?><br>
+                <span class="muted">Referencia:</span> Servicio tecnico segun diagnostico
+            </td>
+        </tr>
+    </table>
 
-    <strong>Vehículo</strong><br>
-    <?= $cabecera['modelo'] ?> — <?= $cabecera['placa'] ?><br><br>
-
-    <table>
+    <table class="items">
         <thead>
             <tr>
-                <th>Descripción</th>
+                <th>Descripcion</th>
                 <th class="center">Cant.</th>
                 <th class="right">Precio</th>
                 <th class="right">Subtotal</th>
@@ -96,8 +216,7 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
         </tbody>
     </table>
 
-    <br>
-    <table width="40%" align="right">
+    <table class="totales" align="right">
         <tr>
             <td>Subtotal</td>
             <td class="right"><?= number_format($cabecera['subtotal'], 0, ',', '.') ?></td>
@@ -106,31 +225,43 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
             <td>Descuento</td>
             <td class="right">- <?= number_format($cabecera['total_descuento'], 0, ',', '.') ?></td>
         </tr>
-        <tr>
-            <td><strong>TOTAL</strong></td>
-            <td class="right"><strong><?= number_format($cabecera['total_final'], 0, ',', '.') ?></strong></td>
+        <tr class="total-final">
+            <td>Total</td>
+            <td class="right"><?= number_format($cabecera['total_final'], 0, ',', '.') ?></td>
         </tr>
     </table>
 
+    <br><br><br><br>
 
-    <br><br><br>
+    <div class="condiciones">
+        <h4>Condiciones y garantia</h4>
+        <p>
+            Este presupuesto tiene validez hasta la fecha indicada. La garantia cubre la mano de obra realizada por el taller
+            y los repuestos instalados, siempre que la falla este relacionada directamente con el servicio efectuado.
+        </p>
+        <p>
+            La garantia no cubre desgaste natural, mal uso, modificaciones externas, reparaciones realizadas por terceros
+            ni fallas ajenas al diagnostico inicial. Si durante el trabajo se detectan danos adicionales, se informara al
+            cliente antes de realizar nuevos trabajos o generar costos extra.
+        </p>
+    </div>
 
-    <table width="100%" style="margin-top:40px; border:none;">
+    <table class="firmas">
         <tr>
-            <td style="width:50%; text-align:center; border:none;">
-                _______________________________<br>
-                <strong>Firma del Cliente</strong><br>
-                <?= $cabecera['nombre_cliente'] . ' ' . $cabecera['apellido_cliente'] ?>
+            <td width="50%" class="center">
+                <span class="firma-linea">
+                    <strong>Firma del Cliente</strong><br>
+                    <?= $cabecera['nombre_cliente'] . ' ' . $cabecera['apellido_cliente'] ?>
+                </span>
             </td>
-
-            <td style="width:50%; text-align:center; border:none;">
-                _______________________________<br>
-                <strong>Firma Autorizada</strong><br>
-                <?= $cabecera['usu_nombre'] . ' ' . $cabecera['usu_apellido'] ?>
+            <td width="50%" class="center">
+                <span class="firma-linea">
+                    <strong>Firma Autorizada</strong><br>
+                    <?= $cabecera['usu_nombre'] . ' ' . $cabecera['usu_apellido'] ?>
+                </span>
             </td>
         </tr>
     </table>
-
 </body>
 
 </html>

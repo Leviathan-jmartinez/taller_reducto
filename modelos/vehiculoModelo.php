@@ -74,17 +74,20 @@ class vehiculoModelo extends mainModel
     {
         $sql = mainModel::conectar()->prepare(
             "INSERT INTO vehiculos
-            (id_cliente,id_modeloauto,color,nro_serie,placa,anho,estado)
+            (id_cliente,id_modeloauto,color,placa,anho,version,transmision,motor,tipo_vehiculo,estado)
             VALUES
-            (:cliente,:modelo,:color,:serie,:placa,:anho,:estado)"
+            (:cliente,:modelo,:color,:placa,:anho,:version,:transmision,:motor,:tipo_vehiculo,:estado)"
         );
 
         $sql->bindParam(":cliente", $datos['id_cliente']);
         $sql->bindParam(":modelo", $datos['id_modeloauto']);
         $sql->bindParam(":color", $datos['color']);
-        $sql->bindParam(":serie", $datos['nro_serie']);
         $sql->bindParam(":placa", $datos['placa']);
         $sql->bindParam(":anho", $datos['anho']);
+        $sql->bindParam(":version", $datos['version']);
+        $sql->bindParam(":transmision", $datos['transmision']);
+        $sql->bindParam(":motor", $datos['motor']);
+        $sql->bindParam(":tipo_vehiculo", $datos['tipo_vehiculo']);
         $sql->bindParam(":estado", $datos['estado']);
 
         $sql->execute();
@@ -99,9 +102,12 @@ class vehiculoModelo extends mainModel
                 id_cliente=:cliente,
                 id_modeloauto=:modelo,
                 color=:color,
-                nro_serie=:serie,
                 placa=:placa,
                 anho=:anho,
+                version=:version,
+                transmision=:transmision,
+                motor=:motor,
+                tipo_vehiculo=:tipo_vehiculo,
                 estado=:estado
             WHERE id_vehiculo=:id"
         );
@@ -109,9 +115,12 @@ class vehiculoModelo extends mainModel
         $sql->bindParam(":cliente", $datos['id_cliente']);
         $sql->bindParam(":modelo", $datos['id_modeloauto']);
         $sql->bindParam(":color", $datos['color']);
-        $sql->bindParam(":serie", $datos['nro_serie']);
         $sql->bindParam(":placa", $datos['placa']);
         $sql->bindParam(":anho", $datos['anho']);
+        $sql->bindParam(":version", $datos['version']);
+        $sql->bindParam(":transmision", $datos['transmision']);
+        $sql->bindParam(":motor", $datos['motor']);
+        $sql->bindParam(":tipo_vehiculo", $datos['tipo_vehiculo']);
         $sql->bindParam(":estado", $datos['estado']);
         $sql->bindParam(":id", $datos['id_vehiculo']);
 

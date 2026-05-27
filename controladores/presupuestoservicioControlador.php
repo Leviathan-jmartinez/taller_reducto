@@ -3,6 +3,10 @@ require_once __DIR__ . "/../modelos/presupuestoServicioModelo.php";
 
 class presupuestoServicioControlador  extends presupuestoServicioModelo
 {
+    public function decrypt($valor)
+    {
+        return mainModel::decryption($valor);
+    }
 
     public function datos_diagnostico_controlador()
     {

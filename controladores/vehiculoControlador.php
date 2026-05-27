@@ -73,6 +73,7 @@ class vehiculoControlador extends vehiculoModelo
                 <th>PLACA</th>
                 <th>CLIENTE</th>
                 <th>MODELO</th>
+                <th>VERSION</th>
                 <th>COLOR</th>
             <th>ESTADO</th>';
 
@@ -99,6 +100,7 @@ class vehiculoControlador extends vehiculoModelo
                 <td>' . $rows['placa'] . '</td>
                 <td>' . $cliente . '</td>
                 <td>' . $rows['mod_descri'] . '</td>
+                <td>' . ($rows['version'] ?? '-') . '</td>
                 <td>' . ($rows['color'] ?? '-') . '</td>
                 <td>' . ($rows['estado'] == 1
                     ? '<span class="badge badge-success">Activo</span>'
@@ -176,7 +178,10 @@ class vehiculoControlador extends vehiculoModelo
         $color   = mainModel::limpiar_string($_POST['color_reg'] ?? "");
         $placa   = strtoupper(mainModel::limpiar_string($_POST['placa_reg'] ?? ""));
         $anho    = mainModel::limpiar_string($_POST['anho_reg'] ?? "");
-        $serie   = strtoupper(mainModel::limpiar_string($_POST['serie_reg'] ?? ""));
+        $version = mainModel::limpiar_string($_POST['version_reg'] ?? "");
+        $transmision = mainModel::limpiar_string($_POST['transmision_reg'] ?? "");
+        $motor = mainModel::limpiar_string($_POST['motor_reg'] ?? "");
+        $tipo_vehiculo = mainModel::limpiar_string($_POST['tipo_vehiculo_reg'] ?? "");
         $estado  = mainModel::limpiar_string($_POST['estado_reg'] ?? "");
 
         if ($cliente == "" || $modelo == "" || $color == "" || $placa == "") {
@@ -214,11 +219,41 @@ class vehiculoControlador extends vehiculoModelo
             exit();
         }
 
-        if ($serie != "" && mainModel::verificarDatos("[a-zA-Z0-9-]{3,50}", $serie)) {
+        if ($version != "" && mainModel::verificarDatos("[a-zA-Z0-9 .-]{1,60}", $version)) {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Error",
-                "Texto" => "El numero de serie no tiene un formato valido",
+                "Texto" => "La version no tiene un formato valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($transmision != "" && mainModel::verificarDatos("[a-zA-Z0-9 .-]{1,30}", $transmision)) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "La transmision no tiene un formato valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($motor != "" && mainModel::verificarDatos("[a-zA-Z0-9 .()\/-]{1,80}", $motor)) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El motor no tiene un formato valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($tipo_vehiculo != "" && mainModel::verificarDatos("[a-zA-Z0-9 .-]{1,40}", $tipo_vehiculo)) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El tipo de vehiculo no tiene un formato valido",
                 "Tipo" => "error"
             ]);
             exit();
@@ -279,7 +314,10 @@ class vehiculoControlador extends vehiculoModelo
             "color" => $color,
             "placa" => $placa,
             "anho" => $anho,
-            "nro_serie" => $serie,
+            "version" => $version,
+            "transmision" => $transmision,
+            "motor" => $motor,
+            "tipo_vehiculo" => $tipo_vehiculo,
             "estado" => $estado
         ];
 
@@ -319,7 +357,10 @@ class vehiculoControlador extends vehiculoModelo
             "color" => mainModel::limpiar_string($_POST['color_up'] ?? ""),
             "placa" => strtoupper(mainModel::limpiar_string($_POST['placa_up'] ?? "")),
             "anho" => mainModel::limpiar_string($_POST['anho_up'] ?? ""),
-            "nro_serie" => strtoupper(mainModel::limpiar_string($_POST['serie_up'] ?? "")),
+            "version" => mainModel::limpiar_string($_POST['version_up'] ?? ""),
+            "transmision" => mainModel::limpiar_string($_POST['transmision_up'] ?? ""),
+            "motor" => mainModel::limpiar_string($_POST['motor_up'] ?? ""),
+            "tipo_vehiculo" => mainModel::limpiar_string($_POST['tipo_vehiculo_up'] ?? ""),
             "estado" => mainModel::limpiar_string($_POST['estado_up'] ?? "")
         ];
 
@@ -372,11 +413,41 @@ class vehiculoControlador extends vehiculoModelo
             exit();
         }
 
-        if ($datos['nro_serie'] != "" && mainModel::verificarDatos("[a-zA-Z0-9-]{3,50}", $datos['nro_serie'])) {
+        if ($datos['version'] != "" && mainModel::verificarDatos("[a-zA-Z0-9 .-]{1,60}", $datos['version'])) {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Error",
-                "Texto" => "El numero de serie no tiene un formato valido",
+                "Texto" => "La version no tiene un formato valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($datos['transmision'] != "" && mainModel::verificarDatos("[a-zA-Z0-9 .-]{1,30}", $datos['transmision'])) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "La transmision no tiene un formato valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($datos['motor'] != "" && mainModel::verificarDatos("[a-zA-Z0-9 .()\/-]{1,80}", $datos['motor'])) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El motor no tiene un formato valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        if ($datos['tipo_vehiculo'] != "" && mainModel::verificarDatos("[a-zA-Z0-9 .-]{1,40}", $datos['tipo_vehiculo'])) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "El tipo de vehiculo no tiene un formato valido",
                 "Tipo" => "error"
             ]);
             exit();

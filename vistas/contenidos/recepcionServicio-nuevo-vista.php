@@ -9,8 +9,6 @@ if (session_status() == PHP_SESSION_NONE) {
 
 require_once "./controladores/recepcionservicioControlador.php";
 $ins_recepcion_rapida = new recepcionservicioControlador();
-$ciudades_recepcion = $ins_recepcion_rapida->listar_ciudades_controlador();
-$ciudades_recepcion = is_array($ciudades_recepcion) ? $ciudades_recepcion : [];
 $modelos_recepcion = $ins_recepcion_rapida->listar_modelos_controlador();
 $modelos_recepcion = is_array($modelos_recepcion) ? $modelos_recepcion : [];
 ?>
@@ -395,7 +393,7 @@ $modelos_recepcion = is_array($modelos_recepcion) ? $modelos_recepcion : [];
                     <input type="hidden" name="accion" value="guardar_cliente_rapido">
 
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label>Tipo de documento</label>
                             <select class="form-control" name="tipo_documento_reg">
                                 <option value="CI">CI</option>
@@ -406,13 +404,9 @@ $modelos_recepcion = is_array($modelos_recepcion) ? $modelos_recepcion : [];
                                 <option value="OF">OF</option>
                             </select>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <label>Documento</label>
                             <input type="text" class="form-control" name="cliente_doc_reg" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label>DV</label>
-                            <input type="text" class="form-control" name="cliente_dv_reg">
                         </div>
                         <div class="col-md-4">
                             <label>Nombre</label>
@@ -425,25 +419,6 @@ $modelos_recepcion = is_array($modelos_recepcion) ? $modelos_recepcion : [];
                         <div class="col-md-4">
                             <label>Telefono</label>
                             <input type="text" class="form-control" name="cliente_telefono_reg">
-                        </div>
-                        <div class="col-md-4">
-                            <label>Email</label>
-                            <input type="email" class="form-control" name="cliente_email_reg">
-                        </div>
-                        <div class="col-md-4">
-                            <label>Direccion</label>
-                            <input type="text" class="form-control" name="cliente_direccion_reg" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label>Ciudad</label>
-                            <select class="form-control" name="ciudad_reg" required>
-                                <option value="">Seleccione ciudad</option>
-                                <?php foreach ($ciudades_recepcion as $ciudad) { ?>
-                                    <option value="<?php echo $ciudad['id_ciudad']; ?>">
-                                        <?php echo htmlspecialchars($ciudad['ciu_descri'], ENT_QUOTES, 'UTF-8'); ?>
-                                    </option>
-                                <?php } ?>
-                            </select>
                         </div>
                     </div>
                 </div>
@@ -500,14 +475,6 @@ $modelos_recepcion = is_array($modelos_recepcion) ? $modelos_recepcion : [];
                         <div class="col-md-4">
                             <label>Placa</label>
                             <input type="text" class="form-control" name="placa_reg" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label>Año</label>
-                            <input type="text" class="form-control" name="anho_reg">
-                        </div>
-                        <div class="col-md-4">
-                            <label>Nro Serie</label>
-                            <input type="text" class="form-control" name="serie_reg">
                         </div>
                     </div>
                 </div>

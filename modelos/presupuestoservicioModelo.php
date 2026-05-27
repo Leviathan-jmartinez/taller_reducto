@@ -141,7 +141,7 @@ class presupuestoservicioModelo extends mainModel
 
             /* ================= OBTENER SUCURSAL DESDE DIAGNÓSTICO ================= */
             $sqlSuc = $pdo->prepare("
-                SELECT r.id_sucursal, r.id_cliente
+                SELECT r.id_sucursal, r.id_cliente, r.id_vehiculo
                 FROM diagnostico_servicio d
                 INNER JOIN recepcion_servicio r 
                     ON r.idrecepcion = d.idrecepcion
@@ -155,8 +155,9 @@ class presupuestoservicioModelo extends mainModel
             $diag = $sqlSuc->fetch(PDO::FETCH_ASSOC);
             $idSucursal = $diag['id_sucursal'] ?? null;
             $idCliente = $diag['id_cliente'] ?? null;
+            $idVehiculo = $diag['id_vehiculo'] ?? null;
 
-            if (!$idSucursal) {
+            if (!$idSucursal || !$idCliente || !$idVehiculo) {
                 $pdo->rollBack();
                 return [
                     'error' => true,
@@ -369,16 +370,18 @@ class presupuestoservicioModelo extends mainModel
             /* ================= INSERT PRESUPUESTO ================= */
             $sql = $pdo->prepare("
             INSERT INTO presupuesto_servicio
-            (id_usuario, id_sucursal, fecha, estado, fecha_venc,
+            (id_usuario, id_sucursal, id_cliente, id_vehiculo, fecha, estado, fecha_venc,
              subtotal, total_descuento, total_final, id_diagnostico)
             VALUES
-            (:usuario, :sucursal, CURDATE(), 1, :fecha_venc,
+            (:usuario, :sucursal, :cliente, :vehiculo, CURDATE(), 1, :fecha_venc,
              :subtotal, :total_desc, :total_final, :id_diagnostico)
         ");
 
             $sql->execute([
                 ':usuario'       => $d['usuario'],
                 ':sucursal'      => $idSucursal,
+                ':cliente'       => $idCliente,
+                ':vehiculo'      => $idVehiculo,
                 ':fecha_venc'    => $d['fecha_venc'],
                 ':subtotal'      => $subtotalServicios,
                 ':total_desc'    => $totalDescuento,

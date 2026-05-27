@@ -92,16 +92,16 @@ class recepcionservicioControlador extends recepcionservicioModelo
         $apellido = mainModel::limpiar_string($_POST['cliente_apellido_reg'] ?? '');
         $telefono = mainModel::limpiar_string($_POST['cliente_telefono_reg'] ?? '');
         $email = mainModel::limpiar_string($_POST['cliente_email_reg'] ?? '');
-        $direccion = mainModel::limpiar_string($_POST['cliente_direccion_reg'] ?? '');
+        $direccion = mainModel::limpiar_string($_POST['cliente_direccion_reg'] ?? 'No informado');
         $ciudad = (int) ($_POST['ciudad_reg'] ?? 0);
         $tipoDocumento = mainModel::limpiar_string($_POST['tipo_documento_reg'] ?? 'CI');
         $dv = mainModel::limpiar_string($_POST['cliente_dv_reg'] ?? '');
 
-        if ($doc === '' || $nombre === '' || $direccion === '' || $ciudad <= 0) {
+        if ($doc === '' || $nombre === '') {
             return json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Datos incompletos",
-                "Texto"  => "Complete documento, nombre, direccion y ciudad",
+                "Texto"  => "Complete documento y nombre",
                 "Tipo"   => "warning"
             ]);
         }
@@ -173,7 +173,8 @@ class recepcionservicioControlador extends recepcionservicioModelo
         $color = mainModel::limpiar_string($_POST['color_reg'] ?? '');
         $placa = mainModel::limpiar_string($_POST['placa_reg'] ?? '');
         $anho = mainModel::limpiar_string($_POST['anho_reg'] ?? '');
-        $serie = mainModel::limpiar_string($_POST['serie_reg'] ?? '');
+        $version = mainModel::limpiar_string($_POST['version_reg'] ?? '');
+        $tipoVehiculo = mainModel::limpiar_string($_POST['tipo_vehiculo_reg'] ?? '');
 
         if ($cliente <= 0 || $modelo <= 0 || $color === '' || $placa === '') {
             return json_encode([
@@ -199,7 +200,8 @@ class recepcionservicioControlador extends recepcionservicioModelo
             "color" => $color,
             "placa" => $placa,
             "anho" => $anho,
-            "nro_serie" => $serie,
+            "version" => $version,
+            "tipo_vehiculo" => $tipoVehiculo,
             "estado" => 1
         ];
 

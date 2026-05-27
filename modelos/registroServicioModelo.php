@@ -12,7 +12,7 @@ class registroServicioModelo extends mainModel
 
             /* ================= VALIDAR OT ================= */
             $q = $pdo->prepare("
-            SELECT estado, id_sucursal
+            SELECT estado, id_sucursal, id_cliente, id_vehiculo
             FROM orden_trabajo
             WHERE idorden_trabajo = ?
             FOR UPDATE
@@ -23,6 +23,11 @@ class registroServicioModelo extends mainModel
             if (!$ot) {
                 $pdo->rollBack();
                 return ['msg' => 'Orden de trabajo no existe'];
+            }
+
+            if (empty($ot['id_cliente']) || empty($ot['id_vehiculo'])) {
+                $pdo->rollBack();
+                return ['msg' => 'La orden de trabajo no tiene cliente o vehiculo asociado'];
             }
 
             if ((int)$ot['estado'] !== 1) {
@@ -60,11 +65,13 @@ class registroServicioModelo extends mainModel
             /* ================= CREAR CABECERA ================= */
             $ins = $pdo->prepare("
             INSERT INTO registro_servicio
-            (idorden_trabajo, id_sucursal, usuario_registra, fecha_ejecucion, estado, observacion)
-            VALUES (?, ?, ?, ?, 1, ?)
+            (idorden_trabajo, id_vehiculo, id_cliente, id_sucursal, usuario_registra, fecha_ejecucion, estado, observacion)
+            VALUES (?, ?, ?, ?, ?, ?, 1, ?)
         ");
             $ins->execute([
                 $datos['idorden_trabajo'],
+                $ot['id_vehiculo'],
+                $ot['id_cliente'],
                 $ot['id_sucursal'],
                 $datos['usuario'],
                 $datos['fecha_ejecucion'], // ✔ ahora correcto
@@ -226,23 +233,11 @@ class registroServicioModelo extends mainModel
             m.mod_descri,
             v.placa
         FROM orden_trabajo ot
-        LEFT JOIN presupuesto_servicio ps 
-            ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-
-        LEFT JOIN diagnostico_servicio ds 
-            ON ds.id_diagnostico = ps.id_diagnostico
-
-        LEFT JOIN recepcion_servicio r_normal 
-            ON r_normal.idrecepcion = ds.idrecepcion
-
-        LEFT JOIN recepcion_servicio r_reclamo 
-            ON r_reclamo.idreclamo_servicio = ot.idreclamo_servicio
-
         LEFT JOIN clientes c 
-            ON c.id_cliente = COALESCE(r_normal.id_cliente, r_reclamo.id_cliente)
+            ON c.id_cliente = ot.id_cliente
 
         LEFT JOIN vehiculos v 
-            ON v.id_vehiculo = COALESCE(r_normal.id_vehiculo, r_reclamo.id_vehiculo)
+            ON v.id_vehiculo = ot.id_vehiculo
 
         LEFT JOIN modelo_auto m 
             ON m.id_modeloauto = v.id_modeloauto
@@ -284,12 +279,8 @@ class registroServicioModelo extends mainModel
                m.mod_descri,
                v.placa
         FROM orden_trabajo ot
-        LEFT JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-        LEFT JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
-        LEFT JOIN recepcion_servicio r_normal ON r_normal.idrecepcion = ds.idrecepcion
-        LEFT JOIN recepcion_servicio r_reclamo ON r_reclamo.idreclamo_servicio = ot.idreclamo_servicio
-        LEFT JOIN clientes c ON c.id_cliente = COALESCE(r_normal.id_cliente, r_reclamo.id_cliente)
-        LEFT JOIN vehiculos v ON v.id_vehiculo = COALESCE(r_normal.id_vehiculo, r_reclamo.id_vehiculo)
+        LEFT JOIN clientes c ON c.id_cliente = ot.id_cliente
+        LEFT JOIN vehiculos v ON v.id_vehiculo = ot.id_vehiculo
         LEFT JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
         WHERE ot.idorden_trabajo = ?
           AND ot.id_sucursal = ?
@@ -472,26 +463,12 @@ class registroServicioModelo extends mainModel
         INNER JOIN orden_trabajo ot 
             ON ot.idorden_trabajo = rs.idorden_trabajo
 
-        /* NORMAL */
-        LEFT JOIN presupuesto_servicio ps 
-            ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-
-        LEFT JOIN diagnostico_servicio ds 
-            ON ds.id_diagnostico = ps.id_diagnostico
-
-        LEFT JOIN recepcion_servicio r_normal 
-            ON r_normal.idrecepcion = ds.idrecepcion
-
-        /* RECLAMO */
-        LEFT JOIN recepcion_servicio r_reclamo 
-            ON r_reclamo.idreclamo_servicio = ot.idreclamo_servicio
-
         /* DATOS */
         LEFT JOIN clientes c 
-            ON c.id_cliente = COALESCE(r_normal.id_cliente, r_reclamo.id_cliente)
+            ON c.id_cliente = rs.id_cliente
 
         LEFT JOIN vehiculos v 
-            ON v.id_vehiculo = COALESCE(r_normal.id_vehiculo, r_reclamo.id_vehiculo)
+            ON v.id_vehiculo = rs.id_vehiculo
 
         LEFT JOIN modelo_auto m 
             ON m.id_modeloauto = v.id_modeloauto

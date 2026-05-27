@@ -293,17 +293,17 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
             SELECT
                 ps.idpresupuesto_servicio,
                 ps.fecha,
-                ps.subtotal,
-                ps.total_descuento,
-                ps.total_final,
                 ds.idrecepcion,
                 c.nombre_cliente,
-                v.placa
+                c.apellido_cliente,
+                v.placa,
+                ma.mod_descri AS modelo
             FROM presupuesto_servicio ps
             INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
             INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
             INNER JOIN clientes c ON c.id_cliente = r.id_cliente
             INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
+            LEFT JOIN modelo_auto ma ON ma.id_modeloauto = v.id_modeloauto
             LEFT JOIN orden_trabajo ot 
                 ON ot.idpresupuesto_servicio = ps.idpresupuesto_servicio
                 AND ot.estado != 0
@@ -312,7 +312,9 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
                             AND r.id_sucursal = :sucursal
                 AND (
                         c.nombre_cliente LIKE :busqueda
+                    OR c.apellido_cliente LIKE :busqueda
                     OR v.placa LIKE :busqueda
+                    OR ma.mod_descri LIKE :busqueda
                 )
             ORDER BY ps.idpresupuesto_servicio DESC
         ";
@@ -329,31 +331,36 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
         $tabla = '<table class="table table-dark table-sm">
             <thead>
                 <tr>
+                    <th>Presupuesto</th>
                     <th>Cliente</th>
                     <th>Vehículo</th>
-                    <th>Total</th>
+                    <th>Fecha</th>
                     <th></th>
                 </tr>
             </thead><tbody>';
 
         foreach ($sql->fetchAll() as $row) {
+            $cliente = trim(($row['nombre_cliente'] ?? '') . ' ' . ($row['apellido_cliente'] ?? ''));
+            $vehiculo = trim(($row['modelo'] ?? '') . ' ' . ($row['placa'] ?? ''));
+            $fecha = !empty($row['fecha']) ? date("d/m/Y", strtotime($row['fecha'])) : '';
+            $args = htmlspecialchars(json_encode([
+                (int)$row['idpresupuesto_servicio'],
+                (int)$row['idrecepcion'],
+                $cliente,
+                $vehiculo,
+                $fecha
+            ], JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
+
             $tabla .= '
             <tr>
-                <td>' . $row['nombre_cliente'] . '</td>
-                <td>' . $row['placa'] . '</td>
-                <td class="text-right">' . number_format((float)$row['total_final'], 0, ',', '.') . '</td>
+                <td class="text-center">#' . (int)$row['idpresupuesto_servicio'] . '</td>
+                <td>' . htmlspecialchars($cliente, ENT_QUOTES, 'UTF-8') . '</td>
+                <td>' . htmlspecialchars($vehiculo, ENT_QUOTES, 'UTF-8') . '</td>
+                <td class="text-center">' . htmlspecialchars($fecha, ENT_QUOTES, 'UTF-8') . '</td>
                 <td class="text-center">
                     <button class="btn btn-success btn-sm"
-                        onclick="seleccionarPresupuesto(
-                            ' . $row['idpresupuesto_servicio'] . ',
-                            ' . $row['idrecepcion'] . ',
-                            \'' . $row['nombre_cliente'] . '\',
-                            \'' . $row['placa'] . '\',
-                            \'' . date("d/m/Y", strtotime($row['fecha'])) . '\',
-                            \'' . number_format((float)$row['subtotal'], 0, ',', '.') . '\',
-                            \'' . number_format((float)$row['total_descuento'], 0, ',', '.') . '\',
-                            \'' . number_format((float)$row['total_final'], 0, ',', '.') . '\'
-                        )">
+                        onclick="seleccionarPresupuesto(...JSON.parse(this.dataset.presupuesto))"
+                        data-presupuesto="' . $args . '">
                         Seleccionar
                     </button>
                 </td>
@@ -369,9 +376,8 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
 
         $sql = self::conectar()->prepare("
         SELECT a.desc_articulo,
-               d.cantidad,
-               d.preciouni,
-               d.subtotal
+               a.tipo,
+               d.cantidad
         FROM presupuesto_detalleservicio d
         INNER JOIN articulos a ON a.id_articulo = d.id_articulo
         WHERE d.idpresupuesto_servicio = ?");
@@ -383,12 +389,16 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
 
         $html = '';
         foreach ($sql->fetchAll() as $row) {
+            $tipoArticulo = strtolower((string)($row['tipo'] ?? ''));
+            $tipo = ($tipoArticulo === 'servicio') ? 'Trabajo' : 'Repuesto';
+            $badge = ($tipoArticulo === 'servicio') ? 'badge-info' : 'badge-secondary';
+
             $html .= '
             <tr>
-                <td>' . $row['desc_articulo'] . '</td>
-                <td class="text-center">' . $row['cantidad'] . '</td>
-                <td class="text-right">' . number_format($row['preciouni'], 0, ',', '.') . '</td>
-                <td class="text-right">' . number_format($row['subtotal'], 0, ',', '.') . '</td>
+                <td>' . htmlspecialchars($row['desc_articulo'], ENT_QUOTES, 'UTF-8') . '</td>
+                <td class="text-center"><span class="badge ' . $badge . '">' . $tipo . '</span></td>
+                <td class="text-center">' . number_format((float)$row['cantidad'], 2, ',', '.') . '</td>
+                <td class="text-center"><span class="badge badge-warning">Pendiente</span></td>
             </tr>
         ';
         }

@@ -114,6 +114,30 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
         min-height: 44px;
         padding: 10px 12px;
     }
+
+    .diagnostico-workspace {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .diagnostico-panel {
+        background: #fff;
+        border: 1px solid #e3e8ef;
+        border-radius: 6px;
+        padding: 14px;
+    }
+
+    .diagnostico-panel h6 {
+        color: #263238;
+        font-weight: 700;
+        margin-bottom: 12px;
+    }
+
+    .diagnostico-checklist-table textarea,
+    .diagnostico-checklist-table select {
+        min-width: 130px;
+    }
 </style>
 
 <div id="alerta_reclamo" class="alert alert-warning" style="display:none;">
@@ -295,23 +319,10 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
             <legend class="w-auto px-2">Datos del Diagnostico</legend>
 
             <div class="row">
-                <div class="col-md-4">
-                    <label>Fecha</label>
-                    <input type="datetime-local" name="fecha"
-                        class="form-control" required>
-                </div>
-                <div class="col-md-4">
+                <div class="col-md-12">
                     <label>Equipo de trabajo</label>
                     <select name="id_equipo" id="id_equipo" class="form-control" required>
                         <option value="">Seleccione equipo</option>
-                    </select>
-                </div>
-                <div class="col-md-4">
-                    <label>Estado</label>
-                    <select name="estado" class="form-control">
-                        <option value="0">Pendiente</option>
-                        <option value="1" selected>En proceso</option>
-                        <option value="2">Finalizado</option>
                     </select>
                 </div>
             </div>
@@ -326,30 +337,36 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
             </div>
         </fieldset>
 
-        <fieldset class="border p-3 mb-3">
-            <legend class="w-auto px-2">Detalle del Diagnostico</legend>
+        <div class="diagnostico-workspace mb-3">
+            <section class="diagnostico-panel">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0"><i class="fas fa-clipboard-check"></i> Checklist tecnico</h6>
+                    <button type="button" class="btn btn-success btn-sm"
+                        onclick="agregarDetalleDiagnostico()">
+                        <i class="fas fa-plus"></i> Agregar
+                    </button>
+                </div>
 
-            <table class="table table-dark table-sm">
-                <thead>
-                    <tr>
-                        <th>Sistema</th>
-                        <th>Problema</th>
-                        <th>Gravedad</th>
-                        <th>Solucion</th>
-                        <th>Repuesto</th>
-                        <th>Mano de obra</th>
-                        <th width="50">Accion</th>
-                    </tr>
-                </thead>
+                <div class="table-responsive">
+                    <table class="table table-dark table-sm diagnostico-checklist-table">
+                        <thead>
+                            <tr>
+                                <th>Sistema</th>
+                                <th>Hallazgo detectado</th>
+                                <th>Gravedad</th>
+                                <th>Recomendacion tecnica</th>
+                                <th>Repuesto</th>
+                                <th>Mano de obra</th>
+                                <th width="50">Accion</th>
+                            </tr>
+                        </thead>
 
-                <tbody id="detalleDiagnostico"></tbody>
-            </table>
+                        <tbody id="detalleDiagnostico"></tbody>
+                    </table>
+                </div>
+            </section>
 
-            <button type="button" class="btn btn-success"
-                onclick="agregarDetalleDiagnostico()">
-                <i class="fas fa-plus"></i> Agregar
-            </button>
-        </fieldset>
+        </div>
 
         <div class="text-center">
             <button type="submit" class="btn btn-info btn-raised">

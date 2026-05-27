@@ -172,24 +172,37 @@
         let fila = `
         <tr id="fila_${indexDetalle}">
             <td>
-                <input type="text" name="detalles[${indexDetalle}][sistema]" 
+                <select name="detalles[${indexDetalle}][sistema]" 
                     class="form-control" required>
+                    <option value="">Seleccione</option>
+                    <option value="Motor">Motor</option>
+                    <option value="Frenos">Frenos</option>
+                    <option value="Suspension">Suspension</option>
+                    <option value="Direccion">Direccion</option>
+                    <option value="Transmision">Transmision</option>
+                    <option value="Electrico">Electrico</option>
+                    <option value="Refrigeracion">Refrigeracion</option>
+                    <option value="Escape">Escape</option>
+                    <option value="Carroceria">Carroceria</option>
+                    <option value="Neumaticos">Neumaticos</option>
+                    <option value="Otro">Otro</option>
+                </select>
             </td>
             <td>
-                <input type="text" name="detalles[${indexDetalle}][problema]" 
-                    class="form-control" required>
+                <textarea name="detalles[${indexDetalle}][problema]" 
+                    class="form-control" rows="2" placeholder="Describa el hallazgo" required></textarea>
             </td>
             <td>
                 <select name="detalles[${indexDetalle}][gravedad]" 
                     class="form-control">
-                    <option value="leve">Leve</option>
-                    <option value="media">Media</option>
-                    <option value="grave">Grave</option>
+                    <option value="leve">Baja</option>
+                    <option value="media" selected>Media</option>
+                    <option value="grave">Alta</option>
                 </select>
             </td>
             <td>
-                <input type="text" name="detalles[${indexDetalle}][solucion_propuesta]" 
-                    class="form-control">
+                <textarea name="detalles[${indexDetalle}][solucion_propuesta]" 
+                    class="form-control" rows="2" placeholder="Trabajo recomendado"></textarea>
             </td>
             <td class="text-center">
                 <input type="checkbox" 
@@ -522,9 +535,9 @@
                             <thead class="thead-light">
                                 <tr>
                                     <th>Sistema</th>
-                                    <th>Problema</th>
+                                    <th>Hallazgo detectado</th>
                                     <th>Gravedad</th>
-                                    <th>Solucion</th>
+                                    <th>Recomendacion tecnica</th>
                                     <th>Repuesto</th>
                                     <th>Mano de obra</th>
                                 </tr>

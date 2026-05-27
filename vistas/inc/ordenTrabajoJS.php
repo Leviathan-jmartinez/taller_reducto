@@ -87,7 +87,7 @@
             .then(r => document.getElementById('resultado_presupuesto').innerHTML = r);
     }
 
-    function seleccionarPresupuesto(nro_presupuesto, recepcion, cliente, vehiculo, fecha, subtotal, descuento, total) {
+    function seleccionarPresupuesto(nro_presupuesto, recepcion, cliente, vehiculo, fecha) {
 
         document.getElementById('idpresupuesto_servicio').value = nro_presupuesto;
         document.getElementById('nro_presupuesto').value = nro_presupuesto;
@@ -96,9 +96,6 @@
         document.getElementById('vehiculo').value = vehiculo;
 
         document.getElementById('fecha_presupuesto').value = fecha || '';
-        document.getElementById('presupuesto_subtotal').value = subtotal || '';
-        document.getElementById('presupuesto_descuento').value = descuento || '';
-        document.getElementById('presupuesto_total').value = total || '';
 
         cargarDetallePresupuesto(nro_presupuesto);
 
@@ -217,9 +214,6 @@
         document.getElementById('vehiculo').value = '';
         document.getElementById('nro_presupuesto').value = '';
         document.getElementById('fecha_presupuesto').value = '';
-        document.getElementById('presupuesto_subtotal').value = '';
-        document.getElementById('presupuesto_descuento').value = '';
-        document.getElementById('presupuesto_total').value = '';
 
         // Resetear selects
         document.getElementById('idtrabajos').value = '';

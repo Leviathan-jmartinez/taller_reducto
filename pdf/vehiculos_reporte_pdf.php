@@ -79,7 +79,7 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
                 <th>Modelo</th>
                 <th>Cliente</th>
                 <th>Documento</th>
-                <th>Serie</th>
+                <th>Version</th>
                 <th>Anho</th>
                 <th>Color</th>
                 <th>Estado</th>
@@ -94,7 +94,7 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
                     <td><?= $row['modelo'] ?: '-' ?></td>
                     <td><?= $row['cliente'] ?: '-' ?></td>
                     <td><?= $row['doc_number'] ?: '-' ?></td>
-                    <td><?= $row['nro_serie'] ?: '-' ?></td>
+                    <td><?= $row['version'] ?: '-' ?></td>
                     <td class="text-center"><?= $row['anho'] ?: '-' ?></td>
                     <td><?= $row['color'] ?: '-' ?></td>
                     <td class="text-center"><?= $row['estado'] == 1 ? 'Activo' : 'Inactivo' ?></td>

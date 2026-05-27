@@ -99,10 +99,10 @@ class ordenTrabajoModelo extends mainModel
             ON r.idrecepcion = ds.idrecepcion
 
         LEFT JOIN clientes c 
-            ON c.id_cliente = r.id_cliente
+            ON c.id_cliente = COALESCE(ot.id_cliente, r.id_cliente)
 
         LEFT JOIN vehiculos v 
-            ON v.id_vehiculo = r.id_vehiculo
+            ON v.id_vehiculo = COALESCE(ot.id_vehiculo, r.id_vehiculo)
 
         LEFT JOIN modelo_auto ma 
             ON ma.id_modeloauto = v.id_modeloauto
@@ -125,10 +125,10 @@ class ordenTrabajoModelo extends mainModel
             )
 
         LEFT JOIN clientes cR 
-            ON cR.id_cliente = rR.id_cliente
+            ON cR.id_cliente = COALESCE(ot.id_cliente, rR.id_cliente)
 
         LEFT JOIN vehiculos vR 
-            ON vR.id_vehiculo = rR.id_vehiculo
+            ON vR.id_vehiculo = COALESCE(ot.id_vehiculo, rR.id_vehiculo)
 
         LEFT JOIN modelo_auto maR
             ON maR.id_modeloauto = vR.id_modeloauto
@@ -284,10 +284,10 @@ class ordenTrabajoModelo extends mainModel
             ON r_reclamo.idreclamo_servicio = rs.idreclamo_servicio
 
         LEFT JOIN clientes c 
-            ON c.id_cliente = COALESCE(r_normal.id_cliente, r_reclamo.id_cliente)
+            ON c.id_cliente = COALESCE(ot.id_cliente, r_normal.id_cliente, r_reclamo.id_cliente)
 
         LEFT JOIN vehiculos v 
-            ON v.id_vehiculo = COALESCE(r_normal.id_vehiculo, r_reclamo.id_vehiculo)
+            ON v.id_vehiculo = COALESCE(ot.id_vehiculo, r_normal.id_vehiculo, r_reclamo.id_vehiculo)
 
         LEFT JOIN modelo_auto ma 
             ON ma.id_modeloauto = v.id_modeloauto
@@ -355,20 +355,20 @@ class ordenTrabajoModelo extends mainModel
             }
 
             $qSuc = $pdo->prepare("
-            SELECT ps.estado, r.id_sucursal
+            SELECT ps.estado, ps.id_sucursal, ps.id_cliente, ps.id_vehiculo
             FROM presupuesto_servicio ps
-            INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
-            INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
             WHERE ps.idpresupuesto_servicio = ?
             FOR UPDATE
         ");
             $qSuc->execute([$datos['idpresupuesto']]);
             $presupuesto = $qSuc->fetch(PDO::FETCH_ASSOC);
             $idSucursal = $presupuesto['id_sucursal'] ?? null;
+            $idCliente = $presupuesto['id_cliente'] ?? null;
+            $idVehiculo = $presupuesto['id_vehiculo'] ?? null;
 
-            if (!$idSucursal) {
+            if (!$idSucursal || !$idCliente || !$idVehiculo) {
                 $pdo->rollBack();
-                return ['msg' => 'No se pudo obtener sucursal'];
+                return ['msg' => 'No se pudo obtener sucursal, cliente o vehiculo'];
             }
 
             if ((int)$presupuesto['estado'] !== 2) {
@@ -384,12 +384,14 @@ class ordenTrabajoModelo extends mainModel
             /* CABECERA OT */
             $cab = $pdo->prepare("
                     INSERT INTO orden_trabajo
-                    (idpresupuesto_servicio, id_usuario, id_sucursal, idtrabajos, tecnico_responsable, observacion, estado)
-                    VALUES (?, ?, ?, ?, ?, ?, 1)
+                    (idpresupuesto_servicio, id_usuario, id_cliente, id_vehiculo, id_sucursal, idtrabajos, tecnico_responsable, observacion, estado)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
                 ");
             $cab->execute([
                 $datos['idpresupuesto'],
                 $datos['idusuario'],
+                $idCliente,
+                $idVehiculo,
                 $idSucursal,
                 $datos['idtrabajos'],
                 $datos['tecnico_responsable'],
@@ -447,10 +449,10 @@ class ordenTrabajoModelo extends mainModel
 
         /* ================= DATOS ================= */
         LEFT JOIN clientes c 
-            ON c.id_cliente = COALESCE(r_normal.id_cliente, r_reclamo.id_cliente)
+            ON c.id_cliente = COALESCE(ot.id_cliente, r_normal.id_cliente, r_reclamo.id_cliente)
 
         LEFT JOIN vehiculos v 
-            ON v.id_vehiculo = COALESCE(r_normal.id_vehiculo, r_reclamo.id_vehiculo)
+            ON v.id_vehiculo = COALESCE(ot.id_vehiculo, r_normal.id_vehiculo, r_reclamo.id_vehiculo)
 
         LEFT JOIN modelo_auto ma 
             ON ma.id_modeloauto = v.id_modeloauto
@@ -580,9 +582,15 @@ class ordenTrabajoModelo extends mainModel
 
             /* 🔒 VALIDAR QUE NO EXISTA OT */
             $qReclamo = $pdo->prepare("
-                SELECT estado, id_sucursal
-                FROM reclamo_servicio
-                WHERE idreclamo_servicio = ?
+                SELECT
+                    rs.estado,
+                    rs.id_sucursal,
+                    COALESCE(rs.id_cliente, r.id_cliente) AS id_cliente,
+                    COALESCE(rs.id_vehiculo, r.id_vehiculo) AS id_vehiculo
+                FROM reclamo_servicio rs
+                LEFT JOIN recepcion_servicio r
+                    ON r.idreclamo_servicio = rs.idreclamo_servicio
+                WHERE rs.idreclamo_servicio = ?
                 FOR UPDATE
             ");
             $qReclamo->execute([$idReclamo]);
@@ -601,6 +609,11 @@ class ordenTrabajoModelo extends mainModel
             if ((int)$reclamo['estado'] !== 2) {
                 $pdo->rollBack();
                 return 'El reclamo no esta en proceso';
+            }
+
+            if (empty($reclamo['id_cliente']) || empty($reclamo['id_vehiculo'])) {
+                $pdo->rollBack();
+                return 'No se pudo obtener cliente o vehiculo del reclamo';
             }
 
             $qDiagnostico = $pdo->prepare("
@@ -643,19 +656,23 @@ class ordenTrabajoModelo extends mainModel
                 tecnico_responsable,
                 idpresupuesto_servicio,
                 id_usuario,
+                id_cliente,
+                id_vehiculo,
                 id_sucursal,
                 fecha_inicio,
                 estado,
                 origen,
                 idreclamo_servicio
             )
-            VALUES (?, ?, NULL, ?, ?, NOW(), 3, 'RECLAMO', ?)
+            VALUES (?, ?, NULL, ?, ?, ?, ?, NOW(), 3, 'RECLAMO', ?)
         ");
 
             $sql->execute([
                 null,
                 null,
                 $usuario,
+                $reclamo['id_cliente'],
+                $reclamo['id_vehiculo'],
                 $sucursal,
                 $idReclamo
             ]);
