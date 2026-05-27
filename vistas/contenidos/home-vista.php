@@ -61,6 +61,18 @@ if ($homeSucursal !== null && mainModel::tienePermiso('compra.factura.ver')) {
     ];
 }
 
+if ($homeSucursal !== null && mainModel::tienePermiso('compra.factura.ver')) {
+    $metricas[] = [
+        'titulo' => 'Transferencias en tránsito',
+        'valor' => $contarHome(
+            'SELECT COUNT(*) AS total FROM transferencia_stock WHERE sucursal_destino = :sucursal AND estado = :estado',
+            [':sucursal' => $homeSucursal, ':estado' => 'en_transito']
+        ),
+        'icono' => 'fas fa-truck',
+        'url' => SERVERURL . 'transferencia-historial/?filtro=en_transito'
+    ];
+}
+
 if ($homeSucursal !== null && mainModel::tienePermiso('servicio.recepcion.ver')) {
     $metricasServicios[] = [
         'titulo' => 'Recepciones pendientes',

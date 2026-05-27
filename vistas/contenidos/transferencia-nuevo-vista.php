@@ -23,12 +23,12 @@ $productosStock    = $productosStock ?? [];
 
             <ul class="full-box list-unstyled page-nav-tabs">
                 <li>
-                    <a class="active" href="<?php echo SERVERURL; ?>/transferencia-nuevo/">
+                    <a class="active" href="<?php echo SERVERURL; ?>transferencia-nuevo/">
                         <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVA TRANSFERENCIA
                     </a>
                 </li>
                 <li>
-                    <a href="<?php echo SERVERURL; ?>/transferencia-historial/">
+                    <a href="<?php echo SERVERURL; ?>transferencia-historial/">
                         <i class="fas fa-search fa-fw"></i> &nbsp; LISTADO DE TRANSFERENCIA
                     </a>
                 </li>

@@ -33,12 +33,12 @@ $filtroId     = $resultado['filtroId'];
 
         <ul class="full-box list-unstyled page-nav-tabs">
             <li>
-                <a href="<?php echo SERVERURL; ?>/transferencia-nuevo/">
+                <a href="<?php echo SERVERURL; ?>transferencia-nuevo/">
                     <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVA TRANSFERENCIA
                 </a>
             </li>
             <li>
-                <a class="active" href="<?php echo SERVERURL; ?>/transferencia-historial/">
+                <a class="active" href="<?php echo SERVERURL; ?>transferencia-historial/">
                     <i class="fas fa-search fa-fw"></i> &nbsp; LISTADO DE TRANSFERENCIAS
                 </a>
             </li>
