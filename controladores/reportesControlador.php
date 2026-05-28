@@ -3,8 +3,6 @@ require_once __DIR__ . "/../modelos/reportesModelo.php";
 require_once __DIR__ . "/../vendor/autoload.php";
 require_once __DIR__ . "/../pdf/ReporteMpdf.php";
 
-use Dompdf\Dompdf;
-
 class reporteControlador extends reportesModelo
 {
     private function acceso_denegado_json()
@@ -13,6 +11,18 @@ class reporteControlador extends reportesModelo
             "error" => "Acceso no autorizado",
             "data" => [],
             "resumen" => []
+        ]);
+    }
+
+    private function imprimir_mpdf_html($html, $archivo, $orientacion = 'P')
+    {
+        ReporteMpdf::desdeHtml($html, [
+            'archivo' => $archivo,
+            'orientacion' => strtoupper(substr($orientacion, 0, 1)) === 'L' ? 'L' : 'P',
+            'salida' => 'D',
+            'estilo_reporte' => true,
+            'empresa' => $_SESSION['empresa_nombre'] ?? 'Empresa',
+            'usuario' => trim(($_SESSION['nombre_str'] ?? '') . ' ' . ($_SESSION['apellido_str'] ?? ''))
         ]);
     }
 
@@ -104,13 +114,7 @@ class reporteControlador extends reportesModelo
         ob_start();
         require_once __DIR__ . "/../pdf/articulos_reportesimple_pdf.php";
         $html = ob_get_clean();
-
-        $dompdf = new Dompdf();
-        $dompdf->setPaper('A4', 'landscape'); // 🔥 horizontal
-        $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->render();
-        $dompdf->stream("reporte_articulos.pdf", ["Attachment" => true]);
-        exit();
+        $this->imprimir_mpdf_html($html, "reporte_articulos.pdf", 'L');
     }
 
     public function reporte_articulos_controlador()
@@ -166,11 +170,7 @@ class reporteControlador extends reportesModelo
         require_once __DIR__ . "/../pdf/articulos_reporte_pdf.php";
         $html = ob_get_clean();
 
-        $dompdf = new Dompdf();
-        $dompdf->setPaper('A4', 'landscape');
-        $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->render();
-        $dompdf->stream("reporte_articulos.pdf", ["Attachment" => true]);
+        $this->imprimir_mpdf_html($html, "reporte_articulos.pdf", 'L');
         exit();
     }
 
@@ -230,13 +230,7 @@ class reporteControlador extends reportesModelo
         ob_start();
         require_once __DIR__ . "/../pdf/sucursales_reporte_pdf.php";
         $html = ob_get_clean();
-
-        $dompdf = new Dompdf();
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->render();
-        $dompdf->stream("reporte_sucursales.pdf", ["Attachment" => true]);
-        exit();
+        $this->imprimir_mpdf_html($html, "reporte_sucursales.pdf", 'P');
     }
 
     /* ==================================================
@@ -287,13 +281,7 @@ class reporteControlador extends reportesModelo
         ob_start();
         require_once __DIR__ . "/../pdf/vehiculos_reporte_pdf.php";
         $html = ob_get_clean();
-
-        $dompdf = new Dompdf();
-        $dompdf->setPaper('A4', 'landscape');
-        $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->render();
-        $dompdf->stream("reporte_vehiculos.pdf", ["Attachment" => true]);
-        exit();
+        $this->imprimir_mpdf_html($html, "reporte_vehiculos.pdf", 'L');
     }
 
     public function reporte_proveedores_controlador()
@@ -341,11 +329,7 @@ class reporteControlador extends reportesModelo
         require_once __DIR__ . "/../pdf/proveedores_reporte_pdf.php";
         $html = ob_get_clean();
 
-        $dompdf = new Dompdf();
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->render();
-        $dompdf->stream("reporte_proveedores.pdf", ["Attachment" => true]);
+        $this->imprimir_mpdf_html($html, "reporte_proveedores.pdf", 'P');
         exit();
     }
 
@@ -397,11 +381,7 @@ class reporteControlador extends reportesModelo
         require_once __DIR__ . "/../pdf/clientes_reporte_pdf.php";
         $html = ob_get_clean();
 
-        $dompdf = new Dompdf();
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->render();
-        $dompdf->stream("reporte_clientes.pdf", ["Attachment" => true]);
+        $this->imprimir_mpdf_html($html, "reporte_clientes.pdf", 'P');
         exit();
     }
 
@@ -460,11 +440,7 @@ class reporteControlador extends reportesModelo
         require_once __DIR__ . "/../pdf/empleados_reporte_pdf.php";
         $html = ob_get_clean();
 
-        $dompdf = new Dompdf();
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->render();
-        $dompdf->stream("reporte_empleados.pdf", ["Attachment" => true]);
+        $this->imprimir_mpdf_html($html, "reporte_empleados.pdf", 'P');
         exit();
     }
 
@@ -490,25 +466,6 @@ class reporteControlador extends reportesModelo
             2 => 'Procesado',
             default => 'Desconocido',
         };
-    }
-
-    private function filtros_reporte_pedidos_texto($desde, $hasta, $estado, $sucursal)
-    {
-        $sucursalTexto = 'Todas';
-
-        if ($sucursal !== null) {
-            $sql = mainModel::conectar()->prepare("SELECT suc_descri FROM sucursales WHERE id_sucursal = :id LIMIT 1");
-            $sql->bindParam(':id', $sucursal, PDO::PARAM_INT);
-            $sql->execute();
-            $sucursalTexto = $sql->fetchColumn() ?: 'Sucursal #' . $sucursal;
-        }
-
-        return [
-            'Desde' => !empty($desde) ? date('d/m/Y', strtotime($desde)) : 'Sin filtro',
-            'Hasta' => !empty($hasta) ? date('d/m/Y', strtotime($hasta)) : 'Sin filtro',
-            'Estado' => $estado !== null ? $this->texto_estado_pedido($estado) : 'Todos',
-            'Sucursal' => $sucursalTexto
-        ];
     }
 
     public function reporte_pedidos_controlador()
@@ -640,11 +597,7 @@ class reporteControlador extends reportesModelo
         require_once __DIR__ . "/../pdf/presupuestos_reporte_pdf.php";
         $html = ob_get_clean();
 
-        $dompdf = new Dompdf();
-        $dompdf->setPaper('A4', 'landscape');
-        $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->render();
-        $dompdf->stream("reporte_presupuestos_compra.pdf", ["Attachment" => true]);
+        $this->imprimir_mpdf_html($html, "reporte_presupuestos_compra.pdf", 'L');
         exit();
     }
 
@@ -690,11 +643,7 @@ class reporteControlador extends reportesModelo
         require_once __DIR__ . "/../pdf/ordenescompras_reporte_pdf.php";
         $html = ob_get_clean();
 
-        $dompdf = new Dompdf();
-        $dompdf->setPaper('A4', 'landscape');
-        $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->render();
-        $dompdf->stream("reporte_ordenes_compra.pdf", ["Attachment" => true]);
+        $this->imprimir_mpdf_html($html, "reporte_ordenes_compra.pdf", 'L');
         exit();
     }
 
@@ -740,11 +689,7 @@ class reporteControlador extends reportesModelo
         require_once __DIR__ . "/../pdf/compras_reporte_pdf.php";
         $html = ob_get_clean();
 
-        $dompdf = new Dompdf();
-        $dompdf->setPaper('A4', 'landscape');
-        $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->render();
-        $dompdf->stream("reporte_compras.pdf", ["Attachment" => true]);
+        $this->imprimir_mpdf_html($html, "reporte_compras.pdf", 'L');
         exit();
     }
 
@@ -797,11 +742,7 @@ class reporteControlador extends reportesModelo
         require_once __DIR__ . "/../pdf/libro_compras_reporte_pdf.php";
         $html = ob_get_clean();
 
-        $dompdf = new Dompdf();
-        $dompdf->setPaper('A4', 'landscape');
-        $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->render();
-        $dompdf->stream("reporte_libro_compras.pdf", ["Attachment" => true]);
+        $this->imprimir_mpdf_html($html, "reporte_libro_compras.pdf", 'L');
         exit();
     }
 
@@ -856,11 +797,7 @@ class reporteControlador extends reportesModelo
         require_once __DIR__ . "/../pdf/transferencias_reporte_pdf.php";
         $html = ob_get_clean();
 
-        $dompdf = new Dompdf();
-        $dompdf->setPaper('A4', 'landscape');
-        $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->render();
-        $dompdf->stream("reporte_transferencias.pdf", ["Attachment" => true]);
+        $this->imprimir_mpdf_html($html, "reporte_transferencias.pdf", 'L');
         exit();
     }
 
@@ -922,11 +859,7 @@ class reporteControlador extends reportesModelo
         require_once __DIR__ . "/../pdf/movimientos_stock_reporte_pdf.php";
         $html = ob_get_clean();
 
-        $dompdf = new Dompdf();
-        $dompdf->setPaper('A4', 'landscape');
-        $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->render();
-        $dompdf->stream("reporte_movimientos_stock.pdf", ["Attachment" => true]);
+        $this->imprimir_mpdf_html($html, "reporte_movimientos_stock.pdf", 'L');
         exit();
     }
 
@@ -979,11 +912,7 @@ class reporteControlador extends reportesModelo
         require_once __DIR__ . "/../pdf/recepcion_servicio_reporte_pdf.php";
         $html = ob_get_clean();
 
-        $dompdf = new Dompdf();
-        $dompdf->setPaper('A4', 'landscape');
-        $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->render();
-        $dompdf->stream("reporte_recepcion_servicio.pdf", ["Attachment" => true]);
+        $this->imprimir_mpdf_html($html, "reporte_recepcion_servicio.pdf", 'L');
         exit();
     }
 
@@ -1029,14 +958,7 @@ class reporteControlador extends reportesModelo
         require_once __DIR__ . "/../pdf/presupuesto_servicio_reporte_pdf.php";
         $html = ob_get_clean();
 
-        $dompdf = new Dompdf();
-        $dompdf->setPaper('A4', 'landscape');
-        $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->render();
-        $dompdf->stream(
-            "reporte_presupuesto_servicio.pdf",
-            ["Attachment" => true]
-        );
+        $this->imprimir_mpdf_html($html, "reporte_presupuesto_servicio.pdf", 'L');
         exit();
     }
 
@@ -1082,11 +1004,7 @@ class reporteControlador extends reportesModelo
         require_once __DIR__ . "/../pdf/orden_trabajo_reporte_pdf.php";
         $html = ob_get_clean();
 
-        $dompdf = new Dompdf();
-        $dompdf->setPaper('A4', 'landscape');
-        $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->render();
-        $dompdf->stream("reporte_orden_trabajo.pdf", ["Attachment" => true]);
+        $this->imprimir_mpdf_html($html, "reporte_orden_trabajo.pdf", 'L');
         exit();
     }
 
@@ -1150,11 +1068,7 @@ class reporteControlador extends reportesModelo
         require_once __DIR__ . "/../pdf/registro_servicio_reporte_pdf.php";
         $html = ob_get_clean();
 
-        $dompdf = new Dompdf();
-        $dompdf->setPaper('A4', 'landscape');
-        $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->render();
-        $dompdf->stream("reporte_registro_servicio.pdf", ["Attachment" => true]);
+        $this->imprimir_mpdf_html($html, "reporte_registro_servicio.pdf", 'L');
         exit();
     }
 

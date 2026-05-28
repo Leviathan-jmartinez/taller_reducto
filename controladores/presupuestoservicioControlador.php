@@ -10,7 +10,11 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
 
     public function datos_diagnostico_controlador()
     {
-        $id = $_POST['id_diagnostico'] ?? null;
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start(['name' => 'STR']);
+        }
+
+        $id = (int)($_POST['id_diagnostico'] ?? 0);
 
         $data = presupuestoServicioModelo::datos_diagnostico_modelo($id);
 
@@ -19,6 +23,10 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
 
     public function buscar_diagnostico_controlador()
     {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start(['name' => 'STR']);
+        }
+
         $texto = $_POST['buscar_diagnostico'] ?? '';
 
         $sql = mainModel::conectar()->prepare("
@@ -43,10 +51,12 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
             OR ma.mar_descri LIKE :b
             OR m.mod_descri LIKE :b
         )
+        AND r.id_sucursal = :sucursal
         ORDER BY d.id_diagnostico DESC
         ");
 
         $sql->bindValue(":b", "%$texto%");
+        $sql->bindValue(":sucursal", $_SESSION['nick_sucursal'] ?? 0, PDO::PARAM_INT);
         $sql->execute();
 
         $html = '<table class="table table-sm">
@@ -99,9 +109,64 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
         }
 
         $txt = trim($_POST['buscar_servicio'] ?? '');
+        $origen = strtoupper(trim($_POST['origen_presupuesto'] ?? 'DIAGNOSTICO'));
+        $idDiagnostico = (int)($_POST['id_diagnostico'] ?? 0);
+        $idCliente = (int)($_POST['id_cliente'] ?? 0);
+        $idVehiculo = (int)($_POST['id_vehiculo'] ?? 0);
 
         if ($txt === '') {
             return '';
+        }
+
+        if ($origen === 'PRELIMINAR') {
+            if ($idCliente <= 0 || $idVehiculo <= 0) {
+                return '<div class="alert alert-warning text-center">
+                    Seleccione cliente y vehiculo antes de agregar servicios
+                </div>';
+            }
+
+            $vehiculoValido = mainModel::conectar()->prepare("
+                SELECT COUNT(*)
+                FROM vehiculos
+                WHERE id_vehiculo = :vehiculo
+                  AND id_cliente = :cliente
+                  AND estado = 1
+            ");
+            $vehiculoValido->execute([
+                ':vehiculo' => $idVehiculo,
+                ':cliente' => $idCliente
+            ]);
+
+            if ((int)$vehiculoValido->fetchColumn() === 0) {
+                return '<div class="alert alert-warning text-center">
+                    El vehiculo no corresponde al cliente seleccionado
+                </div>';
+            }
+        } else {
+            if ($idDiagnostico <= 0) {
+                return '<div class="alert alert-warning text-center">
+                    Seleccione un diagnostico antes de agregar servicios
+                </div>';
+            }
+
+            $diagnosticoDisponible = mainModel::conectar()->prepare("
+                SELECT COUNT(*)
+                FROM diagnostico_servicio d
+                INNER JOIN recepcion_servicio r ON r.idrecepcion = d.idrecepcion
+                WHERE d.id_diagnostico = :id
+                  AND d.estado = 1
+                  AND r.id_sucursal = :sucursal
+            ");
+            $diagnosticoDisponible->execute([
+                ':id' => $idDiagnostico,
+                ':sucursal' => $_SESSION['nick_sucursal'] ?? 0
+            ]);
+
+            if ((int)$diagnosticoDisponible->fetchColumn() === 0) {
+                return '<div class="alert alert-warning text-center">
+                    El diagnostico no esta disponible para presupuesto
+                </div>';
+            }
         }
 
         $datos = presupuestoServicioModelo::buscar_servicios_modelo(
@@ -195,6 +260,113 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
         return presupuestoServicioModelo::descuentos_cliente_modelo($idCliente);
     }
 
+    public function buscar_preliminares_controlador()
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start(['name' => 'STR']);
+        }
+
+        $idCliente = (int)($_POST['id_cliente'] ?? 0);
+        $idVehiculo = (int)($_POST['id_vehiculo'] ?? 0);
+
+        if ($idCliente <= 0 || $idVehiculo <= 0) {
+            return '';
+        }
+
+        $sql = mainModel::conectar()->prepare("
+            SELECT idpresupuesto_servicio, fecha, total_final, estado
+            FROM presupuesto_servicio
+            WHERE origen = 'PRELIMINAR'
+              AND id_cliente = :cliente
+              AND id_vehiculo = :vehiculo
+              AND id_sucursal = :sucursal
+              AND estado IN (1,2)
+            ORDER BY idpresupuesto_servicio DESC
+            LIMIT 5
+        ");
+        $sql->execute([
+            ':cliente' => $idCliente,
+            ':vehiculo' => $idVehiculo,
+            ':sucursal' => $_SESSION['nick_sucursal'] ?? 0
+        ]);
+
+        $datos = $sql->fetchAll(PDO::FETCH_ASSOC);
+        if (!$datos) {
+            return '';
+        }
+
+        $html = '<div class="alert alert-info mb-2">Hay presupuestos preliminares para este cliente/vehiculo.</div>';
+        $html .= '<table class="table table-sm table-bordered"><thead><tr><th>Nro.</th><th>Fecha</th><th>Total</th><th></th></tr></thead><tbody>';
+
+        foreach ($datos as $row) {
+            $html .= '<tr>
+                <td>#' . (int)$row['idpresupuesto_servicio'] . '</td>
+                <td>' . date('d/m/Y', strtotime($row['fecha'])) . '</td>
+                <td>' . number_format((float)$row['total_final'], 0, ',', '.') . '</td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-success btn-sm" onclick="usarPresupuestoPreliminar(' . (int)$row['idpresupuesto_servicio'] . ')">
+                        Usar
+                    </button>
+                </td>
+            </tr>';
+        }
+
+        return $html . '</tbody></table>';
+    }
+
+    public function detalle_preliminar_controlador()
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start(['name' => 'STR']);
+        }
+
+        $id = (int)($_POST['id_presupuesto'] ?? 0);
+
+        $sql = mainModel::conectar()->prepare("
+            SELECT ps.idpresupuesto_servicio, ps.id_cliente, ps.id_vehiculo, ps.estado
+            FROM presupuesto_servicio ps
+            WHERE ps.idpresupuesto_servicio = :id
+              AND ps.origen = 'PRELIMINAR'
+              AND ps.id_sucursal = :sucursal
+              AND ps.estado IN (1,2)
+            LIMIT 1
+        ");
+        $sql->execute([
+            ':id' => $id,
+            ':sucursal' => $_SESSION['nick_sucursal'] ?? 0
+        ]);
+
+        $cab = $sql->fetch(PDO::FETCH_ASSOC);
+        if (!$cab) {
+            return json_encode(['error' => true, 'msg' => 'Presupuesto preliminar no disponible']);
+        }
+
+        $det = mainModel::conectar()->prepare("
+            SELECT
+                pd.id_articulo,
+                pd.cantidad,
+                pd.preciouni,
+                pd.subtotal,
+                a.desc_articulo,
+                a.tipo,
+                COALESCE(s.stockDisponible, 0) AS stock
+            FROM presupuesto_detalleservicio pd
+            INNER JOIN articulos a ON a.id_articulo = pd.id_articulo
+            LEFT JOIN stock s ON s.id_articulo = a.id_articulo AND s.id_sucursal = :sucursal
+            WHERE pd.idpresupuesto_servicio = :id
+        ");
+        $det->execute([
+            ':id' => $id,
+            ':sucursal' => $_SESSION['nick_sucursal'] ?? 0
+        ]);
+
+        return json_encode([
+            'error' => false,
+            'id_presupuesto' => $id,
+            'detalle' => $det->fetchAll(PDO::FETCH_ASSOC)
+        ], JSON_UNESCAPED_UNICODE);
+    }
+
     public function guardar_presupuesto_controlador()
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {
@@ -212,6 +384,66 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
 
         $detalle = json_decode($_POST['detalle_json'], true);
         $descuentos = json_decode($_POST['descuentos_json'], true);
+        $origen = strtoupper(trim($_POST['origen_presupuesto'] ?? 'DIAGNOSTICO'));
+        $origen = ($origen === 'PRELIMINAR') ? 'PRELIMINAR' : 'DIAGNOSTICO';
+        $idDiagnostico = (int)($_POST['id_diagnostico'] ?? 0);
+        $idCliente = (int)($_POST['id_cliente'] ?? 0);
+        $idVehiculo = (int)($_POST['id_vehiculo'] ?? 0);
+        $convertidoDesde = (int)($_POST['convertido_desde'] ?? 0);
+        $fechaVenc = trim($_POST['fecha_venc'] ?? '');
+
+        if ($fechaVenc === '') {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Fecha requerida',
+                'Texto' => 'Debe indicar la fecha de vencimiento del presupuesto',
+                'Tipo' => 'error'
+            ]);
+        }
+
+        $fechaVencObj = DateTime::createFromFormat('Y-m-d', $fechaVenc);
+        $erroresFecha = DateTime::getLastErrors();
+
+        if (
+            !$fechaVencObj ||
+            ($erroresFecha !== false && ($erroresFecha['warning_count'] > 0 || $erroresFecha['error_count'] > 0)) ||
+            $fechaVencObj->format('Y-m-d') !== $fechaVenc
+        ) {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Fecha invalida',
+                'Texto' => 'La fecha de vencimiento no tiene un formato valido',
+                'Tipo' => 'error'
+            ]);
+        }
+
+        $hoy = new DateTime(date('Y-m-d'));
+        if ($fechaVencObj < $hoy) {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Fecha invalida',
+                'Texto' => 'La fecha de vencimiento no puede ser anterior a la fecha actual',
+                'Tipo' => 'error'
+            ]);
+        }
+
+        if ($origen === 'DIAGNOSTICO' && $idDiagnostico <= 0) {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Diagnostico requerido',
+                'Texto' => 'Debe seleccionar un diagnostico antes de generar el presupuesto de servicio',
+                'Tipo' => 'error'
+            ]);
+        }
+
+        if ($origen === 'PRELIMINAR' && ($idCliente <= 0 || $idVehiculo <= 0)) {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Datos requeridos',
+                'Texto' => 'Debe seleccionar cliente y vehiculo para un presupuesto preliminar',
+                'Tipo' => 'error'
+            ]);
+        }
 
         if (empty($detalle)) {
             return json_encode([
@@ -224,8 +456,12 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
 
         $datos = [
             'usuario'         => $_SESSION['id_str'],
-            'id_diagnostico'  => $_POST['id_diagnostico'],
-            'fecha_venc'      => $_POST['fecha_venc'],
+            'id_diagnostico'  => $idDiagnostico,
+            'origen'          => $origen,
+            'id_cliente'      => $idCliente,
+            'id_vehiculo'     => $idVehiculo,
+            'convertido_desde' => $convertidoDesde > 0 ? $convertidoDesde : null,
+            'fecha_venc'      => $fechaVenc,
             'subtotal'        => $_POST['subtotal_servicios'],
             'total_descuento' => $_POST['total_descuento'],
             'total_final'     => $_POST['total_final'],
@@ -325,6 +561,7 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
                     <th>#</th>
                     <th>Cliente</th>
                     <th>Vehículo</th>
+                    <th>Origen</th>
                     <th>' . mainModel::link_orden_tabla($url, 'fecha', 'Fecha', $orden, $direccion, 'presupuesto_servicio_orden', 'presupuesto_servicio_direccion') . '</th>
                     <th>Total</th>
                     <th>Creado por</th>
@@ -346,15 +583,19 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
                     2 => ['Aprobado', 'success'],
                     3 => ['OT generada', 'primary'],
                     4 => ['Facturado', 'info'],
+                    5 => ['Convertido', 'secondary'],
                     0 => ['Anulado', 'danger']
                 ];
 
                 $estado = $estadoMap[$rows['estadoPre']] ?? ['Desconocido', 'secondary'];
+                $origenTexto = (($rows['origen'] ?? 'DIAGNOSTICO') === 'PRELIMINAR') ? 'Preliminar' : 'Diagnostico';
+                $origenBadge = (($rows['origen'] ?? 'DIAGNOSTICO') === 'PRELIMINAR') ? 'info' : 'secondary';
 
                 $tabla .= '<tr class="text-center">
                 <td>' . $contador . '</td>
                 <td>' . $rows['nombre_cliente'] . ' ' . $rows['apellido_cliente'] . '</td>
                 <td>' . $rows['modelo'] . ' ' . $rows['placa'] . '</td>
+                <td><span class="badge bg-' . $origenBadge . '">' . $origenTexto . '</span></td>
                 <td>' . date("d-m-Y", strtotime($rows['fecha'])) . '</td>
                 <td>' . number_format($rows['total_final'], 0, ',', '.') . '</td>
                 <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
@@ -406,8 +647,8 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
 
             $reg_final = $contador - 1;
         } else {
-            $colspan = $mostrarAcciones ? 9 : 8;
-            $tabla .= '<tr><td colspan="9">No hay registros en el sistema</td></tr>';
+            $colspan = $mostrarAcciones ? 10 : 9;
+            $tabla .= '<tr><td colspan="' . $colspan . '">No hay registros en el sistema</td></tr>';
         }
 
         $tabla .= '</tbody></table></div>';

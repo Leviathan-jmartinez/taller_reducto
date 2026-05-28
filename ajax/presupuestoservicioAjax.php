@@ -38,3 +38,11 @@ if (isset($_POST['accion']) && $_POST['accion'] === "datos_diagnostico") {
     echo $insPresupuesto->datos_diagnostico_controlador();
     exit();
 }
+if (isset($_POST['accion']) && $_POST['accion'] === "buscar_preliminares") {
+    echo $insPresupuesto->buscar_preliminares_controlador();
+    exit();
+}
+if (isset($_POST['accion']) && $_POST['accion'] === "detalle_preliminar") {
+    echo $insPresupuesto->detalle_preliminar_controlador();
+    exit();
+}

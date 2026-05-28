@@ -67,6 +67,7 @@ $busqueda_activa = isset($_SESSION['filtro_presupuesto_servicio_activo']);
                         <option value="2" <?php if ($estado == "2") echo "selected"; ?>>Aprobado</option>
                         <option value="3" <?php if ($estado == "3") echo "selected"; ?>>OT generada</option>
                         <option value="4" <?php if ($estado == "4") echo "selected"; ?>>Facturado</option>
+                        <option value="5" <?php if ($estado == "5") echo "selected"; ?>>Convertido</option>
                         <option value="0" <?php if ($estado === "0") echo "selected"; ?>>Anulado</option>
                     </select>
                 </div>
@@ -110,6 +111,7 @@ $busqueda_activa = isset($_SESSION['filtro_presupuesto_servicio_activo']);
                     '2' => 'Aprobado',
                     '3' => 'OT generada',
                     '4' => 'Facturado',
+                    '5' => 'Convertido',
                     '0' => 'Anulado'
                 ]; ?>
                 estado <strong><?php echo $estados[$estado] ?? $estado; ?></strong>

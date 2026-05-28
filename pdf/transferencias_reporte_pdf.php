@@ -12,7 +12,6 @@ $hasta = isset($pdfVars['hasta']) ? (string)$pdfVars['hasta'] : '';
 $proveedor = isset($pdfVars['proveedor']) ? (string)$pdfVars['proveedor'] : '';
 $estado = isset($pdfVars['estado']) ? (string)$pdfVars['estado'] : '';
 $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
-use Dompdf\Dompdf;
 ?>
 
 <style>

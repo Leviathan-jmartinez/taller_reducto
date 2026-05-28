@@ -190,7 +190,8 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
                 <span class="box-title">Vehiculo</span>
                 <strong><?= $cabecera['modelo'] ?: '-' ?></strong><br>
                 <span class="muted">Placa:</span> <?= $cabecera['placa'] ?: '-' ?><br>
-                <span class="muted">Referencia:</span> Servicio tecnico segun diagnostico
+                <span class="muted">Referencia:</span>
+                <?= (($cabecera['origen'] ?? 'DIAGNOSTICO') === 'PRELIMINAR') ? 'Cotizacion preliminar sujeta a diagnostico' : 'Servicio tecnico segun diagnostico' ?>
             </td>
         </tr>
     </table>
@@ -238,6 +239,9 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
         <p>
             Este presupuesto tiene validez hasta la fecha indicada. La garantia cubre la mano de obra realizada por el taller
             y los repuestos instalados, siempre que la falla este relacionada directamente con el servicio efectuado.
+            <?php if (($cabecera['origen'] ?? 'DIAGNOSTICO') === 'PRELIMINAR'): ?>
+                Al ser una cotizacion preliminar, los importes y trabajos quedan sujetos a recepcion y diagnostico tecnico.
+            <?php endif; ?>
         </p>
         <p>
             La garantia no cubre desgaste natural, mal uso, modificaciones externas, reparaciones realizadas por terceros

@@ -34,6 +34,8 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
         autocomplete="off">
 
         <input type="hidden" name="guardar_presupuesto" value="1">
+        <input type="hidden" name="origen_presupuesto" id="origen_presupuesto" value="DIAGNOSTICO">
+        <input type="hidden" name="convertido_desde" id="convertido_desde">
         <input type="hidden" name="id_diagnostico" id="id_diagnostico">
         <input type="hidden" id="id_sucursal" name="id_sucursal">
         <input type="hidden" id="id_cliente" name="id_cliente">
@@ -45,9 +47,24 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
         <input type="hidden" name="total_descuento" id="inp_total_descuento">
         <input type="hidden" name="total_final" id="inp_total_final">
 
+        <!-- ================= TIPO DE PRESUPUESTO ================= -->
+        <fieldset class="border p-3 mb-3">
+            <legend class="w-auto px-2">Tipo de presupuesto</legend>
+
+            <div class="custom-control custom-radio custom-control-inline">
+                <input type="radio" id="modo_diagnostico" name="modo_presupuesto" class="custom-control-input" value="DIAGNOSTICO" checked onchange="cambiarModoPresupuesto(this.value)">
+                <label class="custom-control-label" for="modo_diagnostico">Con diagnostico</label>
+            </div>
+
+            <div class="custom-control custom-radio custom-control-inline">
+                <input type="radio" id="modo_preliminar" name="modo_presupuesto" class="custom-control-input" value="PRELIMINAR" onchange="cambiarModoPresupuesto(this.value)">
+                <label class="custom-control-label" for="modo_preliminar">Preliminar</label>
+            </div>
+        </fieldset>
+
 
         <!-- ================= DIAGNÓSTICO ================= -->
-        <fieldset class="border p-3 mb-3">
+        <fieldset class="border p-3 mb-3" id="bloque_diagnostico">
             <legend class="w-auto px-2">Datos del Diagnóstico</legend>
 
             <div class="row">
@@ -101,6 +118,43 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
                     <i class="fas fa-times"></i> Cancelar
                 </button>
             </div>
+
+            <div id="presupuestos_preliminares" class="mt-3"></div>
+        </fieldset>
+
+        <!-- ================= PRELIMINAR ================= -->
+        <fieldset class="border p-3 mb-3" id="bloque_preliminar" style="display:none;">
+            <legend class="w-auto px-2">Datos preliminares</legend>
+
+            <div class="alert alert-info">
+                Cotizacion referencial sujeta a recepcion y diagnostico tecnico.
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <label>Cliente</label>
+                    <div class="input-group">
+                        <input type="text" id="cliente_preliminar" class="form-control" readonly placeholder="Seleccione un cliente">
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-info" onclick="abrirModalClientePresupuesto()">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <label>Vehiculo</label>
+                    <div class="input-group">
+                        <input type="text" id="vehiculo_preliminar" class="form-control" readonly placeholder="Seleccione un vehiculo">
+                        <div class="input-group-append">
+                            <button type="button" class="btn btn-info" onclick="abrirModalVehiculoPresupuesto()">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </fieldset>
 
         <!-- ================= DATOS GENERALES ================= -->
@@ -123,7 +177,9 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
                 <div class="col-md-4">
                     <label>Fecha vencimiento</label>
                     <input type="date" name="fecha_venc"
-                        class="form-control">
+                        class="form-control"
+                        min="<?= date('Y-m-d'); ?>"
+                        required>
                 </div>
             </div>
         </fieldset>
@@ -138,7 +194,8 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
                         id="buscar_servicio"
                         class="form-control"
                         placeholder="Buscar servicio o artículo"
-                        onkeyup="buscarServicio()">
+                        onkeyup="buscarServicio()"
+                        disabled>
                 </div>
             </div>
 
@@ -204,7 +261,7 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
 
         <!-- ================= BOTONES ================= -->
         <div class="text-center">
-            <button type="submit" class="btn btn-info btn-raised ">
+            <button type="submit" id="btn_guardar_presupuesto_servicio" class="btn btn-info btn-raised " disabled>
                 <i class="fas fa-save"></i> &nbsp; Guardar
             </button>
 
@@ -235,6 +292,52 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
                     onkeyup="buscarDiagnostico()">
 
                 <div id="tabla_diagnostico"></div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ================= MODAL CLIENTE ================= -->
+<div class="modal fade" id="modalClientePresupuesto">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Seleccionar cliente</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <input type="text" id="buscar_cliente"
+                    class="form-control mb-3"
+                    placeholder="Buscar cliente"
+                    onkeyup="buscarClientePresupuesto()">
+
+                <div id="tabla_clientes"></div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ================= MODAL VEHICULO ================= -->
+<div class="modal fade" id="modalVehiculoPresupuesto">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Seleccionar vehiculo</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <input type="text" id="buscar_vehiculo"
+                    class="form-control mb-3"
+                    placeholder="Buscar vehiculo"
+                    onkeyup="buscarVehiculoPresupuesto()">
+
+                <div id="tabla_vehiculos"></div>
             </div>
 
         </div>

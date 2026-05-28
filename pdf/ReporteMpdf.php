@@ -4,6 +4,38 @@ use Mpdf\Mpdf;
 
 class ReporteMpdf
 {
+    public static function desdeHtml(string $html, array $opciones = []): void
+    {
+        $orientacion = strtoupper($opciones['orientacion'] ?? 'P');
+        $formato = $opciones['formato'] ?? 'A4';
+        $archivo = $opciones['archivo'] ?? 'reporte.pdf';
+        $salida = $opciones['salida'] ?? 'D';
+
+        $mpdf = new Mpdf([
+            'format' => $formato . '-' . $orientacion,
+            'margin_top' => $opciones['margin_top'] ?? 10,
+            'margin_bottom' => $opciones['margin_bottom'] ?? 10,
+            'margin_left' => $opciones['margin_left'] ?? 10,
+            'margin_right' => $opciones['margin_right'] ?? 10,
+            'default_font' => 'dejavusans'
+        ]);
+
+        $mpdf->SetTitle($opciones['titulo'] ?? $archivo);
+        if (($opciones['estilo_reporte'] ?? false) === true) {
+            $html = self::aplicarFormatoReporte($html, $opciones);
+        }
+        $mpdf->WriteHTML($html);
+
+        if (($opciones['limpiar_buffers'] ?? true) === true) {
+            while (ob_get_level() > 0) {
+                ob_end_clean();
+            }
+        }
+
+        $mpdf->Output($archivo, $salida);
+        exit();
+    }
+
     public static function generar(array $opciones): void
     {
         $orientacion = strtoupper($opciones['orientacion'] ?? 'P');
@@ -61,9 +93,9 @@ class ReporteMpdf
                 }
 
                 .header {
-                    border-bottom: 2px solid #245f63;
+                    background: #2f6f6f;
+                    color: #fff;
                     margin-bottom: 10px;
-                    padding-bottom: 8px;
                     width: 100%;
                 }
 
@@ -71,8 +103,14 @@ class ReporteMpdf
                     width: 72px;
                 }
 
+                .header td {
+                    border: 0;
+                    color: #fff;
+                    padding: 8px;
+                }
+
                 .title {
-                    color: #245f63;
+                    color: #fff;
                     font-size: 18px;
                     font-weight: bold;
                     margin: 0;
@@ -80,13 +118,13 @@ class ReporteMpdf
                 }
 
                 .subtitle {
-                    color: #607d8b;
+                    color: #fff;
                     font-size: 10px;
                     margin-top: 2px;
                 }
 
                 .meta {
-                    color: #455a64;
+                    color: #fff;
                     font-size: 8.5px;
                     text-align: right;
                 }
@@ -123,8 +161,8 @@ class ReporteMpdf
                 }
 
                 table.data th {
-                    background: #245f63;
-                    border: 1px solid #245f63;
+                    background: #2f6f6f;
+                    border: 1px solid #2f6f6f;
                     color: #fff;
                     font-size: 8.5px;
                     padding: 5px 4px;
@@ -268,5 +306,138 @@ class ReporteMpdf
     private static function e($valor): string
     {
         return htmlspecialchars((string)$valor, ENT_QUOTES, 'UTF-8');
+    }
+
+    private static function aplicarFormatoReporte(string $html, array $opciones): string
+    {
+        $titulo = self::extraerTituloReporte($html);
+        $empresa = self::e($opciones['empresa'] ?? 'Empresa');
+        $usuario = self::e($opciones['usuario'] ?? '');
+        $logo = $opciones['logo'] ?? __DIR__ . '/assets/logo.png';
+
+        $html = preg_replace('/<div\s+class=["\']header["\'][\s\S]*?<\/div>\s*/i', '', $html, 1);
+        $html = preg_replace('/<div\s+class=["\']info["\'][\s\S]*?<\/div>\s*/i', '', $html, 1);
+
+        $cabecera = self::cabeceraReporteHtml($titulo, $empresa, $usuario, $logo);
+        $css = self::cssReportePedido();
+
+        if (stripos($html, '</head>') !== false) {
+            $html = str_ireplace('</head>', $css . '</head>', $html);
+        } else {
+            $html = $css . $html;
+        }
+
+        if (stripos($html, '<body>') !== false) {
+            $html = str_ireplace('<body>', '<body>' . $cabecera, $html);
+        } else {
+            $html = $cabecera . $html;
+        }
+
+        return $html;
+    }
+
+    private static function extraerTituloReporte(string $html): string
+    {
+        if (preg_match('/<div\s+class=["\']header["\'][\s\S]*?<h2[^>]*>([\s\S]*?)<\/h2>/i', $html, $m)) {
+            return trim(strip_tags($m[1]));
+        }
+
+        if (preg_match('/<h2[^>]*>([\s\S]*?)<\/h2>/i', $html, $m)) {
+            return trim(strip_tags($m[1]));
+        }
+
+        return 'REPORTE';
+    }
+
+    private static function cabeceraReporteHtml(string $titulo, string $empresa, string $usuario, string $logo): string
+    {
+        $logoHtml = is_file($logo)
+            ? '<img src="' . self::e($logo) . '" height="50">'
+            : '';
+
+        return '
+            <table class="reporte-header">
+                <tr>
+                    <td width="20%" align="left" style="padding:8px;">' . $logoHtml . '</td>
+                    <td width="50%" align="center">
+                        <h2 style="margin:0;">' . self::e($titulo) . '</h2>
+                        <div class="reporte-empresa">' . $empresa . '</div>
+                    </td>
+                    <td width="30%" align="right" style="padding:8px; font-size:9px;">
+                        <strong>Emitido por:</strong> ' . $usuario . '<br>
+                        <strong>Fecha:</strong> ' . date('d/m/Y H:i') . '
+                    </td>
+                </tr>
+            </table>
+        ';
+    }
+
+    private static function cssReportePedido(): string
+    {
+        return '
+            <style>
+                body {
+                    font-family: DejaVu Sans, sans-serif;
+                    font-size: 10px;
+                    color: #333;
+                }
+
+                .reporte-header {
+                    background: #2f6f6f;
+                    color: #fff;
+                    margin-bottom: 10px;
+                    width: 100%;
+                    border-collapse: collapse;
+                }
+
+                .reporte-header td {
+                    border: 0;
+                    color: #fff;
+                }
+
+                .reporte-header h2 {
+                    color: #fff;
+                    font-size: 17px;
+                    letter-spacing: 0;
+                    text-transform: uppercase;
+                }
+
+                .reporte-empresa {
+                    font-size: 9px;
+                    margin-top: 2px;
+                }
+
+                table {
+                    border-collapse: collapse;
+                    width: 100%;
+                }
+
+                th,
+                td {
+                    border: 1px solid #ddd;
+                    padding: 5px;
+                }
+
+                th {
+                    background: #2f6f6f;
+                    color: #fff;
+                    font-weight: bold;
+                }
+
+                tbody tr:nth-child(even) td {
+                    background: #f7fafa;
+                }
+
+                .text-center,
+                .center {
+                    text-align: center;
+                }
+
+                .text-right,
+                .right {
+                    text-align: right;
+                }
+            </style>
+        ';
     }
 }

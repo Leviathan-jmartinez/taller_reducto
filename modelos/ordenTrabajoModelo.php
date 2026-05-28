@@ -355,7 +355,7 @@ class ordenTrabajoModelo extends mainModel
             }
 
             $qSuc = $pdo->prepare("
-            SELECT ps.estado, ps.id_sucursal, ps.id_cliente, ps.id_vehiculo
+            SELECT ps.estado, ps.id_sucursal, ps.id_cliente, ps.id_vehiculo, ps.id_diagnostico, ps.origen
             FROM presupuesto_servicio ps
             WHERE ps.idpresupuesto_servicio = ?
             FOR UPDATE
@@ -374,6 +374,11 @@ class ordenTrabajoModelo extends mainModel
             if ((int)$presupuesto['estado'] !== 2) {
                 $pdo->rollBack();
                 return ['msg' => 'El presupuesto no esta aprobado'];
+            }
+
+            if (($presupuesto['origen'] ?? 'DIAGNOSTICO') !== 'DIAGNOSTICO' || empty($presupuesto['id_diagnostico'])) {
+                $pdo->rollBack();
+                return ['msg' => 'Un presupuesto preliminar debe convertirse a presupuesto con diagnostico antes de generar OT'];
             }
 
             if ((int)$idSucursal !== (int)$datos['idsucursal']) {

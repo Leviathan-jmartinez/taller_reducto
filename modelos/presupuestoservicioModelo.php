@@ -27,6 +27,7 @@ class presupuestoservicioModelo extends mainModel
         INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
         INNER JOIN marcas ma ON ma.id_marcas = m.id_marcas
         WHERE d.id_diagnostico = ?
+          AND d.estado = 1
         LIMIT 1
         ");
         $sql->execute([$id]);
@@ -139,30 +140,70 @@ class presupuestoservicioModelo extends mainModel
         try {
             $pdo->beginTransaction();
 
-            /* ================= OBTENER SUCURSAL DESDE DIAGNÓSTICO ================= */
-            $sqlSuc = $pdo->prepare("
-                SELECT r.id_sucursal, r.id_cliente, r.id_vehiculo
-                FROM diagnostico_servicio d
-                INNER JOIN recepcion_servicio r 
-                    ON r.idrecepcion = d.idrecepcion
-                WHERE d.id_diagnostico = :id
-            ");
-
-            $sqlSuc->execute([
-                ':id' => $d['id_diagnostico']
-            ]);
-
-            $diag = $sqlSuc->fetch(PDO::FETCH_ASSOC);
-            $idSucursal = $diag['id_sucursal'] ?? null;
-            $idCliente = $diag['id_cliente'] ?? null;
-            $idVehiculo = $diag['id_vehiculo'] ?? null;
-
-            if (!$idSucursal || !$idCliente || !$idVehiculo) {
+            if (empty($d['fecha_venc'])) {
                 $pdo->rollBack();
                 return [
                     'error' => true,
-                    'msg' => 'No se pudo obtener la sucursal del diagnóstico'
+                    'msg' => 'Debe indicar la fecha de vencimiento del presupuesto'
                 ];
+            }
+
+            /* ================= OBTENER SUCURSAL DESDE DIAGNÓSTICO ================= */
+            $origen = (($d['origen'] ?? 'DIAGNOSTICO') === 'PRELIMINAR') ? 'PRELIMINAR' : 'DIAGNOSTICO';
+            $idDiagnostico = $origen === 'DIAGNOSTICO' ? (int)($d['id_diagnostico'] ?? 0) : null;
+
+            if ($origen === 'DIAGNOSTICO') {
+                $sqlSuc = $pdo->prepare("
+                    SELECT r.id_sucursal, r.id_cliente, r.id_vehiculo
+                    FROM diagnostico_servicio d
+                    INNER JOIN recepcion_servicio r 
+                        ON r.idrecepcion = d.idrecepcion
+                    WHERE d.id_diagnostico = :id
+                      AND d.estado = 1
+                ");
+
+                $sqlSuc->execute([
+                    ':id' => $idDiagnostico
+                ]);
+
+                $diag = $sqlSuc->fetch(PDO::FETCH_ASSOC);
+                $idSucursal = $diag['id_sucursal'] ?? null;
+                $idCliente = $diag['id_cliente'] ?? null;
+                $idVehiculo = $diag['id_vehiculo'] ?? null;
+
+                if (!$idSucursal || !$idCliente || !$idVehiculo) {
+                    $pdo->rollBack();
+                    return [
+                        'error' => true,
+                        'msg' => 'Debe seleccionar un diagnostico valido y disponible para presupuesto'
+                    ];
+                }
+            } else {
+                $idSucursal = $_SESSION['nick_sucursal'] ?? null;
+                $idCliente = (int)($d['id_cliente'] ?? 0);
+                $idVehiculo = (int)($d['id_vehiculo'] ?? 0);
+
+                $sqlPre = $pdo->prepare("
+                    SELECT COUNT(*)
+                    FROM vehiculos v
+                    INNER JOIN clientes c ON c.id_cliente = v.id_cliente
+                    WHERE v.id_vehiculo = :vehiculo
+                      AND v.id_cliente = :cliente
+                      AND v.estado = 1
+                      AND c.estado_cliente = 1
+                ");
+                $sqlPre->execute([
+                    ':vehiculo' => $idVehiculo,
+                    ':cliente' => $idCliente
+                ]);
+
+                if (!$idSucursal || $idCliente <= 0 || $idVehiculo <= 0 || (int)$sqlPre->fetchColumn() === 0) {
+                    $pdo->rollBack();
+                    return [
+                        'error' => true,
+                        'msg' => 'Debe seleccionar un cliente y vehiculo validos para el presupuesto preliminar'
+                    ];
+                }
             }
 
             /* ================= VALIDAR SUCURSAL ================= */
@@ -172,6 +213,37 @@ class presupuestoservicioModelo extends mainModel
                     'error' => true,
                     'msg' => 'Sucursal inválida'
                 ];
+            }
+
+            $convertidoDesde = !empty($d['convertido_desde']) ? (int)$d['convertido_desde'] : null;
+            if ($convertidoDesde && $origen === 'DIAGNOSTICO') {
+                $sqlConvertido = $pdo->prepare("
+                    SELECT idpresupuesto_servicio
+                    FROM presupuesto_servicio
+                    WHERE idpresupuesto_servicio = :id
+                      AND origen = 'PRELIMINAR'
+                      AND id_cliente = :cliente
+                      AND id_vehiculo = :vehiculo
+                      AND id_sucursal = :sucursal
+                      AND estado IN (1,2)
+                    FOR UPDATE
+                ");
+                $sqlConvertido->execute([
+                    ':id' => $convertidoDesde,
+                    ':cliente' => $idCliente,
+                    ':vehiculo' => $idVehiculo,
+                    ':sucursal' => $idSucursal
+                ]);
+
+                if (!$sqlConvertido->fetchColumn()) {
+                    $pdo->rollBack();
+                    return [
+                        'error' => true,
+                        'msg' => 'El presupuesto preliminar seleccionado no esta disponible para conversion'
+                    ];
+                }
+            } elseif ($origen === 'PRELIMINAR') {
+                $convertidoDesde = null;
             }
 
             $detalleCalculado = [];
@@ -371,10 +443,10 @@ class presupuestoservicioModelo extends mainModel
             $sql = $pdo->prepare("
             INSERT INTO presupuesto_servicio
             (id_usuario, id_sucursal, id_cliente, id_vehiculo, fecha, estado, fecha_venc,
-             subtotal, total_descuento, total_final, id_diagnostico)
+             subtotal, total_descuento, total_final, id_diagnostico, origen, convertido_desde)
             VALUES
             (:usuario, :sucursal, :cliente, :vehiculo, CURDATE(), 1, :fecha_venc,
-             :subtotal, :total_desc, :total_final, :id_diagnostico)
+             :subtotal, :total_desc, :total_final, :id_diagnostico, :origen, :convertido_desde)
         ");
 
             $sql->execute([
@@ -386,7 +458,9 @@ class presupuestoservicioModelo extends mainModel
                 ':subtotal'      => $subtotalServicios,
                 ':total_desc'    => $totalDescuento,
                 ':total_final'   => $totalFinal,
-                ':id_diagnostico' => $d['id_diagnostico']
+                ':id_diagnostico' => $idDiagnostico,
+                ':origen'         => $origen,
+                ':convertido_desde' => $convertidoDesde
             ]);
 
             $idPresupuesto = $pdo->lastInsertId();
@@ -452,14 +526,27 @@ class presupuestoservicioModelo extends mainModel
                 }
             }
 
-            $sqlUpd = $pdo->prepare("
-            UPDATE diagnostico_servicio
-            SET estado = 2
-            WHERE id_diagnostico = :id
-            ");
-            $sqlUpd->execute([
-                ':id' => $d['id_diagnostico']
-            ]);
+            if ($origen === 'DIAGNOSTICO') {
+                $sqlUpd = $pdo->prepare("
+                UPDATE diagnostico_servicio
+                SET estado = 2
+                WHERE id_diagnostico = :id
+                ");
+                $sqlUpd->execute([
+                    ':id' => $idDiagnostico
+                ]);
+
+                if ($convertidoDesde) {
+                    $sqlConv = $pdo->prepare("
+                    UPDATE presupuesto_servicio
+                    SET estado = 5
+                    WHERE idpresupuesto_servicio = :id
+                    ");
+                    $sqlConv->execute([
+                        ':id' => $convertidoDesde
+                    ]);
+                }
+            }
 
             $pdo->commit();
             return true;
@@ -482,8 +569,8 @@ class presupuestoservicioModelo extends mainModel
         FROM presupuesto_servicio ps
         LEFT JOIN diagnostico_servicio d ON d.id_diagnostico = ps.id_diagnostico
         LEFT JOIN recepcion_servicio r ON r.idrecepcion = d.idrecepcion
-        LEFT JOIN clientes c ON c.id_cliente = r.id_cliente 
-        LEFT JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo 
+        LEFT JOIN clientes c ON c.id_cliente = COALESCE(r.id_cliente, ps.id_cliente)
+        LEFT JOIN vehiculos v ON v.id_vehiculo = COALESCE(r.id_vehiculo, ps.id_vehiculo)
         LEFT JOIN modelo_auto ma ON ma.id_modeloauto = v.id_modeloauto 
         INNER JOIN usuarios u ON u.id_usuario = ps.id_usuario
         WHERE 1=1
@@ -495,6 +582,7 @@ class presupuestoservicioModelo extends mainModel
             ps.idpresupuesto_servicio,
             ps.fecha,
             ps.estado AS estadoPre,
+            ps.origen,
             ps.total_final,
             c.nombre_cliente,
             c.apellido_cliente,
@@ -606,6 +694,7 @@ class presupuestoservicioModelo extends mainModel
                 ps.fecha,
                 ps.fecha_venc,
                 ps.estado,
+                ps.origen,
                 ps.subtotal,
                 ps.total_descuento,
                 ps.total_final,
@@ -621,10 +710,10 @@ class presupuestoservicioModelo extends mainModel
                 u.usu_nombre,
                 u.usu_apellido
             FROM presupuesto_servicio ps
-            INNER JOIN diagnostico_servicio d ON d.id_diagnostico = ps.id_diagnostico
-            INNER JOIN recepcion_servicio r ON r.idrecepcion = d.idrecepcion
-            INNER JOIN clientes c ON c.id_cliente = r.id_cliente
-            INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
+            LEFT JOIN diagnostico_servicio d ON d.id_diagnostico = ps.id_diagnostico
+            LEFT JOIN recepcion_servicio r ON r.idrecepcion = d.idrecepcion
+            INNER JOIN clientes c ON c.id_cliente = COALESCE(r.id_cliente, ps.id_cliente)
+            INNER JOIN vehiculos v ON v.id_vehiculo = COALESCE(r.id_vehiculo, ps.id_vehiculo)
             INNER JOIN modelo_auto ma ON ma.id_modeloauto = v.id_modeloauto
             INNER JOIN usuarios u ON u.id_usuario = ps.id_usuario
             WHERE ps.idpresupuesto_servicio = :id
