@@ -51,36 +51,45 @@ class diagnosticoModelo extends mainModel
     protected static function obtener_recepcion_detalle_modelo($id, $sucursal)
     {
         $sql = mainModel::conectar()->prepare("
-        SELECT
-            rs.idrecepcion,
-            DATE_FORMAT(rs.fecha_ingreso, '%d/%m/%Y %H:%i') AS fecha_ingreso,
-            rs.kilometraje,
-            rs.nivel_combustible,
-            rs.estado_exterior,
-            rs.objetos_vehiculo,
-            rs.tipo_servicio,
-            rs.area_problema,
-            rs.prioridad,
-            rs.accesorios,
-            rs.observacion,
-            rs.origen,
-            rs.id_sucursal,
-            rs.idreclamo_servicio,
-            c.doc_number,
-            c.celular_cliente,
-            CONCAT(c.nombre_cliente,' ',c.apellido_cliente) AS cliente,
-            v.placa,
-            v.anho,
-            v.color,
-            CONCAT(ma.mar_descri, ' ', m.mod_descri, ' ', v.placa, ' (', v.anho, ')') AS vehiculo
-        FROM recepcion_servicio rs
-        INNER JOIN clientes c ON c.id_cliente = rs.id_cliente
-        INNER JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
-        INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
-        INNER JOIN marcas ma ON ma.id_marcas = m.id_marcas
-        WHERE rs.idrecepcion = :id
-          AND rs.id_sucursal = :sucursal
-        LIMIT 1
+                    SELECT
+                rs.idrecepcion,
+                DATE_FORMAT(rs.fecha_ingreso, '%d/%m/%Y %H:%i') AS fecha_ingreso,
+                rs.kilometraje,
+                rs.nivel_combustible,
+                rs.estado_exterior,
+                rs.objetos_vehiculo,
+                rs.tipo_servicio,
+                rs.area_problema,
+                rs.prioridad,
+                rs.accesorios,
+                rs.observacion,
+                rs.origen,
+                rs.id_sucursal,
+                rs.idreclamo_servicio,
+                c.doc_number,
+                c.celular_cliente,
+                CONCAT(c.nombre_cliente,' ',c.apellido_cliente) AS cliente,
+                v.placa,
+                v.anho,
+                v.color,
+                CONCAT(
+                    COALESCE(ma.mar_descri, ''),
+                    ' ',
+                    COALESCE(m.mod_descri, ''),
+                    ' ',
+                    COALESCE(v.placa, ''),
+                    ' (',
+                    COALESCE(v.anho, ''),
+                    ')'
+                ) AS vehiculo
+            FROM recepcion_servicio rs
+            INNER JOIN clientes c ON c.id_cliente = rs.id_cliente
+            LEFT JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
+            LEFT JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
+            LEFT JOIN marcas ma ON ma.id_marcas = m.id_marcas
+            WHERE rs.idrecepcion = :id
+            AND rs.id_sucursal = :sucursal
+            LIMIT 1;
         ");
 
         $sql->bindParam(":id", $id, PDO::PARAM_INT);

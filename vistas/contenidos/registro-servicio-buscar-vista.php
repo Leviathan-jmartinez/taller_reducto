@@ -62,7 +62,7 @@ $busqueda_activa = isset($_SESSION['filtro_registro_servicio_activo']);
                     <label>Estado</label>
                     <select name="estado_regSer" class="form-control">
                         <option value="">Todos</option>
-                        <option value="1" <?php if ($estado == "1") echo "selected"; ?>>Activo</option>
+                        <option value="1" <?php if ($estado == "1") echo "selected"; ?>>Registrado</option>
                         <option value="2" <?php if ($estado == "2") echo "selected"; ?>>Facturado</option>
                         <option value="3" <?php if ($estado == "3") echo "selected"; ?>>Con Reclamo</option>
                         <option value="0" <?php if ($estado === "0") echo "selected"; ?>>Anulada</option>

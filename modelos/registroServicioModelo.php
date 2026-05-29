@@ -30,6 +30,20 @@ class registroServicioModelo extends mainModel
                 return ['msg' => 'La orden de trabajo no tiene cliente o vehiculo asociado'];
             }
 
+            $qVehiculoCliente = $pdo->prepare("
+                SELECT id_vehiculo
+                FROM vehiculos
+                WHERE id_vehiculo = ?
+                  AND id_cliente = ?
+                LIMIT 1
+            ");
+            $qVehiculoCliente->execute([$ot['id_vehiculo'], $ot['id_cliente']]);
+
+            if (!$qVehiculoCliente->fetchColumn()) {
+                $pdo->rollBack();
+                return ['msg' => 'El vehiculo de la orden no pertenece al cliente'];
+            }
+
             if ((int)$ot['estado'] !== 1) {
                 $pdo->rollBack();
                 return ['msg' => 'La orden de trabajo no esta activa'];
@@ -62,11 +76,30 @@ class registroServicioModelo extends mainModel
                 return ['msg' => 'El servicio ya fue registrado'];
             }
 
+            $qRec = $pdo->prepare("
+            SELECT COALESCE(
+                (SELECT ds.idrecepcion
+                 FROM presupuesto_servicio ps
+                 INNER JOIN diagnostico_servicio ds 
+                    ON ds.id_diagnostico = ps.id_diagnostico
+                 WHERE ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+                 LIMIT 1),
+                (SELECT r.idrecepcion
+                 FROM recepcion_servicio r
+                 WHERE r.idreclamo_servicio = ot.idreclamo_servicio
+                 LIMIT 1)
+            )
+            FROM orden_trabajo ot
+            WHERE ot.idorden_trabajo = ?
+        ");
+            $qRec->execute([$datos['idorden_trabajo']]);
+            $idRecepcion = $qRec->fetchColumn();
+
             /* ================= CREAR CABECERA ================= */
             $ins = $pdo->prepare("
             INSERT INTO registro_servicio
-            (idorden_trabajo, id_vehiculo, id_cliente, id_sucursal, usuario_registra, fecha_ejecucion, estado, observacion)
-            VALUES (?, ?, ?, ?, ?, ?, 1, ?)
+            (idorden_trabajo, id_vehiculo, id_cliente, id_sucursal, usuario_registra, fecha_servicio, kilometraje_salida, estado, observacion)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)
         ");
             $ins->execute([
                 $datos['idorden_trabajo'],
@@ -74,7 +107,8 @@ class registroServicioModelo extends mainModel
                 $ot['id_cliente'],
                 $ot['id_sucursal'],
                 $datos['usuario'],
-                $datos['fecha_ejecucion'], // ✔ ahora correcto
+                $datos['fecha_servicio'], 
+                $datos['kilometraje_salida'],
                 $datos['observacion']
             ]);
 
@@ -132,29 +166,6 @@ class registroServicioModelo extends mainModel
             ]);
 
             /* ================= OBTENER RECEPCIÓN ================= */
-            $qRec = $pdo->prepare("
-            SELECT COALESCE(
-                /* SI TIENE PRESUPUESTO */
-                (SELECT ds.idrecepcion
-                 FROM presupuesto_servicio ps
-                 INNER JOIN diagnostico_servicio ds 
-                    ON ds.id_diagnostico = ps.id_diagnostico
-                 WHERE ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-                 LIMIT 1),
-
-                /* SI ES RECLAMO */
-                (SELECT r.idrecepcion
-                 FROM recepcion_servicio r
-                 WHERE r.idreclamo_servicio = ot.idreclamo_servicio
-                 LIMIT 1)
-            )
-            FROM orden_trabajo ot
-            WHERE ot.idorden_trabajo = ?
-        ");
-
-            $qRec->execute([$datos['idorden_trabajo']]);
-            $idRecepcion = $qRec->fetchColumn();
-
             /* ================= CERRAR RECEPCIÓN ================= */
             if ($idRecepcion) {
                 $updRec = $pdo->prepare("
@@ -439,7 +450,7 @@ class registroServicioModelo extends mainModel
     }
 
 
-    protected static function listar_registro_servicio_modelo($inicio, $registros, $filtrosSQL, $orderSQL = "ORDER BY rs.fecha_ejecucion DESC, rs.idregistro_servicio DESC")
+    protected static function listar_registro_servicio_modelo($inicio, $registros, $filtrosSQL, $orderSQL = "ORDER BY rs.fecha_servicio DESC, rs.idregistro_servicio DESC")
     {
         $pdo = self::conectar();
 
@@ -449,7 +460,7 @@ class registroServicioModelo extends mainModel
             rs.fecha_ejecucion,
             rs.estado,
             rs.usuario_registra,
-            ot.idorden_trabajo,
+            rs.idorden_trabajo,
 
             COALESCE(c.nombre_cliente, '') AS nombre_cliente,
             COALESCE(c.apellido_cliente, '') AS apellido_cliente,
@@ -459,9 +470,6 @@ class registroServicioModelo extends mainModel
 
 
         FROM registro_servicio rs
-
-        INNER JOIN orden_trabajo ot 
-            ON ot.idorden_trabajo = rs.idorden_trabajo
 
         /* DATOS */
         LEFT JOIN clientes c 
@@ -487,8 +495,6 @@ class registroServicioModelo extends mainModel
         $total = $pdo->query("
         SELECT COUNT(*)
         FROM registro_servicio rs
-        INNER JOIN orden_trabajo ot 
-            ON ot.idorden_trabajo = rs.idorden_trabajo
         WHERE 1=1 $filtrosSQL
         ")->fetchColumn();
 
@@ -509,11 +515,8 @@ class registroServicioModelo extends mainModel
             $q = $pdo->prepare("
             SELECT rs.estado,
                    rs.idorden_trabajo,
-                   rs.id_sucursal AS sucursal_registro,
-                   ot.id_sucursal AS sucursal_ot
+                   rs.id_sucursal AS sucursal_registro
             FROM registro_servicio rs
-            INNER JOIN orden_trabajo ot
-                ON ot.idorden_trabajo = rs.idorden_trabajo
             WHERE rs.idregistro_servicio = ?
             FOR UPDATE
         ");
@@ -530,10 +533,7 @@ class registroServicioModelo extends mainModel
                 return ['msg' => 'El registro no puede ser anulado'];
             }
 
-            if (
-                (int)$reg['sucursal_registro'] !== (int)$datos['id_sucursal'] ||
-                (int)$reg['sucursal_ot'] !== (int)$datos['id_sucursal']
-            ) {
+            if ((int)$reg['sucursal_registro'] !== (int)$datos['id_sucursal']) {
                 throw new Exception('No puede anular registros de otra sucursal');
             }
 
@@ -560,8 +560,9 @@ class registroServicioModelo extends mainModel
             SET estado = 1,
                 fecha_fin = NULL
             WHERE idorden_trabajo = ?
+              AND id_sucursal = ?
         ");
-            $updOT->execute([$reg['idorden_trabajo']]);
+            $updOT->execute([$reg['idorden_trabajo'], $datos['id_sucursal']]);
 
             /* ================= REABRIR RECEPCIÓN ================= */
             $qOrigen = $pdo->prepare("

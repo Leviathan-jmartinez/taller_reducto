@@ -128,6 +128,15 @@ class reclamoServicioControlador extends reclamoServicioModelo
                 $trabajos .= '</ul>';
             }
 
+            $fechaVencimientoGarantia = $r['garantia_fecha_vencimiento'] ?? '';
+            $dentroGarantiaFecha = !empty($fechaVencimientoGarantia) && date('Y-m-d') <= $fechaVencimientoGarantia;
+            $garantiaTexto = $dentroGarantiaFecha
+                ? 'Disponible hasta ' . date('d/m/Y', strtotime($fechaVencimientoGarantia))
+                : (!empty($fechaVencimientoGarantia)
+                    ? 'Vencida el ' . date('d/m/Y', strtotime($fechaVencimientoGarantia))
+                    : 'Sin garantia configurada');
+            $kmLimite = $r['garantia_km_limite'] ?? '';
+
             $html .= '
             <tr>
                 <td>#' . $r['idregistro_servicio'] . '</td>
@@ -141,7 +150,10 @@ class reclamoServicioControlador extends reclamoServicioModelo
                             \'' . $r['idregistro_servicio'] . '\',
                             \'' . $r['nombre_cliente'] . ' ' . $r['apellido_cliente'] . '\',
                             \'' . $r['mod_descri'] . ' ' . $r['placa'] . '\',
-                            \'' . addslashes($r['trabajos']) . '\'
+                            \'' . addslashes($r['trabajos']) . '\',
+                            ' . ($dentroGarantiaFecha ? '1' : '0') . ',
+                            \'' . addslashes($garantiaTexto) . '\',
+                            \'' . addslashes((string)$kmLimite) . '\'
                         )">
                         Seleccionar
                     </button>
@@ -182,7 +194,7 @@ class reclamoServicioControlador extends reclamoServicioModelo
                      OR c.apellido_cliente LIKE '%$busqueda%' 
                      OR v.placa LIKE '%$busqueda%'
                      OR rs.idreclamo_servicio LIKE '%$busqueda%'
-                     OR rgs.idregistro_servicio LIKE '%$busqueda%')",
+                     OR rs.idregistro_servicio LIKE '%$busqueda%')",
                 "tipo"  => "RAW"
             ];
         }

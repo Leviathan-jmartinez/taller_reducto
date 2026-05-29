@@ -7,11 +7,6 @@ if ($peticionAjax) {
 
 class recepcionservicioControlador extends recepcionservicioModelo
 {
-    public function listar_ciudades_controlador()
-    {
-        return recepcionservicioModelo::listar_ciudades_modelo();
-    }
-
     public function listar_modelos_controlador()
     {
         return recepcionservicioModelo::listar_modelos_modelo();
@@ -172,7 +167,7 @@ class recepcionservicioControlador extends recepcionservicioModelo
         $modelo = (int) ($_POST['modelo_reg'] ?? 0);
         $color = mainModel::limpiar_string($_POST['color_reg'] ?? '');
         $placa = mainModel::limpiar_string($_POST['placa_reg'] ?? '');
-        $anho = mainModel::limpiar_string($_POST['anho_reg'] ?? '');
+        $anho = trim($_POST['anho_reg'] ?? '') !== ''  ? mainModel::limpiar_string($_POST['anho_reg'])  : null;
         $version = mainModel::limpiar_string($_POST['version_reg'] ?? '');
         $tipoVehiculo = mainModel::limpiar_string($_POST['tipo_vehiculo_reg'] ?? '');
 

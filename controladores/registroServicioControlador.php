@@ -22,7 +22,7 @@ class registroServicioControlador extends registroServicioModelo
         }
         if (
             empty($_POST['idorden_trabajo']) ||
-            empty($_POST['fecha_ejecucion'])
+            empty($_POST['fecha_servicio'])
         ) {
             return json_encode([
                 'Alerta' => 'simple',
@@ -69,7 +69,8 @@ class registroServicioControlador extends registroServicioModelo
 
         $datos = [
             'idorden_trabajo' => $idOT,
-            'fecha_ejecucion' => $_POST['fecha_ejecucion'],
+            'fecha_servicio'      => $_POST['fecha_servicio'],
+            'kilometraje_salida'  => $_POST['kilometraje_salida'] ?? null,
             'observacion'     => $_POST['observacion'] ?? '',
             'usuario'         => $idUsuario,
             'updatedby'       => $idUsuario,
@@ -209,7 +210,7 @@ class registroServicioControlador extends registroServicioModelo
 
         if (!empty($busqueda1) && !empty($busqueda2)) {
             $filtros[] = [
-                "campo" => "rs.fecha_ejecucion",
+                "campo" => "rs.fecha_servicio",
                 "tipo"  => "DATE_RANGE",
                 "desde" => $busqueda1,
                 "hasta" => $busqueda2
@@ -226,7 +227,7 @@ class registroServicioControlador extends registroServicioModelo
 
         $filtrosSQL = mainModel::construirFiltros($filtros);
         $columnasOrdenSql = [
-            'fecha' => 'rs.fecha_ejecucion',
+            'fecha' => 'rs.fecha_servicio',
             'estado' => 'rs.estado'
         ];
         $ordenamiento = mainModel::preparar_ordenamiento($orden, $direccion, $columnasOrdenSql, 'fecha', 'DESC');
@@ -252,7 +253,7 @@ class registroServicioControlador extends registroServicioModelo
                 <th>OT</th>
                 <th>Cliente</th>
                 <th>Vehículo</th>
-                <th>' . mainModel::link_orden_tabla($url, 'fecha', 'Fecha ejecucion', $orden, $direccion, 'registro_servicio_orden', 'registro_servicio_direccion') . '</th>
+                <th>' . mainModel::link_orden_tabla($url, 'fecha', 'Fecha Servicio', $orden, $direccion, 'registro_servicio_orden', 'registro_servicio_direccion') . '</th>
                 <th>Registrado por</th>
                 <th>' . mainModel::link_orden_tabla($url, 'estado', 'Estado', $orden, $direccion, 'registro_servicio_orden', 'registro_servicio_direccion') . '</th>
                 <th>Acciones</th>
@@ -288,7 +289,7 @@ class registroServicioControlador extends registroServicioModelo
             <td>#' . $row['idorden_trabajo'] . '</td>
             <td>' . $row['nombre_cliente'] . ' ' . $row['apellido_cliente'] . '</td>
             <td>' . $row['mod_descri'] . ' ' . $row['placa'] . '</td>
-            <td>' . date("d-m-Y", strtotime($row['fecha_ejecucion'])) . '</td>
+            <td>' . date("d-m-Y", strtotime($row['fecha_servicio'])) . '</td>
             <td>' . $row['nombre_usuario'] . '</td>
             <td>' . $estado . '</td>
             <td>';

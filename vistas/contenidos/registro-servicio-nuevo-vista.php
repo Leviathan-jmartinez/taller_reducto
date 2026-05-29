@@ -34,23 +34,23 @@ if (!mainModel::tienePermiso('servicio.registro.crear')) {
 
     <!-- ================= TÍTULO ================= -->
 
-        <h3>
-            <i class="fas fa-clipboard-check"></i>
-            &nbsp; REGISTRO DE SERVICIO
-        </h3>
+    <h3>
+        <i class="fas fa-clipboard-check"></i>
+        &nbsp; REGISTRO DE SERVICIO
+    </h3>
 
-        <ul class="full-box list-unstyled page-nav-tabs">
-            <li>
-                <a class="active" href="<?php echo SERVERURL; ?>/registro-servicio-nuevo/">
-                    <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO
-                </a>
-            </li>
-            <li>
-                <a href="<?php echo SERVERURL; ?>registro-servicio-buscar/">
-                    <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR
-                </a>
-            </li>
-        </ul>
+    <ul class="full-box list-unstyled page-nav-tabs">
+        <li>
+            <a class="active" href="<?php echo SERVERURL; ?>/registro-servicio-nuevo/">
+                <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO
+            </a>
+        </li>
+        <li>
+            <a href="<?php echo SERVERURL; ?>registro-servicio-buscar/">
+                <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR
+            </a>
+        </li>
+    </ul>
 
 
     <!-- ================= BUSCAR OT ================= -->
@@ -153,16 +153,23 @@ if (!mainModel::tienePermiso('servicio.registro.crear')) {
             <legend class="w-auto px-2">Confirmación</legend>
 
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-2">
                     <label>Fecha de ejecución</label>
                     <input type="date"
-                        name="fecha_ejecucion"
+                        name="fecha_servicio"
                         class="form-control"
                         value="<?= date('Y-m-d') ?>"
                         disabled
                         required>
                 </div>
-                <div class="col-md-8">
+                <div class="col-md-4">
+                    <label>Kilometraje salida</label>
+                    <input type="number"
+                        name="kilometraje_salida"
+                        class="form-control"
+                        min="0">
+                </div>
+                <div class="col-md-6">
                     <label>Observación</label>
                     <input type="text"
                         name="observacion"

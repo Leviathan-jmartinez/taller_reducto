@@ -454,7 +454,9 @@ Flujo Basico:
 El usuario selecciona un presupuesto aprobado o un reclamo procesable.
 El sistema valida que no exista OT activa para ese origen.
 Para presupuesto, el sistema crea la OT copiando los trabajos del presupuesto (generar_ot_controlador2, crear_ot_modelo2).
+Para presupuesto, el sistema toma cliente y vehiculo directamente desde `presupuesto_servicio` y los guarda en `orden_trabajo`.
 Para reclamo, el sistema crea la OT con origen RECLAMO (crear_ot_reclamo_controlador, crear_ot_reclamo_modelo).
+Para reclamo por garantia, el sistema conserva el uso de `recepcion_servicio` y `diagnostico_servicio` para validar garantia, validez del reclamo y condiciones sin cobro.
 El sistema registra detalle de OT cuando corresponde.
 El sistema cambia el presupuesto a estado con OT o mantiene el reclamo en proceso.
 El sistema emite mensaje de OT generada.
@@ -470,7 +472,7 @@ El presupuesto queda marcado con OT si corresponde.
 El reclamo mantiene continuidad hacia registro de servicio si corresponde.
 
 * Tablas utilizadas
-Exponen datos: presupuesto_servicio, presupuesto_detalleservicio, diagnostico_servicio, recepcion_servicio, reclamo_servicio, clientes, vehiculos.
+Exponen datos: presupuesto_servicio, presupuesto_detalleservicio, reclamo_servicio, clientes, vehiculos. Diagnostico y recepcion se consultan solo para trazabilidad tecnica, kilometraje o validacion de reclamo por garantia.
 Insertan o actualizan: orden_trabajo, orden_trabajo_detalle, presupuesto_servicio, reclamo_servicio, diagnostico_servicio.
 
 ## 11. Asignar o Completar Orden de Trabajo
@@ -581,7 +583,9 @@ El usuario agrega insumos si corresponde (buscar_insumo_controlador).
 El usuario carga fecha y observacion.
 El usuario confirma registrar servicio.
 El sistema valida permiso, OT, sucursal y registro previo (registrar_servicio_controlador, registrar_servicio_modelo).
+El sistema identifica cliente y vehiculo desde `orden_trabajo` y los copia a `registro_servicio`.
 El sistema registra cabecera de servicio.
+El sistema deja disponible la garantia para calculo posterior desde la fecha de ejecucion: vencimiento a tres meses y limite de kilometraje a 2.000 km sobre el kilometraje de la recepcion que dio origen al servicio.
 El sistema copia detalle de la OT a registro_servicio_detalle.
 El sistema agrega insumos consumidos.
 El sistema descuenta stock y registra movimientos de stock (aplicar_stock_registro_servicio).
@@ -603,7 +607,7 @@ El stock queda descontado.
 El reclamo queda resuelto si corresponde.
 
 * Tablas utilizadas
-Exponen datos: orden_trabajo, orden_trabajo_detalle, articulos, stock, clientes, vehiculos, modelo_auto, recepcion_servicio.
+Exponen datos: orden_trabajo, orden_trabajo_detalle, articulos, stock, clientes, vehiculos, modelo_auto. Recepcion se consulta solo para cierre operativo o reclamo asociado.
 Insertan o actualizan: registro_servicio, registro_servicio_detalle, stock, movimientostock, orden_trabajo, recepcion_servicio, reclamo_servicio.
 
 ## 14. Anular Registro de Servicio
@@ -649,7 +653,7 @@ La recepcion queda en proceso.
 El reclamo vuelve a proceso si corresponde.
 
 * Tablas utilizadas
-Exponen datos: registro_servicio, registro_servicio_detalle, orden_trabajo, recepcion_servicio, articulos, stock.
+Exponen datos: registro_servicio, registro_servicio_detalle, articulos, stock. Orden y recepcion se consultan solo para reabrir el flujo operativo.
 Insertan o actualizan: registro_servicio, stock, movimientostock, orden_trabajo, recepcion_servicio, reclamo_servicio.
 
 ## 15. Registrar Reclamo de Servicio
@@ -679,7 +683,8 @@ El usuario carga descripcion, tipo, origen, prioridad y garantia.
 El usuario confirma registrar reclamo.
 El sistema valida permiso y datos obligatorios (registrar_reclamo_controlador).
 El sistema valida duplicado.
-El sistema identifica cliente y vehiculo del servicio.
+El sistema identifica cliente y vehiculo desde `registro_servicio`, valida su consistencia y los copia a `reclamo_servicio`.
+Si se solicita garantia, el sistema valida inicialmente la fecha de ejecucion del registro reclamado contra el plazo de tres meses. La validacion por kilometraje se vuelve a realizar cuando se cargue la recepcion del reclamo con el kilometraje actual.
 El sistema registra el reclamo (registrar_reclamo_modelo).
 El sistema marca el registro de servicio como con reclamo.
 El sistema emite mensaje de reclamo registrado.
@@ -688,13 +693,14 @@ El sistema emite mensaje de reclamo registrado.
 Si faltan registro o descripcion, el sistema muestra datos incompletos.
 Si ya existe reclamo activo, el sistema no permite duplicar.
 Si no se puede identificar cliente o vehiculo, el sistema cancela.
+Si la garantia esta vencida por fecha, el sistema no permite registrar el reclamo como garantia. El reclamo puede continuar sin garantia si el usuario cambia esa opcion.
 
 * Post Condicion
 El reclamo queda registrado en estado Activo.
 El registro de servicio queda marcado como con reclamo.
 
 * Tablas utilizadas
-Exponen datos: registro_servicio, orden_trabajo, orden_trabajo_detalle, articulos, presupuesto_servicio, diagnostico_servicio, recepcion_servicio, clientes, vehiculos, modelo_auto.
+Exponen datos: registro_servicio, registro_servicio_detalle, articulos, clientes, vehiculos, modelo_auto. Recepcion se consulta solo cuando se necesita calcular el kilometraje de origen para la garantia.
 Insertan o actualizan: reclamo_servicio, registro_servicio.
 
 ## 16. Anular Reclamo de Servicio
@@ -736,5 +742,5 @@ El reclamo queda anulado.
 El registro de servicio se actualiza si no quedan reclamos activos.
 
 * Tablas utilizadas
-Exponen datos: reclamo_servicio, recepcion_servicio, registro_servicio, clientes, vehiculos, modelo_auto.
+Exponen datos: reclamo_servicio, recepcion_servicio, registro_servicio.
 Insertan o actualizan: reclamo_servicio, registro_servicio.

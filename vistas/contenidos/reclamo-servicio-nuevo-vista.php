@@ -101,6 +101,11 @@ if (!mainModel::tienePermiso('servicio.reclamo.crear')) {
                         style="height:auto; min-height:60px; background:#f8f9fa;">
                     </div>
                 </div>
+                <div class="col-md-12 mt-2">
+                    <div id="garantia_estado" class="alert alert-secondary mb-0">
+                        Seleccione un servicio para validar la garantia.
+                    </div>
+                </div>
             </div>
 
         </fieldset>
@@ -147,7 +152,7 @@ if (!mainModel::tienePermiso('servicio.reclamo.crear')) {
 
                 <div class="col-md-3">
                     <label>Garantía</label>
-                    <select name="requiere_garantia" class="form-control">
+                    <select name="requiere_garantia" id="requiere_garantia" class="form-control" disabled>
                         <option value="0">No</option>
                         <option value="1">Sí</option>
                     </select>
@@ -157,7 +162,7 @@ if (!mainModel::tienePermiso('servicio.reclamo.crear')) {
         </fieldset>
 
         <div class="text-center">
-            <button class="btn btn-info btn-raised">
+            <button class="btn btn-info btn-raised" id="btnRegistrarReclamo" disabled>
                 <i class="fas fa-save"></i> &nbsp; Registrar reclamo
             </button>
             <button type="button" class="btn btn-secondary btn-raised"

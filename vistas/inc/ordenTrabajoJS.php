@@ -87,11 +87,10 @@
             .then(r => document.getElementById('resultado_presupuesto').innerHTML = r);
     }
 
-    function seleccionarPresupuesto(nro_presupuesto, recepcion, cliente, vehiculo, fecha) {
+    function seleccionarPresupuesto(nro_presupuesto, cliente, vehiculo, fecha) {
 
         document.getElementById('idpresupuesto_servicio').value = nro_presupuesto;
         document.getElementById('nro_presupuesto').value = nro_presupuesto;
-        document.getElementById('idrecepcion').value = recepcion;
         document.getElementById('cliente').value = cliente;
         document.getElementById('vehiculo').value = vehiculo;
 
@@ -207,7 +206,6 @@
 
         // Limpiar hidden relacionados
         document.getElementById('idpresupuesto_servicio').value = '';
-        document.getElementById('idrecepcion').value = '';
 
         // Limpiar campos readonly
         document.getElementById('cliente').value = '';

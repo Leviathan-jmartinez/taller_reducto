@@ -9,7 +9,6 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
-$id_usuario     = $_SESSION['id_str'];
 ?>
 
 <div class="container-fluid form-neon">
@@ -39,8 +38,6 @@ $id_usuario     = $_SESSION['id_str'];
 
         <input type="hidden" name="generar_ot2" value="1">
         <input type="hidden" name="idpresupuesto_servicio" id="idpresupuesto_servicio">
-        <input type="hidden" name="idrecepcion" id="idrecepcion">
-        <input type="hidden" name="id_usuario" value="<?= $id_usuario; ?>">
 
         <fieldset class="border p-3 mb-3">
             <legend class="w-auto px-2">Origen de la orden</legend>

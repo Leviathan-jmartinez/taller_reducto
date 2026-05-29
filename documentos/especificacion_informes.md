@@ -1027,6 +1027,7 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 - El sistema valida nuevamente permiso `reportes.presupuesto_servicio.ver`.
 - El sistema consulta presupuestos de servicio segun los filtros.
 - Tablas consultadas: presupuesto_servicio, presupuesto_detalleservicio, diagnostico_servicio, recepcion_servicio, usuarios, sucursales, clientes, vehiculos, modelo_auto, marcas.
+- Cliente y vehiculo se obtienen desde `presupuesto_servicio.id_cliente` y `presupuesto_servicio.id_vehiculo`; diagnostico y recepcion se consultan solo para datos tecnicos o trazabilidad del origen.
 - El sistema carga datos dentro de la grilla.
 - El sistema habilita el boton Generar PDF.
 - El usuario presiona Generar PDF.
@@ -1099,6 +1100,7 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 - El sistema valida nuevamente permiso `reportes.orden_trabajo.ver`.
 - El sistema consulta ordenes de trabajo segun los filtros.
 - Tablas consultadas: orden_trabajo, orden_trabajo_detalle, presupuesto_servicio, diagnostico_servicio, recepcion_servicio, sucursales, usuarios, equipo_trabajo, clientes, vehiculos, modelo_auto, marcas.
+- Cliente y vehiculo se obtienen desde `orden_trabajo.id_cliente` y `orden_trabajo.id_vehiculo`; diagnostico y recepcion se consultan solo cuando el informe expone datos propios de esos documentos.
 - El sistema carga datos dentro de la grilla.
 - El sistema habilita el boton Generar PDF.
 - El usuario presiona Generar PDF.
@@ -1173,9 +1175,10 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 - El usuario presiona Previsualizar.
 - El sistema valida nuevamente permiso `reportes.registro_servicio.ver`.
 - El sistema consulta registros de servicio segun los filtros.
-- Tablas consultadas: registro_servicio, registro_servicio_detalle, orden_trabajo, presupuesto_servicio, diagnostico_servicio, recepcion_servicio, sucursales, clientes, vehiculos, modelo_auto, marcas, usuarios, equipo_trabajo, empleados.
+- Tablas consultadas: registro_servicio, registro_servicio_detalle, orden_trabajo, sucursales, clientes, vehiculos, modelo_auto, marcas, usuarios, equipo_trabajo, empleados.
 - La sucursal del informe se obtiene desde `registro_servicio.id_sucursal`.
-- Cliente y vehiculo se obtienen desde la recepcion asociada a la orden de trabajo. Si la orden proviene de un presupuesto, se consulta la recepcion vinculada al diagnostico; si la orden proviene de un reclamo, se consulta la recepcion vinculada al reclamo.
+- Cliente y vehiculo se obtienen desde `registro_servicio.id_cliente` y `registro_servicio.id_vehiculo`.
+- La orden de trabajo se consulta para exponer OT, tecnico y equipo; no se usa para reconstruir cliente/vehiculo.
 - El sistema diferencia los articulos utilizados por origen del detalle: `OT` para repuestos e `INSUMO` para insumos.
 - El sistema calcula cantidad de repuestos, cantidad de insumos e importe total del servicio.
 - El sistema carga datos dentro de la grilla.
@@ -1210,9 +1213,6 @@ Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos,
 - registro_servicio
 - registro_servicio_detalle
 - orden_trabajo
-- presupuesto_servicio
-- diagnostico_servicio
-- recepcion_servicio
 - sucursales
 - clientes
 - vehiculos

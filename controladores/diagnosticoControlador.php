@@ -259,10 +259,52 @@ class diagnosticoControlador extends diagnosticoModelo
                     strtoupper($recepcion['origen'] ?? '') === 'RECLAMO' &&
                     !empty($recepcion['idreclamo_servicio'])
                 ) {
-                    $postAccion = [
-                        "PostAccion" => "generar_ot_reclamo",
-                        "idreclamo_servicio" => (int)$recepcion['idreclamo_servicio']
-                    ];
+                    $qGarantia = mainModel::conectar()->prepare("
+                        SELECT
+                            rc.requiere_garantia,
+                            DATE_ADD(rs.fecha_ejecucion, INTERVAL 3 MONTH) AS fecha_vencimiento,
+                            COALESCE(r_actual.kilometraje, 0) AS km_reclamo,
+                            COALESCE(r_normal.kilometraje, r_reclamo_origen.kilometraje) AS km_origen
+                        FROM reclamo_servicio rc
+                        INNER JOIN registro_servicio rs
+                            ON rs.idregistro_servicio = rc.idregistro_servicio
+                        INNER JOIN orden_trabajo ot_origen
+                            ON ot_origen.idorden_trabajo = rs.idorden_trabajo
+                        LEFT JOIN presupuesto_servicio ps
+                            ON ps.idpresupuesto_servicio = ot_origen.idpresupuesto_servicio
+                        LEFT JOIN diagnostico_servicio ds
+                            ON ds.id_diagnostico = ps.id_diagnostico
+                        LEFT JOIN recepcion_servicio r_normal
+                            ON r_normal.idrecepcion = ds.idrecepcion
+                        LEFT JOIN recepcion_servicio r_reclamo_origen
+                            ON r_reclamo_origen.idreclamo_servicio = ot_origen.idreclamo_servicio
+                        LEFT JOIN recepcion_servicio r_actual
+                            ON r_actual.idreclamo_servicio = rc.idreclamo_servicio
+                        WHERE rc.idreclamo_servicio = ?
+                          AND rc.id_sucursal = ?
+                        LIMIT 1
+                    ");
+                    $qGarantia->execute([
+                        (int)$recepcion['idreclamo_servicio'],
+                        (int)$datos['id_sucursal']
+                    ]);
+
+                    $garantia = $qGarantia->fetch(PDO::FETCH_ASSOC);
+                    $dentroGarantia = $garantia &&
+                        (int)$garantia['requiere_garantia'] === 1 &&
+                        date('Y-m-d') <= $garantia['fecha_vencimiento'] &&
+                        (
+                            $garantia['km_origen'] === null ||
+                            $garantia['km_origen'] === '' ||
+                            (int)$garantia['km_reclamo'] <= ((int)$garantia['km_origen'] + 2000)
+                        );
+
+                    if ($dentroGarantia) {
+                        $postAccion = [
+                            "PostAccion" => "generar_ot_reclamo",
+                            "idreclamo_servicio" => (int)$recepcion['idreclamo_servicio']
+                        ];
+                    }
                 }
             }
 

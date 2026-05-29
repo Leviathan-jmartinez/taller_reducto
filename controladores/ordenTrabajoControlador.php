@@ -293,7 +293,6 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
                     SELECT
                 ps.idpresupuesto_servicio,
                 ps.fecha,
-                ps.created_at,
                 ps.id_cliente,
                 ps.id_vehiculo,
                 c.nombre_cliente,
@@ -321,7 +320,7 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
                 OR v.placa LIKE :busqueda
                 OR ma.mod_descri LIKE :busqueda
             )
-            ORDER BY ps.created_at DESC
+            ORDER BY ps.fecha DESC
         ";
 
         $sql = self::conectar()->prepare($consulta);
@@ -347,10 +346,9 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
         foreach ($sql->fetchAll() as $row) {
             $cliente = trim(($row['nombre_cliente'] ?? '') . ' ' . ($row['apellido_cliente'] ?? ''));
             $vehiculo = trim(($row['modelo'] ?? '') . ' ' . ($row['placa'] ?? ''));
-            $fecha = !empty($row['created_at']) ? date("d/m/Y", strtotime($row['created_at'])) : '';
+            $fecha = !empty($row['fecha']) ? date("d/m/Y", strtotime($row['fecha'])) : '';
             $args = htmlspecialchars(json_encode([
                 (int)$row['idpresupuesto_servicio'],
-                (int)$row['idrecepcion'],
                 $cliente,
                 $vehiculo,
                 $fecha
@@ -424,15 +422,19 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
             ]);
         }
 
-        if (empty($_POST['idpresupuesto_servicio']) || empty($_POST['idtrabajos'])) {
+        $idPresupuesto = (int) mainModel::limpiar_string($_POST['idpresupuesto_servicio'] ?? '0');
+        $idEquipo = (int) mainModel::limpiar_string($_POST['idtrabajos'] ?? '0');
+        $idTecnico = (int) mainModel::limpiar_string($_POST['tecnico_responsable'] ?? '0');
+
+        if ($idPresupuesto <= 0) {
             return json_encode([
                 'Alerta' => 'simple',
                 'Titulo' => 'Error',
-                'Texto'  => 'Datos incompletos',
+                'Texto'  => 'Debe seleccionar un presupuesto aprobado',
                 'Tipo'   => 'error'
             ]);
         }
-        if (empty($_POST['idtrabajos']) || empty($_POST['tecnico_responsable'])) {
+        if ($idEquipo <= 0 || $idTecnico <= 0) {
             return json_encode([
                 'Alerta' => 'simple',
                 'Titulo' => 'Error',
@@ -443,11 +445,11 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
 
 
         $datos = [
-            'idpresupuesto' => $_POST['idpresupuesto_servicio'],
-            'idusuario'     => $_POST['id_usuario'],
+            'idpresupuesto' => $idPresupuesto,
+            'idusuario'     => $_SESSION['id_str'],
             'idsucursal'    => $_SESSION['nick_sucursal'],
-            'idtrabajos'          => intval($_POST['idtrabajos']),
-            'tecnico_responsable' => intval($_POST['tecnico_responsable']),
+            'idtrabajos'          => $idEquipo,
+            'tecnico_responsable' => $idTecnico,
             'observacion'   => $_POST['observacion'] ?? ''
         ];
 

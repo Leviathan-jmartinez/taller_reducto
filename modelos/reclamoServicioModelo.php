@@ -28,7 +28,8 @@ class reclamoServicioModelo extends mainModel
             $qOrigen = $pdo->prepare("
                 SELECT
                     id_cliente,
-                    id_vehiculo
+                    id_vehiculo,
+                    fecha_ejecucion
                 FROM registro_servicio
                 WHERE idregistro_servicio = ?
                 LIMIT 1
@@ -42,6 +43,35 @@ class reclamoServicioModelo extends mainModel
             ) {
                 $pdo->rollBack();
                 return ['msg' => 'No se pudo identificar cliente y vehiculo del servicio reclamado'];
+            }
+
+            $qVehiculoCliente = $pdo->prepare("
+                SELECT id_vehiculo
+                FROM vehiculos
+                WHERE id_vehiculo = ?
+                  AND id_cliente = ?
+                LIMIT 1
+            ");
+            $qVehiculoCliente->execute([
+                $origenServicio['id_vehiculo'],
+                $origenServicio['id_cliente']
+            ]);
+
+            if (!$qVehiculoCliente->fetchColumn()) {
+                $pdo->rollBack();
+                return ['msg' => 'El vehiculo del servicio reclamado no pertenece al cliente'];
+            }
+
+            $requiereGarantia = (int)($datos['requiere_garantia'] ?? 0);
+            if ($requiereGarantia === 1) {
+                $fechaVencimiento = (new DateTime($origenServicio['fecha_ejecucion']))
+                    ->modify('+3 months')
+                    ->format('Y-m-d');
+
+                if (date('Y-m-d') > $fechaVencimiento) {
+                    $pdo->rollBack();
+                    return ['msg' => 'La garantia esta vencida por fecha'];
+                }
             }
 
             /* INSERT RECLAMO */
@@ -73,7 +103,7 @@ class reclamoServicioModelo extends mainModel
                 $datos['tipo_reclamo'],
                 $datos['origen'],
                 $datos['prioridad'],
-                $datos['requiere_garantia'],
+                $requiereGarantia,
                 $datos['usuario']
             ]);
             /* 🔥 MARCAR REGISTRO COMO CON RECLAMO */
@@ -101,6 +131,15 @@ class reclamoServicioModelo extends mainModel
         $sql = self::conectar()->prepare("
         SELECT 
             rs.idregistro_servicio,
+            rs.fecha_ejecucion,
+            DATE_ADD(rs.fecha_ejecucion, INTERVAL 3 MONTH) AS garantia_fecha_vencimiento,
+            MAX(COALESCE(r_normal.kilometraje, r_reclamo.kilometraje)) AS garantia_km_inicio,
+            MAX(
+                CASE
+                    WHEN COALESCE(r_normal.kilometraje, r_reclamo.kilometraje) IS NULL THEN NULL
+                    ELSE CAST(COALESCE(r_normal.kilometraje, r_reclamo.kilometraje) AS UNSIGNED) + 2000
+                END
+            ) AS garantia_km_limite,
             MAX(COALESCE(c.nombre_cliente, '')) AS nombre_cliente,
             MAX(COALESCE(c.apellido_cliente, '')) AS apellido_cliente,
             MAX(COALESCE(m.mod_descri, '')) AS mod_descri,
@@ -109,6 +148,11 @@ class reclamoServicioModelo extends mainModel
             GROUP_CONCAT(DISTINCT a.desc_articulo SEPARATOR '|') AS trabajos
 
         FROM registro_servicio rs
+        INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rs.idorden_trabajo
+        LEFT JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+        LEFT JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
+        LEFT JOIN recepcion_servicio r_normal ON r_normal.idrecepcion = ds.idrecepcion
+        LEFT JOIN recepcion_servicio r_reclamo ON r_reclamo.idreclamo_servicio = ot.idreclamo_servicio
         LEFT JOIN registro_servicio_detalle d ON d.idregistro_servicio = rs.idregistro_servicio
         LEFT JOIN articulos a ON a.id_articulo = d.id_articulo
         LEFT JOIN clientes c ON c.id_cliente = rs.id_cliente
@@ -156,7 +200,6 @@ class reclamoServicioModelo extends mainModel
             MAX(COALESCE(v.placa, '')) AS placa,
             MAX(COALESCE(m.mod_descri, '')) AS modelo
         FROM reclamo_servicio rs
-        INNER JOIN registro_servicio rgs ON rgs.idregistro_servicio = rs.idregistro_servicio
         LEFT JOIN clientes c ON c.id_cliente = rs.id_cliente
         LEFT JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
         LEFT JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
@@ -171,7 +214,6 @@ class reclamoServicioModelo extends mainModel
         $total = $pdo->query("
         SELECT COUNT(DISTINCT rs.idreclamo_servicio)
         FROM reclamo_servicio rs
-        INNER JOIN registro_servicio rgs ON rgs.idregistro_servicio = rs.idregistro_servicio
         LEFT JOIN clientes c ON c.id_cliente = rs.id_cliente
         LEFT JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
         LEFT JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
