@@ -182,8 +182,7 @@ class reclamoServicioControlador extends reclamoServicioModelo
                      OR c.apellido_cliente LIKE '%$busqueda%' 
                      OR v.placa LIKE '%$busqueda%'
                      OR rs.idreclamo_servicio LIKE '%$busqueda%'
-                     OR rgs.idregistro_servicio LIKE '%$busqueda%'
-                     OR ot.idorden_trabajo LIKE '%$busqueda%')",
+                     OR rgs.idregistro_servicio LIKE '%$busqueda%')",
                 "tipo"  => "RAW"
             ];
         }

@@ -27,15 +27,10 @@ class reclamoServicioModelo extends mainModel
 
             $qOrigen = $pdo->prepare("
                 SELECT
-                    COALESCE(r_normal.id_cliente, r_reclamo.id_cliente) AS id_cliente,
-                    COALESCE(r_normal.id_vehiculo, r_reclamo.id_vehiculo) AS id_vehiculo
-                FROM registro_servicio rgs
-                INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rgs.idorden_trabajo
-                LEFT JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-                LEFT JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
-                LEFT JOIN recepcion_servicio r_normal ON r_normal.idrecepcion = ds.idrecepcion
-                LEFT JOIN recepcion_servicio r_reclamo ON r_reclamo.idreclamo_servicio = ot.idreclamo_servicio
-                WHERE rgs.idregistro_servicio = ?
+                    id_cliente,
+                    id_vehiculo
+                FROM registro_servicio
+                WHERE idregistro_servicio = ?
                 LIMIT 1
             ");
             $qOrigen->execute([$datos['idregistro_servicio']]);
@@ -106,7 +101,6 @@ class reclamoServicioModelo extends mainModel
         $sql = self::conectar()->prepare("
         SELECT 
             rs.idregistro_servicio,
-            MAX(ot.idorden_trabajo) AS idorden_trabajo,
             MAX(COALESCE(c.nombre_cliente, '')) AS nombre_cliente,
             MAX(COALESCE(c.apellido_cliente, '')) AS apellido_cliente,
             MAX(COALESCE(m.mod_descri, '')) AS mod_descri,
@@ -115,16 +109,10 @@ class reclamoServicioModelo extends mainModel
             GROUP_CONCAT(DISTINCT a.desc_articulo SEPARATOR '|') AS trabajos
 
         FROM registro_servicio rs
-        INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rs.idorden_trabajo
         LEFT JOIN registro_servicio_detalle d ON d.idregistro_servicio = rs.idregistro_servicio
         LEFT JOIN articulos a ON a.id_articulo = d.id_articulo
-
-        LEFT JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-        LEFT JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
-        LEFT JOIN recepcion_servicio r_normal ON r_normal.idrecepcion = ds.idrecepcion
-        LEFT JOIN recepcion_servicio r_reclamo ON r_reclamo.idreclamo_servicio = ot.idreclamo_servicio
-        LEFT JOIN clientes c ON c.id_cliente = COALESCE(r_normal.id_cliente, r_reclamo.id_cliente)
-        LEFT JOIN vehiculos v ON v.id_vehiculo = COALESCE(r_normal.id_vehiculo, r_reclamo.id_vehiculo)
+        LEFT JOIN clientes c ON c.id_cliente = rs.id_cliente
+        LEFT JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
         LEFT JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
 
         WHERE rs.estado = 1
@@ -134,8 +122,7 @@ class reclamoServicioModelo extends mainModel
             c.nombre_cliente LIKE :b1
             OR c.apellido_cliente LIKE :b2
             OR v.placa LIKE :b3
-            OR ot.idorden_trabajo LIKE :b4
-            OR rs.idregistro_servicio LIKE :b5
+            OR rs.idregistro_servicio LIKE :b4
         )
 
         GROUP BY rs.idregistro_servicio
@@ -150,7 +137,6 @@ class reclamoServicioModelo extends mainModel
         $sql->bindValue(':b2', $busqueda);
         $sql->bindValue(':b3', $busqueda);
         $sql->bindValue(':b4', $busqueda);
-        $sql->bindValue(':b5', $busqueda);
 
         $sql->execute();
 
@@ -165,14 +151,12 @@ class reclamoServicioModelo extends mainModel
         $sql = "
         SELECT 
             rs.*,
-            MAX(rgs.idorden_trabajo) AS idorden_trabajo,
             MAX(COALESCE(c.nombre_cliente, '')) AS nombre_cliente,
             MAX(COALESCE(c.apellido_cliente, '')) AS apellido_cliente,
             MAX(COALESCE(v.placa, '')) AS placa,
             MAX(COALESCE(m.mod_descri, '')) AS modelo
         FROM reclamo_servicio rs
         INNER JOIN registro_servicio rgs ON rgs.idregistro_servicio = rs.idregistro_servicio
-        INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rgs.idorden_trabajo
         LEFT JOIN clientes c ON c.id_cliente = rs.id_cliente
         LEFT JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
         LEFT JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
@@ -188,7 +172,6 @@ class reclamoServicioModelo extends mainModel
         SELECT COUNT(DISTINCT rs.idreclamo_servicio)
         FROM reclamo_servicio rs
         INNER JOIN registro_servicio rgs ON rgs.idregistro_servicio = rs.idregistro_servicio
-        INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rgs.idorden_trabajo
         LEFT JOIN clientes c ON c.id_cliente = rs.id_cliente
         LEFT JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
         LEFT JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto

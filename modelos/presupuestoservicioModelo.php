@@ -568,9 +568,8 @@ class presupuestoservicioModelo extends mainModel
         $baseSQL = "
         FROM presupuesto_servicio ps
         LEFT JOIN diagnostico_servicio d ON d.id_diagnostico = ps.id_diagnostico
-        LEFT JOIN recepcion_servicio r ON r.idrecepcion = d.idrecepcion
-        LEFT JOIN clientes c ON c.id_cliente = COALESCE(r.id_cliente, ps.id_cliente)
-        LEFT JOIN vehiculos v ON v.id_vehiculo = COALESCE(r.id_vehiculo, ps.id_vehiculo)
+        LEFT JOIN clientes c ON c.id_cliente = ps.id_cliente
+        LEFT JOIN vehiculos v ON v.id_vehiculo = ps.id_vehiculo
         LEFT JOIN modelo_auto ma ON ma.id_modeloauto = v.id_modeloauto 
         INNER JOIN usuarios u ON u.id_usuario = ps.id_usuario
         WHERE 1=1
@@ -711,9 +710,8 @@ class presupuestoservicioModelo extends mainModel
                 u.usu_apellido
             FROM presupuesto_servicio ps
             LEFT JOIN diagnostico_servicio d ON d.id_diagnostico = ps.id_diagnostico
-            LEFT JOIN recepcion_servicio r ON r.idrecepcion = d.idrecepcion
-            INNER JOIN clientes c ON c.id_cliente = COALESCE(r.id_cliente, ps.id_cliente)
-            INNER JOIN vehiculos v ON v.id_vehiculo = COALESCE(r.id_vehiculo, ps.id_vehiculo)
+            INNER JOIN clientes c ON c.id_cliente = ps.id_cliente
+            INNER JOIN vehiculos v ON v.id_vehiculo = ps.id_vehiculo
             INNER JOIN modelo_auto ma ON ma.id_modeloauto = v.id_modeloauto
             INNER JOIN usuarios u ON u.id_usuario = ps.id_usuario
             WHERE ps.idpresupuesto_servicio = :id

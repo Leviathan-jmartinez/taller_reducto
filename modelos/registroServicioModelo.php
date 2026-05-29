@@ -564,55 +564,54 @@ class registroServicioModelo extends mainModel
             $updOT->execute([$reg['idorden_trabajo']]);
 
             /* ================= REABRIR RECEPCIÓN ================= */
-            $updRec = $pdo->prepare("
-                UPDATE recepcion_servicio
-                SET estado = 2,
-                    fecha_salida = NULL,
-                    fecha_actualizacion = NOW()
-                WHERE idrecepcion = (
-                    SELECT COALESCE(
-                        /* NORMAL */
-                        (SELECT ds.idrecepcion
-                        FROM presupuesto_servicio ps
-                        INNER JOIN diagnostico_servicio ds 
-                            ON ds.id_diagnostico = ps.id_diagnostico
-                        WHERE ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-                        LIMIT 1),
-
-                        /* RECLAMO */
-                        (SELECT r.idrecepcion
-                        FROM recepcion_servicio r
-                        WHERE r.idreclamo_servicio = ot.idreclamo_servicio
-                        LIMIT 1)
-                    )
-                    FROM orden_trabajo ot
-                    WHERE ot.idorden_trabajo = ?
-                )
-            ");
-            $updRec->execute([$reg['idorden_trabajo']]);
-
-            $updReclamo = $pdo->prepare("
-                UPDATE reclamo_servicio rc
-                INNER JOIN recepcion_servicio r
-                    ON r.idreclamo_servicio = rc.idreclamo_servicio
-                INNER JOIN orden_trabajo ot
-                    ON (
-                        ot.idreclamo_servicio = rc.idreclamo_servicio
-                        OR ot.idpresupuesto_servicio IN (
-                            SELECT ps.idpresupuesto_servicio
+            $qOrigen = $pdo->prepare("
+                SELECT
+                    ot.idreclamo_servicio,
+                    COALESCE(
+                        (
+                            SELECT ds.idrecepcion
                             FROM presupuesto_servicio ps
                             INNER JOIN diagnostico_servicio ds
                                 ON ds.id_diagnostico = ps.id_diagnostico
-                            WHERE ds.idrecepcion = r.idrecepcion
+                            WHERE ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+                            LIMIT 1
+                        ),
+                        (
+                            SELECT r.idrecepcion
+                            FROM recepcion_servicio r
+                            WHERE r.idreclamo_servicio = ot.idreclamo_servicio
+                            LIMIT 1
                         )
-                    )
-                SET rc.estado = 2,
-                    rc.fecha_cierre = NULL,
-                    rc.observacion_cierre = NULL
+                    ) AS idrecepcion
+                FROM orden_trabajo ot
                 WHERE ot.idorden_trabajo = ?
-                  AND rc.estado = 3
+                LIMIT 1
             ");
-            $updReclamo->execute([$reg['idorden_trabajo']]);
+            $qOrigen->execute([$reg['idorden_trabajo']]);
+            $origen = $qOrigen->fetch(PDO::FETCH_ASSOC);
+
+            if (!empty($origen['idrecepcion'])) {
+                $updRec = $pdo->prepare("
+                    UPDATE recepcion_servicio
+                    SET estado = 2,
+                        fecha_salida = NULL,
+                        fecha_actualizacion = NOW()
+                    WHERE idrecepcion = ?
+                ");
+                $updRec->execute([$origen['idrecepcion']]);
+            }
+
+            if (!empty($origen['idreclamo_servicio'])) {
+                $updReclamo = $pdo->prepare("
+                    UPDATE reclamo_servicio
+                    SET estado = 2,
+                        fecha_cierre = NULL,
+                        observacion_cierre = NULL
+                    WHERE idreclamo_servicio = ?
+                      AND estado = 3
+                ");
+                $updReclamo->execute([$origen['idreclamo_servicio']]);
+            }
 
 
             $pdo->commit();

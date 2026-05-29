@@ -85,6 +85,9 @@ El pedido queda registrado en cabecera y detalle.
 El pedido puede quedar pendiente, procesado o anulado.  
 El sistema emite mensajes de confirmacion o advertencia segun corresponda.
 
+* **Tablas interactuadas**  
+`pedido_cabecera`, `pedido_detalle`, `articulos`, `usuarios`, `sucursales`
+
 ---
 
 ## Movimiento "Gestion de Presupuestos de Compra"
@@ -165,6 +168,9 @@ El presupuesto queda registrado con proveedor, articulos y total.
 Si fue generado desde pedido, el pedido queda procesado.  
 El sistema emite confirmacion de registro o anulacion.
 
+* **Tablas interactuadas**  
+`presupuesto_compra`, `presupuesto_detalle`, `pedido_cabecera`, `pedido_detalle`, `proveedores`, `articulos`, `usuarios`, `sucursales`
+
 ---
 
 ## Movimiento "Gestion de Ordenes de Compra"
@@ -238,6 +244,9 @@ La orden de compra queda registrada en cabecera y detalle.
 El presupuesto relacionado puede quedar procesado.  
 El sistema emite confirmacion de registro o anulacion.
 
+* **Tablas interactuadas**  
+`orden_compra`, `orden_compra_detalle`, `presupuesto_compra`, `presupuesto_detalle`, `proveedores`, `articulos`, `articulo_proveedor`, `usuarios`, `sucursales`
+
 ---
 
 ## Movimiento "Gestion de Nota de Remision"
@@ -287,6 +296,9 @@ El sistema no permite anular sin permiso.
 * **Post Condicion**  
 La nota de remision queda registrada con cabecera y detalle.  
 La remision puede quedar activa, procesada o anulada.
+
+* **Tablas interactuadas**  
+`nota_remision`, `nota_remision_detalle`, `compra_cabecera`, `compra_detalle`, `proveedores`, `usuarios`, `sucursales`
 
 ---
 
@@ -351,6 +363,9 @@ El sistema revierte la transaccion si ocurre un error.
 La nota queda registrada y asociada a la factura de compra.  
 Las cuentas a pagar y libro de compras quedan actualizados.  
 El stock se ajusta cuando la nota de credito implica devolucion.
+
+* **Tablas interactuadas**  
+`nota_compra`, `nota_compra_detalle`, `compra_cabecera`, `compra_detalle`, `proveedores`, `cuentas_a_pagar`, `libro_compra`, `stock`, `movimientostock`, `articulos`, `usuarios`, `sucursales`
 
 ---
 
@@ -417,6 +432,9 @@ El stock origen queda descontado al enviar.
 El stock destino queda incrementado al recibir.  
 La transferencia queda en estado en transito, recibido o recibido parcial.  
 Los movimientos de stock quedan registrados.
+
+* **Tablas interactuadas**  
+`transferencia_stock`, `transferencia_stock_detalle`, `stock`, `movimientostock`, `nota_remision`, `nota_remision_detalle`, `articulos`, `sucursales`, `usuarios`, `sucursal_documento`
 
 ---
 
@@ -497,6 +515,9 @@ El inventario queda registrado en cabecera y detalle.
 El stock se actualiza al aplicar diferencias.  
 Los movimientos de ajuste y anulacion quedan registrados.
 
+* **Tablas interactuadas**  
+`ajuste_inventario`, `ajuste_inventario_detalle`, `stock`, `movimientostock`, `articulos`, `categorias`, `proveedores`, `sucursales`, `usuarios`
+
 ---
 
 ## Movimiento "Gestion de Recepcion de Servicio"
@@ -539,6 +560,7 @@ El sistema valida sesion y sucursal.
 
 * El usuario completa kilometraje, nivel de combustible, estado exterior, objetos dentro del vehiculo, tipo de servicio, area del problema, prioridad, accesorios y observacion.
 * El sistema registra la cabecera en `recepcion_servicio` con `id_cliente`, `id_vehiculo`, usuario, sucursal, fecha de ingreso y estado activo.
+* Si se adjuntan fotos, el sistema registra las rutas en `recepcion_fotos`.
 * Si la recepcion viene desde un reclamo, el sistema marca el origen como reclamo y guarda el identificador del reclamo.
 * El sistema emite mensaje de confirmacion.
 
@@ -548,8 +570,8 @@ El sistema valida sesion y sucursal.
 * El sistema muestra recepciones de la sucursal del usuario.
 * El usuario selecciona una recepcion y presiona Anular.
 * El sistema verifica existencia, sucursal y estado.
-* El sistema no permite anular si ya existe un diagnostico activo relacionado.
 * El sistema actualiza la recepcion a estado anulado.
+* Si la recepcion proviene de reclamo, el sistema reabre el reclamo relacionado.
 
 * **Flujo Alternativo**  
 El sistema no permite guardar sin cliente.  
@@ -562,6 +584,9 @@ El sistema revierte la transaccion si falla el alta rapida de cliente o vehiculo
 La recepcion queda registrada y disponible para diagnostico.  
 El cliente y vehiculo quedan identificados directamente en la recepcion.  
 La informacion inicial de kilometraje, combustible y estado del vehiculo queda como dato propio del ingreso al taller, no como dato maestro del vehiculo.
+
+* **Tablas interactuadas**  
+`recepcion_servicio`, `recepcion_fotos`, `clientes`, `ciudades`, `vehiculos`, `modelo_auto`, `marcas`, `usuarios`, `reclamo_servicio`
 
 ---
 
@@ -624,6 +649,9 @@ El diagnostico queda registrado con cabecera y detalle tecnico.
 La recepcion queda vinculada al diagnostico.  
 El diagnostico queda disponible para generar presupuesto de servicio.
 
+* **Tablas interactuadas**  
+`diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `equipo_trabajo`, `usuarios`, `presupuesto_servicio`, `orden_trabajo`
+
 ---
 
 ## Movimiento "Gestion de Presupuesto de Servicio"
@@ -652,7 +680,7 @@ El sistema valida sesion y sucursal.
 **Presupuesto desde diagnostico**
 
 * El usuario busca un diagnostico disponible.
-* El sistema consulta `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `clientes` y `vehiculos`.
+* El sistema consulta `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto` y `marcas`.
 * El usuario selecciona el diagnostico.
 * El sistema copia al presupuesto el cliente y vehiculo de la recepcion.
 * El sistema muestra los detalles tecnicos como referencia para cargar trabajos y repuestos.
@@ -662,40 +690,100 @@ El sistema valida sesion y sucursal.
 * El usuario selecciona cliente y vehiculo sin requerir diagnostico previo.
 * El sistema marca el presupuesto con origen `PRELIMINAR`.
 * El presupuesto preliminar permite entregar una estimacion inicial al cliente.
-* Para generar una orden de trabajo normal, el sistema exige convertir o relacionar el presupuesto a un diagnostico formal y aprobarlo.
+* Si el presupuesto preliminar avanza a una revision real del taller, debe vincularse a una recepcion y diagnostico formal antes de continuar el proceso.
 
 **Agregar trabajos y repuestos**
 
 * El usuario busca articulos o servicios por codigo o descripcion.
-* El sistema consulta `articulos`, precios, stock referencial y datos comerciales disponibles.
+* El sistema consulta `articulos`, `stock`, precios y datos comerciales disponibles.
 * El usuario ingresa cantidad y precio unitario.
 * El sistema valida duplicidad, cantidad y precio.
 * El sistema calcula subtotal, descuentos, promociones y total final en pantalla.
-* Si existen descuentos, promociones o reglas comerciales aplicables, el sistema registra la relacion en las tablas correspondientes.
+* Si existen descuentos o promociones aplicables, el sistema registra la relacion en las tablas correspondientes.
 * El sistema registra la cabecera en `presupuesto_servicio` con `id_cliente`, `id_vehiculo`, origen, sucursal, usuario, fecha, vencimiento, subtotal, descuento y total final.
 * El sistema registra el detalle en `presupuesto_detalleservicio`.
 
-**Aprobar, anular y generar OT**
+**Aprobar y anular**
 
 * El usuario puede aprobar el presupuesto cuando el cliente acepta la propuesta.
 * El sistema actualiza el estado del presupuesto aprobado.
-* El usuario puede generar una orden de trabajo desde un presupuesto aprobado.
-* El sistema valida que no exista una orden activa duplicada para el presupuesto.
-* El sistema copia cliente, vehiculo y detalle del presupuesto a la orden de trabajo.
-* Al generar la orden, el presupuesto queda procesado.
-* El usuario puede anular presupuestos que no esten procesados por una orden activa.
+* El usuario puede anular presupuestos que no tengan una orden de trabajo activa relacionada.
 
 * **Flujo Alternativo**  
 El sistema no permite guardar sin cliente ni vehiculo.  
 El sistema no permite guardar sin detalle.  
-El sistema no permite generar OT desde un presupuesto preliminar sin diagnostico formal.  
-El sistema no permite generar dos ordenes activas para el mismo presupuesto.  
+El sistema no permite usar un presupuesto preliminar como orden operativa del taller.  
 El sistema no permite anular presupuestos ya procesados.
 
 * **Post Condicion**  
 El presupuesto queda registrado con identidad propia de cliente y vehiculo.  
-El detalle economico queda disponible para PDF, aprobacion y generacion de orden de trabajo.  
-El presupuesto puede quedar preliminar, activo, aprobado, procesado o anulado segun el flujo.
+El detalle economico queda disponible para PDF, aprobacion y consulta comercial.  
+El presupuesto puede quedar preliminar, activo, aprobado o anulado segun el flujo.
+
+* **Tablas interactuadas**  
+`presupuesto_servicio`, `presupuesto_detalleservicio`, `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `articulos`, `stock`, `descuentos`, `descuento_cliente`, `promociones`, `promocion_producto`, `presupuesto_descuento`, `presupuesto_promocion`, `orden_trabajo`, `usuarios`
+
+---
+
+## Movimiento "Gestion de Promociones"
+
+* **Nombre de Caso de Uso**  
+Registrar y Gestionar Promocion
+
+* **Descripcion Basica**  
+Permite registrar promociones aplicables a articulos o servicios. La promocion define tipo de beneficio, valor, vigencia, sucursal y articulos alcanzados, para luego aplicarse en presupuestos de servicio.
+
+* **Actores relacionados**  
+Administracion / Usuario autorizado
+
+* **Pre Condicion**  
+El usuario debe estar autenticado.  
+Deben existir articulos activos para asociar a la promocion.
+
+* **Flujo Basico**
+
+* El usuario carga nombre, tipo, valor, vigencia, sucursal, descripcion y estado.
+* El sistema permite buscar articulos activos por codigo o descripcion.
+* El sistema registra o actualiza la cabecera en `promociones`.
+* El sistema registra, reemplaza o elimina articulos asociados en `promocion_producto`.
+* El listado expone usuario creador/modificador y sucursal cuando corresponde.
+
+* **Post Condicion**  
+La promocion queda disponible para presupuestos de servicio si esta activa, vigente y asociada al articulo.
+
+* **Tablas interactuadas**  
+`promociones`, `promocion_producto`, `articulos`, `usuarios`, `sucursales`
+
+---
+
+## Movimiento "Gestion de Descuentos"
+
+* **Nombre de Caso de Uso**  
+Registrar y Gestionar Descuento
+
+* **Descripcion Basica**  
+Permite registrar descuentos comerciales y asociarlos a clientes especificos, para aplicarlos en presupuestos de servicio.
+
+* **Actores relacionados**  
+Administracion / Usuario autorizado
+
+* **Pre Condicion**  
+El usuario debe estar autenticado.  
+Deben existir clientes activos para asignar descuentos.
+
+* **Flujo Basico**
+
+* El usuario carga nombre, tipo, valor, descripcion, aplicacion, vigencia, sucursal y estado.
+* El sistema permite buscar clientes por documento, nombre o apellido.
+* El sistema registra o actualiza la cabecera en `descuentos`.
+* El sistema registra o elimina clientes asociados en `descuento_cliente`.
+* El listado expone usuario creador/modificador y sucursal cuando corresponde.
+
+* **Post Condicion**  
+El descuento queda disponible para presupuestos de servicio si esta activo, vigente y asociado al cliente.
+
+* **Tablas interactuadas**  
+`descuentos`, `descuento_cliente`, `clientes`, `usuarios`, `sucursales`
 
 ---
 
@@ -705,7 +793,7 @@ El presupuesto puede quedar preliminar, activo, aprobado, procesado o anulado se
 Generar y Gestionar Orden de Trabajo
 
 * **Descripcion Basica**  
-Permite convertir un presupuesto aprobado o un reclamo valido en una orden operativa para el taller. En el flujo normal, la OT no se genera directamente desde el diagnostico; se genera desde un `presupuesto_servicio` aprobado, y ese presupuesto debe estar asociado a un diagnostico formal. La orden de trabajo debe mostrar lo necesario para ejecutar el servicio: cliente, vehiculo, origen, equipo, tecnico responsable, trabajos autorizados y repuestos/productos a utilizar. No debe funcionar como una copia visual del presupuesto ni centrar la vista en totales comerciales.
+Permite generar una orden operativa para el taller. El flujo normal genera la OT desde un presupuesto de servicio aprobado y originado en diagnostico. Tambien existe el flujo por reclamo, donde la OT se genera desde un reclamo valido en garantia y sin cobro. La orden de trabajo muestra cliente, vehiculo, origen, equipo, tecnico responsable, trabajos autorizados y repuestos/productos a utilizar.
 
 * **Actores relacionados**  
 Jefe de taller / Tecnico / Asesor de servicio / Usuario autorizado
@@ -713,34 +801,41 @@ Jefe de taller / Tecnico / Asesor de servicio / Usuario autorizado
 * **Pre Condicion**  
 El usuario debe estar autenticado.  
 Debe existir una sucursal asociada al usuario.  
-Para origen normal, debe existir un presupuesto aprobado, de origen diagnostico y apto para generar OT.  
-Para origen reclamo, debe existir un reclamo activo y validado.  
-Deben existir equipo de trabajo y, opcionalmente, tecnico responsable.
+Para OT normal, debe existir un presupuesto aprobado, de origen diagnostico y sin OT activa relacionada.  
+Para OT por reclamo, debe existir un reclamo en proceso con recepcion y diagnostico activo.  
+Para OT por reclamo, el diagnostico debe indicar reclamo valido, garantia aplicable y sin cobro.  
+Deben existir equipo de trabajo y, opcionalmente, tecnico responsable segun el flujo.
 
 * **Flujo Basico**
 
-El usuario ingresa al menu Nueva Orden de Trabajo.  
+El usuario ingresa al menu de Orden de Trabajo o al listado/detalle de diagnosticos y reclamos.  
 El sistema valida sesion y sucursal.
 
-**Generar desde presupuesto**
+**Generar desde presupuesto aprobado**
 
-* El usuario busca un presupuesto aprobado.
-* El sistema consulta `presupuesto_servicio`, `presupuesto_detalleservicio`, `clientes`, `vehiculos`, `articulos`, `diagnostico_servicio` y `recepcion_servicio` cuando corresponde.
+* El usuario busca un presupuesto aprobado por cliente, vehiculo, chapa o modelo.
+* El sistema usa `presupuesto_servicio` como fuente principal de cliente, vehiculo, sucursal, estado y origen.
+* El sistema consulta `clientes`, `vehiculos` y `modelo_auto` para exponer y buscar datos visibles del cliente y vehiculo.
+* El sistema consulta `diagnostico_servicio` y `recepcion_servicio` como trazabilidad del origen diagnostico.
+* El sistema consulta `orden_trabajo` para validar que el presupuesto no tenga una OT activa relacionada.
+* El sistema muestra solo presupuestos aprobados, de origen diagnostico y sin OT activa relacionada.
 * El usuario selecciona el presupuesto.
-* El sistema carga datos de cliente, vehiculo y origen.
-* El sistema muestra trabajos y repuestos autorizados, sin usar la vista como resumen comercial del presupuesto.
-* El usuario selecciona equipo de trabajo, tecnico responsable y observaciones operativas.
-* El sistema registra la cabecera en `orden_trabajo` con `id_cliente`, `id_vehiculo`, presupuesto, usuario, sucursal, equipo, tecnico y estado activo.
-* El sistema copia los articulos del presupuesto en `orden_trabajo_detalle`.
-* El sistema actualiza el presupuesto como procesado.
+* El sistema carga cliente, vehiculo, fecha y detalle autorizado desde `presupuesto_detalleservicio` y `articulos`.
+* El usuario selecciona equipo, tecnico responsable y observacion operativa.
+* El sistema registra la cabecera en `orden_trabajo` y copia el detalle del presupuesto a `orden_trabajo_detalle`.
+* El sistema actualiza `presupuesto_servicio` a procesado.
 
-**Generar desde reclamo**
+**Generar desde diagnostico de reclamo en garantia**
 
-* El usuario selecciona un reclamo activo que requiere atencion del taller.
-* El sistema consulta `reclamo_servicio`, `registro_servicio`, `clientes`, `vehiculos`, recepcion y diagnostico asociado cuando exista.
-* El sistema registra la orden con origen `RECLAMO`, cliente y vehiculo directos.
-* Si el reclamo no requiere cobro por garantia, la orden puede generarse sin presupuesto comercial.
-* El usuario puede completar o ajustar trabajos y repuestos autorizados para la ejecucion.
+* El usuario selecciona un diagnostico asociado a un reclamo.
+* El sistema consulta `diagnostico_servicio`, `recepcion_servicio`, `reclamo_servicio`, `registro_servicio`, `clientes` y `vehiculos`.
+* El sistema valida que el diagnostico pertenezca a un reclamo activo.
+* El sistema valida que el diagnostico tenga reclamo valido, garantia aplicable y que no requiera cobro.
+* El sistema valida que no exista una OT activa para el mismo reclamo.
+* El sistema registra la cabecera en `orden_trabajo` con origen `RECLAMO`, `id_cliente`, `id_vehiculo`, usuario, sucursal y estado operativo.
+* El sistema deja `idpresupuesto_servicio` sin valor porque esta OT no nace de presupuesto.
+* El sistema actualiza el reclamo y el diagnostico para reflejar que ya se genero la orden.
+* El usuario puede completar o ajustar trabajos y repuestos autorizados para la ejecucion cuando corresponda.
 
 **Asignar y cerrar**
 
@@ -751,16 +846,21 @@ El sistema valida sesion y sucursal.
 
 * **Flujo Alternativo**  
 El sistema no permite generar OT sin cliente ni vehiculo.  
-El sistema no permite generar OT normal desde presupuesto no aprobado.  
-El sistema no permite generar OT directa desde diagnostico sin presupuesto aprobado.  
-El sistema no permite generar OT normal desde presupuesto preliminar sin diagnostico.  
-El sistema no permite duplicar una OT activa para el mismo presupuesto o reclamo.  
+El sistema no permite generar OT normal desde presupuestos no aprobados o preliminares sin diagnostico.  
+El sistema no permite duplicar una OT activa para el mismo presupuesto.  
+El sistema no permite generar OT por reclamo desde diagnosticos que no correspondan a reclamo.  
+El sistema no permite generar OT si el reclamo requiere cobro.  
+El sistema no permite generar OT si el reclamo no aplica garantia.  
+El sistema no permite duplicar una OT activa para el mismo reclamo.  
 El sistema no permite anular OT con registro de servicio activo.
 
 * **Post Condicion**  
 La orden queda registrada con cliente, vehiculo y origen propios.  
-Los trabajos y repuestos quedan copiados o cargados en el detalle operativo.  
+Los trabajos y repuestos quedan copiados desde presupuesto o cargados manualmente para reclamo, segun el origen.  
 La orden queda disponible para asignacion, seguimiento y registro de servicio.
+
+* **Tablas interactuadas**  
+`orden_trabajo`, `orden_trabajo_detalle`, `presupuesto_servicio`, `presupuesto_detalleservicio`, `presupuesto_promocion`, `promociones`, `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `reclamo_servicio`, `registro_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `articulos`, `stock`, `equipo_trabajo`, `equipo_empleado`, `empleados`, `usuarios`
 
 ---
 
@@ -808,7 +908,7 @@ El sistema muestra ordenes de trabajo disponibles para registrar.
 * El usuario selecciona un registro y presiona Anular.
 * El sistema verifica existencia, sucursal y estado.
 * El sistema actualiza el registro a anulado.
-* El sistema reabre o ajusta la orden de trabajo relacionada cuando corresponda.
+* El sistema revierte movimientos de stock, reabre la orden de trabajo y reabre recepcion/reclamo cuando corresponde.
 
 * **Flujo Alternativo**  
 El sistema no permite registrar sin orden de trabajo.  
@@ -818,8 +918,11 @@ El sistema no permite anular registros inexistentes o ya anulados.
 
 * **Post Condicion**  
 El servicio queda registrado como historial ejecutado del cliente y vehiculo.  
-La orden queda finalizada o actualizada segun el flujo.  
+La orden queda finalizada o reabierta segun el flujo.  
 El registro queda disponible para reclamos, garantias e informes.
+
+* **Tablas interactuadas**  
+`registro_servicio`, `registro_servicio_detalle`, `orden_trabajo`, `orden_trabajo_detalle`, `presupuesto_servicio`, `diagnostico_servicio`, `recepcion_servicio`, `reclamo_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `articulos`, `stock`, `movimientostock`, `equipo_trabajo`, `empleados`, `usuarios`
 
 ---
 
@@ -829,7 +932,7 @@ El registro queda disponible para reclamos, garantias e informes.
 Registrar Reclamo de Servicio
 
 * **Descripcion Basica**  
-Permite registrar un reclamo sobre un servicio ya ejecutado, validar si corresponde garantia y derivar el caso a recepcion, diagnostico, presupuesto u orden de trabajo segun corresponda. El reclamo tambien guarda cliente y vehiculo para facilitar busqueda, historial e informes.
+Permite registrar un reclamo sobre un servicio ya ejecutado, validar si corresponde garantia y derivar el caso a recepcion y diagnostico. Segun el resultado tecnico, el flujo posterior puede continuar con presupuesto si requiere cobro u orden de trabajo si corresponde garantia sin cobro.
 
 * **Actores relacionados**  
 Asesor de servicio / Jefe de taller / Usuario autorizado
@@ -842,21 +945,22 @@ Debe existir cliente y vehiculo relacionados al servicio ejecutado.
 * **Flujo Basico**
 
 El usuario ingresa al menu Reclamos de Servicio.  
-El usuario busca un registro de servicio por cliente, vehiculo, chapa u orden.
+El usuario busca un registro de servicio por numero de registro, cliente, vehiculo o chapa.
 
 **Registrar reclamo**
 
-* El sistema consulta `registro_servicio`, `orden_trabajo`, `clientes`, `vehiculos` y detalle del servicio.
+* El sistema consulta `registro_servicio`, `registro_servicio_detalle`, `articulos`, `clientes`, `vehiculos` y `modelo_auto`.
 * El usuario selecciona el servicio ejecutado.
 * El usuario carga descripcion, tipo de reclamo, origen, prioridad y si requiere garantia.
 * El sistema registra el reclamo en `reclamo_servicio` con cliente, vehiculo, sucursal, usuario y estado activo.
+* El sistema actualiza `registro_servicio` para indicar que tiene reclamo activo.
 
 **Derivar reclamo**
 
 * Si el reclamo requiere revision fisica, el sistema permite generar una recepcion de servicio con origen reclamo.
 * El diagnostico del reclamo indica si corresponde garantia, si el reclamo es valido y si requiere cobro.
-* Si corresponde garantia sin cobro, el sistema puede generar una orden de trabajo directa desde el reclamo.
-* Si requiere cobro, el flujo debe pasar por presupuesto de servicio antes de generar una orden normal.
+* Si corresponde garantia sin cobro, el flujo puede continuar en Orden de Trabajo desde el diagnostico del reclamo.
+* Si requiere cobro, el caso no habilita OT directa por garantia y debe tratarse como proceso comercial mediante presupuesto de servicio.
 
 **Cerrar o anular**
 
@@ -868,12 +972,15 @@ El usuario busca un registro de servicio por cliente, vehiculo, chapa u orden.
 El sistema no permite reclamos sin registro de servicio.  
 El sistema no permite generar movimientos duplicados para el mismo reclamo activo.  
 El sistema no permite cerrar sin observacion cuando el proceso lo requiere.  
-El sistema no permite anular reclamos con orden o registro activo que impida la reversa.
+El sistema no permite anular reclamos con movimientos derivados activos que impidan la reversa.
 
 * **Post Condicion**  
 El reclamo queda vinculado al servicio ejecutado.  
-El sistema conserva cliente y vehiculo directos para consulta rapida.  
+El sistema conserva cliente y vehiculo directos desde el registro de servicio para consulta rapida.  
 El reclamo puede quedar pendiente, derivado, cerrado o anulado segun el proceso.
+
+* **Tablas interactuadas**  
+`reclamo_servicio`, `registro_servicio`, `registro_servicio_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `articulos`
 
 ---
 
@@ -884,9 +991,10 @@ Los movimientos de servicios fueron ajustados para evitar depender siempre de co
 * `recepcion_servicio` sigue siendo el ingreso fisico del vehiculo al taller.
 * `diagnostico_servicio` depende de una recepcion porque documenta la revision tecnica de ese ingreso.
 * `presupuesto_servicio` guarda `id_cliente` e `id_vehiculo` propios. Si nace desde diagnostico, copia esos datos desde la recepcion. Si nace como preliminar, los toma directamente del cliente y vehiculo seleccionados.
-* `orden_trabajo` guarda `id_cliente` e `id_vehiculo` propios. Si nace desde presupuesto, copia esos datos desde el presupuesto. Si nace desde reclamo, los toma del reclamo o del movimiento relacionado.
+* `orden_trabajo` guarda `id_cliente` e `id_vehiculo` propios. Puede nacer desde presupuesto aprobado de origen diagnostico o desde reclamo en garantia; en ambos casos copia esos datos al documento operativo.
 * `registro_servicio` guarda `id_cliente` e `id_vehiculo` propios. Al generarse desde una OT, copia esos datos desde la orden.
 * `reclamo_servicio` guarda cliente y vehiculo para no depender solamente del registro original al consultar historiales o generar movimientos derivados.
+* En recepcion, diagnostico, presupuesto, orden de trabajo, registro y reclamos, la sucursal se maneja principalmente como `id_sucursal` tomado de la sesion para registrar, filtrar y validar pertenencia. La tabla `sucursales` solo debe listarse cuando el flujo consulta o expone datos propios de la sucursal, como ocurre en promociones, descuentos e informes.
 
 Este enfoque conserva la trazabilidad completa, pero cada documento principal mantiene los datos minimos necesarios para mostrarse, imprimirse e informarse sin reconstruir toda la cadena.
 
@@ -898,15 +1006,17 @@ Las siguientes tablas son las que exponen datos visibles o seleccionables en las
 
 | Interfaz / Proceso | Tablas principales | Datos visibles en interfaz |
 | --- | --- | --- |
-| Recepcion de servicio | `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `usuarios`, `sucursales` | Cliente, vehiculo, chapa/modelo/marca, kilometraje, combustible, estado exterior, objetos, accesorios, prioridad, tipo de servicio, sucursal, usuario y estado |
+| Recepcion de servicio | `recepcion_servicio`, `recepcion_fotos`, `clientes`, `ciudades`, `vehiculos`, `modelo_auto`, `marcas`, `usuarios`, `reclamo_servicio` | Cliente, vehiculo, chapa/modelo/marca, kilometraje, combustible, estado exterior, objetos, accesorios, fotos, prioridad, tipo de servicio, usuario, origen reclamo y estado |
 | Alta rapida de cliente en recepcion | `clientes`, `ciudades` | Tipo/documento, nombre, apellido, telefono y datos minimos de contacto |
 | Alta rapida de vehiculo en recepcion | `vehiculos`, `modelo_auto`, `marcas`, `clientes` | Cliente asociado, modelo, marca, chapa, color y datos esenciales del vehiculo |
-| Diagnostico de servicio | `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `equipo_trabajo`, `usuarios` | Recepcion, cliente, vehiculo, equipo, observaciones, sistema revisado, problema, gravedad, solucion propuesta, requiere repuesto y requiere mano de obra |
-| Presupuesto de servicio | `presupuesto_servicio`, `presupuesto_detalleservicio`, `diagnostico_servicio`, `diagnostico_detalle`, `clientes`, `vehiculos`, `articulos`, `sucursales`, `usuarios` | Origen, cliente, vehiculo, diagnostico, articulos/servicios, cantidades, precios, subtotales, descuentos, promociones, total final, vencimiento y estado |
-| Descuentos y promociones de servicio | `descuentos`, `descuento_cliente`, `promociones`, `promocion_producto`, `presupuesto_descuento`, `presupuesto_promocion`, `regla_comercial`, `regla_comercial_condicion`, `regla_comercial_descuento` | Beneficios aplicables, reglas, condiciones, productos incluidos, montos aplicados y total descontado |
-| Orden de trabajo | `orden_trabajo`, `orden_trabajo_detalle`, `presupuesto_servicio`, `presupuesto_detalleservicio`, `reclamo_servicio`, `clientes`, `vehiculos`, `articulos`, `equipo_trabajo`, `equipo_empleado`, `empleados`, `usuarios`, `sucursales` | Numero de OT, origen, cliente, vehiculo, equipo, tecnico, trabajos/repuestos autorizados, cantidades, observacion operativa y estado |
-| Registro de servicio | `registro_servicio`, `registro_servicio_detalle`, `orden_trabajo`, `orden_trabajo_detalle`, `clientes`, `vehiculos`, `articulos`, `equipo_trabajo`, `empleados`, `usuarios`, `sucursales` | OT, cliente, vehiculo, fecha de ejecucion, trabajos/repuestos ejecutados, observacion, tecnico/equipo y estado |
-| Reclamos de servicio | `reclamo_servicio`, `registro_servicio`, `registro_servicio_detalle`, `orden_trabajo`, `recepcion_servicio`, `diagnostico_servicio`, `clientes`, `vehiculos`, `usuarios`, `sucursales` | Servicio reclamado, cliente, vehiculo, descripcion, tipo, prioridad, garantia, recepcion/diagnostico/OT asociada, cierre y estado |
+| Diagnostico de servicio | `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `equipo_trabajo`, `usuarios`, `presupuesto_servicio`, `orden_trabajo` | Recepcion, cliente, vehiculo, equipo, observaciones, sistema revisado, problema, gravedad, solucion propuesta, requiere repuesto, requiere mano de obra y bloqueos por presupuesto/OT |
+| Presupuesto de servicio | `presupuesto_servicio`, `presupuesto_detalleservicio`, `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `articulos`, `stock`, `descuentos`, `descuento_cliente`, `promociones`, `promocion_producto`, `presupuesto_descuento`, `presupuesto_promocion`, `orden_trabajo`, `usuarios` | Origen, cliente, vehiculo, marca/modelo, diagnostico, articulos/servicios, stock referencial, cantidades, precios, subtotales, descuentos, promociones, total final, vencimiento, bloqueo por OT y estado |
+| Descuentos y promociones de servicio | `descuentos`, `descuento_cliente`, `promociones`, `promocion_producto`, `presupuesto_descuento`, `presupuesto_promocion` | Beneficios aplicables, productos incluidos, montos aplicados y total descontado |
+| Promociones de servicio | `promociones`, `promocion_producto`, `articulos`, `usuarios`, `sucursales` | Promocion, tipo, valor, vigencia, sucursal, articulos asociados, usuario y estado |
+| Descuentos de servicio | `descuentos`, `descuento_cliente`, `clientes`, `usuarios`, `sucursales` | Descuento, tipo, valor, vigencia, sucursal, clientes asociados, usuario y estado |
+| Orden de trabajo | `orden_trabajo`, `orden_trabajo_detalle`, `presupuesto_servicio`, `presupuesto_detalleservicio`, `presupuesto_promocion`, `promociones`, `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `reclamo_servicio`, `registro_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `articulos`, `stock`, `equipo_trabajo`, `equipo_empleado`, `empleados`, `usuarios` | Numero de OT, origen, presupuesto/reclamo, cliente, vehiculo/modelo, equipo, tecnico, diagnostico, trabajos/repuestos autorizados, stock en reclamo, cantidades, observacion operativa y estado |
+| Registro de servicio | `registro_servicio`, `registro_servicio_detalle`, `orden_trabajo`, `orden_trabajo_detalle`, `presupuesto_servicio`, `diagnostico_servicio`, `recepcion_servicio`, `reclamo_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `articulos`, `stock`, `movimientostock`, `equipo_trabajo`, `empleados`, `usuarios` | OT, cliente, vehiculo/modelo, fecha de ejecucion, trabajos/repuestos ejecutados, stock/movimientos generados o revertidos, observacion, tecnico/equipo y estado |
+| Reclamos de servicio | `reclamo_servicio`, `registro_servicio`, `registro_servicio_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `articulos` | Servicio reclamado, cliente, vehiculo/modelo, detalle ejecutado, descripcion, tipo, prioridad, garantia, recepcion derivada, cierre y estado |
 
 ---
 
@@ -916,13 +1026,14 @@ Esta lista resume las tablas que participan directamente en cada movimiento, inc
 
 | Movimiento | Tablas involucradas |
 | --- | --- |
-| Recepcion de servicio | `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `usuarios`, `sucursales` |
-| Diagnostico de servicio | `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `equipo_trabajo`, `usuarios`, `sucursales` |
-| Presupuesto de servicio | `presupuesto_servicio`, `presupuesto_detalleservicio`, `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `articulos`, `descuentos`, `descuento_cliente`, `promociones`, `promocion_producto`, `presupuesto_descuento`, `presupuesto_promocion`, `regla_comercial`, `regla_comercial_condicion`, `regla_comercial_descuento`, `usuarios`, `sucursales` |
-| Orden de trabajo normal | `orden_trabajo`, `orden_trabajo_detalle`, `presupuesto_servicio`, `presupuesto_detalleservicio`, `diagnostico_servicio`, `recepcion_servicio`, `clientes`, `vehiculos`, `articulos`, `equipo_trabajo`, `equipo_empleado`, `empleados`, `usuarios`, `sucursales` |
-| Orden de trabajo por reclamo | `orden_trabajo`, `orden_trabajo_detalle`, `reclamo_servicio`, `registro_servicio`, `recepcion_servicio`, `diagnostico_servicio`, `clientes`, `vehiculos`, `articulos`, `usuarios`, `sucursales` |
-| Registro de servicio | `registro_servicio`, `registro_servicio_detalle`, `orden_trabajo`, `orden_trabajo_detalle`, `clientes`, `vehiculos`, `articulos`, `equipo_trabajo`, `empleados`, `usuarios`, `sucursales` |
-| Reclamo de servicio | `reclamo_servicio`, `registro_servicio`, `registro_servicio_detalle`, `orden_trabajo`, `recepcion_servicio`, `diagnostico_servicio`, `clientes`, `vehiculos`, `usuarios`, `sucursales` |
+| Recepcion de servicio | `recepcion_servicio`, `recepcion_fotos`, `clientes`, `ciudades`, `vehiculos`, `modelo_auto`, `marcas`, `usuarios`, `reclamo_servicio` |
+| Diagnostico de servicio | `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `equipo_trabajo`, `usuarios`, `presupuesto_servicio`, `orden_trabajo` |
+| Presupuesto de servicio | `presupuesto_servicio`, `presupuesto_detalleservicio`, `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `articulos`, `stock`, `descuentos`, `descuento_cliente`, `promociones`, `promocion_producto`, `presupuesto_descuento`, `presupuesto_promocion`, `orden_trabajo`, `usuarios` |
+| Promocion de servicio | `promociones`, `promocion_producto`, `articulos`, `usuarios`, `sucursales` |
+| Descuento de servicio | `descuentos`, `descuento_cliente`, `clientes`, `usuarios`, `sucursales` |
+| Orden de trabajo | `orden_trabajo`, `orden_trabajo_detalle`, `presupuesto_servicio`, `presupuesto_detalleservicio`, `presupuesto_promocion`, `promociones`, `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `reclamo_servicio`, `registro_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `articulos`, `stock`, `equipo_trabajo`, `equipo_empleado`, `empleados`, `usuarios` |
+| Registro de servicio | `registro_servicio`, `registro_servicio_detalle`, `orden_trabajo`, `orden_trabajo_detalle`, `presupuesto_servicio`, `diagnostico_servicio`, `recepcion_servicio`, `reclamo_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `articulos`, `stock`, `movimientostock`, `equipo_trabajo`, `empleados`, `usuarios` |
+| Reclamo de servicio | `reclamo_servicio`, `registro_servicio`, `registro_servicio_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `articulos` |
 
 ---
 
@@ -948,7 +1059,8 @@ Los informes toman datos de tablas transaccionales y referenciales para exponer 
 | Transferencias | `transferencia_stock`, `transferencia_stock_detalle`, `sucursales`, `nota_remision` | Origen, destino, fecha, estado, remision relacionada, items enviados y recibidos |
 | Recepcion de servicio | `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `usuarios`, `sucursales` | Fecha ingreso, cliente, vehiculo, chapa, tipo de servicio, prioridad, sucursal, usuario y estado |
 | Presupuesto de servicio | `presupuesto_servicio`, `presupuesto_detalleservicio`, `diagnostico_servicio`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `usuarios`, `sucursales` | Numero, origen, cliente, vehiculo, diagnostico/recepcion cuando exista, subtotal, descuento, total final, fecha, vencimiento y estado |
-| Orden de trabajo | `orden_trabajo`, `orden_trabajo_detalle`, `presupuesto_servicio`, `diagnostico_servicio`, `recepcion_servicio`, `reclamo_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `equipo_trabajo`, `usuarios`, `sucursales` | Numero de OT, origen, cliente, vehiculo, equipo, tecnico, trabajos/repuestos, fecha inicio, fecha fin y estado |
-| Registro de servicio | `registro_servicio`, `registro_servicio_detalle`, `orden_trabajo`, `presupuesto_servicio`, `diagnostico_servicio`, `recepcion_servicio`, `reclamo_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `equipo_trabajo`, `empleados`, `usuarios`, `sucursales` | Servicio ejecutado, OT, cliente, vehiculo, tecnico/equipo, fecha ejecucion, items ejecutados, total referencial y estado |
+| Orden de trabajo | `orden_trabajo`, `orden_trabajo_detalle`, `presupuesto_servicio`, `diagnostico_servicio`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `equipo_trabajo`, `usuarios`, `sucursales` | Numero de OT, cliente, vehiculo, equipo, diagnostico/recepcion cuando exista, cantidad de items, fecha inicio, fecha fin y estado |
+| Registro de servicio | `registro_servicio`, `registro_servicio_detalle`, `orden_trabajo`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `equipo_trabajo`, `empleados`, `usuarios`, `sucursales` | Servicio ejecutado, OT, cliente, vehiculo, tecnico/equipo, fecha ejecucion, items ejecutados, total referencial y estado |
 
----
+**Observacion tecnica**  
+La especificacion funcional refleja dos flujos activos de OT: generacion normal desde presupuesto aprobado de origen diagnostico y generacion por reclamo en garantia sin cobro. El presupuesto preliminar no genera OT hasta vincularse a un diagnostico formal y aprobarse.

@@ -1313,20 +1313,20 @@ class reportesModelo extends mainModel
         INNER JOIN usuarios u
             ON u.id_usuario = ps.id_usuario
 
-        INNER JOIN diagnostico_servicio ds
+        LEFT JOIN diagnostico_servicio ds
             ON ds.id_diagnostico = ps.id_diagnostico
 
-        INNER JOIN recepcion_servicio rs
+        LEFT JOIN recepcion_servicio rs
             ON rs.idrecepcion = ds.idrecepcion
 
         LEFT JOIN sucursales s
-            ON s.id_sucursal = rs.id_sucursal
+            ON s.id_sucursal = ps.id_sucursal
 
         LEFT JOIN clientes c
-            ON c.id_cliente = rs.id_cliente
+            ON c.id_cliente = ps.id_cliente
 
         LEFT JOIN vehiculos v
-            ON v.id_vehiculo = rs.id_vehiculo
+            ON v.id_vehiculo = ps.id_vehiculo
 
         INNER JOIN modelo_auto mo
             ON mo.id_modeloauto = v.id_modeloauto
@@ -1358,7 +1358,7 @@ class reportesModelo extends mainModel
         }
 
         if ($sucursal !== null) {
-            $sql .= " AND rs.id_sucursal = :sucursal";
+            $sql .= " AND ps.id_sucursal = :sucursal";
             $params[':sucursal'] = (int)$sucursal;
         }
 
@@ -1405,17 +1405,17 @@ class reportesModelo extends mainModel
 
         FROM orden_trabajo ot
 
-        INNER JOIN presupuesto_servicio ps
+        LEFT JOIN presupuesto_servicio ps
             ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
 
-        INNER JOIN diagnostico_servicio ds
+        LEFT JOIN diagnostico_servicio ds
             ON ds.id_diagnostico = ps.id_diagnostico
 
-        INNER JOIN recepcion_servicio rs
+        LEFT JOIN recepcion_servicio rs
             ON rs.idrecepcion = ds.idrecepcion
 
-            INNER JOIN sucursales s
-        ON s.id_sucursal = rs.id_sucursal
+        INNER JOIN sucursales s
+            ON s.id_sucursal = ot.id_sucursal
 
         INNER JOIN usuarios u
             ON u.id_usuario = ot.id_usuario
@@ -1424,10 +1424,10 @@ class reportesModelo extends mainModel
             ON et.id_equipo = ot.idtrabajos
 
         INNER JOIN clientes c
-            ON c.id_cliente = rs.id_cliente
+            ON c.id_cliente = ot.id_cliente
 
         INNER JOIN vehiculos v
-            ON v.id_vehiculo = rs.id_vehiculo
+            ON v.id_vehiculo = ot.id_vehiculo
 
         INNER JOIN modelo_auto mo
             ON mo.id_modeloauto = v.id_modeloauto
@@ -1459,7 +1459,7 @@ class reportesModelo extends mainModel
         }
 
         if ($sucursal !== null) {
-            $sql .= " AND rs.id_sucursal = :sucursal";
+            $sql .= " AND ot.id_sucursal = :sucursal";
             $params[':sucursal'] = (int)$sucursal;
         }
 
@@ -1515,35 +1515,14 @@ class reportesModelo extends mainModel
         INNER JOIN orden_trabajo ot
             ON ot.idorden_trabajo = rs.idorden_trabajo
 
-        LEFT JOIN presupuesto_servicio ps
-            ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
-
-        LEFT JOIN diagnostico_servicio ds
-            ON ds.id_diagnostico = ps.id_diagnostico
-
-        LEFT JOIN recepcion_servicio r_normal
-            ON r_normal.idrecepcion = ds.idrecepcion
-
-        LEFT JOIN (
-            SELECT
-                idreclamo_servicio,
-                MIN(idrecepcion) AS idrecepcion,
-                MIN(id_cliente) AS id_cliente,
-                MIN(id_vehiculo) AS id_vehiculo
-            FROM recepcion_servicio
-            WHERE idreclamo_servicio IS NOT NULL
-            GROUP BY idreclamo_servicio
-        ) r_reclamo
-            ON r_reclamo.idreclamo_servicio = ot.idreclamo_servicio
-
         INNER JOIN sucursales s
             ON s.id_sucursal = rs.id_sucursal
 
         LEFT JOIN clientes c
-            ON c.id_cliente = COALESCE(r_normal.id_cliente, r_reclamo.id_cliente)
+            ON c.id_cliente = rs.id_cliente
 
         LEFT JOIN vehiculos v
-            ON v.id_vehiculo = COALESCE(r_normal.id_vehiculo, r_reclamo.id_vehiculo)
+            ON v.id_vehiculo = rs.id_vehiculo
 
         LEFT JOIN modelo_auto mo
             ON mo.id_modeloauto = v.id_modeloauto

@@ -290,33 +290,38 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
         $texto = trim($_POST['buscar_presupuesto'] ?? '');
         session_start(['name' => 'STR']);
         $consulta = "
-            SELECT
+                    SELECT
                 ps.idpresupuesto_servicio,
                 ps.fecha,
-                ds.idrecepcion,
+                ps.created_at,
+                ps.id_cliente,
+                ps.id_vehiculo,
                 c.nombre_cliente,
                 c.apellido_cliente,
                 v.placa,
                 ma.mod_descri AS modelo
             FROM presupuesto_servicio ps
-            INNER JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
-            INNER JOIN recepcion_servicio r ON r.idrecepcion = ds.idrecepcion
-            INNER JOIN clientes c ON c.id_cliente = r.id_cliente
-            INNER JOIN vehiculos v ON v.id_vehiculo = r.id_vehiculo
-            LEFT JOIN modelo_auto ma ON ma.id_modeloauto = v.id_modeloauto
-            LEFT JOIN orden_trabajo ot 
-                ON ot.idpresupuesto_servicio = ps.idpresupuesto_servicio
-                AND ot.estado != 0
+            INNER JOIN clientes c 
+                ON c.id_cliente = ps.id_cliente
+            INNER JOIN vehiculos v 
+                ON v.id_vehiculo = ps.id_vehiculo
+            LEFT JOIN modelo_auto ma 
+                ON ma.id_modeloauto = v.id_modeloauto
             WHERE ps.estado = '2'
-            AND ot.idorden_trabajo IS NULL
-                            AND r.id_sucursal = :sucursal
-                AND (
-                        c.nombre_cliente LIKE :busqueda
-                    OR c.apellido_cliente LIKE :busqueda
-                    OR v.placa LIKE :busqueda
-                    OR ma.mod_descri LIKE :busqueda
-                )
-            ORDER BY ps.idpresupuesto_servicio DESC
+            AND ps.id_sucursal = :sucursal
+            AND NOT EXISTS (
+                SELECT 1
+                FROM orden_trabajo ot
+                WHERE ot.idpresupuesto_servicio = ps.idpresupuesto_servicio
+                    AND ot.estado != 0
+            )
+            AND (
+                    c.nombre_cliente LIKE :busqueda
+                OR c.apellido_cliente LIKE :busqueda
+                OR v.placa LIKE :busqueda
+                OR ma.mod_descri LIKE :busqueda
+            )
+            ORDER BY ps.created_at DESC
         ";
 
         $sql = self::conectar()->prepare($consulta);
@@ -342,7 +347,7 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
         foreach ($sql->fetchAll() as $row) {
             $cliente = trim(($row['nombre_cliente'] ?? '') . ' ' . ($row['apellido_cliente'] ?? ''));
             $vehiculo = trim(($row['modelo'] ?? '') . ' ' . ($row['placa'] ?? ''));
-            $fecha = !empty($row['fecha']) ? date("d/m/Y", strtotime($row['fecha'])) : '';
+            $fecha = !empty($row['created_at']) ? date("d/m/Y", strtotime($row['created_at'])) : '';
             $args = htmlspecialchars(json_encode([
                 (int)$row['idpresupuesto_servicio'],
                 (int)$row['idrecepcion'],

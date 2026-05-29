@@ -58,12 +58,12 @@ class ordenTrabajoModelo extends mainModel
             ot.*,
 
             /* ================= CLIENTE ================= */
-            MAX(COALESCE(c.nombre_cliente, cR.nombre_cliente)) AS nombre_cliente,
-            MAX(COALESCE(c.apellido_cliente, cR.apellido_cliente)) AS apellido_cliente,
+            MAX(c.nombre_cliente) AS nombre_cliente,
+            MAX(c.apellido_cliente) AS apellido_cliente,
 
             /* ================= VEHICULO ================= */
-            MAX(COALESCE(v.placa, vR.placa)) AS placa,
-            MAX(COALESCE(ma.mod_descri, maR.mod_descri)) AS modelo,
+            MAX(v.placa) AS placa,
+            MAX(ma.mod_descri) AS modelo,
 
             /* ================= KM ================= */
             MAX(COALESCE(r.kilometraje, rR.kilometraje)) AS kilometraje,
@@ -99,10 +99,10 @@ class ordenTrabajoModelo extends mainModel
             ON r.idrecepcion = ds.idrecepcion
 
         LEFT JOIN clientes c 
-            ON c.id_cliente = COALESCE(ot.id_cliente, r.id_cliente)
+            ON c.id_cliente = ot.id_cliente
 
         LEFT JOIN vehiculos v 
-            ON v.id_vehiculo = COALESCE(ot.id_vehiculo, r.id_vehiculo)
+            ON v.id_vehiculo = ot.id_vehiculo
 
         LEFT JOIN modelo_auto ma 
             ON ma.id_modeloauto = v.id_modeloauto
@@ -123,15 +123,6 @@ class ordenTrabajoModelo extends mainModel
                 WHERE d2.idrecepcion = rR.idrecepcion
                   AND d2.estado != 0
             )
-
-        LEFT JOIN clientes cR 
-            ON cR.id_cliente = COALESCE(ot.id_cliente, rR.id_cliente)
-
-        LEFT JOIN vehiculos vR 
-            ON vR.id_vehiculo = COALESCE(ot.id_vehiculo, rR.id_vehiculo)
-
-        LEFT JOIN modelo_auto maR
-            ON maR.id_modeloauto = vR.id_modeloauto
 
         /* ===== EQUIPO ===== */
         LEFT JOIN equipo_trabajo et 
@@ -284,10 +275,10 @@ class ordenTrabajoModelo extends mainModel
             ON r_reclamo.idreclamo_servicio = rs.idreclamo_servicio
 
         LEFT JOIN clientes c 
-            ON c.id_cliente = COALESCE(ot.id_cliente, r_normal.id_cliente, r_reclamo.id_cliente)
+            ON c.id_cliente = ot.id_cliente
 
         LEFT JOIN vehiculos v 
-            ON v.id_vehiculo = COALESCE(ot.id_vehiculo, r_normal.id_vehiculo, r_reclamo.id_vehiculo)
+            ON v.id_vehiculo = ot.id_vehiculo
 
         LEFT JOIN modelo_auto ma 
             ON ma.id_modeloauto = v.id_modeloauto
@@ -454,10 +445,10 @@ class ordenTrabajoModelo extends mainModel
 
         /* ================= DATOS ================= */
         LEFT JOIN clientes c 
-            ON c.id_cliente = COALESCE(ot.id_cliente, r_normal.id_cliente, r_reclamo.id_cliente)
+            ON c.id_cliente = ot.id_cliente
 
         LEFT JOIN vehiculos v 
-            ON v.id_vehiculo = COALESCE(ot.id_vehiculo, r_normal.id_vehiculo, r_reclamo.id_vehiculo)
+            ON v.id_vehiculo = ot.id_vehiculo
 
         LEFT JOIN modelo_auto ma 
             ON ma.id_modeloauto = v.id_modeloauto
