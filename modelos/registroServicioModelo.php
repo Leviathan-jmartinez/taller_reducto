@@ -107,7 +107,7 @@ class registroServicioModelo extends mainModel
                 $ot['id_cliente'],
                 $ot['id_sucursal'],
                 $datos['usuario'],
-                $datos['fecha_servicio'], 
+                $datos['fecha_servicio'],
                 $datos['kilometraje_salida'],
                 $datos['observacion']
             ]);
@@ -241,6 +241,7 @@ class registroServicioModelo extends mainModel
             ot.idorden_trabajo,
             c.nombre_cliente,
             c.apellido_cliente,
+            c.doc_number,
             m.mod_descri,
             v.placa
         FROM orden_trabajo ot
@@ -267,6 +268,7 @@ class registroServicioModelo extends mainModel
         AND (
                 c.nombre_cliente LIKE :b
             OR c.apellido_cliente LIKE :b
+            OR c.doc_number LIKE :b
             OR v.placa LIKE :b
             OR ot.idorden_trabajo LIKE :b
         )
@@ -457,7 +459,7 @@ class registroServicioModelo extends mainModel
         $sql = "
         SELECT 
             rs.idregistro_servicio,
-            rs.fecha_ejecucion,
+            rs.fecha_servicio,
             rs.estado,
             rs.usuario_registra,
             rs.idorden_trabajo,

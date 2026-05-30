@@ -112,7 +112,7 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
                 <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
                 <td>' . $estado . '</td>
                 <td>';
-                       
+
                 if (($rows['origen'] ?? '') === 'RECLAMO' && (int)$rows['estado'] === 3) {
                     $tabla .= '
                     <a href="' . SERVERURL . 'ordenTrabajo-asignar/?id=' . urlencode(mainModel::encryption($rows['idorden_trabajo'])) . '"
@@ -295,6 +295,11 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
                 ps.fecha,
                 ps.id_cliente,
                 ps.id_vehiculo,
+                ps.fecha_venc,
+                CASE
+                    WHEN ps.fecha_venc < CURDATE() THEN 1
+                    ELSE 0
+                END AS vencido,
                 c.nombre_cliente,
                 c.apellido_cliente,
                 v.placa,
@@ -317,10 +322,11 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
             AND (
                     c.nombre_cliente LIKE :busqueda
                 OR c.apellido_cliente LIKE :busqueda
+                OR c.doc_number LIKE :busqueda
                 OR v.placa LIKE :busqueda
                 OR ma.mod_descri LIKE :busqueda
             )
-            ORDER BY ps.fecha DESC
+            ORDER BY ps.fecha,ps.idpresupuesto_servicio DESC
         ";
 
         $sql = self::conectar()->prepare($consulta);
@@ -338,20 +344,31 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
                     <th>Presupuesto</th>
                     <th>Cliente</th>
                     <th>Vehículo</th>
-                    <th>Fecha</th>
+                    <th>Fecha Creacion</th>
+                    <th>Fecha Vencimiento</th>
+                    <th>Estado</th>
                     <th></th>
                 </tr>
             </thead><tbody>';
 
         foreach ($sql->fetchAll() as $row) {
+            $estado = '';
+
+            if ($row['vencido']) {
+                $estado = '<span class="badge badge-danger">Vencido</span>';
+            } else {
+                $estado = '<span class="badge badge-success">Vigente</span>';
+            }
             $cliente = trim(($row['nombre_cliente'] ?? '') . ' ' . ($row['apellido_cliente'] ?? ''));
             $vehiculo = trim(($row['modelo'] ?? '') . ' ' . ($row['placa'] ?? ''));
             $fecha = !empty($row['fecha']) ? date("d/m/Y", strtotime($row['fecha'])) : '';
+            $fecha_venc = !empty($row['fecha_venc']) ? date("d/m/Y", strtotime($row['fecha_venc'])) : '';
             $args = htmlspecialchars(json_encode([
                 (int)$row['idpresupuesto_servicio'],
                 $cliente,
                 $vehiculo,
-                $fecha
+                $fecha,
+                $fecha_venc
             ], JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
 
             $tabla .= '
@@ -360,13 +377,23 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
                 <td>' . htmlspecialchars($cliente, ENT_QUOTES, 'UTF-8') . '</td>
                 <td>' . htmlspecialchars($vehiculo, ENT_QUOTES, 'UTF-8') . '</td>
                 <td class="text-center">' . htmlspecialchars($fecha, ENT_QUOTES, 'UTF-8') . '</td>
-                <td class="text-center">
-                    <button class="btn btn-success btn-sm"
-                        onclick="seleccionarPresupuesto(...JSON.parse(this.dataset.presupuesto))"
-                        data-presupuesto="' . $args . '">
-                        Seleccionar
-                    </button>
-                </td>
+                <td class="text-center">' . htmlspecialchars($fecha_venc, ENT_QUOTES, 'UTF-8') . '</td>
+                <td class="text-center">' . $estado . '</td>
+                <td class="text-center">';
+            if ($row['vencido']) {
+                $tabla .= '
+                    <button class="btn btn-secondary btn-sm" disabled>
+                        Vencido
+                    </button>';
+            } else {
+                $tabla .= '
+                <button class="btn btn-success btn-sm"
+                    onclick="seleccionarPresupuesto(...JSON.parse(this.dataset.presupuesto))"
+                    data-presupuesto="' . $args . '">
+                    Seleccionar
+                </button>';
+            }
+            $tabla .= '   </td>
             </tr>';
         }
 
@@ -585,7 +612,7 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
                 'Tipo' => 'error'
             ]);
         }
-        
+
         if (empty($_POST['idorden_trabajo']) || empty($_POST['idtrabajos']) || empty($_POST['tecnico_responsable'])) {
             return json_encode([
                 "Alerta" => "simple",

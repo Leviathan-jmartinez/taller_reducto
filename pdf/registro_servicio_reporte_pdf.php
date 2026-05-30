@@ -153,7 +153,7 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
                 <tr>
                     <td class="text-center"><?= $i++ ?></td>
                     <td class="text-center"><?= h($row['idregistro_servicio']) ?></td>
-                    <td class="text-center"><?= h($row['fecha_ejecucion']) ?></td>
+                    <td class="text-center"><?= h($row['fecha_servicio']) ?></td>
                     <td class="text-center"><?= estadoRegistroServicio($row['estado']) ?></td>
                     <td><?= h($row['cliente']) ?></td>
                     <td><?= h($row['vehiculo']) ?></td>

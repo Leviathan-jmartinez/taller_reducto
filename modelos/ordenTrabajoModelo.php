@@ -240,6 +240,7 @@ class ordenTrabajoModelo extends mainModel
 
             v.placa,
             ma.mod_descri AS modelo,
+            m.mar_descri AS marca,
 
             rs.tipo_reclamo,
             rs.prioridad,
@@ -282,6 +283,9 @@ class ordenTrabajoModelo extends mainModel
 
         LEFT JOIN modelo_auto ma 
             ON ma.id_modeloauto = v.id_modeloauto
+        
+        LEFT JOIN marcas m
+            ON m.id_marcas = ma.id_marcas
 
         LEFT JOIN (
             SELECT idorden_trabajo, SUM(subtotal) AS total_detalle
@@ -618,8 +622,8 @@ class ordenTrabajoModelo extends mainModel
 
             $qGarantia = $pdo->prepare("
                 SELECT
-                    rs.fecha_ejecucion,
-                    DATE_ADD(rs.fecha_ejecucion, INTERVAL 3 MONTH) AS fecha_vencimiento,
+                    rs.fecha_servicio,
+                    DATE_ADD(rs.fecha_servicio, INTERVAL 3 MONTH) AS fecha_vencimiento,
                     COALESCE(r_actual.kilometraje, 0) AS km_reclamo,
                     COALESCE(r_normal.kilometraje, r_reclamo_origen.kilometraje) AS km_origen
                 FROM reclamo_servicio rc

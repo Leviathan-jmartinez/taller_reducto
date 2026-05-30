@@ -192,6 +192,7 @@ class reclamoServicioControlador extends reclamoServicioModelo
             $filtros[] = [
                 "campo" => "(c.nombre_cliente LIKE '%$busqueda%' 
                      OR c.apellido_cliente LIKE '%$busqueda%' 
+                     OR c.doc_number LIKE '%$busqueda%'
                      OR v.placa LIKE '%$busqueda%'
                      OR rs.idreclamo_servicio LIKE '%$busqueda%'
                      OR rs.idregistro_servicio LIKE '%$busqueda%')",
@@ -508,7 +509,7 @@ class reclamoServicioControlador extends reclamoServicioModelo
             return '<div class="alert alert-warning">Sin reclamos</div>';
         }
 
-        $html = '<table class="table table-sm table-hover">
+        $html = '<table class="table table-sm table-dark">
         <thead>
             <tr>
                 <th>Reclamo</th>

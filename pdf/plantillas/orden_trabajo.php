@@ -12,7 +12,8 @@ $hasta = isset($pdfVars['hasta']) ? (string)$pdfVars['hasta'] : '';
 $proveedor = isset($pdfVars['proveedor']) ? (string)$pdfVars['proveedor'] : '';
 $estado = isset($pdfVars['estado']) ? (string)$pdfVars['estado'] : '';
 $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
-?><!DOCTYPE html>
+?>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -187,6 +188,16 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
             font-weight: bold;
             text-align: right;
         }
+
+        .condiciones {
+            margin-top: 18px;
+            padding: 10px;
+            border: 1px solid #dcdcdc;
+            background: #f8f9fa;
+            font-size: 10px;
+            line-height: 1.5;
+            color: #444;
+        }
     </style>
 </head>
 
@@ -205,7 +216,7 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
             <td width="30%" align="right" style="padding-right:10px; font-size:11px;">
                 <strong>OT N°:</strong>
                 <?= str_pad($cabecera['idorden_trabajo'], 6, '0', STR_PAD_LEFT) ?><br>
-                <?= date('d/m/Y', strtotime($cabecera['fecha_inicio'])) ?>
+                <?= date('d/m/Y H:i', strtotime($cabecera['fecha_inicio'])) ?>
             </td>
         </tr>
     </table>
@@ -233,7 +244,7 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
 
         <div class="box">
             <h3>Vehículo</h3>
-            <?= $cabecera['modelo'] ?? '-' ?><br>
+            <strong><?= $cabecera['marca'] ?: '-' ?> <?= $cabecera['modelo'] ?: '-' ?></strong><br>
             <strong>Placa:</strong> <?= $cabecera['placa'] ?? '-' ?><br>
             <strong>Km:</strong> <?= number_format((float)($cabecera['kilometraje'] ?? 0), 0, ',', '.') ?>
         </div>
@@ -319,6 +330,13 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
         <div class="totales-final">
             TOTAL ESTIMADO: Gs. <?= number_format((float)($cabecera['total_final'] ?? 0), 0, ',', '.') ?>
         </div>
+    </div>
+
+    <div class="condiciones">
+        <strong>Condiciones:</strong><br>
+
+        La presente OT autoriza al taller a realizar los trabajos detallados.
+        Todo trabajo adicional será informado previamente al cliente.
     </div>
 
 

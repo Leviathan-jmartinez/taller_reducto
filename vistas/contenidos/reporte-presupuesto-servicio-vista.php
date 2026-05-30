@@ -43,6 +43,7 @@ $sucursales = $rep->listar_sucursales_controlador();
                         <option value="2">Aprobado</option>
                         <option value="3">OT generada</option>
                         <option value="4">Facturado</option>
+                        <option value="5">Preliminar</option>
                         <option value="0">Anulado</option>
                     </select>
                 </div>

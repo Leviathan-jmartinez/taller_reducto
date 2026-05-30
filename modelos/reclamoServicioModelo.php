@@ -29,7 +29,7 @@ class reclamoServicioModelo extends mainModel
                 SELECT
                     id_cliente,
                     id_vehiculo,
-                    fecha_ejecucion
+                    fecha_servicio
                 FROM registro_servicio
                 WHERE idregistro_servicio = ?
                 LIMIT 1
@@ -64,7 +64,7 @@ class reclamoServicioModelo extends mainModel
 
             $requiereGarantia = (int)($datos['requiere_garantia'] ?? 0);
             if ($requiereGarantia === 1) {
-                $fechaVencimiento = (new DateTime($origenServicio['fecha_ejecucion']))
+                $fechaVencimiento = (new DateTime($origenServicio['fecha_servicio']))
                     ->modify('+3 months')
                     ->format('Y-m-d');
 
@@ -131,8 +131,8 @@ class reclamoServicioModelo extends mainModel
         $sql = self::conectar()->prepare("
         SELECT 
             rs.idregistro_servicio,
-            rs.fecha_ejecucion,
-            DATE_ADD(rs.fecha_ejecucion, INTERVAL 3 MONTH) AS garantia_fecha_vencimiento,
+            rs.fecha_servicio,
+            DATE_ADD(rs.fecha_servicio, INTERVAL 3 MONTH) AS garantia_fecha_vencimiento,
             MAX(COALESCE(r_normal.kilometraje, r_reclamo.kilometraje)) AS garantia_km_inicio,
             MAX(
                 CASE
@@ -165,6 +165,7 @@ class reclamoServicioModelo extends mainModel
         AND (
             c.nombre_cliente LIKE :b1
             OR c.apellido_cliente LIKE :b2
+            OR c.doc_number LIKE :b1
             OR v.placa LIKE :b3
             OR rs.idregistro_servicio LIKE :b4
         )

@@ -471,6 +471,59 @@ class recepcionservicioModelo extends mainModel
             $origen = $d['origen'] ?? 'NORMAL';
             $idreclamo = $d['idreclamo_servicio'] ?? null;
 
+            if ($origen === 'RECLAMO' && !empty($idreclamo)) {
+
+                $qGarantia = $pdo->prepare("
+                SELECT
+                    rc.requiere_garantia,
+                    rs.kilometraje_salida
+                FROM reclamo_servicio rc
+                INNER JOIN registro_servicio rs
+                    ON rs.idregistro_servicio = rc.idregistro_servicio
+                WHERE rc.idreclamo_servicio = ?
+                AND rc.id_sucursal = ?
+                LIMIT 1
+            ");
+
+                $qGarantia->execute([
+                    $idreclamo,
+                    $d['id_sucursal']
+                ]);
+
+                $garantia = $qGarantia->fetch(PDO::FETCH_ASSOC);
+
+                if (!$garantia) {
+                    $pdo->rollBack();
+                    return [
+                        "error" => true,
+                        "msg" => "No se pudo validar la garantía del reclamo"
+                    ];
+                }
+
+                if ((int)$garantia['requiere_garantia'] === 1) {
+
+                    $kmServicio = (int)$garantia['kilometraje_salida'];
+                    $kmActual   = (int)$d['kilometraje'];
+                    $kmLimite   = $kmServicio + 5000;
+
+                    if ($kmServicio <= 0) {
+                        $pdo->rollBack();
+                        return [
+                            "error" => true,
+                            "msg" => "El servicio original no tiene kilometraje de salida registrado"
+                        ];
+                    }
+
+                    if ($kmActual > $kmLimite) {
+                        $pdo->rollBack();
+                        return [
+                            "error" => true,
+                            "msg" => "La garantía está vencida por kilometraje. KM servicio: {$kmServicio}, límite: {$kmLimite}, KM actual: {$kmActual}"
+                        ];
+                    }
+                }
+            }
+
             $sql->bindParam(":usuario",  $d['id_usuario'],   PDO::PARAM_INT);
             $sql->bindParam(":cliente",  $d['id_cliente'],   PDO::PARAM_INT);
             $sql->bindParam(":sucursal", $d['id_sucursal'],  PDO::PARAM_INT);

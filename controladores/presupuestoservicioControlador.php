@@ -33,6 +33,7 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
         SELECT 
             d.id_diagnostico,
             c.nombre_cliente,
+            c.doc_number,
             c.apellido_cliente,
             v.placa,
             ma.mar_descri AS marca,
@@ -47,6 +48,7 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
         AND (
             c.nombre_cliente LIKE :b
             OR c.apellido_cliente LIKE :b
+            OR c.doc_number LIKE :b
             OR v.placa LIKE :b
             OR ma.mar_descri LIKE :b
             OR m.mod_descri LIKE :b
@@ -59,7 +61,7 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
         $sql->bindValue(":sucursal", $_SESSION['nick_sucursal'] ?? 0, PDO::PARAM_INT);
         $sql->execute();
 
-        $html = '<table class="table table-sm">
+        $html = '<table class="table table-dark table-sm">
             <thead>
                 <tr>
                     <th>Cliente</th>
@@ -70,7 +72,7 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
             <tbody>';
 
         foreach ($sql->fetchAll() as $row) {
-            $cliente = trim($row['nombre_cliente'] . ' ' . $row['apellido_cliente']);
+            $cliente = trim($row['doc_number'] . ' - ' . $row['nombre_cliente'] . ' ' . $row['apellido_cliente']);
             $vehiculo = trim($row['marca'] . ' ' . $row['modelo'] . ' ' . $row['placa']);
             $clienteHtml = htmlspecialchars($cliente, ENT_QUOTES, 'UTF-8');
             $vehiculoHtml = htmlspecialchars($vehiculo, ENT_QUOTES, 'UTF-8');
@@ -401,7 +403,9 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
             ]);
         }
 
-        $fechaVencObj = DateTime::createFromFormat('Y-m-d', $fechaVenc);
+        $fechaVenc = trim($_POST['fecha_venc'] ?? '');
+
+        $fechaVencObj = DateTime::createFromFormat('!Y-m-d', $fechaVenc);
         $erroresFecha = DateTime::getLastErrors();
 
         if (
@@ -417,8 +421,8 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
             ]);
         }
 
-        $hoy = new DateTime(date('Y-m-d'));
-        if ($fechaVencObj < $hoy) {
+        $hoyObj = new DateTime('today');
+        if ($fechaVencObj < $hoyObj) {
             return json_encode([
                 'Alerta' => 'simple',
                 'Titulo' => 'Fecha invalida',

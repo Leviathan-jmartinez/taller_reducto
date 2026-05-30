@@ -81,8 +81,7 @@ class registroServicioControlador extends registroServicioModelo
 
         if ($res === true) {
             return json_encode([
-                'Alerta' => 'redireccionar_confirmado',
-                'URL'    => SERVERURL . 'registro-servicio-buscar/',
+                'Alerta' => 'limpiar',
                 'Titulo' => 'Servicio registrado',
                 'Texto'  => 'La orden fue cerrada correctamente',
                 'Tipo'   => 'success'
@@ -112,10 +111,11 @@ class registroServicioControlador extends registroServicioModelo
             return '<div class="alert alert-warning">No se encontraron órdenes</div>';
         }
 
-        $html = '<table class="table table-hover table-sm">
+        $html = '<table class="table table-dark table-sm">
         <thead>
             <tr>
                 <th>OT</th>
+                <th>Número de documento</th>
                 <th>Cliente</th>
                 <th>Vehículo</th>
                 <th></th>
@@ -126,6 +126,7 @@ class registroServicioControlador extends registroServicioModelo
             $html .= '
         <tr>
             <td>#' . $ot['idorden_trabajo'] . '</td>
+            <td>' . $ot['doc_number'] . '</td>
             <td>' . $ot['nombre_cliente'] . ' ' . $ot['apellido_cliente'] . '</td>
             <td>' . $ot['mod_descri'] . ' ' . $ot['placa'] . '</td>
             <td class="text-center">

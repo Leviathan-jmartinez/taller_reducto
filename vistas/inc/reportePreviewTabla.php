@@ -59,7 +59,8 @@
                 1: "Pendiente",
                 2: "Aprobado",
                 3: "OT generada",
-                4: "Facturado"
+                4: "Facturado",
+                5: "Preliminar"
             },
             orden_trabajo: {
                 0: "Anulada",
@@ -130,7 +131,7 @@
                     label: "Registro"
                 },
                 {
-                    key: "fecha_ejecucion",
+                    key: "fecha_servicio",
                     label: "Fecha"
                 },
                 {

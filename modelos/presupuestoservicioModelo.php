@@ -705,6 +705,7 @@ class presupuestoservicioModelo extends mainModel
 
                 v.placa,
                 ma.mod_descri AS modelo,
+                m.mar_descri AS marca,
 
                 u.usu_nombre,
                 u.usu_apellido
@@ -714,6 +715,7 @@ class presupuestoservicioModelo extends mainModel
             INNER JOIN vehiculos v ON v.id_vehiculo = ps.id_vehiculo
             INNER JOIN modelo_auto ma ON ma.id_modeloauto = v.id_modeloauto
             INNER JOIN usuarios u ON u.id_usuario = ps.id_usuario
+            INNER JOIN marcas m ON m.id_marcas = ma.id_marcas
             WHERE ps.idpresupuesto_servicio = :id
             LIMIT 1
         ");

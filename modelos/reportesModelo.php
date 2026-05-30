@@ -1486,7 +1486,7 @@ class reportesModelo extends mainModel
         $sql = "
         SELECT
             rs.idregistro_servicio,
-            rs.fecha_ejecucion,
+            rs.fecha_servicio,
             rs.fecha_registro,
             rs.estado,
 
@@ -1558,12 +1558,12 @@ class reportesModelo extends mainModel
         $params = [];
 
         if (!empty($desde)) {
-            $sql .= " AND DATE(rs.fecha_ejecucion) >= :desde";
+            $sql .= " AND DATE(rs.fecha_servicio) >= :desde";
             $params[':desde'] = $desde;
         }
 
         if (!empty($hasta)) {
-            $sql .= " AND DATE(rs.fecha_ejecucion) <= :hasta";
+            $sql .= " AND DATE(rs.fecha_servicio) <= :hasta";
             $params[':hasta'] = $hasta;
         }
 
@@ -1582,7 +1582,7 @@ class reportesModelo extends mainModel
             $params[':sucursal'] = (int)$sucursal;
         }
 
-        $sql .= " ORDER BY rs.fecha_ejecucion ASC";
+        $sql .= " ORDER BY rs.fecha_servicio ASC";
 
         $stmt = mainModel::conectar()->prepare($sql);
 
@@ -1600,12 +1600,12 @@ class reportesModelo extends mainModel
         $params = [];
 
         if (!empty($desde)) {
-            $where .= " AND DATE(rs.fecha_ejecucion) >= :desde";
+            $where .= " AND DATE(rs.fecha_servicio) >= :desde";
             $params[':desde'] = $desde;
         }
 
         if (!empty($hasta)) {
-            $where .= " AND DATE(rs.fecha_ejecucion) <= :hasta";
+            $where .= " AND DATE(rs.fecha_servicio) <= :hasta";
             $params[':hasta'] = $hasta;
         }
 

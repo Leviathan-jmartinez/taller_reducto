@@ -262,7 +262,7 @@ class diagnosticoControlador extends diagnosticoModelo
                     $qGarantia = mainModel::conectar()->prepare("
                         SELECT
                             rc.requiere_garantia,
-                            DATE_ADD(rs.fecha_ejecucion, INTERVAL 3 MONTH) AS fecha_vencimiento,
+                            DATE_ADD(rs.fecha_servicio, INTERVAL 3 MONTH) AS fecha_vencimiento,
                             COALESCE(r_actual.kilometraje, 0) AS km_reclamo,
                             COALESCE(r_normal.kilometraje, r_reclamo_origen.kilometraje) AS km_origen
                         FROM reclamo_servicio rc

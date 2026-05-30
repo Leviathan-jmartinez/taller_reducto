@@ -12,7 +12,8 @@ $hasta = isset($pdfVars['hasta']) ? (string)$pdfVars['hasta'] : '';
 $proveedor = isset($pdfVars['proveedor']) ? (string)$pdfVars['proveedor'] : '';
 $estado = isset($pdfVars['estado']) ? (string)$pdfVars['estado'] : '';
 $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
-?><!DOCTYPE html>
+?>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -148,14 +149,26 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
 
         .firmas td {
             border: none;
-            padding-top: 34px;
+            padding-top: 55px;
+        }
+
+        .firma-box {
+            text-align: center;
         }
 
         .firma-linea {
             border-top: 1px solid #25313b;
-            display: inline-block;
-            padding-top: 6px;
-            width: 78%;
+            margin: 0 auto 8px auto;
+            width: 75%;
+        }
+
+        .firma-box strong {
+            font-size: 10px;
+            color: #25313b;
+        }
+
+        .firma-box small {
+            font-size: 8px;
         }
     </style>
 </head>
@@ -188,7 +201,7 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
             </td>
             <td width="50%">
                 <span class="box-title">Vehiculo</span>
-                <strong><?= $cabecera['modelo'] ?: '-' ?></strong><br>
+                <strong><?= $cabecera['marca'] ?: '-' ?> <?= $cabecera['modelo'] ?: '-' ?></strong><br>
                 <span class="muted">Placa:</span> <?= $cabecera['placa'] ?: '-' ?><br>
                 <span class="muted">Referencia:</span>
                 <?= (($cabecera['origen'] ?? 'DIAGNOSTICO') === 'PRELIMINAR') ? 'Cotizacion preliminar sujeta a diagnostico' : 'Servicio tecnico segun diagnostico' ?>
@@ -249,20 +262,28 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
             cliente antes de realizar nuevos trabajos o generar costos extra.
         </p>
     </div>
-
+    <br><br><br><br><br>
     <table class="firmas">
         <tr>
             <td width="50%" class="center">
-                <span class="firma-linea">
+                <div class="firma-box">
+                    <div class="firma-linea"></div>
                     <strong>Firma del Cliente</strong><br>
-                    <?= $cabecera['nombre_cliente'] . ' ' . $cabecera['apellido_cliente'] ?>
-                </span>
+                    <span class="muted">
+                        <?= $cabecera['nombre_cliente'] . ' ' . $cabecera['apellido_cliente'] ?>
+                    </span>
+                </div>
             </td>
+
             <td width="50%" class="center">
-                <span class="firma-linea">
+                <div class="firma-box">
+                    <div class="firma-linea"></div>
                     <strong>Firma Autorizada</strong><br>
-                    <?= $cabecera['usu_nombre'] . ' ' . $cabecera['usu_apellido'] ?>
-                </span>
+                    <span class="muted">
+                        <?= $cabecera['usu_nombre'] . ' ' . $cabecera['usu_apellido'] ?>
+                    </span><br>
+                    <small class="muted">Asesor de Servicio</small>
+                </div>
             </td>
         </tr>
     </table>

@@ -611,9 +611,9 @@
             tr.innerHTML = `
             <td>${item.descripcion}</td>
 
-            <td>
+            <td> 
                 <input type="number" min="1"
-                       class="form-control form-control-sm"
+                       class="form-control form-control-sm text-center"
                        value="${item.cantidad}"
                        oninput="cambiarCantidad(this, ${index})">
             </td>
