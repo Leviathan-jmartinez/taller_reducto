@@ -40,7 +40,8 @@ $data_url = [
     "orden_trabajo" => "ordenTrabajo-buscar",
     "registro_servicio" => "registro-servicio-buscar",
     "reclamo_servicio" => "reclamo-servicio-lista",
-    "diagnostico" => "diagnostico-servicio-buscar"
+    "diagnostico" => "diagnostico-servicio-buscar",
+    "salida_insumo" => "registro-insumos-buscar",
 ];
 
 if (!isset($data_url[$modulo])) {
@@ -69,13 +70,16 @@ $modulos_con_fecha = [
     "orden_trabajo",
     "registro_servicio",
     "diagnostico",
-    "reclamo_servicio"
+    "reclamo_servicio",
+    "salida_insumo",
 ];
 
 if (in_array($modulo, $modulos_con_fecha)) {
 
-    if ($modulo == "diagnostico" || $modulo == "presupuesto" || $modulo == "presupuesto_servicio" || $modulo == "orden_trabajo" || $modulo == "registro_servicio" || $modulo == "reclamo_servicio"
-    || $modulo == "ordencompra2") {
+    if (
+        $modulo == "diagnostico" || $modulo == "presupuesto" || $modulo == "presupuesto_servicio" || $modulo == "orden_trabajo" || $modulo == "registro_servicio" || $modulo == "reclamo_servicio"
+        || $modulo == "ordencompra2" || $modulo == "salida_insumo"
+    ) {
         /* ===== MAPEO DE SESIONES ===== */
         $config = [
             "diagnostico" => [
@@ -136,7 +140,16 @@ if (in_array($modulo, $modulos_con_fecha)) {
                     "proveedor" => "proveedor_oc",
                     "estado_oc" => "estado_oc"
                 ]
-            ]
+            ],
+            "salida_insumo" => [
+                "fecha_inicio" => "fecha_inicio_salida_insumo",
+                "fecha_final"  => "fecha_final_salida_insumo",
+                "extra" => [
+                    "nro_salida" => "nro_salida_insumo",
+                    "empleado"   => "empleado_salida_insumo",
+                    "estado"     => "estado_salida_insumo"
+                ]
+            ],
         ];
 
         $cfg = $config[$modulo];
@@ -152,7 +165,7 @@ if (in_array($modulo, $modulos_con_fecha)) {
             unset($_SESSION['estado_reclamo_servicio']);
             unset($_SESSION[$cfg['fecha_inicio']]);
             unset($_SESSION[$cfg['fecha_final']]);
-
+            unset($_SESSION['filtro_salida_insumo_activo']);
             foreach ($cfg['extra'] as $key => $sessionKey) {
                 unset($_SESSION[$sessionKey]);
             }
@@ -182,7 +195,7 @@ if (in_array($modulo, $modulos_con_fecha)) {
 
             $_SESSION[$cfg['fecha_inicio']] = $fecha_ini;
             $_SESSION[$cfg['fecha_final']]  = $fecha_fin;
-        } elseif ($modulo == "diagnostico" && ($fecha_ini != '' || $fecha_fin != '')) {
+        } elseif (($modulo == "diagnostico" || $modulo == "salida_insumo") && ($fecha_ini != '' || $fecha_fin != '')) {
             if ($fecha_ini != '') {
                 $_SESSION[$cfg['fecha_inicio']] = $fecha_ini;
             } else {
@@ -207,7 +220,7 @@ if (in_array($modulo, $modulos_con_fecha)) {
             unset($_SESSION[$cfg['fecha_final']]);
         }
 
-        /* ===== CAMPOS EXTRA (solo diagnóstico) ===== */
+        /* ===== CAMPOS EXTRA  ===== */
         foreach ($cfg['extra'] as $postKey => $sessionKey) {
             $_SESSION[$sessionKey] = $_POST[$postKey] ?? '';
         }
@@ -241,7 +254,9 @@ if (in_array($modulo, $modulos_con_fecha)) {
             ]);
             exit();
         }
-
+        if ($modulo == "salida_insumo") {
+            $_SESSION['filtro_salida_insumo_activo'] = '1';
+        }
         echo json_encode([
             "Alerta" => "redireccionar",
             "URL" => SERVERURL . $data_url[$modulo] . "/"
@@ -349,8 +364,7 @@ if (in_array($modulo, $modulos_con_fecha)) {
 
         /* ===============================
            INVENTARIO (FILTROS OPCIONALES)
-           =============================== */
-        elseif ($modulo == "inventario") {
+           =============================== */ elseif ($modulo == "inventario") {
 
             $fecha_ini = $_POST['fecha_inicio'] ?? '';
             $fecha_fin = $_POST['fecha_final'] ?? '';
@@ -387,8 +401,7 @@ if (in_array($modulo, $modulos_con_fecha)) {
 
         /* ===============================
            RECEPCION (FILTROS OPCIONALES)
-           =============================== */
-        elseif ($modulo == "recepcion") {
+           =============================== */ elseif ($modulo == "recepcion") {
 
             $fecha_ini = $_POST['fecha_inicio'] ?? '';
             $fecha_fin = $_POST['fecha_final'] ?? '';
@@ -429,8 +442,7 @@ if (in_array($modulo, $modulos_con_fecha)) {
 
         /* ===============================
            COMPRA (FECHA OPCIONAL)
-           =============================== */
-        elseif ($modulo == "compra") {
+           =============================== */ elseif ($modulo == "compra") {
 
             $fecha_ini = $_POST['fecha_inicio'] ?? '';
             $fecha_fin = $_POST['fecha_final'] ?? '';

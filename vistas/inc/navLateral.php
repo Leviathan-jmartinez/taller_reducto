@@ -263,6 +263,13 @@ $menuLateral = [
                 'href' => 'reclamo-servicio-nuevo/',
                 'vistas' => ['reclamo-servicio-nuevo', 'reclamo-servicio-lista'],
                 'permiso' => 'servicio.reclamo.ver'
+            ],
+            [
+                'titulo' => 'Registro de Insumos',
+                'icono' => 'fas fa-boxes',
+                'href' => 'registro-insumos/',
+                'vistas' => ['registro-insumos'],
+                'permiso' => 'servicio.insumo.crear'
             ]
         ]
     ],
