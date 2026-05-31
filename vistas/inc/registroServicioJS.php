@@ -1,8 +1,8 @@
 <script>
     const SERVERURL = "<?php echo SERVERURL; ?>";
-    let detalleInsumos = [];
+    
     let timerBuscarOT = null;
-    let timerBuscarInsumo = null;
+    
 
     function setRegistroServicioHabilitado(habilitado) {
         const fecha = document.querySelector('[name="fecha_servicio"]');
@@ -67,13 +67,6 @@
                 document.getElementById('ot_vehiculo').value =
                     data.ot.mod_descri + ' ' + data.ot.placa;
 
-                detalleInsumos = [];
-                renderInsumos();
-                const resultadoInsumos = document.getElementById('resultado_insumos');
-                const buscarInsumoInput = document.getElementById('buscar_insumo');
-                if (resultadoInsumos) resultadoInsumos.innerHTML = '';
-                if (buscarInsumoInput) buscarInsumoInput.value = '';
-
                 let html = '';
                 let total = 0;
 
@@ -91,6 +84,159 @@
                 document.getElementById('detalle_ot').innerHTML = html;
 
                 setRegistroServicioHabilitado(true);
+            });
+    }
+
+    function textoRegistroServicio(valor) {
+        if (valor === null || valor === undefined || valor === '') return '-';
+        return valor;
+    }
+
+    function htmlRegistroServicio(valor) {
+        const div = document.createElement('div');
+        div.textContent = textoRegistroServicio(valor);
+        return div.innerHTML;
+    }
+
+    function numeroRegistroServicio(valor) {
+        const numero = Number(valor || 0);
+        return numero.toLocaleString('es-PY', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+        });
+    }
+
+    function fechaRegistroServicio(valor) {
+        if (!valor) return '-';
+        const fecha = new Date(String(valor).replace(' ', 'T'));
+        if (Number.isNaN(fecha.getTime())) return htmlRegistroServicio(valor);
+        return fecha.toLocaleDateString('es-PY');
+    }
+
+    function estadoRegistroServicio(estado) {
+        const estados = {
+            '0': '<span class="badge badge-secondary">Anulado</span>',
+            '1': '<span class="badge badge-success">Registrado</span>',
+            '2': '<span class="badge badge-primary">Facturado</span>',
+            '3': '<span class="badge badge-warning">Con Reclamo</span>'
+        };
+        return estados[String(estado)] || '<span class="badge badge-light">-</span>';
+    }
+
+    function verDetalleRegistroServicio(idRegistro) {
+        const contenedor = document.getElementById('contenidoDetalleRegistroServicio');
+        if (!contenedor) return;
+
+        contenedor.innerHTML = '<div class="text-center text-muted py-4">Cargando detalle...</div>';
+        $('#modalDetalleRegistroServicio').modal('show');
+
+        const data = new FormData();
+        data.append('accion', 'detalle_registro');
+        data.append('id_registro', idRegistro);
+
+        fetch(SERVERURL + 'ajax/registroServicioAjax.php', {
+                method: 'POST',
+                body: data
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.error) {
+                    contenedor.innerHTML = `<div class="alert alert-danger mb-0">${htmlRegistroServicio(res.msg || 'No se pudo cargar el detalle')}</div>`;
+                    return;
+                }
+
+                const cab = res.cabecera || {};
+                const detalle = Array.isArray(res.detalle) ? res.detalle : [];
+                let total = 0;
+                let filas = '';
+
+                if (detalle.length === 0) {
+                    filas = `
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">Sin detalle registrado</td>
+                        </tr>`;
+                } else {
+                    detalle.forEach(item => {
+                        const subtotal = Number(item.subtotal || 0);
+                        total += subtotal;
+                        filas += `
+                            <tr>
+                                <td>${htmlRegistroServicio(item.desc_articulo)}</td>
+                                <td class="text-center">${htmlRegistroServicio(item.tipo)}</td>
+                                <td class="text-center">${numeroRegistroServicio(item.cantidad)}</td>
+                                <td class="text-right">${numeroRegistroServicio(item.precio_unitario)}</td>
+                                <td class="text-right">${numeroRegistroServicio(subtotal)}</td>
+                                <td class="text-center">${htmlRegistroServicio(item.origen)}</td>
+                            </tr>`;
+                    });
+                }
+
+                contenedor.innerHTML = `
+                    <div class="row mb-3">
+                        <div class="col-md-3 mb-2">
+                            <small class="text-muted d-block">Registro</small>
+                            <strong>#${htmlRegistroServicio(cab.idregistro_servicio)}</strong>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <small class="text-muted d-block">OT</small>
+                            <strong>#${htmlRegistroServicio(cab.idorden_trabajo)}</strong>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <small class="text-muted d-block">Fecha</small>
+                            <strong>${fechaRegistroServicio(cab.fecha_servicio)}</strong>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <small class="text-muted d-block">Estado</small>
+                            ${estadoRegistroServicio(cab.estado)}
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <small class="text-muted d-block">Cliente</small>
+                            <strong>${htmlRegistroServicio((cab.nombre_cliente || '') + ' ' + (cab.apellido_cliente || ''))}</strong>
+                            <div class="text-muted">${htmlRegistroServicio(cab.doc_number)}</div>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <small class="text-muted d-block">Vehiculo</small>
+                            <strong>${htmlRegistroServicio((cab.mod_descri || '') + ' ' + (cab.placa || ''))}</strong>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <small class="text-muted d-block">Registrado por</small>
+                            <strong>${htmlRegistroServicio(cab.nombre_usuario)}</strong>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <small class="text-muted d-block">Kilometraje salida</small>
+                            <strong>${htmlRegistroServicio(cab.kilometraje_salida)}</strong>
+                        </div>
+                        <div class="col-md-8 mb-2">
+                            <small class="text-muted d-block">Observacion</small>
+                            <span>${htmlRegistroServicio(cab.observacion)}</span>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered mb-0">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Detalle realizado</th>
+                                    <th class="text-center">Tipo</th>
+                                    <th class="text-center">Cant.</th>
+                                    <th class="text-right">Precio</th>
+                                    <th class="text-right">Subtotal</th>
+                                    <th class="text-center">Origen</th>
+                                </tr>
+                            </thead>
+                            <tbody>${filas}</tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="4" class="text-right">Total</th>
+                                    <th class="text-right">${numeroRegistroServicio(total)}</th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>`;
+            })
+            .catch(() => {
+                contenedor.innerHTML = '<div class="alert alert-danger mb-0">No se pudo cargar el detalle</div>';
             });
     }
 
@@ -137,134 +283,22 @@
 
     });
 
-    function buscarInsumo() {
-        const input = document.getElementById('buscar_insumo');
-        const resultado = document.getElementById('resultado_insumos');
-        if (!input || !resultado) return;
-
-        let texto = input.value.trim();
-        clearTimeout(timerBuscarInsumo);
-
-        if (texto.length < 2) {
-            resultado.innerHTML = '';
-            return;
-        }
-
-        timerBuscarInsumo = setTimeout(() => {
-            fetch(SERVERURL + 'ajax/registroServicioAjax.php', {
-                    method: 'POST',
-                    body: new URLSearchParams({
-                        accion: 'buscar_insumo',
-                        texto: texto
-                    })
-                })
-                .then(r => r.text())
-                .then(html => {
-                    resultado.innerHTML = html;
-                });
-        }, 300);
-    }
-
-    function agregarInsumo(id, descripcion, stock) {
-
-        let existe = detalleInsumos.find(i => i.id_articulo == id);
-
-        if (existe) {
-            alert('El insumo ya fue agregado');
-            return;
-        }
-
-        if (stock <= 0) {
-            alert('Sin stock disponible');
-            return;
-        }
-
-        let item = {
-            id_articulo: id,
-            descripcion: descripcion,
-            cantidad: 1,
-            stock: stock
-        };
-
-        detalleInsumos.push(item);
-
-        renderInsumos();
-    }
-
-    function renderInsumos() {
-
-        let tbody = document.getElementById('detalle_insumos');
-        tbody.innerHTML = '';
-
-        detalleInsumos.forEach((item, index) => {
-
-            let tr = document.createElement('tr');
-
-            tr.innerHTML = `
-            <td>${item.descripcion}</td>
-
-            <td>
-                <input type="number" min="1"
-                    class="form-control form-control-sm"
-                    value="${item.cantidad}"
-                    oninput="cambiarCantidadInsumo(this, ${index})">
-            </td>
-
-            <td class="text-center">
-                <button class="btn btn-danger btn-sm"
-                    onclick="quitarInsumo(${index})">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
-        `;
-
-            tbody.appendChild(tr);
-        });
-    }
-
-    function cambiarCantidadInsumo(input, index) {
-
-        let item = detalleInsumos[index];
-
-        let cantidad = parseInt(input.value);
-
-        if (isNaN(cantidad) || cantidad <= 0) cantidad = 1;
-
-        if (cantidad > item.stock) {
-            alert('Stock insuficiente');
-            cantidad = item.stock;
-            input.value = cantidad;
-        }
-
-        item.cantidad = cantidad;
-    }
-
-    function quitarInsumo(index) {
-        detalleInsumos.splice(index, 1);
-        renderInsumos();
-    }
 
     function limpiarRegistroServicio() {
-        detalleInsumos = [];
+        
 
         const idOT = document.getElementById('idorden_trabajo');
-        const insumosJson = document.getElementById('insumos_json');
         const otNumero = document.getElementById('ot_numero');
         const otCliente = document.getElementById('ot_cliente');
         const otVehiculo = document.getElementById('ot_vehiculo');
         const resultadoOT = document.getElementById('resultado_ot');
-        const resultadoInsumos = document.getElementById('resultado_insumos');
-        const detalleInsumosBody = document.getElementById('detalle_insumos');
         const detalleOT = document.getElementById('detalle_ot');
 
         if (idOT) idOT.value = '';
-        if (insumosJson) insumosJson.value = '';
         if (otNumero) otNumero.value = '';
         if (otCliente) otCliente.value = '';
         if (otVehiculo) otVehiculo.value = '';
         if (resultadoOT) resultadoOT.innerHTML = '';
-        if (resultadoInsumos) resultadoInsumos.innerHTML = '';
-        if (detalleInsumosBody) detalleInsumosBody.innerHTML = '';
         if (detalleOT) {
             detalleOT.innerHTML = `
             <tr>
@@ -273,9 +307,6 @@
                 </td>
             </tr>`;
         }
-
-        const buscarInsumoInput = document.getElementById('buscar_insumo');
-        if (buscarInsumoInput) buscarInsumoInput.value = '';
 
         const observacion = document.querySelector('[name="observacion"]');
         if (observacion) observacion.value = '';
@@ -287,7 +318,7 @@
     if (formRegistroServicio) {
         formRegistroServicio.addEventListener('submit', function(e) {
             const idOT = document.getElementById('idorden_trabajo');
-            const insumosJson = document.getElementById('insumos_json');
+            
 
             if (!idOT || !idOT.value) {
                 e.preventDefault();
@@ -295,9 +326,24 @@
                 return;
             }
 
-            if (insumosJson) {
-                insumosJson.value = JSON.stringify(detalleInsumos);
-            }
         }, true);
     }
+
+    document.addEventListener('ajax:limpiar', function(e) {
+        if (!e.detail || e.detail.modulo !== 'registro_servicio') return;
+
+        limpiarRegistroServicio();
+    });
+
+    document.addEventListener('submit', function(e) {
+        const form = e.target.closest('.FormularioAjax');
+        if (!form || form.dataset.modulo !== 'registro_servicio') return;
+
+        setTimeout(() => {
+            const res = window.lastAjaxResponse || null;
+            if (res && res.Alerta === 'limpiar') {
+                limpiarRegistroServicio();
+            }
+        }, 800);
+    });
 </script>

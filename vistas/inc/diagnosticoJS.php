@@ -2,6 +2,7 @@
     window.diagnosticoServerUrl = "<?php echo SERVERURL; ?>";
     let indexDetalle = 0;
     let recepcionTimer = null;
+    let articuloTimers = {};
 
     function abrirModalRecepcion() {
         const input = document.getElementById('buscar_recepcion');
@@ -16,6 +17,33 @@
         const div = document.createElement('div');
         div.textContent = textoSeguro(valor);
         return div.innerHTML;
+    }
+
+    function renderDetallesReclamoDiagnostico(detalles) {
+        const tbody = document.getElementById('rec_detalles');
+        if (!tbody) return;
+
+        if (!Array.isArray(detalles) || detalles.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center text-muted">
+                        Sin detalles especificos.
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        tbody.innerHTML = detalles.map(d => {
+            const tipo = (d.tipo || '').toLowerCase() === 'servicio' ? 'Servicio' : 'Repuesto';
+            return `
+                <tr>
+                    <td>${escaparHtml(d.desc_articulo)}</td>
+                    <td>${escaparHtml(tipo)}</td>
+                    <td class="text-center">${escaparHtml(d.cantidad)}</td>
+                    <td>${escaparHtml(d.origen)}</td>
+                    <td>${escaparHtml(d.motivo)}</td>
+                </tr>`;
+        }).join('');
     }
 
     function buscarRecepcionAjax() {
@@ -88,6 +116,7 @@
                         document.getElementById("rec_fecha").innerText = textoSeguro(data.fecha_reclamo);
                         document.getElementById("rec_tipo").innerText = textoSeguro(data.tipo_reclamo);
                         document.getElementById("rec_prioridad").innerHTML = getPrioridadTexto(data.prioridad);
+                        renderDetallesReclamoDiagnostico(data.detalles || []);
                     })
                     .catch(err => console.error("ERROR JS:", err));
             }
@@ -164,6 +193,7 @@
         document.getElementById("rec_tipo").innerText = '';
         document.getElementById("rec_prioridad").innerHTML = '';
         document.getElementById("rec_fecha").innerText = '';
+        renderDetallesReclamoDiagnostico([]);
     }
 
     function agregarDetalleDiagnostico() {
@@ -172,47 +202,50 @@
         let fila = `
         <tr id="fila_${indexDetalle}">
             <td>
-                <select name="detalles[${indexDetalle}][sistema]" 
-                    class="form-control" required>
-                    <option value="">Seleccione</option>
-                    <option value="Motor">Motor</option>
-                    <option value="Frenos">Frenos</option>
-                    <option value="Suspension">Suspension</option>
-                    <option value="Direccion">Direccion</option>
-                    <option value="Transmision">Transmision</option>
-                    <option value="Electrico">Electrico</option>
-                    <option value="Refrigeracion">Refrigeracion</option>
-                    <option value="Escape">Escape</option>
-                    <option value="Carroceria">Carroceria</option>
-                    <option value="Neumaticos">Neumaticos</option>
-                    <option value="Otro">Otro</option>
+                <input type="hidden" name="detalles[${indexDetalle}][id_articulo_servicio]" id="detalle_servicio_id_${indexDetalle}">
+                <input type="text" class="form-control"
+                    id="detalle_servicio_txt_${indexDetalle}"
+                    placeholder="Buscar servicio"
+                    onkeyup="buscarArticuloDetalle(${indexDetalle}, 'servicio')"
+                    autocomplete="off" required>
+                <div id="detalle_servicio_resultado_${indexDetalle}"></div>
+            </td>
+            <td>
+                <select name="detalles[${indexDetalle}][repuesto_origen]"
+                    id="detalle_repuesto_origen_${indexDetalle}"
+                    class="form-control"
+                    onchange="actualizarOrigenRepuesto(${indexDetalle})">
+                    <option value="TALLER" selected>Taller</option>
+                    <option value="CLIENTE">Cliente</option>
+                    <option value="NINGUNO">Ninguno</option>
                 </select>
             </td>
             <td>
-                <textarea name="detalles[${indexDetalle}][problema]" 
-                    class="form-control" rows="2" placeholder="Describa el hallazgo" required></textarea>
+                <input type="hidden" name="detalles[${indexDetalle}][id_articulo_repuesto]" id="detalle_repuesto_id_${indexDetalle}">
+                <input type="text" class="form-control"
+                    id="detalle_repuesto_txt_${indexDetalle}"
+                    placeholder="Buscar repuesto"
+                    onkeyup="buscarArticuloDetalle(${indexDetalle}, 'repuesto')"
+                    autocomplete="off">
+                <div id="detalle_repuesto_resultado_${indexDetalle}"></div>
             </td>
             <td>
-                <select name="detalles[${indexDetalle}][gravedad]" 
-                    class="form-control">
+                <input type="number" min="1" step="1"
+                    name="detalles[${indexDetalle}][cantidad_repuesto]"
+                    class="form-control text-center"
+                    value="1">
+            </td>
+            <td>
+                <select name="detalles[${indexDetalle}][gravedad]" class="form-control">
                     <option value="leve">Baja</option>
                     <option value="media" selected>Media</option>
                     <option value="grave">Alta</option>
+                    <option value="urgente">Urgente</option>
                 </select>
             </td>
             <td>
-                <textarea name="detalles[${indexDetalle}][solucion_propuesta]" 
-                    class="form-control" rows="2" placeholder="Trabajo recomendado"></textarea>
-            </td>
-            <td class="text-center">
-                <input type="checkbox" 
-                    name="detalles[${indexDetalle}][requiere_repuesto]" 
-                    value="1">
-            </td>
-            <td class="text-center">
-                <input type="checkbox" 
-                    name="detalles[${indexDetalle}][requiere_mano_obra]" 
-                    value="1" checked>
+                <textarea name="detalles[${indexDetalle}][problema]"
+                    class="form-control" rows="2" placeholder="Observacion tecnica" required></textarea>
             </td>
             <td class="text-center">
                 <button type="button" 
@@ -231,6 +264,71 @@
     function eliminarDetalle(index) {
         const fila = document.getElementById('fila_' + index);
         if (fila) fila.remove();
+    }
+
+    function actualizarOrigenRepuesto(index) {
+        const origen = document.getElementById(`detalle_repuesto_origen_${index}`);
+        const idInput = document.getElementById(`detalle_repuesto_id_${index}`);
+        const txtInput = document.getElementById(`detalle_repuesto_txt_${index}`);
+        const cantInput = document.querySelector(`[name="detalles[${index}][cantidad_repuesto]"]`);
+        const resultado = document.getElementById(`detalle_repuesto_resultado_${index}`);
+        const sinRepuesto = origen && origen.value === 'NINGUNO';
+
+        if (idInput && sinRepuesto) idInput.value = '';
+        if (txtInput) {
+            txtInput.disabled = sinRepuesto;
+            if (sinRepuesto) txtInput.value = '';
+        }
+        if (cantInput) {
+            cantInput.disabled = sinRepuesto;
+            cantInput.value = sinRepuesto ? '0' : (parseFloat(cantInput.value || '0') > 0 ? cantInput.value : '1');
+        }
+        if (resultado && sinRepuesto) resultado.innerHTML = '';
+    }
+
+    function buscarArticuloDetalle(index, campo) {
+        const tipoUso = campo === 'repuesto' ? 'repuesto' : 'servicio';
+        const input = document.getElementById(`detalle_${campo}_txt_${index}`);
+        const contenedor = document.getElementById(`detalle_${campo}_resultado_${index}`);
+        const idInput = document.getElementById(`detalle_${campo}_id_${index}`);
+        if (!input || !contenedor) return;
+        if (campo === 'repuesto') {
+            const origen = document.getElementById(`detalle_repuesto_origen_${index}`);
+            if (origen && origen.value === 'NINGUNO') return;
+        }
+        if (idInput) idInput.value = '';
+
+        clearTimeout(articuloTimers[`${campo}_${index}`]);
+        articuloTimers[`${campo}_${index}`] = setTimeout(() => {
+            const texto = input.value.trim();
+            if (texto.length < 2) {
+                contenedor.innerHTML = '';
+                return;
+            }
+
+            fetch(window.diagnosticoServerUrl + "ajax/diagnosticoAjax.php", {
+                    method: "POST",
+                    body: new URLSearchParams({
+                        accion: "buscar_articulos",
+                        buscar: texto,
+                        tipo_uso: tipoUso,
+                        campo: campo,
+                        index: index
+                    })
+                })
+                .then(r => r.text())
+                .then(html => contenedor.innerHTML = html);
+        }, 220);
+    }
+
+    function seleccionarArticuloDetalle(index, campo, id, codigo, descripcion) {
+        const idInput = document.getElementById(`detalle_${campo}_id_${index}`);
+        const txtInput = document.getElementById(`detalle_${campo}_txt_${index}`);
+        const resultado = document.getElementById(`detalle_${campo}_resultado_${index}`);
+
+        if (idInput) idInput.value = id;
+        if (txtInput) txtInput.value = `${codigo} - ${descripcion}`;
+        if (resultado) resultado.innerHTML = '';
     }
 
     function limpiarDiagnostico() {
@@ -305,6 +403,19 @@
                 itemRecepcion.dataset.reclamo || null
             );
 
+            return;
+        }
+
+        const itemArticulo = e.target.closest('.diagnostico-articulo-item');
+        if (itemArticulo) {
+            e.preventDefault();
+            seleccionarArticuloDetalle(
+                itemArticulo.dataset.index,
+                itemArticulo.dataset.campo,
+                itemArticulo.dataset.id,
+                itemArticulo.dataset.codigo,
+                itemArticulo.dataset.desc
+            );
             return;
         }
 
@@ -503,16 +614,21 @@
 
                 const c = data.cabecera;
                 const detalles = Array.isArray(data.detalles) ? data.detalles : [];
+                const esReclamo = (c.origen || '').toUpperCase() === 'RECLAMO';
+                const bloqueReclamo = esReclamo ? `
+                    <div class="col-md-3 mt-3"><strong>Garantia:</strong><br>${renderBoolTexto(c.es_garantia)}</div>
+                    <div class="col-md-3 mt-3"><strong>Requiere cobro:</strong><br>${renderBoolTexto(c.requiere_cobro)}</div>
+                ` : '';
                 const filas = detalles.length ? detalles.map((d) => `
                     <tr>
-                        <td>${escaparHtml(d.sistema)}</td>
-                        <td>${escaparHtml(d.problema)}</td>
+                        <td>${escaparHtml(d.servicio_desc)}</td>
+                        <td>${escaparHtml(d.repuesto_origen)}</td>
+                        <td>${escaparHtml(d.repuesto_desc)}</td>
+                        <td class="text-center">${d.id_articulo_repuesto ? escaparHtml(d.cantidad_repuesto) : '-'}</td>
                         <td>${escaparHtml(d.gravedad)}</td>
-                        <td>${escaparHtml(d.solucion_propuesta)}</td>
-                        <td class="text-center">${renderBoolTexto(d.requiere_repuesto)}</td>
-                        <td class="text-center">${renderBoolTexto(d.requiere_mano_obra)}</td>
+                        <td>${escaparHtml(d.problema)}</td>
                     </tr>
-                `).join('') : '<tr><td colspan="6" class="text-center text-muted">Sin detalles cargados.</td></tr>';
+                `).join('') : '<tr><td colspan="6" class="text-center text-muted">Sin trabajos cargados.</td></tr>';
 
                 contenedor.innerHTML = `
                     <div class="row">
@@ -525,8 +641,7 @@
                         <div class="col-md-4 mt-3"><strong>Equipo:</strong><br>${escaparHtml(c.equipo)}</div>
                         <div class="col-md-3 mt-3"><strong>Origen:</strong><br>${escaparHtml(c.origen)}</div>
                         <div class="col-md-3 mt-3"><strong>Servicio:</strong><br>${escaparHtml(c.tipo_servicio)}</div>
-                        <div class="col-md-3 mt-3"><strong>Garantia:</strong><br>${renderBoolTexto(c.es_garantia)}</div>
-                        <div class="col-md-3 mt-3"><strong>Requiere cobro:</strong><br>${renderBoolTexto(c.requiere_cobro)}</div>
+                        ${bloqueReclamo}
                         <div class="col-md-12 mt-3"><strong>Observacion recepcion:</strong><br>${escaparHtml(c.recepcion_observacion)}</div>
                         <div class="col-md-12 mt-3"><strong>Observacion diagnostico:</strong><br>${escaparHtml(c.observaciones)}</div>
                     </div>
@@ -534,12 +649,12 @@
                         <table class="table table-bordered table-sm">
                             <thead class="thead-light">
                                 <tr>
-                                    <th>Sistema</th>
-                                    <th>Hallazgo detectado</th>
-                                    <th>Gravedad</th>
-                                    <th>Recomendacion tecnica</th>
+                                    <th>Servicio</th>
+                                    <th>Origen repuesto</th>
                                     <th>Repuesto</th>
-                                    <th>Mano de obra</th>
+                                    <th>Cant.</th>
+                                    <th>Gravedad</th>
+                                    <th>Observacion</th>
                                 </tr>
                             </thead>
                             <tbody>${filas}</tbody>

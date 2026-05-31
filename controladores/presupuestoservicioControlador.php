@@ -779,7 +779,8 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
     {
         return [
             'cabecera' => self::obtener_presupuesto_cabecera($id),
-            'detalle'  => self::obtener_presupuesto_detalle($id)
+            'detalle'  => self::obtener_presupuesto_detalle($id),
+            'promociones' => self::obtener_presupuesto_promociones($id)
         ];
     }
 }

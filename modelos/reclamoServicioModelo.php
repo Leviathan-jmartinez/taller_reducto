@@ -11,20 +11,6 @@ class reclamoServicioModelo extends mainModel
         try {
             $pdo->beginTransaction();
 
-            /* VALIDAR DUPLICADO */
-            $v = $pdo->prepare("
-            SELECT idreclamo_servicio
-            FROM reclamo_servicio
-            WHERE idregistro_servicio = ?
-            AND estado IN (1, 2)
-        ");
-            $v->execute([$datos['idregistro_servicio']]);
-
-            if ($v->rowCount() > 0) {
-                $pdo->rollBack();
-                return ['msg' => 'Ya existe reclamo activo'];
-            }
-
             $qOrigen = $pdo->prepare("
                 SELECT
                     id_cliente,
@@ -74,6 +60,40 @@ class reclamoServicioModelo extends mainModel
                 }
             }
 
+            $tipoReclamo = strtoupper(trim($datos['tipo_reclamo'] ?? 'GENERAL'));
+            $tiposPermitidos = ['SERVICIO', 'REPUESTO', 'ATENCION', 'GENERAL'];
+            if (!in_array($tipoReclamo, $tiposPermitidos, true)) {
+                $pdo->rollBack();
+                return ['msg' => 'Tipo de reclamo invalido'];
+            }
+
+            $detalles = json_decode($datos['detalles_reclamo_json'] ?? '[]', true);
+            if (!is_array($detalles)) {
+                $detalles = [];
+            }
+
+            if (in_array($tipoReclamo, ['SERVICIO', 'REPUESTO'], true) && empty($detalles)) {
+                $pdo->rollBack();
+                return ['msg' => 'Debe seleccionar al menos un detalle reclamado'];
+            }
+
+            if (in_array($tipoReclamo, ['ATENCION', 'GENERAL'], true)) {
+                $v = $pdo->prepare("
+                    SELECT idreclamo_servicio
+                    FROM reclamo_servicio
+                    WHERE idregistro_servicio = ?
+                      AND tipo_reclamo = ?
+                      AND estado IN (1, 2)
+                    LIMIT 1
+                ");
+                $v->execute([$datos['idregistro_servicio'], $tipoReclamo]);
+
+                if ($v->fetchColumn()) {
+                    $pdo->rollBack();
+                    return ['msg' => 'Ya existe un reclamo activo de este tipo para el servicio'];
+                }
+            }
+
             /* INSERT RECLAMO */
             $ins = $pdo->prepare("
             INSERT INTO reclamo_servicio
@@ -100,12 +120,97 @@ class reclamoServicioModelo extends mainModel
                 $origenServicio['id_cliente'],
                 $origenServicio['id_vehiculo'],
                 $datos['descripcion'],
-                $datos['tipo_reclamo'],
+                $tipoReclamo,
                 $datos['origen'],
                 $datos['prioridad'],
                 $requiereGarantia,
                 $datos['usuario']
             ]);
+
+            $idReclamo = (int)$pdo->lastInsertId();
+
+            if (!empty($detalles)) {
+                $valDetalle = $pdo->prepare("
+                    SELECT
+                        d.id_registro_servicio_detalle,
+                        a.tipo
+                    FROM registro_servicio_detalle d
+                    INNER JOIN articulos a ON a.id_articulo = d.id_articulo
+                    WHERE d.id_registro_servicio_detalle = ?
+                      AND d.idregistro_servicio = ?
+                    LIMIT 1
+                ");
+
+                $duplicadoDetalle = $pdo->prepare("
+                    SELECT rd.idreclamo_detalle
+                    FROM reclamo_servicio_detalle rd
+                    INNER JOIN reclamo_servicio r
+                        ON r.idreclamo_servicio = rd.idreclamo_servicio
+                    WHERE rd.id_registro_servicio_detalle = ?
+                      AND r.estado IN (1, 2)
+                    LIMIT 1
+                ");
+
+                $insDet = $pdo->prepare("
+                    INSERT INTO reclamo_servicio_detalle
+                    (
+                        idreclamo_servicio,
+                        id_registro_servicio_detalle,
+                        motivo,
+                        requiere_garantia,
+                        estado
+                    )
+                    VALUES (?, ?, ?, ?, 1)
+                ");
+
+                $idsSeleccionados = [];
+
+                foreach ($detalles as $det) {
+                    $idDetalle = (int)($det['id_registro_servicio_detalle'] ?? 0);
+                    if ($idDetalle <= 0 || isset($idsSeleccionados[$idDetalle])) {
+                        continue;
+                    }
+
+                    $valDetalle->execute([$idDetalle, $datos['idregistro_servicio']]);
+                    $detalleValido = $valDetalle->fetch(PDO::FETCH_ASSOC);
+
+                    if (!$detalleValido) {
+                        throw new Exception('Uno de los detalles no pertenece al servicio seleccionado');
+                    }
+
+                    if ($tipoReclamo === 'SERVICIO' && $detalleValido['tipo'] !== 'servicio') {
+                        throw new Exception('El reclamo de servicio solo puede incluir servicios');
+                    }
+
+                    if ($tipoReclamo === 'REPUESTO' && $detalleValido['tipo'] !== 'producto') {
+                        throw new Exception('El reclamo de repuesto solo puede incluir productos');
+                    }
+
+                    $duplicadoDetalle->execute([$idDetalle]);
+                    if ($duplicadoDetalle->fetchColumn()) {
+                        throw new Exception('Uno de los detalles seleccionados ya tiene un reclamo activo');
+                    }
+
+                    $motivo = trim($det['motivo'] ?? '');
+                    if ($motivo === '') {
+                        $motivo = $datos['descripcion'];
+                    }
+
+                    $insDet->execute([
+                        $idReclamo,
+                        $idDetalle,
+                        $motivo,
+                        $requiereGarantia
+                    ]);
+
+                    $idsSeleccionados[$idDetalle] = true;
+                }
+
+                if (in_array($tipoReclamo, ['SERVICIO', 'REPUESTO'], true) && empty($idsSeleccionados)) {
+                    throw new Exception('Debe seleccionar al menos un detalle reclamado');
+                }
+            }
+
             /* 🔥 MARCAR REGISTRO COMO CON RECLAMO */
             $upd = $pdo->prepare("
                 UPDATE registro_servicio
@@ -127,7 +232,9 @@ class reclamoServicioModelo extends mainModel
     /* ================= BUSCAR REGISTRO ================= */
     protected static function buscar_registro_modelo($texto)
     {
-        session_start(['name' => 'STR']);
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start(['name' => 'STR']);
+        }
         $sql = self::conectar()->prepare("
         SELECT 
             rs.idregistro_servicio,
@@ -186,6 +293,68 @@ class reclamoServicioModelo extends mainModel
         $sql->execute();
 
         return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    protected static function cargar_registro_reclamo_modelo($idRegistro, $idSucursal)
+    {
+        $pdo = self::conectar();
+
+        $cab = $pdo->prepare("
+            SELECT
+                rs.idregistro_servicio,
+                rs.fecha_servicio,
+                DATE_ADD(rs.fecha_servicio, INTERVAL 3 MONTH) AS garantia_fecha_vencimiento,
+                COALESCE(r_normal.kilometraje, r_reclamo.kilometraje) AS garantia_km_inicio,
+                CASE
+                    WHEN COALESCE(r_normal.kilometraje, r_reclamo.kilometraje) IS NULL THEN NULL
+                    ELSE CAST(COALESCE(r_normal.kilometraje, r_reclamo.kilometraje) AS UNSIGNED) + 2000
+                END AS garantia_km_limite,
+                c.nombre_cliente,
+                c.apellido_cliente,
+                v.placa,
+                m.mod_descri
+            FROM registro_servicio rs
+            INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rs.idorden_trabajo
+            LEFT JOIN presupuesto_servicio ps ON ps.idpresupuesto_servicio = ot.idpresupuesto_servicio
+            LEFT JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
+            LEFT JOIN recepcion_servicio r_normal ON r_normal.idrecepcion = ds.idrecepcion
+            LEFT JOIN recepcion_servicio r_reclamo ON r_reclamo.idreclamo_servicio = ot.idreclamo_servicio
+            INNER JOIN clientes c ON c.id_cliente = rs.id_cliente
+            INNER JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
+            INNER JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
+            WHERE rs.idregistro_servicio = ?
+              AND rs.id_sucursal = ?
+              AND rs.estado = 1
+            LIMIT 1
+        ");
+        $cab->execute([$idRegistro, $idSucursal]);
+        $registro = $cab->fetch(PDO::FETCH_ASSOC);
+
+        if (!$registro) {
+            return [];
+        }
+
+        $det = $pdo->prepare("
+            SELECT
+                d.id_registro_servicio_detalle,
+                d.id_articulo,
+                a.desc_articulo,
+                a.tipo,
+                d.cantidad,
+                d.precio_unitario,
+                d.subtotal,
+                d.origen
+            FROM registro_servicio_detalle d
+            INNER JOIN articulos a ON a.id_articulo = d.id_articulo
+            WHERE d.idregistro_servicio = ?
+            ORDER BY d.id_registro_servicio_detalle ASC
+        ");
+        $det->execute([$idRegistro]);
+
+        return [
+            'registro' => $registro,
+            'detalle' => $det->fetchAll(PDO::FETCH_ASSOC)
+        ];
     }
 
     /* ================= LISTAR / BUSCAR RECLAMOS ================= */

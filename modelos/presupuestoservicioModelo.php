@@ -38,15 +38,84 @@ class presupuestoservicioModelo extends mainModel
 
         /* DETALLE */
         $sqlDet = $pdo->prepare("
-                SELECT 
-            problema,
-            requiere_repuesto,
-            requiere_mano_obra
-        FROM diagnostico_detalle
-        WHERE id_diagnostico = ?");
-        $sqlDet->execute([$id]);
+        SELECT
+            dd.id_articulo_servicio,
+            dd.id_articulo_repuesto,
+            dd.problema,
+            dd.gravedad,
+            dd.cantidad_repuesto,
+            dd.repuesto_origen,
+            serv.codigo AS servicio_codigo,
+            serv.desc_articulo AS servicio_desc,
+            serv.precio_venta AS servicio_precio,
+            serv.tipo AS servicio_tipo,
+            rep.codigo AS repuesto_codigo,
+            rep.desc_articulo AS repuesto_desc,
+            rep.precio_venta AS repuesto_precio,
+            rep.tipo AS repuesto_tipo,
+            IFNULL(stock_rep.stockDisponible, 0) AS repuesto_stock
+        FROM diagnostico_detalle dd
+        LEFT JOIN articulos serv ON serv.id_articulo = dd.id_articulo_servicio
+        LEFT JOIN articulos rep ON rep.id_articulo = dd.id_articulo_repuesto
+        LEFT JOIN stock stock_rep
+            ON stock_rep.id_articulo = rep.id_articulo
+            AND stock_rep.id_sucursal = :sucursal
+        WHERE dd.id_diagnostico = :id");
+        $sqlDet->execute([
+            ':sucursal' => $cabecera['id_sucursal'],
+            ':id' => $id
+        ]);
 
-        $cabecera['detalle'] = $sqlDet->fetchAll(PDO::FETCH_ASSOC);
+        $detalleDiagnostico = $sqlDet->fetchAll(PDO::FETCH_ASSOC);
+        $cabecera['detalle'] = $detalleDiagnostico;
+
+        $detallePresupuesto = [];
+        foreach ($detalleDiagnostico as $det) {
+            $idServicio = (int)($det['id_articulo_servicio'] ?? 0);
+            if ($idServicio > 0 && ($det['servicio_tipo'] ?? '') === 'servicio') {
+                if (!isset($detallePresupuesto[$idServicio])) {
+                    $detallePresupuesto[$idServicio] = [
+                        'id_articulo' => $idServicio,
+                        'codigo' => $det['servicio_codigo'],
+                        'desc_articulo' => $det['servicio_desc'],
+                        'precio_venta' => (float)$det['servicio_precio'],
+                        'tipo' => 'servicio',
+                        'stock' => 0,
+                        'cantidad' => 0
+                    ];
+                }
+
+                $detallePresupuesto[$idServicio]['cantidad'] += 1;
+            }
+
+            if (
+                strtoupper($det['repuesto_origen'] ?? '') === 'TALLER' &&
+                !empty($det['id_articulo_repuesto']) &&
+                ($det['repuesto_tipo'] ?? '') === 'producto'
+            ) {
+                $idRepuesto = (int)$det['id_articulo_repuesto'];
+                $cantidad = (float)($det['cantidad_repuesto'] ?? 0);
+                if ($cantidad <= 0) {
+                    $cantidad = 1;
+                }
+
+                if (!isset($detallePresupuesto[$idRepuesto])) {
+                    $detallePresupuesto[$idRepuesto] = [
+                        'id_articulo' => $idRepuesto,
+                        'codigo' => $det['repuesto_codigo'],
+                        'desc_articulo' => $det['repuesto_desc'],
+                        'precio_venta' => (float)$det['repuesto_precio'],
+                        'tipo' => 'producto',
+                        'stock' => (float)$det['repuesto_stock'],
+                        'cantidad' => 0
+                    ];
+                }
+
+                $detallePresupuesto[$idRepuesto]['cantidad'] += $cantidad;
+            }
+        }
+
+        $cabecera['detalle_presupuesto'] = array_values($detallePresupuesto);
 
         return $cabecera;
     }
@@ -247,8 +316,8 @@ class presupuestoservicioModelo extends mainModel
             }
 
             $detalleCalculado = [];
-            $promocionesAplicadas = [];
             $subtotalServicios = 0;
+            $totalPromociones = 0;
 
             $sqlArticulo = $pdo->prepare("
                 SELECT id_articulo, desc_articulo, precio_venta, tipo
@@ -327,8 +396,8 @@ class presupuestoservicioModelo extends mainModel
                 }
 
                 $precioBase = (float)$articulo['precio_venta'];
-                $precioFinal = $precioBase;
                 $montoPromoUnitario = 0;
+                $idPromo = null;
 
                 $sqlPromo->execute([
                     ':articulo' => $idArticulo,
@@ -337,6 +406,7 @@ class presupuestoservicioModelo extends mainModel
                 $promo = $sqlPromo->fetch(PDO::FETCH_ASSOC);
 
                 if ($promo) {
+                    $idPromo = (int)$promo['id_promocion'];
                     if ($promo['tipo'] === 'PORCENTAJE') {
                         $montoPromoUnitario = $precioBase * ((float)$promo['valor'] / 100);
                     } elseif ($promo['tipo'] === 'MONTO_FIJO') {
@@ -345,25 +415,29 @@ class presupuestoservicioModelo extends mainModel
                         $montoPromoUnitario = max(0, $precioBase - (float)$promo['valor']);
                     }
 
-                    $precioFinal = max(0, $precioBase - $montoPromoUnitario);
-                    $idPromo = (int)$promo['id_promocion'];
-                    $promocionesAplicadas[$idPromo] = ($promocionesAplicadas[$idPromo] ?? 0) + ($montoPromoUnitario * $cantidad);
+                    $montoPromoUnitario = min($precioBase, max(0, $montoPromoUnitario));
                 }
 
-                $subtotalLinea = $precioFinal * $cantidad;
+                $montoPromoLinea = $montoPromoUnitario * $cantidad;
+                $subtotalLinea = $precioBase * $cantidad;
                 $subtotalServicios += $subtotalLinea;
+                $totalPromociones += $montoPromoLinea;
 
                 $detalleCalculado[] = [
                     'id_articulo' => $idArticulo,
                     'cantidad' => $cantidad,
-                    'precio_final' => $precioFinal,
-                    'subtotal' => $subtotalLinea
+                    'precio_base' => $precioBase,
+                    'subtotal' => $subtotalLinea,
+                    'id_promocion' => $idPromo,
+                    'monto_promocion_unitario' => $montoPromoUnitario,
+                    'monto_promocion' => $montoPromoLinea
                 ];
             }
 
             $descuentosAplicados = [];
             $totalDescuento = 0;
             $idsDescuentos = [];
+            $baseDescuentos = max(0, $subtotalServicios - $totalPromociones);
 
             foreach (($d['descuentos'] ?? []) as $desc) {
                 $idDesc = (int)($desc['id_descuento'] ?? 0);
@@ -399,10 +473,10 @@ class presupuestoservicioModelo extends mainModel
                     }
 
                     $monto = $desc['tipo'] === 'PORCENTAJE'
-                        ? $subtotalServicios * ((float)$desc['valor'] / 100)
+                        ? $baseDescuentos * ((float)$desc['valor'] / 100)
                         : (float)$desc['valor'];
 
-                    $monto = min($monto, max(0, $subtotalServicios - $totalDescuento));
+                    $monto = min($monto, max(0, $baseDescuentos - $totalDescuento));
                     $totalDescuento += $monto;
 
                     $descuentosAplicados[] = [
@@ -415,7 +489,7 @@ class presupuestoservicioModelo extends mainModel
                 }
             }
 
-            $totalFinal = max(0, $subtotalServicios - $totalDescuento);
+            $totalFinal = max(0, $subtotalServicios - $totalPromociones - $totalDescuento);
 
             $totalesVista = [
                 'subtotal' => (float)($d['subtotal'] ?? -1),
@@ -478,33 +552,33 @@ class presupuestoservicioModelo extends mainModel
                     ':articulo'    => $it['id_articulo'],
                     ':presupuesto' => $idPresupuesto,
                     ':cantidad'    => $it['cantidad'],
-                    ':precio'      => $it['precio_final'],
+                    ':precio'      => $it['precio_base'],
                     ':subtotal'    => $it['subtotal']
                 ]);
-            }
 
-            /* ================= ACTUALIZAR DIAGNÓSTICO ================= */
-            if ($promocionesAplicadas) {
-                $sqlPresPromo = $pdo->prepare("
+                $it['id_detalle_presupuesto'] = (int)$pdo->lastInsertId();
+
+                if (!empty($it['id_promocion']) && $it['monto_promocion'] > 0) {
+                    $sqlPresPromo = $pdo->prepare("
                     INSERT INTO presupuesto_promocion
-                    (idpresupuesto_servicio, id_promocion, monto_aplicado, fecha_aplicacion)
+                    (idpresupuesto_servicio, id_detalle_presupuesto, id_promocion, id_articulo, cantidad, monto_unitario, monto_aplicado, fecha_aplicacion)
                     VALUES
-                    (:presupuesto, :promocion, :monto, NOW())
+                    (:presupuesto, :detalle, :promocion, :articulo, :cantidad, :monto_unitario, :monto, NOW())
                 ");
-
-                foreach ($promocionesAplicadas as $idPromo => $monto) {
-                    if ($monto <= 0) {
-                        continue;
-                    }
 
                     $sqlPresPromo->execute([
                         ':presupuesto' => $idPresupuesto,
-                        ':promocion' => $idPromo,
-                        ':monto' => $monto
+                        ':detalle' => $it['id_detalle_presupuesto'],
+                        ':promocion' => $it['id_promocion'],
+                        ':articulo' => $it['id_articulo'],
+                        ':cantidad' => $it['cantidad'],
+                        ':monto_unitario' => $it['monto_promocion_unitario'],
+                        ':monto' => $it['monto_promocion']
                     ]);
                 }
             }
 
+            /* ================= ACTUALIZAR DIAGNÓSTICO ================= */
             if ($descuentosAplicados) {
                 $sqlPresDesc = $pdo->prepare("
                     INSERT INTO presupuesto_descuento
@@ -728,6 +802,7 @@ class presupuestoservicioModelo extends mainModel
     {
         $sql = self::conectar()->prepare("
             SELECT
+                d.id_detalle_presupuesto,
                 a.desc_articulo,
                 d.cantidad,
                 d.preciouni,
@@ -735,6 +810,28 @@ class presupuestoservicioModelo extends mainModel
             FROM presupuesto_detalleservicio d
             INNER JOIN articulos a ON a.id_articulo = d.id_articulo
             WHERE d.idpresupuesto_servicio = :id
+        ");
+        $sql->bindParam(":id", $id, PDO::PARAM_INT);
+        $sql->execute();
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    protected static function obtener_presupuesto_promociones($id)
+    {
+        $sql = self::conectar()->prepare("
+            SELECT
+                pp.id_detalle_presupuesto,
+                p.nombre,
+                a.desc_articulo,
+                pp.cantidad,
+                pp.monto_unitario,
+                pp.monto_aplicado,
+                pp.fecha_aplicacion
+            FROM presupuesto_promocion pp
+            INNER JOIN promociones p ON p.id_promocion = pp.id_promocion
+            INNER JOIN articulos a ON a.id_articulo = pp.id_articulo
+            WHERE pp.idpresupuesto_servicio = :id
+            ORDER BY p.nombre, a.desc_articulo
         ");
         $sql->bindParam(":id", $id, PDO::PARAM_INT);
         $sql->execute();

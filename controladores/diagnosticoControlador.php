@@ -168,6 +168,44 @@ class diagnosticoControlador extends diagnosticoModelo
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function buscar_articulos_controlador()
+    {
+        session_start(['name' => 'STR']);
+
+        $texto = trim($_POST['buscar'] ?? '');
+        $tipoUso = ($_POST['tipo_uso'] ?? '') === 'repuesto' ? 'repuesto' : 'servicio';
+        $index = (int)($_POST['index'] ?? 0);
+        $campo = ($_POST['campo'] ?? '') === 'repuesto' ? 'repuesto' : 'servicio';
+
+        if (strlen($texto) < 2) {
+            return '';
+        }
+
+        $tipoArticulo = $tipoUso === 'servicio' ? 'servicio' : 'producto';
+        $datos = diagnosticoModelo::buscar_articulos_modelo($texto, $tipoArticulo);
+
+        if (!$datos) {
+            return '<div class="diagnostico-autocomplete-empty">Sin resultados</div>';
+        }
+
+        $html = '<div class="diagnostico-articulo-resultados">';
+        foreach ($datos as $a) {
+            $html .= '
+            <button type="button" class="diagnostico-articulo-item"
+                data-id="' . (int)$a['id_articulo'] . '"
+                data-codigo="' . htmlspecialchars($a['codigo'], ENT_QUOTES, 'UTF-8') . '"
+                data-desc="' . htmlspecialchars($a['desc_articulo'], ENT_QUOTES, 'UTF-8') . '"
+                data-tipo="' . htmlspecialchars($tipoUso, ENT_QUOTES, 'UTF-8') . '"
+                data-index="' . $index . '"
+                data-campo="' . htmlspecialchars($campo, ENT_QUOTES, 'UTF-8') . '">
+                <span>' . htmlspecialchars($a['desc_articulo'], ENT_QUOTES, 'UTF-8') . '</span>
+                <small>' . htmlspecialchars($a['codigo'], ENT_QUOTES, 'UTF-8') . '</small>
+            </button>';
+        }
+
+        return $html . '</div>';
+    }
+
     public function guardar_diagnostico_controlador()
     {
         session_start(['name' => 'STR']);
@@ -620,6 +658,30 @@ class diagnosticoControlador extends diagnosticoModelo
         $sql->execute();
 
         $data = $sql->fetch(PDO::FETCH_ASSOC);
+
+        if ($data) {
+            $det = mainModel::conectar()->prepare("
+                SELECT
+                    rd.idreclamo_detalle,
+                    rd.motivo,
+                    rd.requiere_garantia,
+                    d.cantidad,
+                    d.origen,
+                    a.desc_articulo,
+                    a.tipo
+                FROM reclamo_servicio_detalle rd
+                INNER JOIN registro_servicio_detalle d
+                    ON d.id_registro_servicio_detalle = rd.id_registro_servicio_detalle
+                INNER JOIN articulos a
+                    ON a.id_articulo = d.id_articulo
+                WHERE rd.idreclamo_servicio = :id
+                  AND rd.estado = 1
+                ORDER BY rd.idreclamo_detalle ASC
+            ");
+            $det->bindParam(":id", $id);
+            $det->execute();
+            $data['detalles'] = $det->fetchAll(PDO::FETCH_ASSOC);
+        }
 
         return json_encode($data ?: []);
     }

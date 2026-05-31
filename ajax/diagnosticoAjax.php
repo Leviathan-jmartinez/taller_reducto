@@ -17,6 +17,11 @@ if (isset($_POST['accion'])) {
         exit();
     }
 
+    if ($_POST['accion'] == "buscar_articulos") {
+        echo $inst_diag->buscar_articulos_controlador();
+        exit();
+    }
+
     if ($_POST['accion'] == "guardar_diagnostico") {
         echo $inst_diag->guardar_diagnostico_controlador();
         exit();

@@ -73,8 +73,7 @@ class registroServicioControlador extends registroServicioModelo
             'kilometraje_salida'  => $_POST['kilometraje_salida'] ?? null,
             'observacion'     => $_POST['observacion'] ?? '',
             'usuario'         => $idUsuario,
-            'updatedby'       => $idUsuario,
-            'insumos_json'    => $_POST['insumos_json'] ?? '[]',
+            'updatedby'       => $idUsuario
         ];
 
         $res = registroServicioModelo::registrar_servicio_modelo($datos);
@@ -163,37 +162,39 @@ class registroServicioControlador extends registroServicioModelo
         ]);
     }
 
-
-    public function buscar_insumo_controlador()
+    public function detalle_registro_servicio_controlador()
     {
-        $texto = $_POST['texto'] ?? '';
-
-        $datos = registroServicioModelo::buscar_insumo_modelo($texto);
-
-        if (empty($datos)) {
-            return '<tr><td colspan="2">Sin resultados</td></tr>';
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start(['name' => 'STR']);
         }
 
-        $html = '';
-
-        foreach ($datos as $row) {
-            $html .= '
-        <tr>
-            <td>' . $row['desc_articulo'] . '</td>
-            <td class="text-center">
-                <button class="btn btn-success btn-sm"
-                    onclick="agregarInsumo(
-                            ' . $row['id_articulo'] . ',
-                            \'' . $row['desc_articulo'] . '\',
-                            ' . $row['stockDisponible'] . '
-                        )">
-                    Agregar
-                </button>
-            </td>
-        </tr>';
+        if (!mainModel::tienePermiso('servicio.registro.ver')) {
+            return json_encode([
+                'error' => true,
+                'msg' => 'Acceso denegado'
+            ]);
         }
 
-        return $html;
+        $idSucursal = $_SESSION['nick_sucursal'] ?? null;
+        $idRegistro = mainModel::decryption($_POST['id_registro'] ?? '');
+
+        if (!$idSucursal || !$idRegistro) {
+            return json_encode([
+                'error' => true,
+                'msg' => 'Registro invalido'
+            ]);
+        }
+
+        $datos = self::detalle_registro_servicio_modelo($idRegistro, $idSucursal);
+
+        if (!$datos) {
+            return json_encode([
+                'error' => true,
+                'msg' => 'No se encontro el registro'
+            ]);
+        }
+
+        return json_encode($datos, JSON_UNESCAPED_UNICODE);
     }
 
     public function listar_registro_servicio_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $orden = 'fecha', $direccion = 'DESC')
@@ -294,6 +295,13 @@ class registroServicioControlador extends registroServicioModelo
             <td>' . $row['nombre_usuario'] . '</td>
             <td>' . $estado . '</td>
             <td>';
+                $tabla .= '
+                <button type="button"
+                    class="btn btn-info btn-sm mr-1"
+                    title="Ver detalle"
+                    onclick="verDetalleRegistroServicio(\'' . mainModel::encryption($row['idregistro_servicio']) . '\')">
+                    <i class="fas fa-eye"></i>
+                </button>';
                 if (mainModel::tienePermiso('servicio.registro.anular') && $row['estado'] == 1) {
                     $tabla .= '
                 <form class="FormularioAjax d-inline"

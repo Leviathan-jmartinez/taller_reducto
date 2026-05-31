@@ -291,24 +291,50 @@
 
     function renderRepuestos() {
 
-        let html = "";
+        let html = '';
 
         repuestos.forEach((r, i) => {
 
             html += `
-            <tr>
-                <td>${r.nombre}</td>
-                <td>${r.cantidad}</td>
-                <td>
-                    <button type="button" class="btn btn-danger btn-sm" onclick="eliminarRepuesto(${i})">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `;
+        <tr>
+            <td>${r.descripcion}</td>
+
+            <td width="120">
+                <input type="number"
+                    class="form-control form-control-sm"
+                    min="1"
+                    step="0.01"
+                    value="${r.cantidad}"
+                    onchange="cambiarCantidadRepuesto(${i}, this.value)">
+            </td>
+
+            <td class="text-center">
+                <button type="button"
+                    class="btn btn-danger btn-sm"
+                    onclick="quitarRepuesto(${i})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>`;
         });
 
-        document.getElementById("lista_repuestos").innerHTML = html;
+        document.getElementById('lista_repuestos').innerHTML = html;
+
+        document.getElementById('repuestos_json').value =
+            JSON.stringify(repuestos);
+    }
+
+    function cambiarCantidadRepuesto(index, valor) {
+
+        valor = parseFloat(valor);
+
+        if (isNaN(valor) || valor <= 0) {
+            valor = 1;
+        }
+
+        repuestos[index].cantidad = valor;
+
+        renderRepuestos();
     }
 
     const inputArticulo = document.getElementById("buscar_articulo");
@@ -500,22 +526,27 @@
 
     function renderTrabajos() {
 
-        let html = "";
+        let html = '';
 
         trabajos.forEach((t, i) => {
 
             html += `
         <tr>
-            <td>${t.nombre}</td>
-            <td class="text-right">
-                <button type="button" class="btn btn-danger btn-sm" onclick="eliminarTrabajo(${i})">
+            <td>${t.descripcion}</td>
+            <td class="text-center">
+                <button type="button"
+                    class="btn btn-danger btn-sm"
+                    onclick="quitarTrabajo(${i})">
                     <i class="fas fa-trash"></i>
                 </button>
             </td>
         </tr>`;
         });
 
-        document.getElementById("lista_trabajos").innerHTML = html;
+        document.getElementById('lista_trabajos').innerHTML = html;
+
+        document.getElementById('trabajos_json').value =
+            JSON.stringify(trabajos);
     }
 
 
@@ -591,5 +622,19 @@
             repuestosInput.value = JSON.stringify(repuestos || []);
 
         }, true); // 👈 🔥 IMPORTANTE: CAPTURA
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+
+        if (Array.isArray(window.TRABAJOS_DIAGNOSTICO)) {
+            trabajos = window.TRABAJOS_DIAGNOSTICO;
+        }
+
+        if (Array.isArray(window.REPUESTOS_DIAGNOSTICO)) {
+            repuestos = window.REPUESTOS_DIAGNOSTICO;
+        }
+
+        renderTrabajos();
+        renderRepuestos();
     });
 </script>

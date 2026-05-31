@@ -5,6 +5,7 @@ $filtros = isset($pdfVars['filtros']) && is_array($pdfVars['filtros']) ? $pdfVar
 $resumen = isset($pdfVars['resumen']) && is_array($pdfVars['resumen']) ? $pdfVars['resumen'] : [];
 $cabecera = isset($pdfVars['cabecera']) && is_array($pdfVars['cabecera']) ? $pdfVars['cabecera'] : [];
 $detalle = isset($pdfVars['detalle']) && is_array($pdfVars['detalle']) ? $pdfVars['detalle'] : [];
+$promociones = isset($pdfVars['promociones']) && is_array($pdfVars['promociones']) ? $pdfVars['promociones'] : [];
 $empresa = isset($pdfVars['empresa']) ? (string)$pdfVars['empresa'] : '';
 $usuario = isset($pdfVars['usuario']) ? (string)$pdfVars['usuario'] : '';
 $desde = isset($pdfVars['desde']) ? (string)$pdfVars['desde'] : '';
@@ -12,6 +13,15 @@ $hasta = isset($pdfVars['hasta']) ? (string)$pdfVars['hasta'] : '';
 $proveedor = isset($pdfVars['proveedor']) ? (string)$pdfVars['proveedor'] : '';
 $estado = isset($pdfVars['estado']) ? (string)$pdfVars['estado'] : '';
 $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
+$totalPromociones = 0;
+$promocionesPorDetalle = [];
+foreach ($promociones as $promo) {
+    $totalPromociones += (float)($promo['monto_aplicado'] ?? 0);
+    $idDetallePromo = (int)($promo['id_detalle_presupuesto'] ?? 0);
+    if ($idDetallePromo > 0) {
+        $promocionesPorDetalle[$idDetallePromo][] = $promo;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -107,6 +117,19 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
 
         .items tbody tr:nth-child(even) td {
             background: #f8fafc;
+        }
+
+        .promo-line td {
+            background: #eef7f3 !important;
+            border-top: none;
+            color: #2f6f4e;
+            font-size: 9.5px;
+            padding-top: 4px;
+        }
+
+        .promo-label {
+            color: #245f63;
+            font-weight: bold;
         }
 
         .totales {
@@ -226,6 +249,18 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
                     <td class="right"><?= number_format($d['preciouni'], 0, ',', '.') ?></td>
                     <td class="right"><?= number_format($d['subtotal'], 0, ',', '.') ?></td>
                 </tr>
+                <?php foreach (($promocionesPorDetalle[(int)($d['id_detalle_presupuesto'] ?? 0)] ?? []) as $promo): ?>
+                    <tr class="promo-line">
+                        <td colspan="3">
+                            <span class="promo-label">Promocion:</span>
+                            <?= $promo['nombre'] ?>
+                            <span class="muted">
+                                | <?= $promo['cantidad'] ?> x -<?= number_format($promo['monto_unitario'], 0, ',', '.') ?>
+                            </span>
+                        </td>
+                        <td class="right">- <?= number_format($promo['monto_aplicado'], 0, ',', '.') ?></td>
+                    </tr>
+                <?php endforeach; ?>
             <?php endforeach; ?>
         </tbody>
     </table>
@@ -234,6 +269,10 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
         <tr>
             <td>Subtotal</td>
             <td class="right"><?= number_format($cabecera['subtotal'], 0, ',', '.') ?></td>
+        </tr>
+        <tr>
+            <td>Promociones</td>
+            <td class="right">- <?= number_format($totalPromociones, 0, ',', '.') ?></td>
         </tr>
         <tr>
             <td>Descuento</td>

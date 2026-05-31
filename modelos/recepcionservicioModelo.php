@@ -302,6 +302,7 @@ class recepcionservicioModelo extends mainModel
               AND (
                    v.placa LIKE :termino
                 OR m.mod_descri LIKE :termino
+                OR ma.mar_descri LIKE :termino
               )
             ORDER BY v.placa ASC
             LIMIT 20

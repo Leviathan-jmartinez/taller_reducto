@@ -14,6 +14,7 @@ $data = $insPres->datos_presupuesto_controlador($id);
 
 $cabecera = $data['cabecera'];
 $detalle  = $data['detalle'];
+$promociones = $data['promociones'] ?? [];
 
 if (!$cabecera) {
     exit('Presupuesto no encontrado');

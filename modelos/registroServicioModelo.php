@@ -124,25 +124,6 @@ class registroServicioModelo extends mainModel
         ");
             $det->execute([$idRegistro, $datos['idorden_trabajo']]);
 
-            /* ================= INSERTAR INSUMOS ================= */
-            $insumos = json_decode($datos['insumos_json'] ?? '[]', true);
-
-            if (!empty($insumos)) {
-                $ins = $pdo->prepare("
-                INSERT INTO registro_servicio_detalle
-                (idregistro_servicio, id_articulo, cantidad, precio_unitario, subtotal, origen)
-                VALUES (?, ?, ?, 0, 0, 'INSUMO')
-            ");
-
-                foreach ($insumos as $i) {
-                    $ins->execute([
-                        $idRegistro,
-                        $i['id_articulo'],
-                        $i['cantidad']
-                    ]);
-                }
-            }
-
             /* ================= APLICAR STOCK ================= */
             self::aplicar_stock_registro_servicio(
                 $pdo,
@@ -322,6 +303,63 @@ class registroServicioModelo extends mainModel
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    protected static function detalle_registro_servicio_modelo($idRegistro, $idSucursal)
+    {
+        $pdo = self::conectar();
+
+        $cabecera = $pdo->prepare("
+            SELECT
+                rs.idregistro_servicio,
+                rs.idorden_trabajo,
+                rs.fecha_servicio,
+                rs.kilometraje_salida,
+                rs.observacion,
+                rs.estado,
+                COALESCE(c.nombre_cliente, '') AS nombre_cliente,
+                COALESCE(c.apellido_cliente, '') AS apellido_cliente,
+                COALESCE(c.doc_number, '') AS doc_number,
+                COALESCE(m.mod_descri, '') AS mod_descri,
+                COALESCE(v.placa, '') AS placa,
+                CONCAT(COALESCE(u.usu_nombre, ''), ' ', COALESCE(u.usu_apellido, '')) AS nombre_usuario
+            FROM registro_servicio rs
+            LEFT JOIN clientes c ON c.id_cliente = rs.id_cliente
+            LEFT JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
+            LEFT JOIN modelo_auto m ON m.id_modeloauto = v.id_modeloauto
+            LEFT JOIN usuarios u ON u.id_usuario = rs.usuario_registra
+            WHERE rs.idregistro_servicio = ?
+              AND rs.id_sucursal = ?
+            LIMIT 1
+        ");
+        $cabecera->execute([$idRegistro, $idSucursal]);
+        $registro = $cabecera->fetch(PDO::FETCH_ASSOC);
+
+        if (!$registro) {
+            return [];
+        }
+
+        $detalle = $pdo->prepare("
+            SELECT
+                d.id_registro_servicio_detalle,
+                d.id_articulo,
+                COALESCE(a.desc_articulo, '') AS desc_articulo,
+                COALESCE(a.tipo, '') AS tipo,
+                d.cantidad,
+                d.precio_unitario,
+                d.subtotal,
+                d.origen
+            FROM registro_servicio_detalle d
+            LEFT JOIN articulos a ON a.id_articulo = d.id_articulo
+            WHERE d.idregistro_servicio = ?
+            ORDER BY d.id_registro_servicio_detalle ASC
+        ");
+        $detalle->execute([$idRegistro]);
+
+        return [
+            'cabecera' => $registro,
+            'detalle' => $detalle->fetchAll(PDO::FETCH_ASSOC)
+        ];
+    }
+
     protected static function aplicar_stock_registro_servicio(PDO $pdo, $idRegistro, $idSucursal, $usuario)
     {
         $sql = $pdo->prepare("
@@ -331,7 +369,7 @@ class registroServicioModelo extends mainModel
         FROM registro_servicio_detalle d
         INNER JOIN articulos a ON a.id_articulo = d.id_articulo
         WHERE d.idregistro_servicio = ?
-          AND a.tipo IN ('producto','insumo') ");
+          AND a.tipo IN ('producto') ");
         $sql->execute([$idRegistro]);
 
         $items = $sql->fetchAll(PDO::FETCH_ASSOC);
@@ -403,7 +441,7 @@ class registroServicioModelo extends mainModel
             FROM registro_servicio_detalle d
             INNER JOIN articulos a ON a.id_articulo = d.id_articulo
             WHERE d.idregistro_servicio = ?
-            AND a.tipo IN ('producto','insumo') ");
+            AND a.tipo IN ('producto') ");
         $sql->execute([$idRegistro]);
 
         foreach ($sql->fetchAll(PDO::FETCH_ASSOC) as $item) {

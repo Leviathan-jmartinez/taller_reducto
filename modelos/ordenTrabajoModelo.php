@@ -164,17 +164,34 @@ class ordenTrabajoModelo extends mainModel
     protected static function obtener_detalle_diagnostico_modelo($idDiagnostico)
     {
         $sql = mainModel::conectar()->prepare("
-            SELECT
-                sistema,
-                problema,
-                gravedad,
-                solucion_propuesta,
-                requiere_repuesto,
-                requiere_mano_obra
-            FROM diagnostico_detalle
-            WHERE id_diagnostico = :id
-            ORDER BY id_diagnostico_detalle ASC
-        ");
+        SELECT
+            dd.id_diagnostico_detalle,
+            dd.id_diagnostico,
+
+            dd.id_articulo_servicio,
+            serv.desc_articulo AS servicio,
+
+            dd.id_articulo_repuesto,
+            rep.desc_articulo AS repuesto,
+
+            dd.cantidad_repuesto,
+            dd.problema,
+            dd.gravedad,
+            dd.repuesto_origen
+
+        FROM diagnostico_detalle dd
+
+        LEFT JOIN articulos serv
+            ON serv.id_articulo = dd.id_articulo_servicio
+
+        LEFT JOIN articulos rep
+            ON rep.id_articulo = dd.id_articulo_repuesto
+
+        WHERE dd.id_diagnostico = :id
+
+        ORDER BY dd.id_diagnostico_detalle ASC
+     ");
+
         $sql->bindParam(":id", $idDiagnostico, PDO::PARAM_INT);
         $sql->execute();
 
@@ -869,6 +886,4 @@ class ordenTrabajoModelo extends mainModel
             return $e->getMessage();
         }
     }
-
-    
 }

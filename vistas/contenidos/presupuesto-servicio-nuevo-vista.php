@@ -99,9 +99,12 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
                 <table class="table table-sm table-bordered">
                     <thead class="thead-light">
                         <tr>
-                            <th>Problema</th>
+                            <th>Servicio</th>
+                            <th>Origen repuesto</th>
                             <th>Repuesto</th>
-                            <th>Mano de obra</th>
+                            <th>Cant.</th>
+                            <th>Gravedad</th>
+                            <th>Observacion</th>
                         </tr>
                     </thead>
                     <tbody id="lista_diagnostico"></tbody>
@@ -227,6 +230,9 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
             <div class="text-right">
                 <strong>Subtotal servicios:</strong>
                 <span id="txt_subtotal_servicios">Gs. 0</span>
+                <br>
+                <strong>Promociones:</strong>
+                <span id="txt_total_promociones">Gs. 0</span>
             </div>
         </fieldset>
 
@@ -248,6 +254,9 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
             <div class="text-right">
                 <p>Subtotal:
                     <strong id="total_subtotal">Gs. 0</strong>
+                </p>
+                <p>Promociones:
+                    <strong id="total_promociones">Gs. 0</strong>
                 </p>
                 <p>Descuentos:
                     <strong id="txt_total_descuento">Gs. 0</strong>

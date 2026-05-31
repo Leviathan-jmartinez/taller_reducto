@@ -108,6 +108,30 @@ $busqueda_activa = isset($_SESSION['filtro_registro_servicio_activo']);
     ?>
 </div>
 
+<div class="modal fade" id="modalDetalleRegistroServicio" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-clipboard-list"></i>
+                    &nbsp; Detalle del servicio realizado
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Cerrar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="contenidoDetalleRegistroServicio">
+                <div class="text-center text-muted py-4">Seleccione un registro</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                    <i class="fas fa-times"></i> Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <?php
 include_once "./vistas/inc/registroServicioJS.php"; ?>

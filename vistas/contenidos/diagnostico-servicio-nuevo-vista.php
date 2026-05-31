@@ -138,6 +138,62 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
     .diagnostico-checklist-table select {
         min-width: 130px;
     }
+
+    .diagnostico-articulos-grid {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .diagnostico-articulo-box {
+        border: 1px solid #e3e8ef;
+        border-radius: 6px;
+        padding: 12px;
+    }
+
+    .diagnostico-articulo-lista {
+        min-height: 52px;
+    }
+
+    .diagnostico-articulo-chip {
+        align-items: center;
+        background: #f8fafc;
+        border: 1px solid #e3e8ef;
+        border-radius: 6px;
+        display: flex;
+        justify-content: space-between;
+        margin-top: 8px;
+        padding: 8px 10px;
+    }
+
+    .diagnostico-articulo-resultados {
+        border: 1px solid #e3e8ef;
+        border-radius: 6px;
+        margin-top: 6px;
+        max-height: 190px;
+        overflow-y: auto;
+    }
+
+    .diagnostico-articulo-item {
+        background: #fff;
+        border: 0;
+        border-bottom: 1px solid #edf0f2;
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 10px;
+        text-align: left;
+        width: 100%;
+    }
+
+    .diagnostico-articulo-item:hover {
+        background: #f4f8fb;
+    }
+
+    @media (max-width: 768px) {
+        .diagnostico-articulos-grid {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 
 <div id="alerta_reclamo" class="alert alert-warning" style="display:none;">
@@ -172,6 +228,27 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
                     <strong>Fecha:</strong><br>
                     <span id="rec_fecha"></span>
                 </div>
+            </div>
+
+            <div class="table-responsive mt-3">
+                <table class="table table-sm table-bordered mb-0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Item reclamado</th>
+                            <th>Tipo</th>
+                            <th>Cant.</th>
+                            <th>Origen</th>
+                            <th>Motivo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rec_detalles">
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">
+                                Sin detalles especificos.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -340,7 +417,7 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
         <div class="diagnostico-workspace mb-3">
             <section class="diagnostico-panel">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="mb-0"><i class="fas fa-clipboard-check"></i> Checklist tecnico</h6>
+                    <h6 class="mb-0"><i class="fas fa-clipboard-check"></i> Trabajos recomendados</h6>
                     <button type="button" class="btn btn-success btn-sm"
                         onclick="agregarDetalleDiagnostico()">
                         <i class="fas fa-plus"></i> Agregar
@@ -351,12 +428,12 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
                     <table class="table table-dark table-sm diagnostico-checklist-table">
                         <thead>
                             <tr>
-                                <th>Sistema</th>
-                                <th>Hallazgo detectado</th>
-                                <th>Gravedad</th>
-                                <th>Recomendacion tecnica</th>
+                                <th>Servicio</th>
+                                <th>Origen repuesto</th>
                                 <th>Repuesto</th>
-                                <th>Mano de obra</th>
+                                <th width="90">Cant.</th>
+                                <th>Gravedad</th>
+                                <th>Observacion</th>
                                 <th width="50">Accion</th>
                             </tr>
                         </thead>

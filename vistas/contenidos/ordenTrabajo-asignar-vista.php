@@ -116,12 +116,12 @@ $detalleDiagnostico = !empty($ot['id_diagnostico_reclamo'])
                     <table class="table table-dark table-sm mb-0">
                         <thead>
                             <tr>
-                                <th>Sistema</th>
+                                <th>Servicio</th>
                                 <th>Problema</th>
                                 <th>Gravedad</th>
-                                <th>Solucion propuesta</th>
                                 <th>Repuesto</th>
-                                <th>Mano de obra</th>
+                                <th>Cantidad</th>
+                                <th>Origen</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -132,12 +132,12 @@ $detalleDiagnostico = !empty($ot['id_diagnostico_reclamo'])
                             <?php } else { ?>
                                 <?php foreach ($detalleDiagnostico as $det) { ?>
                                     <tr>
-                                        <td><?php echo $det['sistema'] ?: '-'; ?></td>
+                                        <td><?php echo $det['servicio'] ?: '-'; ?></td>
                                         <td><?php echo $det['problema'] ?: '-'; ?></td>
                                         <td><?php echo $det['gravedad'] ?: '-'; ?></td>
-                                        <td><?php echo $det['solucion_propuesta'] ?: '-'; ?></td>
-                                        <td><?php echo !empty($det['requiere_repuesto']) ? 'Si' : 'No'; ?></td>
-                                        <td><?php echo !empty($det['requiere_mano_obra']) ? 'Si' : 'No'; ?></td>
+                                        <td><?php echo $det['repuesto'] ?: '-'; ?></td>
+                                        <td><?php echo $det['cantidad_repuesto'] ?: '-'; ?></td>
+                                        <td><?php echo $det['repuesto_origen'] ?: '-'; ?></td>
                                     </tr>
                                 <?php } ?>
                             <?php } ?>
@@ -240,5 +240,39 @@ $detalleDiagnostico = !empty($ot['id_diagnostico_reclamo'])
         </form>
     </div>
 </div>
+
+
+<?php
+$trabajosIniciales = [];
+$repuestosIniciales = [];
+
+foreach ($detalleDiagnostico as $det) {
+
+    if (!empty($det['id_articulo_servicio'])) {
+
+        $trabajosIniciales[] = [
+            'id_articulo' => (int)$det['id_articulo_servicio'],
+            'descripcion' => $det['servicio'] ?? ''
+        ];
+    }
+
+    if (!empty($det['id_articulo_repuesto'])) {
+
+        $repuestosIniciales[] = [
+            'id_articulo' => (int)$det['id_articulo_repuesto'],
+            'descripcion' => $det['repuesto'] ?? '',
+            'cantidad' => (float)$det['cantidad_repuesto']
+        ];
+    }
+}
+?>
+
+<script>
+    window.TRABAJOS_DIAGNOSTICO =
+        <?php echo json_encode($trabajosIniciales, JSON_UNESCAPED_UNICODE); ?>;
+
+    window.REPUESTOS_DIAGNOSTICO =
+        <?php echo json_encode($repuestosIniciales, JSON_UNESCAPED_UNICODE); ?>;
+</script>
 
 <?php include_once "./vistas/inc/ordenTrabajoJS.php"; ?>

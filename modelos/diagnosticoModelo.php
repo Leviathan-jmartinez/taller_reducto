@@ -99,9 +99,49 @@ class diagnosticoModelo extends mainModel
         return $sql->fetch(PDO::FETCH_ASSOC);
     }
 
+    protected static function buscar_articulos_modelo($texto, $tipo)
+    {
+        $texto = "%$texto%";
+
+        $sql = mainModel::conectar()->prepare("
+            SELECT id_articulo, codigo, desc_articulo, tipo
+            FROM articulos
+            WHERE estado = 1
+              AND tipo = :tipo
+              AND (desc_articulo LIKE :b OR codigo LIKE :b)
+            ORDER BY desc_articulo
+            LIMIT 20
+        ");
+
+        $sql->bindParam(":tipo", $tipo);
+        $sql->bindParam(":b", $texto);
+        $sql->execute();
+
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    protected static function asegurar_columnas_diagnostico_detalle($pdo)
+    {
+        $columnas = [
+            "id_articulo_servicio INT UNSIGNED DEFAULT NULL AFTER id_diagnostico",
+            "id_articulo_repuesto INT UNSIGNED DEFAULT NULL AFTER id_articulo_servicio",
+            "cantidad_repuesto DECIMAL(12,2) DEFAULT 1 AFTER id_articulo_repuesto",
+            "repuesto_origen VARCHAR(20) DEFAULT 'TALLER' AFTER cantidad_repuesto"
+        ];
+
+        foreach ($columnas as $columna) {
+            try {
+                $pdo->exec("ALTER TABLE diagnostico_detalle ADD COLUMN " . $columna);
+            } catch (Exception $e) {
+                // La columna ya existe en instalaciones actualizadas.
+            }
+        }
+    }
+
     protected static function guardar_diagnostico_modelo($d)
     {
         $pdo = mainModel::conectar();
+        self::asegurar_columnas_diagnostico_detalle($pdo);
 
         try {
             $pdo->beginTransaction();
@@ -156,28 +196,69 @@ class diagnosticoModelo extends mainModel
             /* ================= DETALLES ================= */
 
             if (!empty($d['detalles'])) {
+                $detallesGuardados = 0;
 
                 $sql_det = $pdo->prepare("
                     INSERT INTO diagnostico_detalle
-                    (id_diagnostico, sistema, problema, gravedad, solucion_propuesta, requiere_repuesto, requiere_mano_obra)
+                    (id_diagnostico, id_articulo_servicio, id_articulo_repuesto, cantidad_repuesto, repuesto_origen, problema, gravedad)
                     VALUES
-                    (:diag, :sistema, :problema, :gravedad, :solucion, :rep, :mano)
+                    (:diag, :servicio, :repuesto, :cantidad_repuesto, :repuesto_origen, :problema, :gravedad)
+                ");
+
+                $sqlArticulo = $pdo->prepare("
+                    SELECT id_articulo, tipo
+                    FROM articulos
+                    WHERE id_articulo = :id
+                      AND estado = 1
+                    LIMIT 1
                 ");
 
                 foreach ($d['detalles'] as $i => $det) {
 
-                    if (empty(trim($det['problema']))) continue;
+                    $idServicio = (int)($det['id_articulo_servicio'] ?? 0);
+                    $idRepuesto = (int)($det['id_articulo_repuesto'] ?? 0);
+                    $problema = trim($det['problema'] ?? '');
+                    $cantidadRepuesto = (float)($det['cantidad_repuesto'] ?? 0);
+                    $repuestoOrigen = strtoupper(trim($det['repuesto_origen'] ?? 'TALLER'));
+                    if (!in_array($repuestoOrigen, ['TALLER', 'CLIENTE', 'NINGUNO'], true)) {
+                        $repuestoOrigen = 'TALLER';
+                    }
 
-                    $item = $i + 1;
+                    if ($idServicio <= 0 || $problema === '') {
+                        continue;
+                    }
+
+                    $sqlArticulo->execute([':id' => $idServicio]);
+                    $servicio = $sqlArticulo->fetch(PDO::FETCH_ASSOC);
+                    if (!$servicio || $servicio['tipo'] !== 'servicio') {
+                        continue;
+                    }
+
+                    if ($repuestoOrigen === 'NINGUNO') {
+                        $idRepuesto = null;
+                        $cantidadRepuesto = 0;
+                    } elseif ($idRepuesto > 0) {
+                        $sqlArticulo->execute([':id' => $idRepuesto]);
+                        $repuesto = $sqlArticulo->fetch(PDO::FETCH_ASSOC);
+                        if (!$repuesto || $repuesto['tipo'] !== 'producto') {
+                            $idRepuesto = null;
+                            $cantidadRepuesto = 0;
+                        } elseif ($cantidadRepuesto <= 0) {
+                            $cantidadRepuesto = 1;
+                        }
+                    } else {
+                        $idRepuesto = null;
+                        $cantidadRepuesto = 0;
+                    }
 
                     if (!$sql_det->execute([
                         ':diag'      => $id_diagnostico,
-                        ':sistema'   => $det['sistema'] ?? null,
-                        ':problema'  => $det['problema'],
-                        ':gravedad'  => $det['gravedad'] ?? 'media',
-                        ':solucion'  => $det['solucion_propuesta'] ?? null,
-                        ':rep'       => $det['requiere_repuesto'] ?? 0,
-                        ':mano'      => $det['requiere_mano_obra'] ?? 1
+                        ':servicio'  => $idServicio,
+                        ':repuesto'  => $idRepuesto,
+                        ':cantidad_repuesto' => $cantidadRepuesto,
+                        ':repuesto_origen' => $repuestoOrigen,
+                        ':problema'  => $problema,
+                        ':gravedad'  => $det['gravedad'] ?? 'media'
                     ])) {
                         $error = $sql_det->errorInfo();
                         $pdo->rollBack();
@@ -186,6 +267,16 @@ class diagnosticoModelo extends mainModel
                             "msg" => "Error detalle: " . ($error[2] ?? "SQL desconocido")
                         ];
                     }
+
+                    $detallesGuardados++;
+                }
+
+                if ($detallesGuardados < 1) {
+                    $pdo->rollBack();
+                    return [
+                        "error" => true,
+                        "msg" => "Debe seleccionar al menos un servicio valido en el detalle"
+                    ];
                 }
             }
 
@@ -338,15 +429,23 @@ class diagnosticoModelo extends mainModel
             return [];
         }
 
+        self::asegurar_columnas_diagnostico_detalle($pdo);
         $sqlDetalle = $pdo->prepare("
         SELECT
-            sistema,
-            problema,
-            gravedad,
-            solucion_propuesta,
-            requiere_repuesto,
-            requiere_mano_obra
+            dd.problema,
+            dd.gravedad,
+            dd.id_articulo_servicio,
+            dd.id_articulo_repuesto,
+            dd.cantidad_repuesto,
+            dd.repuesto_origen,
+            serv.codigo AS servicio_codigo,
+            serv.desc_articulo AS servicio_desc,
+            rep.codigo AS repuesto_codigo,
+            rep.desc_articulo AS repuesto_desc
         FROM diagnostico_detalle
+        dd
+        LEFT JOIN articulos serv ON serv.id_articulo = dd.id_articulo_servicio
+        LEFT JOIN articulos rep ON rep.id_articulo = dd.id_articulo_repuesto
         WHERE id_diagnostico = :id
         ORDER BY id_diagnostico_detalle ASC
         ");

@@ -31,6 +31,27 @@ class reclamoServicioControlador extends reclamoServicioModelo
         }
 
         $idRegistro = mainModel::limpiar_string(mainModel::decryption($_POST['idregistro_servicio']));
+        $tipoReclamo = strtoupper(trim($_POST['tipo_reclamo'] ?? 'GENERAL'));
+        $detallesJson = $_POST['detalles_reclamo_json'] ?? '[]';
+        $detalles = json_decode($detallesJson, true);
+
+        if (!in_array($tipoReclamo, ['SERVICIO', 'REPUESTO', 'ATENCION', 'GENERAL'], true)) {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Error',
+                'Texto'  => 'Tipo de reclamo invalido',
+                'Tipo'   => 'error'
+            ]);
+        }
+
+        if (in_array($tipoReclamo, ['SERVICIO', 'REPUESTO'], true) && (empty($detalles) || !is_array($detalles))) {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Error',
+                'Texto'  => 'Debe seleccionar al menos un detalle reclamado',
+                'Tipo'   => 'error'
+            ]);
+        }
 
         /* 🔥 OBTENER SUCURSAL */
         $idSucursal = mainModel::ejecutar_consulta_simple("
@@ -61,10 +82,11 @@ class reclamoServicioControlador extends reclamoServicioModelo
             'idregistro_servicio' => $idRegistro,
             'id_sucursal' => $idSucursal,
             'descripcion' => $_POST['descripcion'],
-            'tipo_reclamo' => $_POST['tipo_reclamo'],
+            'tipo_reclamo' => $tipoReclamo,
             'origen' => $_POST['origen'],
             'prioridad' => $_POST['prioridad'],
             'requiere_garantia' => $_POST['requiere_garantia'] ?? 0,
+            'detalles_reclamo_json' => $detallesJson,
             'usuario' => $_SESSION['id_str']
         ];
 
@@ -145,16 +167,7 @@ class reclamoServicioControlador extends reclamoServicioModelo
                 <td>' . $trabajos . '</td>
                 <td class="text-center">
                     <button class="btn btn-success btn-sm"
-                        onclick="seleccionarRegistro(
-                            \'' . mainModel::encryption($r['idregistro_servicio']) . '\',
-                            \'' . $r['idregistro_servicio'] . '\',
-                            \'' . $r['nombre_cliente'] . ' ' . $r['apellido_cliente'] . '\',
-                            \'' . $r['mod_descri'] . ' ' . $r['placa'] . '\',
-                            \'' . addslashes($r['trabajos']) . '\',
-                            ' . ($dentroGarantiaFecha ? '1' : '0') . ',
-                            \'' . addslashes($garantiaTexto) . '\',
-                            \'' . addslashes((string)$kmLimite) . '\'
-                        )">
+                        onclick="seleccionarRegistro(\'' . mainModel::encryption($r['idregistro_servicio']) . '\')">
                         Seleccionar
                     </button>
                 </td>
@@ -162,6 +175,28 @@ class reclamoServicioControlador extends reclamoServicioModelo
         }
 
         return $html . '</tbody></table>';
+    }
+
+    public function cargar_registro_reclamo_controlador()
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start(['name' => 'STR']);
+        }
+
+        $idRegistro = mainModel::decryption($_POST['idregistro_servicio'] ?? '');
+        $idRegistro = mainModel::limpiar_string($idRegistro);
+
+        if (!$idRegistro) {
+            return json_encode(['error' => true]);
+        }
+
+        $data = self::cargar_registro_reclamo_modelo($idRegistro, $_SESSION['nick_sucursal']);
+
+        if (!$data) {
+            return json_encode(['error' => true]);
+        }
+
+        return json_encode($data, JSON_UNESCAPED_UNICODE);
     }
 
     public function listar_reclamo_controlador($pagina, $registros, $url, $busqueda = "", $orden = 'fecha', $direccion = 'DESC')

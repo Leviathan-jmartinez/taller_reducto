@@ -79,8 +79,8 @@
         document.getElementById('vehiculo_preliminar').value = '';
         document.getElementById('lista_diagnostico').innerHTML = `
             <tr>
-                <td colspan="3" class="text-center text-muted">
-                    Seleccione un diagnostico para ver los problemas...
+                <td colspan="6" class="text-center text-muted">
+                    Seleccione un diagnostico para ver los trabajos...
                 </td>
             </tr>`;
     }
@@ -210,7 +210,8 @@
                         subtotal: precio * cantidad,
                         tipo: item.tipo,
                         stock: Number(item.stock || 0),
-                        promocion: null
+                        promocion: null,
+                        monto_promocion: 0
                     };
                 });
 
@@ -300,24 +301,104 @@
 
                         html += `
                         <tr>
-                            <td>${d.problema}</td>
-                            <td class="text-center">
-                                ${d.requiere_repuesto == 1 ? '✔️' : '❌'}
-                            </td>
-                            <td class="text-center">
-                                ${d.requiere_mano_obra == 1 ? '✔️' : '❌'}
-                            </td>
+                            <td>${d.servicio_desc || '-'}</td>
+                            <td>${d.repuesto_origen || '-'}</td>
+                            <td>${d.repuesto_desc || '-'}</td>
+                            <td class="text-center">${d.repuesto_desc ? d.cantidad_repuesto : '-'}</td>
+                            <td>${d.gravedad || '-'}</td>
+                            <td>${d.problema || '-'}</td>
                         </tr>`;
                     });
 
                     document.getElementById('lista_diagnostico').innerHTML = html;
                 }
 
+                cargarDetallePresupuestoDiagnostico(data.detalle_presupuesto || []);
+
                 cargarDescuentosCliente(data.id_cliente);
                 buscarPresupuestosPreliminares(data.id_cliente, data.id_vehiculo);
             })
             .catch(err => {
                 console.error("ERROR FETCH:", err);
+            });
+    }
+
+    function aplicarPromoAItem(item) {
+        let datos = new FormData();
+        datos.append('promo_articulo', item.id_articulo);
+
+        return fetch(SERVERURL + 'ajax/presupuestoServicioAjax.php', {
+                method: 'POST',
+                body: datos
+            })
+            .then(r => r.json())
+            .then(promo => {
+                if (promo.id_promocion) {
+                    item.monto_promocion = 0;
+                    if (promo.tipo === 'PORCENTAJE') {
+                        item.monto_promocion = item.precio_base * promo.valor / 100;
+                        item.precio_final = item.precio_base - (item.precio_base * promo.valor / 100);
+                    }
+
+                    if (promo.tipo === 'MONTO_FIJO') {
+                        item.monto_promocion = Math.min(item.precio_base, promo.valor);
+                        item.precio_final = Math.max(0, item.precio_base - promo.valor);
+                    }
+
+                    if (promo.tipo === 'PRECIO_FIJO') {
+                        item.monto_promocion = Math.max(0, item.precio_base - promo.valor);
+                        item.precio_final = promo.valor;
+                    }
+
+                    item.monto_promocion = Math.min(item.precio_base, Math.max(0, item.monto_promocion));
+                    item.precio_final = Math.max(0, item.precio_base - item.monto_promocion);
+                    item.promocion = promo;
+                }
+
+                item.subtotal = item.precio_base * item.cantidad;
+                return item;
+            });
+    }
+
+    function cargarDetallePresupuestoDiagnostico(items) {
+        detalleServicios = [];
+        document.getElementById('convertido_desde').value = '';
+
+        if (!Array.isArray(items) || items.length === 0) {
+            renderDetalle();
+            guardarEstadoPresupuesto();
+            return;
+        }
+
+        const base = items.map(item => {
+            const cantidad = Number(item.cantidad || 1);
+            const precio = Number(item.precio_venta || 0);
+
+            return {
+                id_articulo: Number(item.id_articulo),
+                descripcion: item.desc_articulo,
+                cantidad: cantidad > 0 ? cantidad : 1,
+                precio_base: precio,
+                precio_final: precio,
+                subtotal: precio * (cantidad > 0 ? cantidad : 1),
+                tipo: item.tipo,
+                stock: Number(item.stock || 0),
+                promocion: null,
+                monto_promocion: 0
+            };
+        });
+
+        Promise.all(base.map(aplicarPromoAItem))
+            .then(detalle => {
+                detalleServicios = detalle;
+                renderDetalle();
+                guardarEstadoPresupuesto();
+            })
+            .catch(err => {
+                console.error('Error cargando detalle del diagnostico:', err);
+                detalleServicios = base;
+                renderDetalle();
+                guardarEstadoPresupuesto();
             });
     }
 
@@ -429,8 +510,8 @@
         // LIMPIAR DETALLE DIAGNOSTICO
         document.getElementById('lista_diagnostico').innerHTML = `
     <tr>
-        <td colspan="3" class="text-center text-muted">
-            Seleccione un diagnóstico para ver los problemas...
+        <td colspan="6" class="text-center text-muted">
+            Seleccione un diagnóstico para ver los trabajos...
         </td>
     </tr>`;
 
@@ -450,6 +531,10 @@
 
         // TOTALES
         document.getElementById('txt_subtotal_servicios').innerText = 'Gs. 0';
+        const txtPromo = document.getElementById('txt_total_promociones');
+        if (txtPromo) txtPromo.innerText = 'Gs. 0';
+        const totalPromo = document.getElementById('total_promociones');
+        if (totalPromo) totalPromo.innerText = 'Gs. 0';
         document.getElementById('txt_total_descuento').innerText = 'Gs. 0';
         document.getElementById('txt_total_final').innerText = 'Gs. 0';
 
@@ -514,7 +599,8 @@
             subtotal: precio,
             tipo: tipo,
             stock: stock,
-            promocion: null
+            promocion: null,
+            monto_promocion: 0
         };
 
         // 🔥 consultar promo
@@ -529,22 +615,28 @@
             .then(promo => {
 
                 if (promo.id_promocion) {
+                    item.monto_promocion = 0;
 
                     if (promo.tipo === 'PORCENTAJE') {
+                        item.monto_promocion = precio * promo.valor / 100;
                         item.precio_final =
                             precio - (precio * promo.valor / 100);
                     }
 
                     if (promo.tipo === 'MONTO_FIJO') {
+                        item.monto_promocion = Math.min(precio, promo.valor);
                         item.precio_final =
                             Math.max(0, precio - promo.valor);
                     }
 
                     if (promo.tipo === 'PRECIO_FIJO') {
+                        item.monto_promocion = Math.max(0, precio - promo.valor);
                         item.precio_final = promo.valor;
                     }
 
-                    item.subtotal = item.precio_final * item.cantidad;
+                    item.monto_promocion = Math.min(precio, Math.max(0, item.monto_promocion));
+                    item.precio_final = Math.max(0, precio - item.monto_promocion);
+                    item.subtotal = item.precio_base * item.cantidad;
                     item.promocion = promo;
                 }
 
@@ -557,21 +649,28 @@
     function recalcularTotales() {
 
         let subtotalServicios = 0;
-        detalleServicios.forEach(i => subtotalServicios += i.subtotal);
+        detalleServicios.forEach(i => {
+            i.subtotal = Number(i.precio_base || 0) * Number(i.cantidad || 0);
+            subtotalServicios += i.subtotal;
+        });
+        let totalPromociones = 0;
+        detalleServicios.forEach(i => totalPromociones += (Number(i.monto_promocion || 0) * Number(i.cantidad || 0)));
+        let baseDescuentos = Math.max(0, subtotalServicios - totalPromociones);
 
         let totalDescuentos = 0;
 
         descuentosAplicados.forEach(d => {
             if (d.tipo === 'PORCENTAJE') {
-                d.monto = subtotalServicios * d.valor / 100;
+                d.monto = baseDescuentos * d.valor / 100;
             }
             if (d.tipo === 'MONTO_FIJO') {
-                d.monto = d.valor;
+                d.monto = Math.min(d.valor, Math.max(0, baseDescuentos - totalDescuentos));
             }
+            d.monto = Math.min(d.monto, Math.max(0, baseDescuentos - totalDescuentos));
             totalDescuentos += d.monto;
         });
 
-        let totalFinal = Math.max(0, subtotalServicios - totalDescuentos);
+        let totalFinal = Math.max(0, subtotalServicios - totalPromociones - totalDescuentos);
 
         // ===== SUBTOTALES =====
         document.getElementById('txt_subtotal_servicios').innerText =
@@ -579,6 +678,12 @@
 
         document.getElementById('total_subtotal').innerText =
             'Gs. ' + subtotalServicios.toLocaleString();
+
+        const txtPromos = document.getElementById('txt_total_promociones');
+        if (txtPromos) txtPromos.innerText = 'Gs. ' + totalPromociones.toLocaleString();
+
+        const totalPromos = document.getElementById('total_promociones');
+        if (totalPromos) totalPromos.innerText = 'Gs. ' + totalPromociones.toLocaleString();
 
         // ===== DESCUENTOS =====
         document.getElementById('txt_total_descuento').innerText =
@@ -625,8 +730,8 @@
             <td class="text-center" id="subtotal_${index}">
                 ${item.subtotal.toLocaleString()}
             </td>          
-            <td class="text-center">
-            ${item.promocion? `<small class="text-success">Promo: ${item.promocion.nombre}</small>`: ''}
+            <td class="text-center" id="promo_${index}">
+            ${item.promocion ? `<small class="text-success">${item.promocion.nombre}<br>- Gs. ${(Number(item.monto_promocion || 0) * Number(item.cantidad || 0)).toLocaleString()}</small>` : ''}
             </td>
             <td class="text-center">
                 <button class="btn btn-danger btn-sm"
@@ -664,6 +769,12 @@
 
         document.getElementById('subtotal_' + index).innerText =
             item.subtotal.toLocaleString();
+        const promoCelda = document.getElementById('promo_' + index);
+        if (promoCelda) {
+            promoCelda.innerHTML = item.promocion ?
+                `<small class="text-success">${item.promocion.nombre}<br>- Gs. ${(Number(item.monto_promocion || 0) * Number(item.cantidad || 0)).toLocaleString()}</small>` :
+                '';
+        }
 
         recalcularTotales();
         guardarEstadoConDelay();
@@ -698,8 +809,11 @@
 
         if (p.tipo === 'PRECIO_FIJO') {
             item.monto_promocion =
-                item.precio_base - p.valor;
+                Math.max(0, item.precio_base - p.valor);
         }
+
+        item.monto_promocion =
+            Math.min(item.precio_base, Math.max(0, item.monto_promocion));
 
         item.precio_final =
             item.precio_base - item.monto_promocion;
@@ -707,7 +821,7 @@
 
     function recalcularLinea(index) {
         let item = detalleServicios[index];
-        item.subtotal = item.cantidad * item.precio_final;
+        item.subtotal = item.cantidad * item.precio_base;
     }
 
 

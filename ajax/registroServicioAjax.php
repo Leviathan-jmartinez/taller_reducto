@@ -21,13 +21,13 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'cargar_ot') {
     exit();
 }
 
-if (isset($_POST['accion']) && $_POST['accion'] === 'anular') {
-    echo $insRS->anular_registro_servicio_controlador();
+if (isset($_POST['accion']) && $_POST['accion'] === 'detalle_registro') {
+    echo $insRS->detalle_registro_servicio_controlador();
     exit();
 }
 
-if (isset($_POST['accion']) && $_POST['accion'] === 'buscar_insumo') {
-    echo $insRS->buscar_insumo_controlador();
+if (isset($_POST['accion']) && $_POST['accion'] === 'anular') {
+    echo $insRS->anular_registro_servicio_controlador();
     exit();
 }
 

@@ -59,6 +59,7 @@ if (!mainModel::tienePermiso('servicio.reclamo.crear')) {
 
         <input type="hidden" name="accion" value="registrar_reclamo">
         <input type="hidden" name="idregistro_servicio" id="idregistro_servicio">
+        <input type="hidden" name="detalles_reclamo_json" id="detalles_reclamo_json">
 
         <!-- ================= BUSCAR REGISTRO ================= -->
         <fieldset class="border p-3 mb-3">
@@ -95,10 +96,27 @@ if (!mainModel::tienePermiso('servicio.reclamo.crear')) {
                         class="form-control" readonly>
                 </div>
                 <div class="col-md-12 mt-2">
-                    <label>Trabajos realizados</label>
-                    <div id="trabajos_realizados"
-                        class="form-control"
-                        style="height:auto; min-height:60px; background:#f8f9fa;">
+                    <label>Detalle reclamado</label>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="thead-light text-center">
+                                <tr>
+                                    <th></th>
+                                    <th>Item</th>
+                                    <th>Tipo</th>
+                                    <th>Cant.</th>
+                                    <th>Origen</th>
+                                    <th>Motivo especifico</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detalle_reclamo_items">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">
+                                        Seleccione un servicio realizado
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
                 <div class="col-md-12 mt-2">
@@ -126,10 +144,11 @@ if (!mainModel::tienePermiso('servicio.reclamo.crear')) {
 
                 <div class="col-md-3">
                     <label>Tipo</label>
-                    <select name="tipo_reclamo" class="form-control">
+                    <select name="tipo_reclamo" id="tipo_reclamo" class="form-control" onchange="actualizarTipoReclamo()">
                         <option value="SERVICIO">Servicio</option>
                         <option value="REPUESTO">Repuesto</option>
                         <option value="ATENCION">Atención</option>
+                        <option value="GENERAL">General</option>
                     </select>
                 </div>
 
