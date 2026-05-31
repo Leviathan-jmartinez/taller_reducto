@@ -79,6 +79,51 @@ class usuarioModelo extends mainModel
         return $sql;
     }
 
+    protected static function hash_clave_usuario_modelo($clave)
+    {
+        return password_hash($clave, PASSWORD_DEFAULT);
+    }
+
+    protected static function verificar_clave_usuario_modelo($clave, $hashGuardado)
+    {
+        if ($hashGuardado === null || $hashGuardado === '') {
+            return false;
+        }
+
+        return password_verify($clave, $hashGuardado);
+    }
+
+    protected static function clave_usuario_necesita_rehash_modelo($hashGuardado)
+    {
+        return password_needs_rehash($hashGuardado, PASSWORD_DEFAULT);
+    }
+
+    protected static function obtener_usuario_por_nick_modelo($nick)
+    {
+        $sql = mainModel::conectar()->prepare("
+        SELECT *
+        FROM usuarios
+        WHERE usu_nick = :Nick
+        LIMIT 1
+        ");
+        $sql->bindParam(":Nick", $nick);
+        $sql->execute();
+        return $sql;
+    }
+
+    protected static function actualizar_clave_usuario_modelo($idUsuario, $clave)
+    {
+        $sql = mainModel::conectar()->prepare("
+        UPDATE usuarios
+        SET usu_clave = :Clave
+        WHERE id_usuario = :Usuario
+        ");
+        $sql->bindParam(":Clave", $clave);
+        $sql->bindParam(":Usuario", $idUsuario);
+        $sql->execute();
+        return $sql;
+    }
+
     protected static function listar_usuarios_modelo()
     {
         $sql = self::conectar()->prepare("

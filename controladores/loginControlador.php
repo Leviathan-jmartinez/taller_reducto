@@ -113,9 +113,7 @@ class loginControlador extends loginModelo
             exit();
         }
 
-        $clave = mainModel::encryption($clave);
-
-        if ($row['usu_clave'] != $clave) {
+        if (!loginModelo::verificar_clave_login_modelo($clave, $row['usu_clave'])) {
             $estado_intentos = loginModelo::registrar_intento_fallido_modelo($row['id_usuario']);
             $intentos = (int)$estado_intentos['usu_intentos_fallidos'];
             $intentos_restantes = max(0, 3 - $intentos);
@@ -144,6 +142,10 @@ class loginControlador extends loginModelo
                 ';
             }
             exit();
+        }
+
+        if (loginModelo::clave_login_necesita_rehash_modelo($row['usu_clave'])) {
+            loginModelo::actualizar_clave_usuario_modelo($row['id_usuario'], loginModelo::hash_clave_login_modelo($clave));
         }
 
         loginModelo::reiniciar_intentos_login_modelo($row['id_usuario']);
@@ -271,11 +273,14 @@ class loginControlador extends loginModelo
             exit();
         }
 
-        $claveActualEnc = mainModel::encryption($claveActual);
         $check = loginModelo::obtener_usuario_login_modelo($_SESSION['nick_str']);
         $row = $check->fetch(PDO::FETCH_ASSOC);
 
-        if (!$row || $row['usu_clave'] !== $claveActualEnc || (int)$row['id_usuario'] !== (int)$_SESSION['id_str']) {
+        if (
+            !$row ||
+            !loginModelo::verificar_clave_login_modelo($claveActual, $row['usu_clave']) ||
+            (int)$row['id_usuario'] !== (int)$_SESSION['id_str']
+        ) {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Contraseña incorrecta",
@@ -285,7 +290,7 @@ class loginControlador extends loginModelo
             exit();
         }
 
-        $claveNuevaEnc = mainModel::encryption($claveNueva1);
+        $claveNuevaEnc = loginModelo::hash_clave_login_modelo($claveNueva1);
         $actualizar = loginModelo::cambiar_clave_obligatoria_modelo($_SESSION['id_str'], $claveNuevaEnc);
 
         if ($actualizar->rowCount() >= 1) {

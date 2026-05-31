@@ -19,7 +19,7 @@ class mainModel
         return $sql;
     }
     /** Encriptar */
-    public function encryption($string)
+    public static function encryption($string)
     {
         $output = FALSE;
         $key = hash('sha256', SECRET_KEY);

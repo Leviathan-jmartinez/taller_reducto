@@ -175,7 +175,7 @@ class usuarioControlador extends usuarioModelo
             echo json_encode($alerta);
             exit();
         } else {
-            $clave = mainModel::encryption($clave1);
+            $clave = usuarioModelo::hash_clave_usuario_modelo($clave1);
         }
         $datos_usuario_reg = [
             "ci" => $ci,
@@ -663,8 +663,6 @@ class usuarioControlador extends usuarioModelo
             echo json_encode($alerta);
             exit();
         }
-        $admin_clave = mainModel::encryption($admin_clave);
-
         if ($estado != "1" && $estado != "0") {
             $alerta = [
                 "Alerta" => "simple",
@@ -759,14 +757,19 @@ class usuarioControlador extends usuarioModelo
                     echo json_encode($alerta);
                     exit();
                 }
-                $clave = mainModel::encryption($_POST['usuario_clave_nueva_1']);
+                $clave = usuarioModelo::hash_clave_usuario_modelo($_POST['usuario_clave_nueva_1']);
             }
         } else {
             $clave = $campos_usuario_up['usu_clave'];
         }
         /**comprobar credenciales  */
+        $check_cuenta = usuarioModelo::obtener_usuario_por_nick_modelo($admin_user);
+        $cuenta_admin = $check_cuenta->fetch(PDO::FETCH_ASSOC);
+
         if ($tipo_cuenta == "propia") {
-            $check_cuenta = mainModel::ejecutar_consulta_simple("SELECT id_usuario from usuarios where usu_nick='$admin_user' and usu_clave = '$admin_clave' and id_usuario ='$id'");
+            $credenciales_validas = $cuenta_admin &&
+                (int)$cuenta_admin['id_usuario'] === (int)$id &&
+                usuarioModelo::verificar_clave_usuario_modelo($admin_clave, $cuenta_admin['usu_clave']);
         } else {
             if (!mainModel::tienePermiso('usuarios.editar')) {
                 return json_encode([
@@ -776,9 +779,11 @@ class usuarioControlador extends usuarioModelo
                     "Tipo" => "error"
                 ]);
             }
-            $check_cuenta = mainModel::ejecutar_consulta_simple("SELECT id_usuario from usuarios where usu_nick='$admin_user' and usu_clave = '$admin_clave'");
+            $credenciales_validas = $cuenta_admin &&
+                usuarioModelo::verificar_clave_usuario_modelo($admin_clave, $cuenta_admin['usu_clave']);
         }
-        if ($check_cuenta->rowCount() <= 0) {
+
+        if (!$credenciales_validas) {
             $alerta = [
                 "Alerta" => "simple",
                 "Titulo" => "Ocurrio un error inesperado!",
@@ -787,6 +792,15 @@ class usuarioControlador extends usuarioModelo
             ];
             echo json_encode($alerta);
             exit();
+        }
+
+        if (usuarioModelo::clave_usuario_necesita_rehash_modelo($cuenta_admin['usu_clave'])) {
+            $hash_admin_actualizado = usuarioModelo::hash_clave_usuario_modelo($admin_clave);
+            usuarioModelo::actualizar_clave_usuario_modelo($cuenta_admin['id_usuario'], $hash_admin_actualizado);
+
+            if ((int)$cuenta_admin['id_usuario'] === (int)$id && $clave === $campos_usuario_up['usu_clave']) {
+                $clave = $hash_admin_actualizado;
+            }
         }
         /**preparando datos para envio al modelo */
         $datos_usuario_up = [
