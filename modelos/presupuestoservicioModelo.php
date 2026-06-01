@@ -320,7 +320,7 @@ class presupuestoservicioModelo extends mainModel
             $totalPromociones = 0;
 
             $sqlArticulo = $pdo->prepare("
-                SELECT id_articulo, desc_articulo, precio_venta, tipo
+                SELECT id_articulo, desc_articulo, tipo
                 FROM articulos
                 WHERE id_articulo = :articulo
                   AND estado = 1
@@ -334,24 +334,20 @@ class presupuestoservicioModelo extends mainModel
                   AND id_sucursal = :sucursal
             ");
 
-            $sqlPromo = $pdo->prepare("
-                SELECT p.id_promocion, p.tipo, p.valor
-                FROM promociones p
-                INNER JOIN promocion_producto pp ON pp.id_promocion = p.id_promocion
-                WHERE pp.id_articulo = :articulo
-                  AND p.estado = 1
-                  AND CURDATE() BETWEEN p.fecha_inicio AND p.fecha_fin
-                  AND (p.id_sucursal IS NULL OR p.id_sucursal = :sucursal)
-                ORDER BY p.valor DESC, p.id_promocion DESC
+            $sqlPromoExiste = $pdo->prepare("
+                SELECT id_promocion
+                FROM promociones
+                WHERE id_promocion = :promocion
                 LIMIT 1
             ");
 
-            /* ================= VALIDAR Y RECALCULAR DETALLE ================= */
+            /* ================= VALIDAR DETALLE Y CONSERVAR IMPORTES ACEPTADOS ================= */
             foreach ($d['detalle'] as $it) {
                 $idArticulo = (int)($it['id_articulo'] ?? 0);
                 $cantidad = (float)($it['cantidad'] ?? 0);
+                $precioBase = (float)($it['precio_base'] ?? 0);
 
-                if ($idArticulo <= 0 || $cantidad <= 0) {
+                if ($idArticulo <= 0 || $cantidad <= 0 || $precioBase < 0) {
                     $pdo->rollBack();
                     return [
                         'error' => true,
@@ -395,27 +391,29 @@ class presupuestoservicioModelo extends mainModel
                     }
                 }
 
-                $precioBase = (float)$articulo['precio_venta'];
                 $montoPromoUnitario = 0;
                 $idPromo = null;
+                $promoEnviada = $it['promocion'] ?? null;
 
-                $sqlPromo->execute([
-                    ':articulo' => $idArticulo,
-                    ':sucursal' => $idSucursal
-                ]);
-                $promo = $sqlPromo->fetch(PDO::FETCH_ASSOC);
+                if (is_array($promoEnviada) && !empty($promoEnviada['id_promocion'])) {
+                    $idPromoEnviada = (int)$promoEnviada['id_promocion'];
+                    $sqlPromoExiste->execute([':promocion' => $idPromoEnviada]);
 
-                if ($promo) {
-                    $idPromo = (int)$promo['id_promocion'];
-                    if ($promo['tipo'] === 'PORCENTAJE') {
-                        $montoPromoUnitario = $precioBase * ((float)$promo['valor'] / 100);
-                    } elseif ($promo['tipo'] === 'MONTO_FIJO') {
-                        $montoPromoUnitario = min($precioBase, (float)$promo['valor']);
-                    } elseif ($promo['tipo'] === 'PRECIO_FIJO') {
-                        $montoPromoUnitario = max(0, $precioBase - (float)$promo['valor']);
+                    if ($sqlPromoExiste->fetchColumn()) {
+                        $idPromo = $idPromoEnviada;
+                        $tipoPromo = $promoEnviada['tipo'] ?? '';
+                        $valorPromo = (float)($promoEnviada['valor'] ?? 0);
+
+                        if ($tipoPromo === 'PORCENTAJE') {
+                            $montoPromoUnitario = $precioBase * ($valorPromo / 100);
+                        } elseif ($tipoPromo === 'MONTO_FIJO') {
+                            $montoPromoUnitario = min($precioBase, $valorPromo);
+                        } elseif ($tipoPromo === 'PRECIO_FIJO') {
+                            $montoPromoUnitario = max(0, $precioBase - $valorPromo);
+                        }
+
+                        $montoPromoUnitario = min($precioBase, max(0, $montoPromoUnitario));
                     }
-
-                    $montoPromoUnitario = min($precioBase, max(0, $montoPromoUnitario));
                 }
 
                 $montoPromoLinea = $montoPromoUnitario * $cantidad;
@@ -436,57 +434,46 @@ class presupuestoservicioModelo extends mainModel
 
             $descuentosAplicados = [];
             $totalDescuento = 0;
-            $idsDescuentos = [];
             $baseDescuentos = max(0, $subtotalServicios - $totalPromociones);
+
+            $sqlDescExiste = $pdo->prepare("
+                SELECT id_descuento
+                FROM descuentos
+                WHERE id_descuento = :descuento
+                LIMIT 1
+            ");
 
             foreach (($d['descuentos'] ?? []) as $desc) {
                 $idDesc = (int)($desc['id_descuento'] ?? 0);
-                if ($idDesc > 0) {
-                    $idsDescuentos[$idDesc] = true;
+                if ($idDesc <= 0) {
+                    continue;
                 }
-            }
 
-            if ($idsDescuentos) {
-                $sqlDesc = $pdo->prepare("
-                    SELECT d.id_descuento, d.nombre, d.tipo, d.valor
-                    FROM descuentos d
-                    INNER JOIN descuento_cliente dc ON dc.id_descuento = d.id_descuento
-                    WHERE d.id_descuento = :descuento
-                      AND dc.id_cliente = :cliente
-                      AND d.estado = 1
-                      AND (d.fecha_inicio IS NULL OR d.fecha_inicio <= CURDATE())
-                      AND (d.fecha_fin IS NULL OR d.fecha_fin >= CURDATE())
-                      AND (d.id_sucursal IS NULL OR d.id_sucursal = :sucursal)
-                    LIMIT 1
-                ");
-
-                foreach (array_keys($idsDescuentos) as $idDesc) {
-                    $sqlDesc->execute([
-                        ':descuento' => $idDesc,
-                        ':cliente' => $idCliente,
-                        ':sucursal' => $idSucursal
-                    ]);
-                    $desc = $sqlDesc->fetch(PDO::FETCH_ASSOC);
-
-                    if (!$desc) {
-                        continue;
-                    }
-
-                    $monto = $desc['tipo'] === 'PORCENTAJE'
-                        ? $baseDescuentos * ((float)$desc['valor'] / 100)
-                        : (float)$desc['valor'];
-
-                    $monto = min($monto, max(0, $baseDescuentos - $totalDescuento));
-                    $totalDescuento += $monto;
-
-                    $descuentosAplicados[] = [
-                        'id_descuento' => (int)$desc['id_descuento'],
-                        'tipo' => $desc['tipo'],
-                        'valor' => (float)$desc['valor'],
-                        'monto' => $monto,
-                        'motivo' => $desc['nombre']
-                    ];
+                $sqlDescExiste->execute([':descuento' => $idDesc]);
+                if (!$sqlDescExiste->fetchColumn()) {
+                    continue;
                 }
+
+                $tipoDesc = $desc['tipo'] ?? '';
+                $valorDesc = (float)($desc['valor'] ?? 0);
+                if (!in_array($tipoDesc, ['PORCENTAJE', 'MONTO_FIJO'], true) || $valorDesc <= 0) {
+                    continue;
+                }
+
+                $monto = $tipoDesc === 'PORCENTAJE'
+                        ? $baseDescuentos * ($valorDesc / 100)
+                        : $valorDesc;
+
+                $monto = min($monto, max(0, $baseDescuentos - $totalDescuento));
+                $totalDescuento += $monto;
+
+                $descuentosAplicados[] = [
+                    'id_descuento' => $idDesc,
+                    'tipo' => $tipoDesc,
+                    'valor' => $valorDesc,
+                    'monto' => $monto,
+                    'motivo' => $desc['nombre'] ?? ''
+                ];
             }
 
             $totalFinal = max(0, $subtotalServicios - $totalPromociones - $totalDescuento);
@@ -508,7 +495,7 @@ class presupuestoservicioModelo extends mainModel
                     $pdo->rollBack();
                     return [
                         'error' => true,
-                        'msg' => 'Los totales del presupuesto cambiaron. Verifique nuevamente antes de guardar.'
+                        'msg' => 'Los importes enviados no coinciden con el detalle del presupuesto. Verifique nuevamente antes de guardar.'
                     ];
                 }
             }

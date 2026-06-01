@@ -568,13 +568,6 @@ class ordenTrabajoModelo extends mainModel
             }
 
             if (!empty($ot['idreclamo_servicio'])) {
-                $updReclamo = $pdo->prepare("
-                    UPDATE reclamo_servicio
-                    SET estado = 1
-                    WHERE idreclamo_servicio = ?
-                ");
-                $updReclamo->execute([$ot['idreclamo_servicio']]);
-
                 $updDiagnostico = $pdo->prepare("
                     UPDATE diagnostico_servicio d
                     INNER JOIN recepcion_servicio r ON r.idrecepcion = d.idrecepcion

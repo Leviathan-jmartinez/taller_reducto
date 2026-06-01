@@ -53,7 +53,7 @@ if (!mainModel::tienePermiso('servicio.insumo.crear')) {
         data-form="save"
         autocomplete="off">
 
-        <input type="hidden" name="accion" value="registrar_salida_consumible">
+        <input type="hidden" name="accion" value="registrar_salida_insumo">
         <input type="hidden" name="consumibles_json" id="consumibles_json">
 
         <fieldset class="border p-3 mb-3">

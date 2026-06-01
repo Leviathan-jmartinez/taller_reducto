@@ -12,6 +12,11 @@ class recepcionservicioControlador extends recepcionservicioModelo
         return recepcionservicioModelo::listar_modelos_modelo();
     }
 
+    public function listar_ciudades_controlador()
+    {
+        return recepcionservicioModelo::listar_ciudades_modelo();
+    }
+
     public function buscar_cliente_controlador()
     {
         $busqueda = $_POST['buscar_cliente'] ?? '';
@@ -69,6 +74,34 @@ class recepcionservicioControlador extends recepcionservicioModelo
         );
     }
 
+    public function buscar_ciudad_autocomplete_controlador()
+    {
+        $busqueda = mainModel::limpiar_string($_POST['termino'] ?? '');
+
+        if (strlen($busqueda) < 2) {
+            return json_encode([]);
+        }
+
+        return json_encode(
+            recepcionservicioModelo::buscar_ciudad_autocomplete_modelo($busqueda),
+            JSON_UNESCAPED_UNICODE
+        );
+    }
+
+    public function buscar_modelo_autocomplete_controlador()
+    {
+        $busqueda = mainModel::limpiar_string($_POST['termino'] ?? '');
+
+        if (strlen($busqueda) < 2) {
+            return json_encode([]);
+        }
+
+        return json_encode(
+            recepcionservicioModelo::buscar_modelo_autocomplete_modelo($busqueda),
+            JSON_UNESCAPED_UNICODE
+        );
+    }
+
     public function guardar_cliente_rapido_controlador()
     {
         session_start(['name' => 'STR']);
@@ -91,6 +124,7 @@ class recepcionservicioControlador extends recepcionservicioModelo
         $ciudad = (int) ($_POST['ciudad_reg'] ?? 0);
         $tipoDocumento = mainModel::limpiar_string($_POST['tipo_documento_reg'] ?? 'CI');
         $dv = mainModel::limpiar_string($_POST['cliente_dv_reg'] ?? '');
+        $estadoCivil = mainModel::limpiar_string($_POST['cliente_estadoC_reg'] ?? '');
 
         if ($doc === '' || $nombre === '') {
             return json_encode([
@@ -120,7 +154,7 @@ class recepcionservicioControlador extends recepcionservicioModelo
             "id_ciudad" => $ciudad,
             "doc_type" => $tipoDocumento,
             "digito_v" => $dv,
-            "estado_civil" => "",
+            "estado_civil" => $estadoCivil,
             "estado_cliente" => 1
         ];
 
@@ -169,6 +203,8 @@ class recepcionservicioControlador extends recepcionservicioModelo
         $placa = mainModel::limpiar_string($_POST['placa_reg'] ?? '');
         $anho = trim($_POST['anho_reg'] ?? '') !== ''  ? mainModel::limpiar_string($_POST['anho_reg'])  : null;
         $version = mainModel::limpiar_string($_POST['version_reg'] ?? '');
+        $transmision = mainModel::limpiar_string($_POST['transmision_reg'] ?? '');
+        $motor = mainModel::limpiar_string($_POST['motor_reg'] ?? '');
         $tipoVehiculo = mainModel::limpiar_string($_POST['tipo_vehiculo_reg'] ?? '');
 
         if ($cliente <= 0 || $modelo <= 0 || $color === '' || $placa === '') {
@@ -196,6 +232,8 @@ class recepcionservicioControlador extends recepcionservicioModelo
             "placa" => $placa,
             "anho" => $anho,
             "version" => $version,
+            "transmision" => $transmision,
+            "motor" => $motor,
             "tipo_vehiculo" => $tipoVehiculo,
             "estado" => 1
         ];

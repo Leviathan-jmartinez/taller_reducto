@@ -22,6 +22,12 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'buscar_cliente_autocomplete
 if (isset($_POST['accion']) && $_POST['accion'] === 'buscar_vehiculo_autocomplete') {
     echo $inst_recep->buscar_vehiculo_autocomplete_controlador();
 }
+if (isset($_POST['accion']) && $_POST['accion'] === 'buscar_ciudad_autocomplete') {
+    echo $inst_recep->buscar_ciudad_autocomplete_controlador();
+}
+if (isset($_POST['accion']) && $_POST['accion'] === 'buscar_modelo_autocomplete') {
+    echo $inst_recep->buscar_modelo_autocomplete_controlador();
+}
 if (isset($_POST['accion']) && $_POST['accion'] === 'guardar_cliente_rapido') {
     echo $inst_recep->guardar_cliente_rapido_controlador();
 }

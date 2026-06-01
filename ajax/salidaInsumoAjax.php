@@ -10,9 +10,9 @@ $insSalida = new salidaInsumoControlador();
 /* ================= REGISTRAR ================= */
 if (
     isset($_POST['accion']) &&
-    $_POST['accion'] === 'registrar_salida_consumible'
+    $_POST['accion'] === 'registrar_salida_insumo'
 ) {
-    echo $insSalida->registrar_salida_consumible_controlador();
+    echo $insSalida->registrar_salida_insumo_controlador();
     exit();
 }
 
@@ -30,7 +30,7 @@ if (
     isset($_POST['accion']) &&
     $_POST['accion'] === 'anular'
 ) {
-    echo $insSalida->anular_salida_consumible_controlador();
+    echo $insSalida->anular_salida_insumo_controlador();
     exit();
 }
 

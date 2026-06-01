@@ -15,6 +15,22 @@ class recepcionservicioModelo extends mainModel
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    protected static function buscar_ciudad_autocomplete_modelo($busqueda)
+    {
+        $sql = mainModel::conectar()->prepare("
+            SELECT id_ciudad, ciu_descri
+            FROM ciudades
+            WHERE estado = 1
+              AND ciu_descri LIKE :busqueda
+            ORDER BY ciu_descri ASC
+            LIMIT 20
+        ");
+        $sql->bindValue(":busqueda", '%' . $busqueda . '%');
+        $sql->execute();
+
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     protected static function listar_modelos_modelo()
     {
         $sql = mainModel::conectar()->prepare("
@@ -23,6 +39,22 @@ class recepcionservicioModelo extends mainModel
             WHERE estado = 1
             ORDER BY mod_descri ASC
         ");
+        $sql->execute();
+
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    protected static function buscar_modelo_autocomplete_modelo($busqueda)
+    {
+        $sql = mainModel::conectar()->prepare("
+            SELECT id_modeloauto, mod_descri
+            FROM modelo_auto
+            WHERE estado = 1
+              AND mod_descri LIKE :busqueda
+            ORDER BY mod_descri ASC
+            LIMIT 20
+        ");
+        $sql->bindValue(":busqueda", '%' . $busqueda . '%');
         $sql->execute();
 
         return $sql->fetchAll(PDO::FETCH_ASSOC);
@@ -147,9 +179,9 @@ class recepcionservicioModelo extends mainModel
         try {
             $sql = $pdo->prepare("
                 INSERT INTO vehiculos
-                (id_cliente,id_modeloauto,color,placa,anho,version,tipo_vehiculo,estado)
+                (id_cliente,id_modeloauto,color,placa,anho,version,transmision,motor,tipo_vehiculo,estado)
                 VALUES
-                (:cliente,:modelo,:color,:placa,:anho,:version,:tipo_vehiculo,:estado)
+                (:cliente,:modelo,:color,:placa,:anho,:version,:transmision,:motor,:tipo_vehiculo,:estado)
             ");
 
             $sql->bindValue(":cliente", (int) $datos['id_cliente'], PDO::PARAM_INT);
@@ -158,6 +190,8 @@ class recepcionservicioModelo extends mainModel
             $sql->bindValue(":placa", $datos['placa']);
             $sql->bindValue(":anho", $datos['anho']);
             $sql->bindValue(":version", $datos['version']);
+            $sql->bindValue(":transmision", $datos['transmision']);
+            $sql->bindValue(":motor", $datos['motor']);
             $sql->bindValue(":tipo_vehiculo", $datos['tipo_vehiculo']);
             $sql->bindValue(":estado", (int) $datos['estado'], PDO::PARAM_INT);
 

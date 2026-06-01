@@ -59,7 +59,7 @@ class salidaInsumoControlador extends salidaInsumoModelo
         return $html;
     }
 
-    public function registrar_salida_consumible_controlador()
+    public function registrar_salida_insumo_controlador()
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start(['name' => 'STR']);
@@ -112,7 +112,7 @@ class salidaInsumoControlador extends salidaInsumoModelo
             'consumibles_json'  => $_POST['consumibles_json']
         ];
 
-        $res = self::registrar_salida_consumible_modelo($datos);
+        $res = self::registrar_salida_insumo_modelo($datos);
 
         if ($res === true) {
             return json_encode([
@@ -131,7 +131,7 @@ class salidaInsumoControlador extends salidaInsumoModelo
         ]);
     }
 
-    public function anular_salida_consumible_controlador()
+    public function anular_salida_insumo_controlador()
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start(['name' => 'STR']);
@@ -179,12 +179,12 @@ class salidaInsumoControlador extends salidaInsumoModelo
         }
 
         $datos = [
-            'idsalida_consumible' => $idSalida,
+            'idsalida_insumo' => $idSalida,
             'usuario'             => $idUsuario,
             'id_sucursal'         => $idSucursal
         ];
 
-        $res = self::anular_salida_consumible_modelo($datos);
+        $res = self::anular_salida_insumo_modelo($datos);
 
         if ($res === true) {
             return json_encode([
@@ -220,7 +220,7 @@ class salidaInsumoControlador extends salidaInsumoModelo
 
         $filtros = [
             [
-                "campo" => "sc.idsalida_consumible",
+                "campo" => "sc.idsalida_insumo",
                 "tipo"  => "=",
                 "valor" => $nro_salida
             ],
@@ -269,7 +269,7 @@ class salidaInsumoControlador extends salidaInsumoModelo
             $inicio,
             $registros,
             $filtrosSQL,
-            "ORDER BY " . $ordenamiento['sql'] . ", sc.idsalida_consumible DESC"
+            "ORDER BY " . $ordenamiento['sql'] . ", sc.idsalida_insumo DESC"
         );
 
         $datos = $res['datos'];
@@ -307,7 +307,7 @@ class salidaInsumoControlador extends salidaInsumoModelo
                 $tabla .= '
             <tr class="text-center">
                 <td>' . $contador . '</td>
-                <td>#' . (int)$row['idsalida_consumible'] . '</td>
+                <td>#' . (int)$row['idsalida_insumo'] . '</td>
                 <td>' . date("d/m/Y H:i", strtotime($row['fecha'])) . '</td>
                 <td>' . htmlspecialchars($row['empleado'], ENT_QUOTES, 'UTF-8') . '</td>
                 <td>' . htmlspecialchars($row['usuario_registra'], ENT_QUOTES, 'UTF-8') . '</td>
@@ -323,7 +323,7 @@ class salidaInsumoControlador extends salidaInsumoModelo
                     data-form="delete">
 
                     <input type="hidden" name="accion" value="anular">
-                    <input type="hidden" name="id_salida" value="' . mainModel::encryption($row['idsalida_consumible']) . '">
+                    <input type="hidden" name="id_salida" value="' . mainModel::encryption($row['idsalida_insumo']) . '">
 
                     <button class="btn btn-danger btn-sm">
                         <i class="fas fa-ban"></i>

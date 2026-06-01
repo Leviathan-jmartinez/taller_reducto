@@ -9,8 +9,7 @@ if (session_status() == PHP_SESSION_NONE) {
 
 require_once "./controladores/recepcionservicioControlador.php";
 $ins_recepcion_rapida = new recepcionservicioControlador();
-$modelos_recepcion = $ins_recepcion_rapida->listar_modelos_controlador();
-$modelos_recepcion = is_array($modelos_recepcion) ? $modelos_recepcion : [];
+$tipos_vehiculo_recepcion = ['Automovil', 'Camioneta', 'SUV', 'Furgon', 'Camion', 'Motocicleta', 'Otro'];
 ?>
 
 <style>
@@ -393,7 +392,7 @@ $modelos_recepcion = is_array($modelos_recepcion) ? $modelos_recepcion : [];
                     <input type="hidden" name="accion" value="guardar_cliente_rapido">
 
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label>Tipo de documento</label>
                             <select class="form-control" name="tipo_documento_reg">
                                 <option value="CI">CI</option>
@@ -404,21 +403,49 @@ $modelos_recepcion = is_array($modelos_recepcion) ? $modelos_recepcion : [];
                                 <option value="OF">OF</option>
                             </select>
                         </div>
-                        <div class="col-md-6">
-                            <label>Documento</label>
-                            <input type="text" class="form-control" name="cliente_doc_reg" required>
+                        <div class="col-md-4">
+                            <label>Documento *</label>
+                            <input type="text" class="form-control" name="cliente_doc_reg" pattern="[a-zA-Z0-9-]{3,20}" maxlength="20" required>
                         </div>
                         <div class="col-md-4">
-                            <label>Nombre</label>
-                            <input type="text" class="form-control" name="cliente_nombre_reg" required>
+                            <label>DV</label>
+                            <input type="text" class="form-control" name="cliente_dv_reg" pattern="[0-9]{1}" maxlength="1" inputmode="numeric">
+                        </div>
+                        <div class="col-md-4">
+                            <label>Nombre *</label>
+                            <input type="text" class="form-control" name="cliente_nombre_reg" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,&-]{2,30}" maxlength="30" required>
                         </div>
                         <div class="col-md-4">
                             <label>Apellido</label>
-                            <input type="text" class="form-control" name="cliente_apellido_reg">
+                            <input type="text" class="form-control" name="cliente_apellido_reg" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{2,30}" maxlength="30">
                         </div>
                         <div class="col-md-4">
-                            <label>Telefono</label>
-                            <input type="text" class="form-control" name="cliente_telefono_reg">
+                            <label>Teléfono</label>
+                            <input type="text" class="form-control" name="cliente_telefono_reg" pattern="[0-9()+ -]{6,15}" maxlength="15" inputmode="tel">
+                        </div>
+                        <div class="col-md-4">
+                            <label>Email</label>
+                            <input type="email" class="form-control" name="cliente_email_reg" maxlength="50">
+                        </div>
+                        <div class="col-md-4">
+                            <label>Dirección</label>
+                            <input type="text" class="form-control" name="cliente_direccion_reg" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,#°\/-]{3,50}" maxlength="50">
+                        </div>
+                        <div class="col-md-4 recepcion-autocomplete-wrap">
+                            <label>Ciudad</label>
+                            <input type="hidden" name="ciudad_reg" id="ciudad_reg_recepcion">
+                            <input type="text" class="form-control" id="ciudad_nombre_recepcion" placeholder="Escriba al menos 2 caracteres">
+                            <div id="resultado_ciudades_autocomplete" class="recepcion-autocomplete"></div>
+                        </div>
+                        <div class="col-md-4">
+                            <label>Estado civil</label>
+                            <select class="form-control" name="cliente_estadoC_reg">
+                                <option value="">Seleccione estado civil</option>
+                                <option value="Soltero">Soltero</option>
+                                <option value="Casado">Casado</option>
+                                <option value="Viudo">Viudo</option>
+                                <option value="Divorciado">Divorciado</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -457,24 +484,46 @@ $modelos_recepcion = is_array($modelos_recepcion) ? $modelos_recepcion : [];
                     <div class="alert alert-info" id="vehiculo_rapido_cliente_nombre"></div>
 
                     <div class="row">
+                        <div class="col-md-4 recepcion-autocomplete-wrap">
+                            <label>Modelo *</label>
+                            <input type="hidden" name="modelo_reg" id="modelo_reg_recepcion">
+                            <input type="text" class="form-control" id="modelo_nombre_recepcion" placeholder="Escriba al menos 2 caracteres" required>
+                            <div id="resultado_modelos_autocomplete" class="recepcion-autocomplete"></div>
+                        </div>
                         <div class="col-md-4">
-                            <label>Modelo</label>
-                            <select class="form-control" name="modelo_reg" required>
-                                <option value="">Seleccione modelo</option>
-                                <?php foreach ($modelos_recepcion as $modelo) { ?>
-                                    <option value="<?php echo $modelo['id_modeloauto']; ?>">
-                                        <?php echo htmlspecialchars($modelo['mod_descri'], ENT_QUOTES, 'UTF-8'); ?>
+                            <label>Color *</label>
+                            <input type="text" class="form-control" name="color_reg" pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ ]{3,45}" maxlength="45" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label>Placa *</label>
+                            <input type="text" class="form-control" name="placa_reg" pattern="[a-zA-Z0-9-]{3,20}" maxlength="20" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label>Año</label>
+                            <input type="text" class="form-control" name="anho_reg" pattern="[0-9]{4}" maxlength="4" inputmode="numeric">
+                        </div>
+                        <div class="col-md-4">
+                            <label>Versión</label>
+                            <input type="text" class="form-control" name="version_reg" pattern="[a-zA-Z0-9 .-]{1,60}" maxlength="60">
+                        </div>
+                        <div class="col-md-4">
+                            <label>Transmisión</label>
+                            <input type="text" class="form-control" name="transmision_reg" pattern="[a-zA-Z0-9 .-]{1,30}" maxlength="30">
+                        </div>
+                        <div class="col-md-4">
+                            <label>Motor</label>
+                            <input type="text" class="form-control" name="motor_reg" pattern="[a-zA-Z0-9 .()/-]{1,80}" maxlength="80">
+                        </div>
+                        <div class="col-md-4">
+                            <label>Tipo de vehículo</label>
+                            <select class="form-control" name="tipo_vehiculo_reg">
+                                <option value="">Seleccione tipo de vehículo</option>
+                                <?php foreach ($tipos_vehiculo_recepcion as $tipoVehiculo) { ?>
+                                    <option value="<?php echo $tipoVehiculo; ?>">
+                                        <?php echo htmlspecialchars($tipoVehiculo, ENT_QUOTES, 'UTF-8'); ?>
                                     </option>
                                 <?php } ?>
                             </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label>Color</label>
-                            <input type="text" class="form-control" name="color_reg" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label>Placa</label>
-                            <input type="text" class="form-control" name="placa_reg" required>
                         </div>
                     </div>
                 </div>

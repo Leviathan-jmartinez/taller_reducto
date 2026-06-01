@@ -32,7 +32,7 @@ class salidaInsumoModelo extends mainModel
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    protected static function registrar_salida_consumible_modelo($datos)
+    protected static function registrar_salida_insumo_modelo($datos)
     {
         $pdo = self::conectar();
 
@@ -47,7 +47,7 @@ class salidaInsumoModelo extends mainModel
             }
 
             $cab = $pdo->prepare("
-                INSERT INTO salida_consumible
+                INSERT INTO salida_insumo
                 (id_sucursal, id_usuario, id_tecnico, fecha, observacion, estado)
                 VALUES (?, ?, ?, now(), ?, 1)
             ");
@@ -95,8 +95,8 @@ class salidaInsumoModelo extends mainModel
                 }
 
                 $det = $pdo->prepare("
-                    INSERT INTO salida_consumible_detalle
-                    (idsalida_consumible, id_articulo, cantidad)
+                    INSERT INTO salida_insumo_detalle
+                    (idsalida_insumo, id_articulo, cantidad)
                     VALUES (?, ?, ?)
                 ");
                 $det->execute([
@@ -155,7 +155,7 @@ class salidaInsumoModelo extends mainModel
         }
     }
 
-    protected static function anular_salida_consumible_modelo($datos)
+    protected static function anular_salida_insumo_modelo($datos)
     {
         $pdo = self::conectar();
 
@@ -164,12 +164,12 @@ class salidaInsumoModelo extends mainModel
 
             /* ================= VALIDAR CABECERA ================= */
             $q = $pdo->prepare("
-            SELECT idsalida_consumible, id_sucursal, estado
-            FROM salida_consumible
-            WHERE idsalida_consumible = ?
+            SELECT idsalida_insumo, id_sucursal, estado
+            FROM salida_insumo
+            WHERE idsalida_insumo = ?
             FOR UPDATE
         ");
-            $q->execute([$datos['idsalida_consumible']]);
+            $q->execute([$datos['idsalida_insumo']]);
             $salida = $q->fetch(PDO::FETCH_ASSOC);
 
             if (!$salida) {
@@ -190,14 +190,14 @@ class salidaInsumoModelo extends mainModel
                 d.id_articulo,
                 d.cantidad,
                 a.desc_articulo
-            FROM salida_consumible_detalle d
+            FROM salida_insumo_detalle d
             INNER JOIN articulos a 
                 ON a.id_articulo = d.id_articulo
-            WHERE d.idsalida_consumible = ?
+            WHERE d.idsalida_insumo = ?
               AND a.tipo = 'insumo'
               AND a.estado = 1
         ");
-            $det->execute([$datos['idsalida_consumible']]);
+            $det->execute([$datos['idsalida_insumo']]);
             $items = $det->fetchAll(PDO::FETCH_ASSOC);
 
             if (!$items) {
@@ -245,7 +245,7 @@ class salidaInsumoModelo extends mainModel
                     $idArticulo,
                     $cantidad,
                     $datos['usuario'],
-                    'ANUL_SAL_INS #' . $datos['idsalida_consumible']
+                    'ANUL_SAL_INS #' . $datos['idsalida_insumo']
                 ]);
 
                 $idMovimiento = $pdo->lastInsertId();
@@ -280,13 +280,13 @@ class salidaInsumoModelo extends mainModel
 
             /* ================= ANULAR CABECERA ================= */
             $updCab = $pdo->prepare("
-            UPDATE salida_consumible
+            UPDATE salida_insumo
             SET estado = 0
-            WHERE idsalida_consumible = ?
+            WHERE idsalida_insumo = ?
               AND estado = 1
         ");
 
-            $updCab->execute([$datos['idsalida_consumible']]);
+            $updCab->execute([$datos['idsalida_insumo']]);
 
             if ($updCab->rowCount() === 0) {
                 throw new Exception('No se pudo anular la salida');
@@ -332,12 +332,12 @@ class salidaInsumoModelo extends mainModel
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    protected static function listar_salida_insumo_modelo($inicio, $registros, $filtrosSQL, $orderSQL = "ORDER BY sc.fecha DESC, sc.idsalida_consumible DESC")
+    protected static function listar_salida_insumo_modelo($inicio, $registros, $filtrosSQL, $orderSQL = "ORDER BY sc.fecha DESC, sc.idsalida_insumo DESC")
     {
         $conexion = mainModel::conectar();
 
         $baseSQL = "
-        FROM salida_consumible sc
+        FROM salida_insumo sc
         INNER JOIN empleados e 
             ON e.idempleados = sc.id_tecnico
         INNER JOIN usuarios u 
@@ -348,7 +348,7 @@ class salidaInsumoModelo extends mainModel
 
         $selectSQL = "
         SELECT 
-            sc.idsalida_consumible,
+            sc.idsalida_insumo,
             sc.fecha,
             sc.estado,
             sc.observacion,
