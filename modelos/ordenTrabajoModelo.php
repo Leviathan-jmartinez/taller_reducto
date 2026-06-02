@@ -744,14 +744,6 @@ class ordenTrabajoModelo extends mainModel
             WHERE idreclamo_servicio = ?
         ")->execute([$idReclamo]);
 
-            $pdo->prepare("
-            UPDATE diagnostico_servicio d
-            INNER JOIN recepcion_servicio r ON r.idrecepcion = d.idrecepcion
-            SET d.estado = 3
-            WHERE r.idreclamo_servicio = ?
-              AND d.estado != 0
-        ")->execute([$idReclamo]);
-
             $pdo->commit();
             return true;
         } catch (Exception $e) {

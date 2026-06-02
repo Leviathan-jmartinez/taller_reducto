@@ -54,6 +54,12 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
             OR m.mod_descri LIKE :b
         )
         AND r.id_sucursal = :sucursal
+        AND NOT EXISTS (
+            SELECT 1
+            FROM orden_trabajo ot
+            WHERE ot.idreclamo_servicio = r.idreclamo_servicio
+              AND ot.estado != 0
+        )
         ORDER BY d.id_diagnostico DESC
         ");
 
@@ -158,6 +164,12 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
                 WHERE d.id_diagnostico = :id
                   AND d.estado = 1
                   AND r.id_sucursal = :sucursal
+                  AND NOT EXISTS (
+                      SELECT 1
+                      FROM orden_trabajo ot
+                      WHERE ot.idreclamo_servicio = r.idreclamo_servicio
+                        AND ot.estado != 0
+                  )
             ");
             $diagnosticoDisponible->execute([
                 ':id' => $idDiagnostico,
@@ -283,6 +295,7 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
               AND id_vehiculo = :vehiculo
               AND id_sucursal = :sucursal
               AND estado IN (1,2)
+              AND fecha_venc >= CURDATE()
             ORDER BY idpresupuesto_servicio DESC
             LIMIT 5
         ");
@@ -331,6 +344,7 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
               AND ps.origen = 'PRELIMINAR'
               AND ps.id_sucursal = :sucursal
               AND ps.estado IN (1,2)
+              AND ps.fecha_venc >= CURDATE()
             LIMIT 1
         ");
         $sql->execute([

@@ -1,5 +1,36 @@
 <script>
     const SERVERURL = "<?php echo SERVERURL; ?>";
+    const PROMOCION_STORAGE_BASE = 'promo_articulos';
+
+    function storageKeyPromo() {
+        const modo = window.PROMOCION_FORM_MODO || 'crear';
+        const id = window.PROMOCION_FORM_ID || 'nuevo';
+        return modo === 'editar' ? `${PROMOCION_STORAGE_BASE}_editar_${id}` : `${PROMOCION_STORAGE_BASE}_crear`;
+    }
+
+    function articulosPromoGuardados() {
+        return JSON.parse(localStorage.getItem(storageKeyPromo())) || [];
+    }
+
+    function guardarListaArticulosPromo(articulos) {
+        localStorage.setItem(storageKeyPromo(), JSON.stringify(articulos));
+    }
+
+    function sincronizarArticulosPromoDesdeVista() {
+        const lista = document.getElementById('articulos_seleccionados');
+        if (!lista) return;
+
+        const articulos = Array.from(lista.querySelectorAll('li')).map(li => {
+            const input = li.querySelector('input[name="articulos[]"]');
+            return {
+                id: input ? input.value : '',
+                descripcion: (li.firstChild ? li.firstChild.textContent : '').trim()
+            };
+        }).filter(a => a.id);
+
+        guardarListaArticulosPromo(articulos);
+    }
+
     /* ================= BUSCAR ARTÍCULOS ================= */
     function buscarArticuloPromo() {
         let txt = document.getElementById('buscar_articulo').value.trim();
@@ -51,7 +82,7 @@
 
     function guardarArticulosPromo(id, descripcion) {
 
-        let articulos = JSON.parse(localStorage.getItem('promo_articulos')) || [];
+        let articulos = articulosPromoGuardados();
 
         // evitar duplicados
         if (articulos.find(a => a.id == id)) {
@@ -63,7 +94,7 @@
             descripcion: descripcion
         });
 
-        localStorage.setItem('promo_articulos', JSON.stringify(articulos));
+        guardarListaArticulosPromo(articulos);
     }
 
     /* ================= QUITAR ARTÍCULO ================= */
@@ -72,18 +103,20 @@
         let el = document.getElementById('articulo_' + id);
         if (el) el.remove();
 
-        let articulos = JSON.parse(localStorage.getItem('promo_articulos')) || [];
+        let articulos = articulosPromoGuardados();
         articulos = articulos.filter(a => a.id != id);
 
-        localStorage.setItem('promo_articulos', JSON.stringify(articulos));
+        guardarListaArticulosPromo(articulos);
     }
 
     function restaurarArticulosPromo() {
-        if (window.PROMOCION_FORM_MODO !== 'crear') {
-            return;
+        localStorage.removeItem(PROMOCION_STORAGE_BASE);
+
+        if (window.PROMOCION_FORM_MODO === 'editar') {
+            sincronizarArticulosPromoDesdeVista();
         }
 
-        let articulos = JSON.parse(localStorage.getItem('promo_articulos')) || [];
+        let articulos = articulosPromoGuardados();
 
         articulos.forEach(a => {
             agregarArticuloPromo(a.id, a.descripcion);
@@ -98,7 +131,8 @@
         if (e.detail.modulo === 'promociones') {
 
             // 1. LocalStorage propio
-            localStorage.removeItem('promo_articulos');
+            localStorage.removeItem(PROMOCION_STORAGE_BASE);
+            localStorage.removeItem(storageKeyPromo());
 
             // 2. Lista visual
             const lista = document.getElementById('articulos_seleccionados');

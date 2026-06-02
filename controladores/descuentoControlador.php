@@ -116,7 +116,7 @@ class descuentoControlador extends descuentoModelo
         }
 
         $aplicaA = $_POST['aplica_a'] ?? 'TOTAL';
-        if (!in_array($aplicaA, ['PRODUCTO', 'CATEGORIA', 'TOTAL'], true)) {
+        if (!in_array($aplicaA, ['PRODUCTO', 'SERVICIO', 'TOTAL'], true)) {
             $aplicaA = 'TOTAL';
         }
 
@@ -345,7 +345,7 @@ class descuentoControlador extends descuentoModelo
             "id_sucursal" => empty($_POST['id_sucursal']) ? null : (int)$_POST['id_sucursal']
         ];
 
-        if (!in_array($datos['aplica_a'], ['PRODUCTO', 'CATEGORIA', 'TOTAL'], true)) {
+        if (!in_array($datos['aplica_a'], ['PRODUCTO', 'SERVICIO', 'TOTAL'], true)) {
             $datos['aplica_a'] = 'TOTAL';
         }
 

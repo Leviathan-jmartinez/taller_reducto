@@ -547,7 +547,17 @@
         datos.append("accion", "crear_ot_reclamo");
         datos.append("idreclamo_servicio", idReclamo);
 
-        fetch(window.diagnosticoServerUrl + "ajax/ordenTrabajoAjax.php", {
+        Swal.fire({
+            title: "Generando OT",
+            text: "Espere un momento...",
+            type: "info",
+            showConfirmButton: false,
+            allowOutsideClick: false,
+            allowEscapeKey: false
+        });
+
+        setTimeout(() => {
+            fetch(window.diagnosticoServerUrl + "ajax/ordenTrabajoAjax.php", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded"
@@ -556,21 +566,45 @@
             })
             .then(async r => {
                 let txt = await r.text();
-                if (!txt) throw "VACIO";
+                if (!txt) {
+                    throw new Error("Respuesta vacia del servidor");
+                }
 
-                return JSON.parse(txt);
+                try {
+                    return JSON.parse(txt);
+                } catch (e) {
+                    throw new Error(txt);
+                }
             })
             .then(data => {
                 if (data.Alerta === "recargar") {
-                    location.reload();
+                    Swal.fire({
+                        title: data.Titulo || "OT generada",
+                        text: data.Texto || "La orden de trabajo fue generada correctamente",
+                        type: data.Tipo || "success",
+                        confirmButtonText: "Aceptar"
+                    }).then(() => {
+                        location.reload();
+                    });
                 } else {
-                    Swal.fire(data.Titulo, data.Texto, data.Tipo);
+                    Swal.fire({
+                        title: data.Titulo || "Resultado",
+                        text: data.Texto || "",
+                        type: data.Tipo || "info",
+                        confirmButtonText: "Aceptar"
+                    });
                 }
             })
             .catch(err => {
                 console.error("ERROR:", err);
-                alert("Error en respuesta");
+                Swal.fire({
+                    title: "Error",
+                    text: err && err.message ? err.message : "No se pudo generar la orden de trabajo",
+                    type: "error",
+                    confirmButtonText: "Aceptar"
+                });
             });
+        }, 150);
     }
 
     function estadoDiagnosticoTexto(estado) {
@@ -639,6 +673,7 @@
                         <div class="col-md-4 mt-3"><strong>Cliente:</strong><br>${escaparHtml(c.cliente)} (${escaparHtml(c.doc_number)})</div>
                         <div class="col-md-4 mt-3"><strong>Vehiculo:</strong><br>${escaparHtml(c.vehiculo)}</div>
                         <div class="col-md-4 mt-3"><strong>Equipo:</strong><br>${escaparHtml(c.equipo)}</div>
+                        <div class="col-md-4 mt-3"><strong>Registrado por:</strong><br>${escaparHtml(c.usuario)}</div>
                         <div class="col-md-3 mt-3"><strong>Origen:</strong><br>${escaparHtml(c.origen)}</div>
                         <div class="col-md-3 mt-3"><strong>Servicio:</strong><br>${escaparHtml(c.tipo_servicio)}</div>
                         ${bloqueReclamo}

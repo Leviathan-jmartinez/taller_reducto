@@ -595,7 +595,7 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
         return json_encode([
             "Alerta" => "simple",
             "Titulo" => "Error",
-            "Texto" => $ok === false ? "El reclamo ya tiene una OT activa" : $ok,
+            "Texto" => $ok === false ? "El reclamo ya tiene una OT activa" : (is_array($ok) ? ($ok['msg'] ?? 'No se pudo generar la OT') : (string)$ok),
             "Tipo" => "error"
         ]);
     }

@@ -28,6 +28,12 @@ class presupuestoservicioModelo extends mainModel
         INNER JOIN marcas ma ON ma.id_marcas = m.id_marcas
         WHERE d.id_diagnostico = ?
           AND d.estado = 1
+          AND NOT EXISTS (
+              SELECT 1
+              FROM orden_trabajo ot
+              WHERE ot.idreclamo_servicio = r.idreclamo_servicio
+                AND ot.estado != 0
+          )
         LIMIT 1
         ");
         $sql->execute([$id]);
@@ -185,6 +191,7 @@ class presupuestoservicioModelo extends mainModel
             d.nombre,
             d.tipo,
             d.valor,
+            d.aplica_a,
             d.es_reutilizable
         FROM descuentos d
         INNER JOIN descuento_cliente dc
@@ -229,6 +236,12 @@ class presupuestoservicioModelo extends mainModel
                         ON r.idrecepcion = d.idrecepcion
                     WHERE d.id_diagnostico = :id
                       AND d.estado = 1
+                      AND NOT EXISTS (
+                          SELECT 1
+                          FROM orden_trabajo ot
+                          WHERE ot.idreclamo_servicio = r.idreclamo_servicio
+                            AND ot.estado != 0
+                      )
                 ");
 
                 $sqlSuc->execute([
@@ -295,6 +308,7 @@ class presupuestoservicioModelo extends mainModel
                       AND id_vehiculo = :vehiculo
                       AND id_sucursal = :sucursal
                       AND estado IN (1,2)
+                      AND fecha_venc >= CURDATE()
                     FOR UPDATE
                 ");
                 $sqlConvertido->execute([
@@ -426,6 +440,7 @@ class presupuestoservicioModelo extends mainModel
                     'cantidad' => $cantidad,
                     'precio_base' => $precioBase,
                     'subtotal' => $subtotalLinea,
+                    'tipo_articulo' => strtolower((string)($articulo['tipo'] ?? '')),
                     'id_promocion' => $idPromo,
                     'monto_promocion_unitario' => $montoPromoUnitario,
                     'monto_promocion' => $montoPromoLinea
@@ -435,9 +450,14 @@ class presupuestoservicioModelo extends mainModel
             $descuentosAplicados = [];
             $totalDescuento = 0;
             $baseDescuentos = max(0, $subtotalServicios - $totalPromociones);
+            $descuentosPorAlcance = [
+                'TOTAL' => 0,
+                'PRODUCTO' => 0,
+                'SERVICIO' => 0
+            ];
 
             $sqlDescExiste = $pdo->prepare("
-                SELECT id_descuento
+                SELECT id_descuento, aplica_a
                 FROM descuentos
                 WHERE id_descuento = :descuento
                 LIMIT 1
@@ -450,7 +470,8 @@ class presupuestoservicioModelo extends mainModel
                 }
 
                 $sqlDescExiste->execute([':descuento' => $idDesc]);
-                if (!$sqlDescExiste->fetchColumn()) {
+                $descuentoBD = $sqlDescExiste->fetch(PDO::FETCH_ASSOC);
+                if (!$descuentoBD) {
                     continue;
                 }
 
@@ -460,17 +481,41 @@ class presupuestoservicioModelo extends mainModel
                     continue;
                 }
 
+                $aplicaA = strtoupper((string)($descuentoBD['aplica_a'] ?? $desc['aplica_a'] ?? 'TOTAL'));
+                if (!in_array($aplicaA, ['TOTAL', 'PRODUCTO', 'SERVICIO'], true)) {
+                    $aplicaA = 'TOTAL';
+                }
+
+                $baseAlcance = 0;
+                foreach ($detalleCalculado as $linea) {
+                    $tipoLinea = $linea['tipo_articulo'] ?? '';
+                    if ($aplicaA === 'PRODUCTO' && $tipoLinea !== 'producto') {
+                        continue;
+                    }
+                    if ($aplicaA === 'SERVICIO' && $tipoLinea !== 'servicio') {
+                        continue;
+                    }
+                    $baseAlcance += max(0, $linea['subtotal'] - $linea['monto_promocion']);
+                }
+
+                $baseDisponibleAlcance = max(0, $baseAlcance - ($descuentosPorAlcance[$aplicaA] ?? 0));
+                $baseDisponibleGlobal = max(0, $baseDescuentos - $totalDescuento);
+                $baseDisponible = min($baseDisponibleAlcance, $baseDisponibleGlobal);
+
                 $monto = $tipoDesc === 'PORCENTAJE'
-                        ? $baseDescuentos * ($valorDesc / 100)
+                        ? $baseAlcance * ($valorDesc / 100)
                         : $valorDesc;
 
-                $monto = min($monto, max(0, $baseDescuentos - $totalDescuento));
+                $monto = min($monto, $baseDisponible);
                 $totalDescuento += $monto;
+                $descuentosPorAlcance[$aplicaA] = ($descuentosPorAlcance[$aplicaA] ?? 0) + $monto;
 
                 $descuentosAplicados[] = [
                     'id_descuento' => $idDesc,
                     'tipo' => $tipoDesc,
                     'valor' => $valorDesc,
+                    'aplica_a' => $aplicaA,
+                    'base_aplicada' => $baseAlcance,
                     'monto' => $monto,
                     'motivo' => $desc['nombre'] ?? ''
                 ];
@@ -567,15 +612,33 @@ class presupuestoservicioModelo extends mainModel
 
             /* ================= ACTUALIZAR DIAGNÓSTICO ================= */
             if ($descuentosAplicados) {
-                $sqlPresDesc = $pdo->prepare("
+                $usaAlcancePresupuestoDescuento = false;
+                try {
+                    $columnasPresupuestoDescuento = $pdo->query("SHOW COLUMNS FROM presupuesto_descuento")->fetchAll(PDO::FETCH_COLUMN);
+                    $usaAlcancePresupuestoDescuento = in_array('aplica_a', $columnasPresupuestoDescuento, true)
+                        && in_array('base_aplicada', $columnasPresupuestoDescuento, true);
+                } catch (Exception $e) {
+                    $usaAlcancePresupuestoDescuento = false;
+                }
+
+                if ($usaAlcancePresupuestoDescuento) {
+                    $sqlPresDesc = $pdo->prepare("
+                    INSERT INTO presupuesto_descuento
+                    (id_presupuesto, id_descuento, id_usuario, tipo, valor, aplica_a, base_aplicada, monto_aplicado, motivo)
+                    VALUES
+                    (:presupuesto, :descuento, :usuario, :tipo, :valor, :aplica_a, :base_aplicada, :monto, :motivo)
+                ");
+                } else {
+                    $sqlPresDesc = $pdo->prepare("
                     INSERT INTO presupuesto_descuento
                     (id_presupuesto, id_descuento, id_usuario, tipo, valor, monto_aplicado, motivo)
                     VALUES
                     (:presupuesto, :descuento, :usuario, :tipo, :valor, :monto, :motivo)
                 ");
+                }
 
                 foreach ($descuentosAplicados as $desc) {
-                    $sqlPresDesc->execute([
+                    $paramsDesc = [
                         ':presupuesto' => $idPresupuesto,
                         ':descuento' => $desc['id_descuento'],
                         ':usuario' => $d['usuario'],
@@ -583,7 +646,12 @@ class presupuestoservicioModelo extends mainModel
                         ':valor' => $desc['valor'],
                         ':monto' => $desc['monto'],
                         ':motivo' => $desc['motivo']
-                    ]);
+                    ];
+                    if ($usaAlcancePresupuestoDescuento) {
+                        $paramsDesc[':aplica_a'] = $desc['aplica_a'];
+                        $paramsDesc[':base_aplicada'] = $desc['base_aplicada'];
+                    }
+                    $sqlPresDesc->execute($paramsDesc);
                 }
             }
 

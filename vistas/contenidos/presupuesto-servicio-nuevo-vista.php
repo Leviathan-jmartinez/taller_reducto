@@ -210,10 +210,11 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
                         <tr>
                             <th>Servicio</th>
                             <th width="10%">Cant.</th>
-                            <th width="15%">Precio Unitario</th>
-                            <th width="15%">Subtotal</th>
-                            <th width="15%">Promoción</th>
-                            <th width="15%"></th>
+                            <th width="14%">Precio Unitario</th>
+                            <th width="13%">Subtotal</th>
+                            <th width="13%">Promoción</th>
+                            <th width="15%">Subtotal Final</th>
+                            <th width="10%"></th>
                         </tr>
                     </thead>
                     <tbody>

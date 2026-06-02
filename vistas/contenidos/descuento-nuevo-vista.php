@@ -130,7 +130,7 @@ $botonClase = $esEditar ? 'btn-primary' : 'btn-info btn-raised';
                     <div class="col-md-4">
                         <label>Aplica a</label>
                         <select name="aplica_a" class="form-control" required>
-                            <?php foreach (['TOTAL' => 'Total', 'PRODUCTO' => 'Producto', 'CATEGORIA' => 'Categoria'] as $valor => $texto): ?>
+                            <?php foreach (['TOTAL' => 'Total', 'PRODUCTO' => 'Producto', 'SERVICIO' => 'Servicio'] as $valor => $texto): ?>
                                 <option value="<?= $valor ?>" <?= (($descuento['aplica_a'] ?? 'TOTAL') === $valor) ? 'selected' : '' ?>>
                                     <?= $texto ?>
                                 </option>

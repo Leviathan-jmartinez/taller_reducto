@@ -102,7 +102,9 @@ function alertasAjax(alerta, form = null) {
                 cancelButtonText: 'No, despues'
             }).then((confirmacion) => {
                 if (confirmacion.value && typeof crearOTReclamo === "function") {
-                    crearOTReclamo(alerta.id_diagnostico, alerta.idreclamo_servicio);
+                    setTimeout(() => {
+                        crearOTReclamo(alerta.id_diagnostico, alerta.idreclamo_servicio);
+                    }, 150);
                     return;
                 }
 

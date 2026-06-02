@@ -651,6 +651,8 @@
         let subtotalServicios = 0;
         detalleServicios.forEach(i => {
             i.subtotal = Number(i.precio_base || 0) * Number(i.cantidad || 0);
+            i.descuento_linea = 0;
+            i.subtotal_final = Math.max(0, i.subtotal - (Number(i.monto_promocion || 0) * Number(i.cantidad || 0)));
             subtotalServicios += i.subtotal;
         });
         let totalPromociones = 0;
@@ -658,16 +660,54 @@
         let baseDescuentos = Math.max(0, subtotalServicios - totalPromociones);
 
         let totalDescuentos = 0;
+        let descuentosPorAlcance = {
+            TOTAL: 0,
+            PRODUCTO: 0,
+            SERVICIO: 0
+        };
 
         descuentosAplicados.forEach(d => {
+            const alcance = normalizarAlcanceDescuento(d.aplica_a);
+            let baseAlcance = 0;
+
+            detalleServicios.forEach(item => {
+                const tipoItem = String(item.tipo || '').toLowerCase();
+                if (alcance === 'PRODUCTO' && tipoItem !== 'producto') return;
+                if (alcance === 'SERVICIO' && tipoItem !== 'servicio') return;
+
+                const subtotalLinea = Number(item.precio_base || 0) * Number(item.cantidad || 0);
+                const promocionLinea = Number(item.monto_promocion || 0) * Number(item.cantidad || 0);
+                baseAlcance += Math.max(0, subtotalLinea - promocionLinea);
+            });
+
+            const baseDisponibleAlcance = Math.max(0, baseAlcance - (descuentosPorAlcance[alcance] || 0));
+            const baseDisponibleGlobal = Math.max(0, baseDescuentos - totalDescuentos);
+            const baseDisponible = Math.min(baseDisponibleAlcance, baseDisponibleGlobal);
+
             if (d.tipo === 'PORCENTAJE') {
-                d.monto = baseDescuentos * d.valor / 100;
+                d.monto = baseAlcance * Number(d.valor || 0) / 100;
             }
             if (d.tipo === 'MONTO_FIJO') {
-                d.monto = Math.min(d.valor, Math.max(0, baseDescuentos - totalDescuentos));
+                d.monto = Number(d.valor || 0);
             }
-            d.monto = Math.min(d.monto, Math.max(0, baseDescuentos - totalDescuentos));
+            d.aplica_a = alcance;
+            d.base_aplicada = baseAlcance;
+            d.monto = Math.min(Number(d.monto || 0), baseDisponible);
+
+            distribuirDescuentoEnLineas(alcance, baseAlcance, d.monto);
             totalDescuentos += d.monto;
+            descuentosPorAlcance[alcance] = (descuentosPorAlcance[alcance] || 0) + d.monto;
+        });
+
+        detalleServicios.forEach((item, index) => {
+            const subtotalLinea = Number(item.subtotal || 0);
+            const promocionLinea = Number(item.monto_promocion || 0) * Number(item.cantidad || 0);
+            item.subtotal_final = Math.max(0, subtotalLinea - promocionLinea - Number(item.descuento_linea || 0));
+
+            const celdaFinal = document.getElementById('subtotal_final_' + index);
+            if (celdaFinal) {
+                celdaFinal.innerText = item.subtotal_final.toLocaleString();
+            }
         });
 
         let totalFinal = Math.max(0, subtotalServicios - totalPromociones - totalDescuentos);
@@ -732,6 +772,9 @@
             </td>          
             <td class="text-center" id="promo_${index}">
             ${item.promocion ? `<small class="text-success">${item.promocion.nombre}<br>- Gs. ${(Number(item.monto_promocion || 0) * Number(item.cantidad || 0)).toLocaleString()}</small>` : ''}
+            </td>
+            <td class="text-center" id="subtotal_final_${index}">
+                ${Number(item.subtotal_final || item.subtotal || 0).toLocaleString()}
             </td>
             <td class="text-center">
                 <button class="btn btn-danger btn-sm"
@@ -824,6 +867,61 @@
         item.subtotal = item.cantidad * item.precio_base;
     }
 
+    function distribuirDescuentoEnLineas(alcance, baseAlcance, montoDescuento) {
+        if (baseAlcance <= 0 || montoDescuento <= 0) return;
+
+        let indicesAlcanzados = [];
+        detalleServicios.forEach((item, index) => {
+            const tipoItem = String(item.tipo || '').toLowerCase();
+            if (alcance === 'PRODUCTO' && tipoItem !== 'producto') return;
+            if (alcance === 'SERVICIO' && tipoItem !== 'servicio') return;
+
+            const subtotalLinea = Number(item.precio_base || 0) * Number(item.cantidad || 0);
+            const promocionLinea = Number(item.monto_promocion || 0) * Number(item.cantidad || 0);
+            const baseLinea = Math.max(0, subtotalLinea - promocionLinea);
+            if (baseLinea > 0) {
+                indicesAlcanzados.push({
+                    index,
+                    baseLinea
+                });
+            }
+        });
+
+        let acumulado = 0;
+        indicesAlcanzados.forEach((linea, pos) => {
+            let montoLinea = montoDescuento * (linea.baseLinea / baseAlcance);
+            if (pos === indicesAlcanzados.length - 1) {
+                montoLinea = Math.max(0, montoDescuento - acumulado);
+            } else {
+                montoLinea = Math.round(montoLinea);
+                acumulado += montoLinea;
+            }
+
+            detalleServicios[linea.index].descuento_linea =
+                Number(detalleServicios[linea.index].descuento_linea || 0) + montoLinea;
+        });
+    }
+
+    function normalizarAlcanceDescuento(aplicaA) {
+        const alcance = String(aplicaA || 'TOTAL').toUpperCase();
+        return ['TOTAL', 'PRODUCTO', 'SERVICIO'].includes(alcance) ? alcance : 'TOTAL';
+    }
+
+    function etiquetaAlcanceDescuento(aplicaA) {
+        const alcance = normalizarAlcanceDescuento(aplicaA);
+        if (alcance === 'PRODUCTO') return 'Producto';
+        if (alcance === 'SERVICIO') return 'Servicio';
+        return 'Total';
+    }
+
+    function escaparAtributo(texto) {
+        return String(texto || '')
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
 
     function cargarDescuentosCliente(idCliente) {
 
@@ -846,6 +944,7 @@
                 } else {
 
                     descuentos.forEach(d => {
+                        const aplicaA = normalizarAlcanceDescuento(d.aplica_a);
 
                         // 🔹 verificar si ya estaba aplicado (por localStorage)
                         let checked = descuentosAplicados.some(
@@ -857,19 +956,19 @@
                         <input class="form-check-input"
                                type="checkbox"
                                ${checked ? 'checked' : ''}
-                               onchange="toggleDescuento(
-                                   this,
-                                   ${d.id_descuento},
-                                   '${d.nombre}',
-                                   '${d.tipo}',
-                                   ${d.valor}
-                               )">
+                               data-id="${Number(d.id_descuento)}"
+                               data-nombre="${escaparAtributo(d.nombre)}"
+                               data-tipo="${escaparAtributo(d.tipo)}"
+                               data-valor="${Number(d.valor)}"
+                               data-aplica-a="${aplicaA}"
+                               onchange="toggleDescuento(this)">
 
                         <label class="form-check-label">
                             ${d.nombre}
                             (${d.tipo === 'PORCENTAJE'
                                 ? d.valor + '%'
                                 : 'Gs. ' + d.valor.toLocaleString()})
+                            <small class="text-muted">- ${etiquetaAlcanceDescuento(aplicaA)}</small>
                         </label>
                     </div>`;
                     });
@@ -883,7 +982,12 @@
             .catch(err => console.error('Error cargando descuentos:', err));
     }
 
-    function toggleDescuento(checkbox, id, nombre, tipo, valor) {
+    function toggleDescuento(checkbox) {
+        const id = Number(checkbox.dataset.id || 0);
+        const nombre = checkbox.dataset.nombre || '';
+        const tipo = checkbox.dataset.tipo || '';
+        const valor = Number(checkbox.dataset.valor || 0);
+        const aplicaA = normalizarAlcanceDescuento(checkbox.dataset.aplicaA);
 
         if (checkbox.checked) {
 
@@ -898,6 +1002,8 @@
                     nombre: nombre,
                     tipo: tipo,
                     valor: valor,
+                    aplica_a: aplicaA,
+                    base_aplicada: 0,
                     monto: 0
                 });
             }

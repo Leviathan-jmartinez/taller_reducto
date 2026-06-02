@@ -236,11 +236,24 @@ class diagnosticoControlador extends diagnosticoModelo
             ]);
         }
 
-        if (empty($_POST['id_sucursal'])) {
+        if (empty($_SESSION['nick_sucursal'])) {
             return json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Error",
-                "Texto" => "No se pudo obtener la sucursal",
+                "Texto" => "No se pudo obtener la sucursal del usuario",
+                "Tipo" => "error"
+            ]);
+        }
+
+        $idRecepcion = (int) mainModel::limpiar_string($_POST['idrecepcion']);
+        $idSucursal = (int) $_SESSION['nick_sucursal'];
+        $recepcionSeleccionada = diagnosticoModelo::obtener_recepcion_detalle_modelo($idRecepcion, $idSucursal);
+
+        if (!$recepcionSeleccionada) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Recepción inválida",
+                "Texto" => "La recepción seleccionada no existe o no pertenece a la sucursal del usuario",
                 "Tipo" => "error"
             ]);
         }
@@ -256,10 +269,10 @@ class diagnosticoControlador extends diagnosticoModelo
         /* ================= DETALLES ================= */
 
         $datos = [
-            "idrecepcion" => $_POST['idrecepcion'],
+            "idrecepcion" => $idRecepcion,
             "id_usuario"  => $_SESSION['id_str'],
             "id_equipo"   => $_POST['id_equipo'],
-            "id_sucursal" => $_POST['id_sucursal'],
+            "id_sucursal" => $idSucursal,
             "observacion" => $_POST['observacion'],
             "estado"      => 1, // En proceso
             "es_garantia" => $_POST['es_garantia'] ?? 0,
@@ -287,10 +300,7 @@ class diagnosticoControlador extends diagnosticoModelo
                 (int)$datos['es_garantia'] === 1 &&
                 (int)$datos['requiere_cobro'] === 0
             ) {
-                $recepcion = diagnosticoModelo::obtener_recepcion_detalle_modelo(
-                    (int)$datos['idrecepcion'],
-                    (int)$datos['id_sucursal']
-                );
+                $recepcion = $recepcionSeleccionada;
 
                 if (
                     $recepcion &&
@@ -482,6 +492,7 @@ class diagnosticoControlador extends diagnosticoModelo
             <th>Servicio</th>
             <th>Origen</th>
             <th>Equipo</th>
+            <th>Usuario</th>
             <th>' . mainModel::link_orden_tabla($url, 'estado', 'Estado', $orden, $direccion, 'diagnostico_orden', 'diagnostico_direccion') . '</th>
             <th>Acciones</th>
         </tr></thead><tbody>';
@@ -517,6 +528,7 @@ class diagnosticoControlador extends diagnosticoModelo
             <td>' . htmlspecialchars($rows['tipo_servicio'] ?: '-', ENT_QUOTES, 'UTF-8') . '</td>
             <td>' . $origenBadge . '</td>
             <td>' . htmlspecialchars($rows['equipo'] ?: '-', ENT_QUOTES, 'UTF-8') . '</td>
+            <td>' . htmlspecialchars(trim(($rows['usu_nombre'] ?? '') . ' ' . ($rows['usu_apellido'] ?? '')) ?: '-', ENT_QUOTES, 'UTF-8') . '</td>
             <td><span class="badge bg-' . $estado[1] . '">' . $estado[0] . '</span></td>
             <td>';
 

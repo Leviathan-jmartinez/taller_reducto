@@ -239,5 +239,6 @@ $botonClase = $esEditar ? 'btn-primary' : 'btn-info btn-raised';
 
 <script>
     window.PROMOCION_FORM_MODO = "<?= $esEditar ? 'editar' : 'crear' ?>";
+    window.PROMOCION_FORM_ID = "<?= $esEditar ? htmlspecialchars($idPromocion, ENT_QUOTES, 'UTF-8') : 'nuevo' ?>";
 </script>
 <?php include_once "./vistas/inc/promocion.php"; ?>
