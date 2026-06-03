@@ -297,7 +297,7 @@
 
             html += `
         <tr>
-            <td>${r.descripcion}</td>
+            <td>${r.descripcion || r.nombre || '-'}</td>
 
             <td width="120">
                 <input type="number"
@@ -330,6 +330,12 @@
 
         if (isNaN(valor) || valor <= 0) {
             valor = 1;
+        }
+
+        const stockDisponible = Number(repuestos[index].stock || 0);
+        if (stockDisponible > 0 && valor > stockDisponible) {
+            alert("Stock insuficiente. Disponible: " + stockDisponible);
+            valor = stockDisponible;
         }
 
         repuestos[index].cantidad = valor;
@@ -369,10 +375,12 @@
                             `Stock: ${a.stock}` :
                             "SIN STOCK";
 
+                        const deshabilitado = Number(a.stock || 0) <= 0;
+
                         html += `
                 <button type="button" 
-                    class="list-group-item list-group-item-action d-flex justify-content-between"
-                    onclick='seleccionarArticulo(${JSON.stringify(a)})'>
+                    class="list-group-item list-group-item-action d-flex justify-content-between ${deshabilitado ? 'disabled' : ''}"
+                    ${deshabilitado ? 'disabled' : `onclick='seleccionarArticulo(${JSON.stringify(a)})'`}>
 
                     <span>${a.desc_articulo}</span>
                     <span class="badge bg-${color}">${textoStock}</span>
@@ -390,6 +398,11 @@
     let articuloSeleccionado = null;
 
     function seleccionarArticulo(a) {
+
+        if (Number(a.stock || 0) <= 0) {
+            alert("El repuesto seleccionado no tiene stock disponible");
+            return;
+        }
 
         articuloSeleccionado = a;
 
@@ -412,15 +425,31 @@
             return;
         }
 
+        const stockDisponible = Number(articuloSeleccionado.stock || 0);
+        if (stockDisponible <= 0) {
+            alert("El repuesto seleccionado no tiene stock disponible");
+            return;
+        }
+
+        if (cantidad > stockDisponible) {
+            alert("Stock insuficiente. Disponible: " + stockDisponible);
+            return;
+        }
+
         let existente = repuestos.find(r => r.id_articulo == articuloSeleccionado.id_articulo);
 
         if (existente) {
+            if ((Number(existente.cantidad || 0) + cantidad) > stockDisponible) {
+                alert("Stock insuficiente. Disponible: " + stockDisponible);
+                return;
+            }
             existente.cantidad += cantidad;
         } else {
             repuestos.push({
                 id_articulo: articuloSeleccionado.id_articulo,
-                nombre: articuloSeleccionado.desc_articulo,
-                cantidad: cantidad
+                descripcion: articuloSeleccionado.desc_articulo,
+                cantidad: cantidad,
+                stock: stockDisponible
             });
         }
 
@@ -510,7 +539,7 @@
 
         trabajos.push({
             id_articulo: servicioSeleccionado.id_articulo,
-            nombre: servicioSeleccionado.desc_articulo
+            descripcion: servicioSeleccionado.desc_articulo
         });
 
         renderTrabajos();
@@ -532,7 +561,7 @@
 
             html += `
         <tr>
-            <td>${t.descripcion}</td>
+            <td>${t.descripcion || t.nombre || '-'}</td>
             <td class="text-center">
                 <button type="button"
                     class="btn btn-danger btn-sm"

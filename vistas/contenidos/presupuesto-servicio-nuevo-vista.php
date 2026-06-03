@@ -204,6 +204,8 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
 
             <div id="resultado_servicios"></div>
 
+            <div id="aviso_detalle_preliminar" class="mt-3" style="display:none;"></div>
+
             <div class="table-responsive mt-3">
                 <table class="table table-dark table-sm" id="tabla_detalle">
                     <thead class="text-center">

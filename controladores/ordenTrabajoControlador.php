@@ -303,6 +303,7 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
                 c.nombre_cliente,
                 c.apellido_cliente,
                 v.placa,
+                m.mar_descri AS marca,
                 ma.mod_descri AS modelo
             FROM presupuesto_servicio ps
             INNER JOIN clientes c 
@@ -311,6 +312,8 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
                 ON v.id_vehiculo = ps.id_vehiculo
             LEFT JOIN modelo_auto ma 
                 ON ma.id_modeloauto = v.id_modeloauto
+            LEFT JOIN marcas m
+                ON m.id_marcas = ma.id_marcas
             WHERE ps.estado = '2'
             AND ps.id_sucursal = :sucursal
             AND NOT EXISTS (
@@ -324,6 +327,7 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
                 OR c.apellido_cliente LIKE :busqueda
                 OR c.doc_number LIKE :busqueda
                 OR v.placa LIKE :busqueda
+                OR m.mar_descri LIKE :busqueda
                 OR ma.mod_descri LIKE :busqueda
             )
             ORDER BY ps.fecha,ps.idpresupuesto_servicio DESC
@@ -360,7 +364,7 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
                 $estado = '<span class="badge badge-success">Vigente</span>';
             }
             $cliente = trim(($row['nombre_cliente'] ?? '') . ' ' . ($row['apellido_cliente'] ?? ''));
-            $vehiculo = trim(($row['modelo'] ?? '') . ' ' . ($row['placa'] ?? ''));
+            $vehiculo = trim(($row['marca'] ?? '') . ' ' . ($row['modelo'] ?? '') . ' ' . ($row['placa'] ?? ''));
             $fecha = !empty($row['fecha']) ? date("d/m/Y", strtotime($row['fecha'])) : '';
             $fecha_venc = !empty($row['fecha_venc']) ? date("d/m/Y", strtotime($row['fecha_venc'])) : '';
             $args = htmlspecialchars(json_encode([

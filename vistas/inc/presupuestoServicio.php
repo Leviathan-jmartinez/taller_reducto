@@ -3,6 +3,12 @@
     let detalleServicios = [];
     let timeoutGuardar = null;
     let descuentosAplicados = [];
+    let detalleDiagnosticoOriginal = [];
+    let detalleDesdePreliminarId = '';
+    let estadoPorModo = {
+        DIAGNOSTICO: null,
+        PRELIMINAR: null
+    };
 
     function modoPresupuesto() {
         return document.getElementById('origen_presupuesto')?.value || 'DIAGNOSTICO';
@@ -41,18 +47,123 @@
         }
     }
 
+    function clonarDetalle(items) {
+        return JSON.parse(JSON.stringify(Array.isArray(items) ? items : []));
+    }
+
+    function mostrarAvisoDetallePreliminar() {
+        const contenedor = document.getElementById('aviso_detalle_preliminar');
+        if (!contenedor) return;
+
+        if (!detalleDesdePreliminarId) {
+            contenedor.style.display = 'none';
+            contenedor.innerHTML = '';
+            return;
+        }
+
+        const puedeRestaurar = Array.isArray(detalleDiagnosticoOriginal) && detalleDiagnosticoOriginal.length > 0;
+        contenedor.style.display = 'block';
+        contenedor.innerHTML = `
+            <div class="alert alert-warning d-flex justify-content-between align-items-center mb-0">
+                <span>
+                    Detalle cargado desde presupuesto preliminar #${detalleDesdePreliminarId}.
+                    ${puedeRestaurar ? 'Puede restaurar el detalle generado desde el diagnóstico.' : ''}
+                </span>
+                ${puedeRestaurar ? `
+                    <button type="button" class="btn btn-sm btn-outline-dark" onclick="restaurarDetalleDiagnostico()">
+                        Restaurar diagnóstico
+                    </button>` : ''}
+            </div>`;
+    }
+
+    function snapshotModoActual() {
+        return {
+            convertido_desde: document.getElementById('convertido_desde')?.value || '',
+            detalle: clonarDetalle(detalleServicios),
+            descuentos: clonarDetalle(descuentosAplicados),
+            detalle_diagnostico_original: clonarDetalle(detalleDiagnosticoOriginal),
+            detalle_desde_preliminar_id: detalleDesdePreliminarId,
+            diagnostico: {
+                id_diagnostico: document.getElementById('id_diagnostico')?.value || '',
+                diagnostico_info: document.getElementById('diagnostico_info')?.value || '',
+                cliente: document.getElementById('cliente')?.value || '',
+                vehiculo: document.getElementById('vehiculo')?.value || '',
+                id_cliente: modoPresupuesto() === 'DIAGNOSTICO' ? (document.getElementById('id_cliente')?.value || '') : '',
+                id_vehiculo: modoPresupuesto() === 'DIAGNOSTICO' ? (document.getElementById('id_vehiculo')?.value || '') : '',
+                kilometraje: document.getElementById('kilometraje')?.value || '',
+                observacion: document.getElementById('observacion')?.value || '',
+                lista_html: document.getElementById('lista_diagnostico')?.innerHTML || ''
+            },
+            preliminar: {
+                id_cliente: modoPresupuesto() === 'PRELIMINAR' ? (document.getElementById('id_cliente')?.value || '') : '',
+                id_vehiculo: modoPresupuesto() === 'PRELIMINAR' ? (document.getElementById('id_vehiculo')?.value || '') : '',
+                cliente: document.getElementById('cliente_preliminar')?.value || '',
+                vehiculo: document.getElementById('vehiculo_preliminar')?.value || ''
+            }
+        };
+    }
+
+    function aplicarSnapshotModo(modo, estado) {
+        if (!estado) return false;
+
+        document.getElementById('convertido_desde').value = estado.convertido_desde || '';
+        detalleServicios = clonarDetalle(estado.detalle);
+        descuentosAplicados = clonarDetalle(estado.descuentos);
+        detalleDiagnosticoOriginal = clonarDetalle(estado.detalle_diagnostico_original);
+        detalleDesdePreliminarId = estado.detalle_desde_preliminar_id || estado.convertido_desde || '';
+
+        if (modo === 'DIAGNOSTICO') {
+            const diagnostico = estado.diagnostico || {};
+            limpiarDatosPreliminar();
+            document.getElementById('id_diagnostico').value = diagnostico.id_diagnostico || '';
+            document.getElementById('diagnostico_info').value = diagnostico.diagnostico_info || '';
+            document.getElementById('id_cliente').value = diagnostico.id_cliente || '';
+            document.getElementById('id_vehiculo').value = diagnostico.id_vehiculo || '';
+            document.getElementById('cliente').value = diagnostico.cliente || '';
+            document.getElementById('vehiculo').value = diagnostico.vehiculo || '';
+            document.getElementById('kilometraje').value = diagnostico.kilometraje || '';
+            document.getElementById('observacion').value = diagnostico.observacion || '';
+            if (diagnostico.lista_html) {
+                document.getElementById('lista_diagnostico').innerHTML = diagnostico.lista_html;
+            }
+        } else {
+            const preliminar = estado.preliminar || {};
+            limpiarDatosDiagnostico();
+            document.getElementById('id_cliente').value = preliminar.id_cliente || '';
+            document.getElementById('id_vehiculo').value = preliminar.id_vehiculo || '';
+            document.getElementById('cliente_preliminar').value = preliminar.cliente || '';
+            document.getElementById('vehiculo_preliminar').value = preliminar.vehiculo || '';
+        }
+
+        renderDetalle();
+        mostrarAvisoDetallePreliminar();
+        actualizarBloqueoPresupuesto();
+        return true;
+    }
+
     function cambiarModoPresupuesto(modo) {
+        const modoAnterior = modoPresupuesto();
+        estadoPorModo[modoAnterior] = snapshotModoActual();
+
         document.getElementById('origen_presupuesto').value = modo;
         document.getElementById('bloque_diagnostico').style.display = modo === 'DIAGNOSTICO' ? 'block' : 'none';
         document.getElementById('bloque_preliminar').style.display = modo === 'PRELIMINAR' ? 'block' : 'none';
 
+        if (aplicarSnapshotModo(modo, estadoPorModo[modo])) {
+            guardarEstadoPresupuesto();
+            return;
+        }
+
         detalleServicios = [];
         descuentosAplicados = [];
+        detalleDiagnosticoOriginal = [];
+        detalleDesdePreliminarId = '';
         document.getElementById('convertido_desde').value = '';
         document.getElementById('resultado_servicios').innerHTML = '';
         const preliminares = document.getElementById('presupuestos_preliminares');
         if (preliminares) preliminares.innerHTML = '';
         renderDetalle();
+        mostrarAvisoDetallePreliminar();
 
         if (modo === 'DIAGNOSTICO') {
             limpiarDatosPreliminar();
@@ -184,6 +295,20 @@
     }
 
     function usarPresupuestoPreliminar(idPresupuesto) {
+        if (modoPresupuesto() === 'DIAGNOSTICO' && detalleServicios.length > 0) {
+            const confirma = confirm(
+                'Esto reemplazara el detalle generado desde el diagnostico por el detalle del presupuesto preliminar seleccionado. Desea continuar?'
+            );
+
+            if (!confirma) {
+                return;
+            }
+
+            if (!Array.isArray(detalleDiagnosticoOriginal) || detalleDiagnosticoOriginal.length === 0) {
+                detalleDiagnosticoOriginal = clonarDetalle(detalleServicios);
+            }
+        }
+
         fetch(SERVERURL + 'ajax/presupuestoServicioAjax.php', {
                 method: 'POST',
                 body: new URLSearchParams({
@@ -216,7 +341,9 @@
                 });
 
                 document.getElementById('convertido_desde').value = data.id_presupuesto;
+                detalleDesdePreliminarId = data.id_presupuesto || idPresupuesto;
                 renderDetalle();
+                mostrarAvisoDetallePreliminar();
                 guardarEstadoPresupuesto();
                 alert('Presupuesto preliminar cargado para revision');
             });
@@ -362,10 +489,13 @@
 
     function cargarDetallePresupuestoDiagnostico(items) {
         detalleServicios = [];
+        detalleDiagnosticoOriginal = [];
+        detalleDesdePreliminarId = '';
         document.getElementById('convertido_desde').value = '';
 
         if (!Array.isArray(items) || items.length === 0) {
             renderDetalle();
+            mostrarAvisoDetallePreliminar();
             guardarEstadoPresupuesto();
             return;
         }
@@ -391,18 +521,37 @@
         Promise.all(base.map(aplicarPromoAItem))
             .then(detalle => {
                 detalleServicios = detalle;
+                detalleDiagnosticoOriginal = clonarDetalle(detalle);
                 renderDetalle();
+                mostrarAvisoDetallePreliminar();
                 guardarEstadoPresupuesto();
             })
             .catch(err => {
                 console.error('Error cargando detalle del diagnostico:', err);
                 detalleServicios = base;
+                detalleDiagnosticoOriginal = clonarDetalle(base);
                 renderDetalle();
+                mostrarAvisoDetallePreliminar();
                 guardarEstadoPresupuesto();
             });
     }
 
+    function restaurarDetalleDiagnostico() {
+        if (!Array.isArray(detalleDiagnosticoOriginal) || detalleDiagnosticoOriginal.length === 0) {
+            alert('No hay detalle de diagnostico para restaurar');
+            return;
+        }
+
+        detalleServicios = clonarDetalle(detalleDiagnosticoOriginal);
+        detalleDesdePreliminarId = '';
+        document.getElementById('convertido_desde').value = '';
+        renderDetalle();
+        mostrarAvisoDetallePreliminar();
+        guardarEstadoPresupuesto();
+    }
+
     function guardarEstadoPresupuesto() {
+        estadoPorModo[modoPresupuesto()] = snapshotModoActual();
 
         let estado = {
             origen: modoPresupuesto(),
@@ -423,6 +572,9 @@
                 vehiculo: document.getElementById('vehiculo_preliminar')?.value || ''
             },
             detalle: detalleServicios,
+            detalle_diagnostico_original: detalleDiagnosticoOriginal,
+            detalle_desde_preliminar_id: detalleDesdePreliminarId,
+            estado_por_modo: estadoPorModo,
             descuentos: descuentosAplicados
         };
 
@@ -441,6 +593,12 @@
         if (!data) return;
 
         let estado = JSON.parse(data);
+        if (estado.estado_por_modo) {
+            estadoPorModo = {
+                DIAGNOSTICO: estado.estado_por_modo.DIAGNOSTICO || null,
+                PRELIMINAR: estado.estado_por_modo.PRELIMINAR || null
+            };
+        }
         const origen = estado.origen || 'DIAGNOSTICO';
         const radioModo = document.getElementById(origen === 'PRELIMINAR' ? 'modo_preliminar' : 'modo_diagnostico');
         if (radioModo) radioModo.checked = true;
@@ -448,6 +606,18 @@
         document.getElementById('convertido_desde').value = estado.convertido_desde || '';
         document.getElementById('bloque_diagnostico').style.display = origen === 'DIAGNOSTICO' ? 'block' : 'none';
         document.getElementById('bloque_preliminar').style.display = origen === 'PRELIMINAR' ? 'block' : 'none';
+
+        if (estadoPorModo[origen] && aplicarSnapshotModo(origen, estadoPorModo[origen])) {
+            const clienteSnapshot = origen === 'PRELIMINAR' ?
+                (estadoPorModo[origen].preliminar && estadoPorModo[origen].preliminar.id_cliente) :
+                (estadoPorModo[origen].diagnostico && estadoPorModo[origen].diagnostico.id_cliente);
+
+            if (clienteSnapshot) {
+                cargarDescuentosCliente(clienteSnapshot);
+            }
+
+            return;
+        }
 
         // 🔹 
         if (estado.diagnostico) {
@@ -477,6 +647,11 @@
                 renderDetalle();
             }, 100);
         }
+        if (Array.isArray(estado.detalle_diagnostico_original)) {
+            detalleDiagnosticoOriginal = estado.detalle_diagnostico_original;
+        }
+        detalleDesdePreliminarId = estado.detalle_desde_preliminar_id || estado.convertido_desde || '';
+        mostrarAvisoDetallePreliminar();
         if (Array.isArray(estado.descuentos)) {
             descuentosAplicados = estado.descuentos;
         }
@@ -494,6 +669,8 @@
 
         detalleServicios = [];
         descuentosAplicados = [];
+        detalleDiagnosticoOriginal = [];
+        detalleDesdePreliminarId = '';
 
         document.getElementById('detalle_json').value = '';
         document.getElementById('descuentos_json').value = '';
@@ -524,6 +701,7 @@
 
         // TABLA SERVICIOS
         renderDetalle();
+        mostrarAvisoDetallePreliminar();
 
         // DESCUENTOS
         document.getElementById('descuentos_cliente').innerHTML =
@@ -796,7 +974,11 @@
         let item = detalleServicios[index];
 
         let cantidad = parseInt(input.value);
-        if (isNaN(cantidad) || cantidad <= 0) cantidad = 1;
+        if (isNaN(cantidad) || cantidad <= 0) {
+            alert('La cantidad debe ser mayor a cero');
+            cantidad = 1;
+            input.value = cantidad;
+        }
 
 
         if (item.tipo === 'producto' && cantidad > item.stock) {
@@ -1018,6 +1200,33 @@
         guardarEstadoPresupuesto();
     }
 
+    function validarDetallePresupuesto() {
+        if (!Array.isArray(detalleServicios) || detalleServicios.length === 0) {
+            alert('Debe agregar al menos un servicio');
+            return false;
+        }
+
+        for (let i = 0; i < detalleServicios.length; i++) {
+            const item = detalleServicios[i];
+            const cantidad = Number(item.cantidad || 0);
+            const precio = Number(item.precio_base || 0);
+
+            if (!Number.isFinite(cantidad) || cantidad <= 0) {
+                alert('La cantidad del detalle debe ser mayor a cero');
+                renderDetalle();
+                return false;
+            }
+
+            if (!Number.isFinite(precio) || precio < 0) {
+                alert('El precio del detalle no puede ser negativo');
+                renderDetalle();
+                return false;
+            }
+        }
+
+        return true;
+    }
+
 
     document.querySelector('.FormularioAjax')
         .addEventListener('submit', prepararEnvioPresupuesto, true);
@@ -1030,6 +1239,14 @@
                 e.stopImmediatePropagation();
             }
             alert('Debe completar el origen del presupuesto antes de guardar');
+            return false;
+        }
+
+        if (!validarDetallePresupuesto()) {
+            if (e) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+            }
             return false;
         }
 

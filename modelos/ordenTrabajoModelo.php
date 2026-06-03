@@ -63,6 +63,7 @@ class ordenTrabajoModelo extends mainModel
 
             /* ================= VEHICULO ================= */
             MAX(v.placa) AS placa,
+            MAX(m.mar_descri) AS marca,
             MAX(ma.mod_descri) AS modelo,
 
             /* ================= KM ================= */
@@ -81,10 +82,7 @@ class ordenTrabajoModelo extends mainModel
             MAX(dR.diagnostico_general) AS diagnostico_general,
             MAX(dR.es_garantia) AS es_garantia,
             MAX(dR.es_reclamo_valido) AS es_reclamo_valido,
-            MAX(dR.requiere_cobro) AS requiere_cobro,
-
-            /* ================= EQUIPO ================= */
-            GROUP_CONCAT(CONCAT(e.nombre,' ',e.apellido) SEPARATOR ', ') AS miembros
+            MAX(dR.requiere_cobro) AS requiere_cobro
 
         FROM orden_trabajo ot
 
@@ -107,6 +105,9 @@ class ordenTrabajoModelo extends mainModel
         LEFT JOIN modelo_auto ma 
             ON ma.id_modeloauto = v.id_modeloauto
 
+        LEFT JOIN marcas m
+            ON m.id_marcas = ma.id_marcas
+
         /* ===== FLUJO RECLAMO (CORRECTO) ===== */
         LEFT JOIN reclamo_servicio rs 
             ON rs.idreclamo_servicio = ot.idreclamo_servicio
@@ -123,16 +124,6 @@ class ordenTrabajoModelo extends mainModel
                 WHERE d2.idrecepcion = rR.idrecepcion
                   AND d2.estado != 0
             )
-
-        /* ===== EQUIPO ===== */
-        LEFT JOIN equipo_trabajo et 
-            ON et.id_equipo = ot.idtrabajos
-
-        LEFT JOIN equipo_empleado ee 
-            ON ee.id_equipo = et.id_equipo
-
-        LEFT JOIN empleados e 
-            ON e.idempleados = ee.idempleados
 
         WHERE ot.idorden_trabajo = :id
         GROUP BY ot.idorden_trabajo
@@ -789,6 +780,90 @@ class ordenTrabajoModelo extends mainModel
                 return 'Solo se puede completar una OT pendiente por reclamo';
             }
 
+            $qEquipoTecnico = $pdo->prepare("
+                SELECT COUNT(*)
+                FROM equipo_trabajo et
+                INNER JOIN equipo_empleado ee ON ee.id_equipo = et.id_equipo
+                INNER JOIN empleados e ON e.idempleados = ee.idempleados
+                WHERE et.id_equipo = ?
+                  AND et.id_sucursal = ?
+                  AND et.estado = 1
+                  AND ee.idempleados = ?
+                  AND ee.estado = 1
+                  AND e.estado = 1
+            ");
+            $qEquipoTecnico->execute([
+                $d['equipo'],
+                $_SESSION['nick_sucursal'],
+                $d['tecnico']
+            ]);
+
+            if ((int)$qEquipoTecnico->fetchColumn() === 0) {
+                $pdo->rollBack();
+                return 'Equipo o tecnico invalido para la sucursal';
+            }
+
+            $qArticulo = $pdo->prepare("
+                SELECT id_articulo, desc_articulo, tipo
+                FROM articulos
+                WHERE id_articulo = ?
+                  AND estado = 1
+                LIMIT 1
+            ");
+
+            $trabajosValidados = [];
+            $trabajosUsados = [];
+            foreach (($d['trabajos'] ?? []) as $t) {
+                $idArticulo = (int)($t['id_articulo'] ?? 0);
+                if ($idArticulo <= 0) {
+                    $pdo->rollBack();
+                    return 'Detalle de trabajos invalido';
+                }
+
+                if (isset($trabajosUsados[$idArticulo])) {
+                    $pdo->rollBack();
+                    return 'No se permiten trabajos duplicados';
+                }
+
+                $qArticulo->execute([$idArticulo]);
+                $articulo = $qArticulo->fetch(PDO::FETCH_ASSOC);
+                if (!$articulo || strtolower((string)$articulo['tipo']) !== 'servicio') {
+                    $pdo->rollBack();
+                    return 'Uno de los trabajos no es un servicio activo';
+                }
+
+                $trabajosUsados[$idArticulo] = true;
+                $trabajosValidados[] = ['id_articulo' => $idArticulo];
+            }
+
+            $repuestosAgrupados = [];
+            foreach (($d['repuestos'] ?? []) as $r) {
+                $idArticulo = (int)($r['id_articulo'] ?? 0);
+                $cantidad = (float)($r['cantidad'] ?? 0);
+                if ($idArticulo <= 0 || $cantidad <= 0) {
+                    $pdo->rollBack();
+                    return 'Detalle de repuestos invalido';
+                }
+
+                $qArticulo->execute([$idArticulo]);
+                $articulo = $qArticulo->fetch(PDO::FETCH_ASSOC);
+                if (!$articulo || strtolower((string)$articulo['tipo']) !== 'producto') {
+                    $pdo->rollBack();
+                    return 'Uno de los repuestos no es un producto activo';
+                }
+
+                if (!isset($repuestosAgrupados[$idArticulo])) {
+                    $repuestosAgrupados[$idArticulo] = [
+                        'id_articulo' => $idArticulo,
+                        'cantidad' => 0
+                    ];
+                }
+                $repuestosAgrupados[$idArticulo]['cantidad'] += $cantidad;
+            }
+
+            $d['trabajos'] = $trabajosValidados;
+            $d['repuestos'] = array_values($repuestosAgrupados);
+
             /* BORRAR DETALLE */
             $pdo->prepare("
             DELETE FROM orden_trabajo_detalle 
@@ -815,7 +890,7 @@ class ordenTrabajoModelo extends mainModel
                     $qStock->execute([$r['id_articulo'], $_SESSION['nick_sucursal']]);
                     $stock = $qStock->fetchColumn();
 
-                    if ($stock < $r['cantidad']) {
+                    if ($stock === false || (float)$stock < (float)$r['cantidad']) {
                         throw new Exception("Stock insuficiente para artículo ID " . $r['id_articulo']);
                     }
 

@@ -398,8 +398,14 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
             ]);
         }
 
-        $detalle = json_decode($_POST['detalle_json'], true);
-        $descuentos = json_decode($_POST['descuentos_json'], true);
+        $detalle = json_decode($_POST['detalle_json'] ?? '[]', true);
+        $descuentos = json_decode($_POST['descuentos_json'] ?? '[]', true);
+        if (!is_array($detalle)) {
+            $detalle = [];
+        }
+        if (!is_array($descuentos)) {
+            $descuentos = [];
+        }
         $origen = strtoupper(trim($_POST['origen_presupuesto'] ?? 'DIAGNOSTICO'));
         $origen = ($origen === 'PRELIMINAR') ? 'PRELIMINAR' : 'DIAGNOSTICO';
         $idDiagnostico = (int)($_POST['id_diagnostico'] ?? 0);
@@ -470,6 +476,29 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
                 'Texto' => 'Debe agregar al menos un servicio',
                 'Tipo' => 'error'
             ]);
+        }
+
+        foreach ($detalle as $item) {
+            $cantidad = (float)($item['cantidad'] ?? 0);
+            $precio = (float)($item['precio_base'] ?? 0);
+
+            if ($cantidad <= 0) {
+                return json_encode([
+                    'Alerta' => 'simple',
+                    'Titulo' => 'Detalle invalido',
+                    'Texto' => 'La cantidad del detalle debe ser mayor a cero',
+                    'Tipo' => 'error'
+                ]);
+            }
+
+            if ($precio < 0) {
+                return json_encode([
+                    'Alerta' => 'simple',
+                    'Titulo' => 'Detalle invalido',
+                    'Texto' => 'El precio del detalle no puede ser negativo',
+                    'Tipo' => 'error'
+                ]);
+            }
         }
 
         $datos = [
@@ -630,7 +659,7 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
 
                     $tabla .= '<td><div style="display:flex; gap:6px; justify-content:center;">';
 
-                    if ($puedeAprobar && $rows['estadoPre'] == 1) {
+                    if ($puedeAprobar && $rows['estadoPre'] == 1 && ($rows['origen'] ?? 'DIAGNOSTICO') !== 'PRELIMINAR') {
                         $tabla .= '
                     <form class="FormularioAjax d-inline"
                         action="' . SERVERURL . 'ajax/presupuestoServicioAjax.php"

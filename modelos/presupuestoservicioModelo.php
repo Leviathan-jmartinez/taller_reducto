@@ -696,7 +696,6 @@ class presupuestoservicioModelo extends mainModel
 
         $baseSQL = "
         FROM presupuesto_servicio ps
-        LEFT JOIN diagnostico_servicio d ON d.id_diagnostico = ps.id_diagnostico
         LEFT JOIN clientes c ON c.id_cliente = ps.id_cliente
         LEFT JOIN vehiculos v ON v.id_vehiculo = ps.id_vehiculo
         LEFT JOIN modelo_auto ma ON ma.id_modeloauto = v.id_modeloauto 
@@ -740,7 +739,7 @@ class presupuestoservicioModelo extends mainModel
 
             // 🔹 obtener datos
             $sql = $pdo->prepare("
-            SELECT estado, id_sucursal, id_diagnostico
+            SELECT estado, id_sucursal, id_diagnostico, convertido_desde
             FROM presupuesto_servicio
             WHERE idpresupuesto_servicio = :id
             ");
@@ -773,15 +772,29 @@ class presupuestoservicioModelo extends mainModel
             ");
             $sql->execute([':id' => $id]);
 
-            // 🔹 actualizar diagnóstico
-            $sql = $pdo->prepare("
-            UPDATE diagnostico_servicio
-            SET estado = 1
-            WHERE id_diagnostico = :id_diag
-            ");
-            $sql->execute([
-                ':id_diag' => $pres['id_diagnostico']
-            ]);
+            if (!empty($pres['id_diagnostico'])) {
+                $sql = $pdo->prepare("
+                UPDATE diagnostico_servicio
+                SET estado = 1
+                WHERE id_diagnostico = :id_diag
+                ");
+                $sql->execute([
+                    ':id_diag' => $pres['id_diagnostico']
+                ]);
+            }
+
+            if (!empty($pres['convertido_desde'])) {
+                $sql = $pdo->prepare("
+                UPDATE presupuesto_servicio
+                SET estado = 1
+                WHERE idpresupuesto_servicio = :id_preliminar
+                  AND origen = 'PRELIMINAR'
+                  AND estado = 5
+                ");
+                $sql->execute([
+                    ':id_preliminar' => $pres['convertido_desde']
+                ]);
+            }
 
             $pdo->commit();
 
@@ -807,6 +820,7 @@ class presupuestoservicioModelo extends mainModel
             SET estado = 2
             WHERE idpresupuesto_servicio = :id
               AND estado = 1
+              AND origen <> 'PRELIMINAR'
         ");
 
         return $sql->execute([
@@ -839,7 +853,6 @@ class presupuestoservicioModelo extends mainModel
                 u.usu_nombre,
                 u.usu_apellido
             FROM presupuesto_servicio ps
-            LEFT JOIN diagnostico_servicio d ON d.id_diagnostico = ps.id_diagnostico
             INNER JOIN clientes c ON c.id_cliente = ps.id_cliente
             INNER JOIN vehiculos v ON v.id_vehiculo = ps.id_vehiculo
             INNER JOIN modelo_auto ma ON ma.id_modeloauto = v.id_modeloauto

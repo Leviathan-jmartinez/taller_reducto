@@ -64,7 +64,10 @@ $detalleDiagnostico = !empty($ot['id_diagnostico_reclamo'])
             </div>
             <div class="col-md-4">
                 <strong>Vehiculo:</strong><br>
-                <?php echo $ot['placa'] ?? '-'; ?>
+                <?php
+                $vehiculo = trim(($ot['marca'] ?? '') . ' ' . ($ot['modelo'] ?? '') . ' ' . ($ot['placa'] ?? ''));
+                echo $vehiculo !== '' ? $vehiculo : '-';
+                ?>
             </div>
             <div class="col-md-4">
                 <strong>Kilometraje:</strong><br>

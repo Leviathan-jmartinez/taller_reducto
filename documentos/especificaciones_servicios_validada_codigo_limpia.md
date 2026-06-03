@@ -535,7 +535,7 @@ Nuevo desde diagnóstico
 El usuario busca un diagnóstico por cliente, documento, placa, marca, modelo o número.
 El sistema busca diagnósticos activos disponibles para presupuesto; si el diagnóstico proviene de reclamo, excluye los que ya tienen una OT activa asociada al reclamo. Tablas consultadas: diagnostico_servicio, recepcion_servicio, clientes, vehiculos, modelo_auto, marcas, orden_trabajo.
 El usuario selecciona un diagnóstico.
-El sistema carga los datos del diagnóstico, cliente, vehículo, kilometraje, observación y sucursal, validando que siga disponible para presupuesto. Tablas consultadas: diagnostico_servicio, recepcion_servicio, orden_trabajo.
+El sistema carga en la vista los datos del diagnóstico, cliente, vehículo, kilometraje y observación, validando internamente que siga disponible para presupuesto y pertenezca a la sucursal del usuario. Tablas consultadas: diagnostico_servicio, recepcion_servicio, clientes, vehiculos, modelo_auto, marcas, orden_trabajo.
 El sistema consulta el detalle técnico del diagnóstico. Tablas consultadas para detalle técnico: diagnostico_detalle, articulos, stock.
 El sistema muestra el detalle técnico del diagnóstico con servicio, origen del repuesto, repuesto, cantidad, gravedad y problema.
 El sistema arma el detalle inicial del presupuesto a partir del diagnóstico seleccionado.
@@ -544,11 +544,13 @@ Para el detalle inicial, el sistema incluye los repuestos del diagnóstico únic
 Si un mismo servicio o repuesto aparece más de una vez en el diagnóstico, el sistema acumula la cantidad en el detalle presupuestable.
 El sistema toma el precio mostrado al usuario al momento de armar el presupuesto y consulta el stock disponible de los repuestos en la sucursal.
 El sistema carga automáticamente los ítems presupuestables generados desde el diagnóstico.
-El sistema evalúa promociones vigentes por cada artículo cargado desde el diagnóstico y conserva la promoción aplicada en el detalle del presupuesto. Tablas consultadas: promociones, promocion_producto.
-El sistema consulta descuentos disponibles para el cliente asociado al diagnóstico. Tablas consultadas: descuentos, descuento_cliente.
+Como parte de la carga en pantalla del diagnóstico, el sistema evalúa promociones vigentes por cada artículo presupuestable cargado desde el diagnóstico y conserva la promoción aplicada en el detalle del presupuesto. Tablas consultadas: promociones, promocion_producto.
+Como parte de la carga en pantalla del diagnóstico, el sistema consulta descuentos disponibles para el cliente asociado al diagnóstico. Tablas consultadas: descuentos, descuento_cliente.
 El sistema puede buscar presupuestos preliminares existentes, no vencidos y disponibles para el mismo cliente y vehículo. Tabla consultada: presupuesto_servicio.
 El usuario puede reutilizar un presupuesto preliminar existente para revisión y conversión.
-Si el usuario reutiliza un preliminar existente, el sistema valida que no esté vencido y carga su detalle conservando los precios aceptados en el preliminar. Tablas consultadas: presupuesto_servicio, presupuesto_detalleservicio, articulos, stock.
+Si el usuario reutiliza un preliminar existente, el sistema solicita confirmación porque el detalle presupuestable generado desde el diagnóstico será reemplazado por el detalle del preliminar.
+Si el usuario confirma, el sistema valida que el preliminar no esté vencido y carga su detalle conservando los precios aceptados. Tablas consultadas: presupuesto_servicio, presupuesto_detalleservicio, articulos, stock.
+El sistema muestra un aviso indicando que el detalle fue cargado desde un preliminar y permite restaurar el detalle original del diagnóstico antes de guardar.
 El usuario ingresa fecha de vencimiento.
 El usuario puede agregar servicios o repuestos adicionales al detalle.
 El sistema busca artículos o servicios activos. Tablas consultadas: articulos, stock, promociones, promocion_producto.
@@ -558,16 +560,6 @@ El sistema evalúa promociones vigentes sobre los artículos agregados manualmen
 El usuario puede aplicar un descuento permitido; si el alcance es total aplica sobre todo el presupuesto, si es producto aplica solo sobre artículos de tipo producto y si es servicio aplica solo sobre artículos de tipo servicio.
 El sistema calcula subtotal, promociones, descuentos y total final.
 
-Nuevo preliminar
-El usuario selecciona cliente y vehículo.
-El sistema valida que el vehículo pertenezca al cliente seleccionado. Tabla consultada: vehiculos.
-El sistema consulta descuentos disponibles para el cliente. Tablas consultadas: descuentos, descuento_cliente.
-El usuario ingresa fecha de vencimiento.
-El usuario agrega servicios o repuestos al detalle.
-El sistema busca artículos o servicios activos y muestra stock para productos. Tablas consultadas: articulos, stock.
-El sistema evalúa promociones vigentes sobre los artículos agregados y conserva la promoción aplicada. Tablas consultadas: promociones, promocion_producto.
-El sistema calcula los importes del presupuesto.
-
 Guardar
 El usuario presiona Guardar.
 El sistema emite mensaje de confirmación.
@@ -576,18 +568,15 @@ El sistema valida permisos para registrar presupuestos.
 El sistema valida fecha de vencimiento.
 El sistema valida que la fecha de vencimiento tenga formato válido y no sea anterior a la fecha actual.
 Si el presupuesto proviene de diagnóstico, el sistema valida que exista diagnóstico seleccionado.
-Si el presupuesto es preliminar, el sistema valida cliente y vehículo.
 Si el presupuesto proviene de diagnóstico, el sistema valida que el diagnóstico siga activo, pertenezca a la sucursal del usuario y obtiene cliente y vehículo desde la recepción asociada. Tablas consultadas: diagnostico_servicio, recepcion_servicio.
 Si el diagnóstico proviene de reclamo, el sistema valida que no exista una OT activa asociada al reclamo. Tabla consultada: orden_trabajo.
-Si el presupuesto es preliminar, el sistema valida que el cliente esté activo y que el vehículo esté activo y relacionado al cliente. Tablas consultadas: clientes, vehiculos.
-El sistema registra el presupuesto preliminar en la sucursal del usuario.
-Si se convierte un preliminar desde un diagnóstico, el sistema valida que el preliminar pertenezca al mismo cliente, vehículo y sucursal, que no esté vencido y que esté disponible para conversión. Tabla consultada: presupuesto_servicio.
+Si se utiliza un preliminar desde un diagnóstico, el sistema valida que el preliminar pertenezca al mismo cliente, vehículo y sucursal obtenidos desde el diagnóstico, que no esté vencido y que esté disponible para conversión. Tabla consultada: presupuesto_servicio.
 El sistema valida que exista al menos un detalle.
 El sistema valida importes y cantidades.
 El sistema valida que cada artículo del detalle exista y esté activo. Tabla consultada: articulos.
 El sistema valida stock disponible para productos cuando corresponda. Tabla consultada: stock.
-El sistema valida las promociones enviadas cuando fueron aplicadas y conserva los importes aceptados por el usuario. Tabla consultada: promociones.
-El sistema valida los descuentos enviados cuando fueron aplicados y verifica su alcance. Tabla consultada: descuentos.
+Si el detalle enviado incluye una promoción aplicada, el sistema verifica que el identificador de la promoción exista y recalcula el importe aplicado usando el tipo y valor enviados en pantalla. Tabla consultada: promociones.
+El sistema valida los descuentos enviados cuando fueron aplicados, verifica que existan, obtiene su alcance y recalcula el descuento sobre la base correspondiente: total, productos o servicios. Tabla consultada: descuentos.
 El sistema recalcula subtotal, promociones, descuentos y total final en el servidor usando precios, promociones y el alcance de cada descuento aceptado en pantalla.
 El sistema compara los totales calculados desde el detalle enviado con los totales enviados desde la pantalla.
 El sistema registra la cabecera. Tabla registrada: presupuesto_servicio.
@@ -601,16 +590,18 @@ El sistema emite mensaje de presupuesto guardado correctamente.
 Aprobar
 El usuario ingresa a Buscar Presupuestos.
 El sistema permite filtrar y ordenar presupuestos por los criterios disponibles en la búsqueda.
-El sistema consulta los presupuestos de la sucursal del usuario. Tablas consultadas para listar presupuestos: presupuesto_servicio, diagnostico_servicio, clientes, vehiculos, modelo_auto, usuarios.
+El sistema consulta los presupuestos de la sucursal del usuario. Tablas consultadas para listar presupuestos: presupuesto_servicio, clientes, vehiculos, modelo_auto, usuarios.
 El sistema muestra cliente, vehículo, origen, fecha, total, usuario registrador, estado y acciones.
-Si el presupuesto está pendiente y el usuario tiene permiso de aprobación, el sistema muestra la opción Aprobar.
+El sistema permite imprimir el presupuesto en PDF desde la búsqueda de presupuestos. Tablas consultadas para PDF: presupuesto_servicio, presupuesto_detalleservicio, presupuesto_promocion, presupuesto_descuento, diagnostico_servicio, clientes, vehiculos, modelo_auto, marcas, usuarios, articulos, promociones, descuentos.
+Si el presupuesto proviene de diagnóstico, está pendiente y el usuario tiene permiso de aprobación, el sistema muestra la opción Aprobar.
+Si el presupuesto es preliminar, el sistema no muestra la opción Aprobar.
 Si el presupuesto está pendiente o aprobado y el usuario tiene permiso de anulación, el sistema muestra la opción Anular.
 El usuario presiona Aprobar.
 El sistema emite mensaje de confirmación.
 El usuario confirma la acción.
 El sistema valida permisos para aprobar presupuestos.
 El sistema valida que el presupuesto pertenezca a la sucursal del usuario. Tabla consultada: presupuesto_servicio.
-El sistema valida que el presupuesto esté en estado pendiente. Tabla consultada: presupuesto_servicio.
+El sistema valida que el presupuesto provenga de diagnóstico y esté en estado pendiente. Tabla consultada: presupuesto_servicio.
 El sistema actualiza el presupuesto como aprobado. Tabla actualizada: presupuesto_servicio.
 El sistema emite mensaje de aprobación correcta.
 
@@ -625,17 +616,23 @@ El sistema valida que el presupuesto pueda anularse. Tabla consultada: presupues
 El sistema valida que no tenga una orden de trabajo activa asociada. Tabla consultada: orden_trabajo.
 El sistema anula el presupuesto. Tabla actualizada: presupuesto_servicio.
 Si el presupuesto provenía de diagnóstico, el sistema devuelve el diagnóstico a estado disponible para presupuesto cuando corresponda. Tabla actualizada: diagnostico_servicio.
+Si el presupuesto provenía de diagnóstico y fue generado usando un preliminar, el sistema devuelve el preliminar convertido a estado disponible. Tabla actualizada: presupuesto_servicio.
+Si el presupuesto es preliminar y no tiene diagnóstico asociado, solo queda anulado el presupuesto preliminar; no se modifica ningún diagnóstico.
 El sistema emite mensaje de anulación correcta.
 
 Flujo Alternativo:
 Si el usuario no tiene permiso, el sistema muestra acceso no autorizado.
+Presupuesto preliminar
+El usuario puede registrar un presupuesto preliminar sin diagnóstico.
+El usuario selecciona cliente y vehículo, carga fecha de vencimiento y agrega ítems al detalle.
+El sistema registra el preliminar en la sucursal del usuario.
+
 Si faltan diagnóstico, cliente, vehículo, fecha de vencimiento o detalle, el sistema muestra datos incompletos y no guarda.
 Si la fecha de vencimiento, los importes, las cantidades o los artículos no son válidos, el sistema cancela la operación e informa el motivo.
 Si el diagnóstico, cliente, vehículo o presupuesto preliminar no está disponible para el flujo seleccionado, el sistema no permite generar o convertir el presupuesto.
 Si el diagnóstico proviene de reclamo y ya tiene una OT activa asociada al reclamo, el sistema no lo muestra para presupuesto y no permite guardar con ese diagnóstico.
 Si no existe stock suficiente para productos, el sistema no permite agregar o guardar el detalle correspondiente.
 Si el presupuesto pertenece a otra sucursal, no está en estado permitido o ya tiene OT activa, el sistema no permite aprobarlo o anularlo.
-El usuario puede imprimir el PDF del presupuesto desde el listado. El sistema consulta la cabecera, detalle, promociones y descuentos del presupuesto. Tablas consultadas para PDF: presupuesto_servicio, presupuesto_detalleservicio, presupuesto_promocion, presupuesto_descuento, diagnostico_servicio, clientes, vehiculos, modelo_auto, marcas, usuarios, articulos, promociones, descuentos.
 El usuario puede presionar Cancelar, y el sistema limpia el formulario.
 
 Post Condición
@@ -648,6 +645,8 @@ Si se convirtió desde un preliminar, el presupuesto preliminar queda marcado co
 Si se aprueba, el presupuesto queda disponible para generar orden de trabajo.
 Si se anula, el presupuesto queda en estado Anulado.
 Si se anula y provenía de diagnóstico, el diagnóstico vuelve a estar disponible para presupuesto cuando no tenga una OT activa asociada por reclamo.
+Si se anula y fue generado usando un preliminar, el preliminar convertido vuelve a quedar disponible.
+Si se anula un presupuesto preliminar sin diagnóstico asociado, no se altera ningún diagnóstico.
 
 Descripción de las tablas
 Nombre	Alias	Base de Datos
@@ -708,7 +707,7 @@ El usuario busca un presupuesto aprobado por cliente, vehículo o número.
 El sistema busca presupuestos aprobados, vigentes, de la sucursal del usuario y sin OT activa. Tablas consultadas: presupuesto_servicio, clientes, vehiculos, modelo_auto, marcas, orden_trabajo.
 El sistema muestra los presupuestos encontrados.
 El usuario selecciona un presupuesto.
-El sistema muestra datos del presupuesto, cliente, vehículo, fecha, subtotal, descuento y total.
+El sistema muestra datos del presupuesto, cliente, marca, modelo, placa, fecha, subtotal, descuento y total.
 El sistema consulta el detalle del presupuesto. Tablas consultadas para detalle de presupuesto: presupuesto_detalleservicio, articulos.
 El sistema muestra los servicios o artículos presupuestados.
 El usuario selecciona equipo de trabajo.
@@ -725,26 +724,26 @@ El sistema valida que exista presupuesto seleccionado.
 El sistema valida que exista equipo y técnico responsable.
 El sistema valida que el presupuesto esté aprobado. Tabla consultada: presupuesto_servicio.
 El sistema valida que el presupuesto pertenezca a la sucursal del usuario. Tabla consultada: presupuesto_servicio.
-El sistema valida que el presupuesto no tenga una OT activa. Tabla consultada: orden_trabajo.
 El sistema valida que el presupuesto provenga de un diagnóstico; si es preliminar, debe haberse convertido a presupuesto con diagnóstico antes de generar la OT. Tabla consultada: presupuesto_servicio.
+El sistema valida que el presupuesto no tenga una OT activa. Tabla consultada: orden_trabajo.
 El sistema registra la cabecera. Tabla registrada: orden_trabajo.
 El sistema copia el detalle del presupuesto a la OT. Tablas consultadas: presupuesto_detalleservicio. Tabla registrada: orden_trabajo_detalle.
 El sistema actualiza el presupuesto a estado OT generada. Tabla actualizada: presupuesto_servicio.
-El sistema emite mensaje de OT generada correctamente.
+El sistema emite mensaje de OT generada correctamente y se limpia la interfaz.
 
 Completar OT por Reclamo
 El usuario realiza la búsqueda de OT.
 El sistema permite filtrar por fecha inicial, fecha final y estado.
-El sistema consulta las órdenes de trabajo registradas. Tablas consultadas para listar OT: orden_trabajo, presupuesto_servicio, diagnostico_servicio, recepcion_servicio, clientes, vehiculos, modelo_auto, usuarios.
+El sistema consulta las órdenes de trabajo registradas. Tablas consultadas para listar OT: orden_trabajo, presupuesto_servicio, clientes, vehiculos, modelo_auto, usuarios.
 El sistema muestra cliente, vehículo, fecha, presupuesto u origen, usuario creador y estado.
 Si la OT proviene de reclamo y está pendiente de completar, el sistema muestra la opción Completar OT.
 El usuario presiona Completar OT.
 El sistema valida que el usuario tenga permiso para completar OT por reclamo.
 El sistema consulta la OT seleccionada. Tabla consultada: orden_trabajo.
 El sistema valida que la OT exista, provenga de reclamo y se encuentre en estado Pendiente de completar. Tabla consultada: orden_trabajo.
-El sistema consulta los datos necesarios para completar la OT. Tablas consultadas para completar OT: orden_trabajo, reclamo_servicio, recepcion_servicio, clientes, vehiculos, modelo_auto, diagnostico_servicio, equipo_trabajo, equipo_empleado, empleados.
+El sistema consulta la OT, el vehículo y el diagnóstico asociado al reclamo para completar la orden. Tablas consultadas para completar OT: orden_trabajo, reclamo_servicio, recepcion_servicio, clientes, vehiculos, modelo_auto, marcas, diagnostico_servicio.
 El sistema muestra número de OT, fecha, estado pendiente, origen reclamo y acceso para volver al listado.
-El sistema muestra información del vehículo: cliente, vehículo y kilometraje.
+El sistema muestra información del vehículo: cliente, marca, modelo, placa y kilometraje.
 El sistema muestra el diagnóstico asociado al reclamo: número de diagnóstico, fecha, garantía, reclamo válido, requiere cobro y observación.
 El sistema consulta y muestra el detalle técnico del diagnóstico. Tablas consultadas para detalle técnico: diagnostico_detalle, articulos.
 El sistema precarga como trabajos los servicios cargados en el detalle del diagnóstico.
@@ -768,18 +767,16 @@ El sistema valida datos obligatorios: OT, equipo y técnico.
 El sistema valida que el detalle de trabajos y repuestos tenga formato válido.
 El sistema valida que exista al menos un trabajo o repuesto en el detalle confirmado.
 El sistema valida existencia de la OT, sucursal, origen reclamo y estado pendiente de completar. Tabla consultada: orden_trabajo.
-Si existen repuestos, el sistema consulta stock por artículo y sucursal. Tabla consultada: stock.
-El sistema valida stock suficiente por cada repuesto. Tabla consultada: stock.
+Si existen repuestos, el sistema consulta stock por artículo y sucursal y valida stock suficiente por cada repuesto. Tabla consultada: stock.
 El sistema elimina el detalle anterior de la OT. Tabla actualizada: orden_trabajo_detalle.
-El sistema registra los repuestos confirmados con cantidad, precio unitario cero y subtotal cero. Tabla registrada: orden_trabajo_detalle.
-El sistema registra los trabajos confirmados con cantidad uno, precio unitario cero y subtotal cero. Tabla registrada: orden_trabajo_detalle.
 El sistema actualiza la OT con equipo, técnico, observación y estado Activa. Tabla actualizada: orden_trabajo.
+El sistema registra el detalle confirmado de trabajos y repuestos, sin costo. Tabla registrada: orden_trabajo_detalle.
 El sistema emite mensaje de OT completada correctamente y redirige al listado de OT.
 
 Anular
 El usuario realiza la búsqueda de OT.
 El sistema permite filtrar por fecha inicial, fecha final y estado.
-El sistema consulta las órdenes de trabajo registradas. Tablas consultadas para listar OT: orden_trabajo, presupuesto_servicio, diagnostico_servicio, recepcion_servicio, clientes, vehiculos, modelo_auto, usuarios.
+El sistema consulta las órdenes de trabajo registradas. Tablas consultadas para listar OT: orden_trabajo, presupuesto_servicio, clientes, vehiculos, modelo_auto, usuarios.
 Si la OT está activa o pendiente de completar, el sistema muestra la opción Anular.
 El usuario presiona Anular.
 El sistema emite mensaje de confirmación.
@@ -793,6 +790,7 @@ Si la OT proviene de reclamo, el sistema no modifica el estado del reclamo y dej
 El sistema emite mensaje de OT anulada correctamente.
 
 Flujo Alternativo:
+El sistema permite imprimir la orden de trabajo en PDF desde la búsqueda de órdenes de trabajo. Tablas consultadas para PDF: orden_trabajo, orden_trabajo_detalle, presupuesto_servicio, diagnostico_servicio, recepcion_servicio, reclamo_servicio, clientes, vehiculos, modelo_auto, marcas, articulos, equipo_trabajo, equipo_empleado, empleados.
 Si el usuario no tiene permiso, el sistema muestra acceso no autorizado.
 Si faltan presupuesto, equipo, técnico o detalle requerido, el sistema muestra datos incompletos y no guarda.
 Si el presupuesto no existe, no está aprobado, pertenece a otra sucursal, ya tiene OT activa o no proviene de diagnóstico válido, el sistema no permite generar la OT.
@@ -845,10 +843,10 @@ Agregar
 Anular
 
 Nombre de Caso de Uso
-Registrar Servicios y Registrar insumos utilizados.
+Registrar Servicios
 
 Descripción Básica
-Este caso permite registrar la ejecución de una orden de trabajo activa. El sistema permite buscar una OT disponible, visualizar sus datos y detalle, agregar insumos utilizados, registrar fecha de ejecución, kilometraje de salida y observación. Cuando se agregan productos o insumos, el sistema descuenta stock y registra el movimiento correspondiente.
+Este caso permite registrar la ejecución de una orden de trabajo activa. El sistema permite buscar una OT disponible, visualizar sus datos y detalle, registrar fecha de ejecución, kilometraje de salida y observación. Cuando el detalle de la OT incluye productos, el sistema descuenta stock y registra el movimiento correspondiente.
 
 Actores relacionados
 Personal de Recepción
@@ -860,7 +858,7 @@ Debe existir una OT activa.
 La OT debe pertenecer a la sucursal del usuario.
 La OT debe tener detalle registrado.
 No debe existir un registro de servicio activo previo para la misma OT.
-Si se agregan insumos, debe existir stock disponible.
+Si la OT incluye productos, debe existir stock disponible.
 
 Flujo de eventos
 Flujo Básico:
@@ -870,18 +868,13 @@ El sistema muestra las opciones Registro de Servicio y Buscar Registro de Servic
 
 Nuevo
 El usuario busca una orden de trabajo por cliente, vehículo o número de OT.
-El sistema busca OT activas, de la sucursal del usuario, con detalle registrado y sin servicio activo previo. Tablas consultadas para buscar OT: orden_trabajo, presupuesto_servicio, diagnostico_servicio, recepcion_servicio, clientes, vehiculos, modelo_auto, registro_servicio, orden_trabajo_detalle.
+El sistema busca OT activas, de la sucursal del usuario, con detalle registrado y sin servicio activo previo. Tablas consultadas para buscar OT: orden_trabajo, clientes, vehiculos, modelo_auto, registro_servicio, orden_trabajo_detalle.
 El sistema muestra las OT encontradas.
 El usuario selecciona una OT.
-El sistema consulta los datos de la OT seleccionada. Tablas consultadas para cargar OT: orden_trabajo, presupuesto_servicio, diagnostico_servicio, recepcion_servicio, clientes, vehiculos, modelo_auto.
+El sistema consulta los datos de la OT seleccionada. Tablas consultadas para cargar OT: orden_trabajo, clientes, vehiculos, modelo_auto, orden_trabajo_detalle.
 El sistema muestra número de OT, cliente y vehículo.
 El sistema consulta el detalle de la OT. Tablas consultadas para detalle de OT: orden_trabajo_detalle, articulos.
 El sistema muestra artículo o servicio, cantidad, precio y subtotal.
-El usuario puede buscar insumos utilizados.
-El sistema consulta insumos activos con stock. Tablas consultadas para insumos: articulos, stock.
-El sistema muestra los insumos encontrados.
-El usuario agrega uno o más insumos y su cantidad correspondiente.
-El usuario puede quitar insumos antes de guardar.
 El usuario ingresa fecha de ejecución, kilometraje de salida y observación si corresponde.
 
 Guardar
@@ -893,12 +886,11 @@ El sistema valida datos obligatorios.
 El sistema valida que la OT esté activa y que pertenezca a la sucursal del usuario. Tabla consultada: orden_trabajo.
 El sistema valida que no exista un registro de servicio activo previo para la OT. Tabla consultada: registro_servicio.
 El sistema valida que la OT tenga detalle. Tabla consultada: orden_trabajo_detalle.
-Si se agregan insumos, el sistema valida stock suficiente. Tabla consultada: stock.
+Si el detalle de la OT incluye productos, el sistema valida stock suficiente. Tabla consultada: stock.
 El sistema registra la cabecera del servicio. Tabla registrada: registro_servicio.
 El sistema registra el detalle de la OT con origen OT. Tabla registrada: registro_servicio_detalle.
-Si se agregaron insumos, el sistema registra los insumos con origen INSUMO. Tabla registrada: registro_servicio_detalle.
-El sistema descuenta stock de productos e insumos utilizados. Tabla actualizada: stock.
-El sistema registra el movimiento de stock de productos e insumos utilizados. Tabla registrada: movimientostock.
+El sistema descuenta stock de productos incluidos en el detalle. Tabla actualizada: stock.
+El sistema registra el movimiento de stock de productos incluidos en el detalle. Tabla registrada: movimientostock.
 El sistema actualiza la OT a estado Servicio registrado. Tabla actualizada: orden_trabajo.
 El sistema registra fecha de finalización de la OT. Tabla actualizada: orden_trabajo.
 El sistema actualiza la recepción a estado Finalizado. Tabla actualizada: recepcion_servicio.
@@ -909,7 +901,7 @@ Anular
 El usuario ingresa a Buscar Registro de Servicio.
 El usuario ingresa filtros de búsqueda por fecha inicial, fecha final o estado.
 El usuario presiona Buscar.
-El sistema consulta los registros de servicio. Tablas consultadas para buscar/listar registros: registro_servicio, orden_trabajo, presupuesto_servicio, diagnostico_servicio, recepcion_servicio, clientes, vehiculos, modelo_auto, usuarios.
+El sistema consulta los registros de servicio. Tablas consultadas para buscar/listar registros: registro_servicio, clientes, vehiculos, modelo_auto, usuarios.
 El sistema muestra número de registro, OT, cliente, vehículo, fecha de ejecución, usuario registrador y estado.
 Si el registro está activo y el usuario tiene permiso de anulación, el sistema muestra la opción Anular.
 El usuario presiona Anular.
@@ -918,7 +910,7 @@ El usuario confirma la acción.
 El sistema valida permiso de anulación.
 El sistema valida el registro seleccionado.
 El sistema verifica que el registro exista, esté activo y pertenezca a la sucursal del usuario. Tablas consultadas: registro_servicio, orden_trabajo.
-El sistema revierte el stock utilizado en los artículos tipo producto e insumo. Tablas consultadas para revertir stock: registro_servicio_detalle, articulos.
+El sistema revierte el stock utilizado en los artículos tipo producto. Tablas consultadas para revertir stock: registro_servicio_detalle, articulos.
 El sistema actualiza el stock revertido. Tabla actualizada: stock.
 El sistema registra el movimiento inverso de stock. Tabla registrada: movimientostock.
 El sistema anula el registro de servicio. Tabla actualizada: registro_servicio.
@@ -931,7 +923,7 @@ El sistema recarga el listado de registros.
 Flujo Alternativo:
 Si el usuario no tiene permiso, el sistema muestra acceso denegado.
 Si la OT no existe, no está activa, pertenece a otra sucursal, no tiene detalle o ya tiene un registro activo, el sistema no permite registrar el servicio.
-Si faltan datos obligatorios o se agregan insumos sin stock suficiente, el sistema no permite registrar o revierte la operación.
+Si faltan datos obligatorios o no hay stock suficiente para los productos del detalle, el sistema no permite registrar o revierte la operación.
 Si el registro de servicio no existe, no está activo o pertenece a otra sucursal, el sistema no permite anularlo.
 Si ocurre un error durante el registro o anulación, el sistema revierte la transacción.
 
@@ -941,7 +933,7 @@ El detalle queda registrado en registro_servicio_detalle.
 La OT queda en estado Servicio registrado.
 La recepción asociada queda cerrada o finalizada.
 Si corresponde a reclamo, el reclamo queda cerrado por servicio registrado.
-El stock de productos e insumos utilizados queda descontado.
+El stock de productos incluidos en el detalle queda descontado.
 Se registra movimiento de stock por salida en movimientostock.
 Si se anula el registro, se revierten stock y estados asociados.
 
