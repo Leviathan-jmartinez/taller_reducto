@@ -127,44 +127,16 @@ class reclamoServicioControlador extends reclamoServicioModelo
                 <th>Servicio</th>
                 <th>Cliente</th>
                 <th>Vehículo</th>
-                <th>Trabajos</th>
                 <th></th>
             </tr>
         </thead><tbody>';
 
         foreach ($datos as $r) {
-
-            // 🔥 GENERAR TRABAJOS POR FILA
-            $trabajos = '';
-
-            if (!empty($r['trabajos'])) {
-
-                $items = explode('|', $r['trabajos']);
-
-                $trabajos .= '<ul style="margin:0;padding-left:15px;">';
-
-                foreach ($items as $t) {
-                    $trabajos .= '<li>' . $t . '</li>';
-                }
-
-                $trabajos .= '</ul>';
-            }
-
-            $fechaVencimientoGarantia = $r['garantia_fecha_vencimiento'] ?? '';
-            $dentroGarantiaFecha = !empty($fechaVencimientoGarantia) && date('Y-m-d') <= $fechaVencimientoGarantia;
-            $garantiaTexto = $dentroGarantiaFecha
-                ? 'Disponible hasta ' . date('d/m/Y', strtotime($fechaVencimientoGarantia))
-                : (!empty($fechaVencimientoGarantia)
-                    ? 'Vencida el ' . date('d/m/Y', strtotime($fechaVencimientoGarantia))
-                    : 'Sin garantia configurada');
-            $kmLimite = $r['garantia_km_limite'] ?? '';
-
             $html .= '
             <tr>
                 <td>#' . $r['idregistro_servicio'] . '</td>
                 <td>' . $r['nombre_cliente'] . ' ' . $r['apellido_cliente'] . '</td>
                 <td>' . $r['mod_descri'] . ' ' . $r['placa'] . '</td>
-                <td>' . $trabajos . '</td>
                 <td class="text-center">
                     <button class="btn btn-success btn-sm"
                         onclick="seleccionarRegistro(\'' . mainModel::encryption($r['idregistro_servicio']) . '\')">

@@ -13,6 +13,10 @@ class salidaInsumoControlador extends salidaInsumoModelo
             session_start(['name' => 'STR']);
         }
 
+        if (!mainModel::tienePermiso('servicio.insumo.crear')) {
+            return '<div class="alert alert-danger">Acceso no autorizado</div>';
+        }
+
         $texto = trim($_POST['texto'] ?? '');
 
         $datos = self::buscar_consumible_modelo($texto);
@@ -364,6 +368,14 @@ class salidaInsumoControlador extends salidaInsumoModelo
 
     public function buscar_empleado_controlador()
     {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start(['name' => 'STR']);
+        }
+
+        if (!mainModel::tienePermiso('servicio.insumo.crear')) {
+            return '<div class="alert alert-danger">Acceso no autorizado</div>';
+        }
+
         $texto = trim($_POST['texto'] ?? '');
 
         $datos = self::buscar_empleado_modelo($texto);

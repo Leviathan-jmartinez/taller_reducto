@@ -871,9 +871,8 @@ El usuario busca una orden de trabajo por cliente, vehículo o número de OT.
 El sistema busca OT activas, de la sucursal del usuario, con detalle registrado y sin servicio activo previo. Tablas consultadas para buscar OT: orden_trabajo, clientes, vehiculos, modelo_auto, registro_servicio, orden_trabajo_detalle.
 El sistema muestra las OT encontradas.
 El usuario selecciona una OT.
-El sistema consulta los datos de la OT seleccionada. Tablas consultadas para cargar OT: orden_trabajo, clientes, vehiculos, modelo_auto, orden_trabajo_detalle.
-El sistema muestra número de OT, cliente y vehículo.
-El sistema consulta el detalle de la OT. Tablas consultadas para detalle de OT: orden_trabajo_detalle, articulos.
+El sistema consulta los datos de la OT seleccionada. Tablas consultadas para cargar OT: orden_trabajo, clientes, vehiculos, modelo_auto, orden_trabajo_detalle, articulos.
+El sistema muestra número de OT, cliente y vehículo y detalles de la OT.
 El sistema muestra artículo o servicio, cantidad, precio y subtotal.
 El usuario ingresa fecha de ejecución, kilometraje de salida y observación si corresponde.
 
@@ -909,7 +908,7 @@ El sistema emite mensaje de confirmación.
 El usuario confirma la acción.
 El sistema valida permiso de anulación.
 El sistema valida el registro seleccionado.
-El sistema verifica que el registro exista, esté activo y pertenezca a la sucursal del usuario. Tablas consultadas: registro_servicio, orden_trabajo.
+El sistema verifica que el registro exista, esté activo y pertenezca a la sucursal del usuario. Tabla consultada: registro_servicio.
 El sistema revierte el stock utilizado en los artículos tipo producto. Tablas consultadas para revertir stock: registro_servicio_detalle, articulos.
 El sistema actualiza el stock revertido. Tabla actualizada: stock.
 El sistema registra el movimiento inverso de stock. Tabla registrada: movimientostock.
@@ -922,6 +921,7 @@ El sistema recarga el listado de registros.
 
 Flujo Alternativo:
 Si el usuario no tiene permiso, el sistema muestra acceso denegado.
+Desde la búsqueda, el usuario puede ver el detalle de un registro de servicio. El sistema consulta la cabecera y el detalle del registro. Tablas consultadas: registro_servicio, registro_servicio_detalle, clientes, vehiculos, modelo_auto, usuarios, articulos.
 Si la OT no existe, no está activa, pertenece a otra sucursal, no tiene detalle o ya tiene un registro activo, el sistema no permite registrar el servicio.
 Si faltan datos obligatorios o no hay stock suficiente para los productos del detalle, el sistema no permite registrar o revierte la operación.
 Si el registro de servicio no existe, no está activo o pertenece a otra sucursal, el sistema no permite anularlo.
@@ -943,8 +943,6 @@ registro_servicio	registro_servicio	Bd_reduc
 registro_servicio_detalle	registro_servicio_detalle	Bd_reduc
 orden_trabajo	orden_trabajo	Bd_reduc
 orden_trabajo_detalle	orden_trabajo_detalle	Bd_reduc
-presupuesto_servicio	presupuesto_servicio	Bd_reduc
-diagnostico_servicio	diagnostico_servicio	Bd_reduc
 recepcion_servicio	recepcion_servicio	Bd_reduc
 clientes	clientes	Bd_reduc
 vehiculos	vehiculos	Bd_reduc
@@ -988,10 +986,13 @@ El sistema muestra las opciones Nuevo y Listado de Reclamos.
 
 Nuevo
 El usuario busca un servicio realizado por cliente, vehículo, número de registro u OT.
-El sistema busca registros de servicio activos de la sucursal del usuario. Tablas consultadas para buscar servicio realizado: registro_servicio, registro_servicio_detalle, orden_trabajo, articulos, presupuesto_servicio, diagnostico_servicio, recepcion_servicio, clientes, vehiculos, modelo_auto.
+El sistema busca registros de servicio activos de la sucursal del usuario. Tablas consultadas para buscar servicio realizado: registro_servicio, clientes, vehiculos, modelo_auto.
 El sistema muestra los registros encontrados.
 El usuario selecciona un registro de servicio.
-El sistema carga número de registro, cliente, vehículo, garantía y trabajos realizados.
+El sistema carga la cabecera del servicio seleccionado: número de registro, fecha del servicio, cliente, vehículo, vencimiento de garantía y límite de kilometraje calculado desde el kilometraje de salida. Tablas consultadas para cabecera del servicio realizado: registro_servicio, clientes, vehiculos, modelo_auto.
+El sistema consulta el detalle del servicio realizado. Tablas consultadas para detalle reclamable: registro_servicio_detalle, articulos.
+El sistema muestra los ítems reclamables con artículo o servicio, tipo, cantidad, origen y campo para motivo específico.
+El sistema habilita la opción de garantía solo si el servicio sigue dentro del plazo por fecha; el límite de kilometraje queda informado para validarse luego en recepción.
 El usuario ingresa descripción del reclamo.
 El usuario selecciona tipo de reclamo, prioridad y si requiere garantía.
 Según el tipo de reclamo, el usuario selecciona los detalles reclamados.
@@ -1001,15 +1002,11 @@ Guardar
 El usuario presiona Registrar reclamo.
 El sistema emite mensaje de confirmación.
 El usuario confirma la acción.
-El sistema valida permisos para registrar.
-El sistema valida datos obligatorios.
-El sistema valida que exista el registro de servicio. Tabla consultada: registro_servicio.
-El sistema valida que el registro de servicio pertenezca a la sucursal del usuario. Tabla consultada: registro_servicio.
-El sistema valida que no exista otro reclamo activo o en proceso del mismo tipo para el mismo registro. Tabla consultada: reclamo_servicio.
-El sistema valida que los detalles seleccionados pertenezcan al registro de servicio. Tabla consultada: registro_servicio_detalle.
-El sistema valida que los detalles seleccionados no tengan reclamo activo. Tabla consultada: reclamo_servicio_detalle.
-Si requiere garantía, el sistema valida vigencia por fecha y kilometraje cuando corresponda. Tablas consultadas: registro_servicio, orden_trabajo, recepcion_servicio.
-El sistema identifica cliente y vehículo del servicio reclamado. Tablas consultadas: registro_servicio, orden_trabajo, presupuesto_servicio, diagnostico_servicio, recepcion_servicio.
+El sistema valida permisos, datos obligatorios, tipo de reclamo y detalles requeridos según el tipo.
+El sistema valida que el registro de servicio exista, pertenezca a la sucursal del usuario y permita identificar cliente y vehículo. Tabla consultada: registro_servicio.
+Si requiere garantía, el sistema valida la vigencia por fecha del servicio. Tabla consultada: registro_servicio.
+Para reclamos generales o de atención, el sistema valida que no exista otro reclamo activo o en proceso del mismo tipo para el mismo registro. Tabla consultada: reclamo_servicio.
+Para reclamos de servicio o repuesto, el sistema valida en una sola consulta los detalles seleccionados, su tipo y reclamos activos previos. Tablas consultadas: registro_servicio_detalle, articulos, reclamo_servicio_detalle, reclamo_servicio.
 El sistema registra el reclamo. Tabla registrada: reclamo_servicio.
 El sistema registra el detalle del reclamo. Tabla registrada: reclamo_servicio_detalle.
 El sistema actualiza el registro de servicio como con reclamo. Tabla actualizada: registro_servicio.
@@ -1018,7 +1015,7 @@ El sistema emite mensaje de reclamo registrado correctamente.
 Anular
 El usuario ingresa filtros de búsqueda por texto o estado en la Búsqueda de Reclamos.
 El usuario presiona Buscar.
-El sistema consulta los reclamos de la sucursal. Tablas consultadas para buscar/listar reclamos: reclamo_servicio, registro_servicio, orden_trabajo, recepcion_servicio, clientes, vehiculos, modelo_auto.
+El sistema consulta los reclamos de la sucursal. Tablas consultadas para buscar/listar reclamos: reclamo_servicio, clientes, vehiculos, modelo_auto.
 El sistema muestra número de reclamo, cliente, vehículo, fecha, descripción, tipo, prioridad y estado.
 Si el reclamo está activo y el usuario tiene permiso de anulación, el sistema muestra la opción Anular.
 El usuario presiona Anular.
@@ -1058,15 +1055,11 @@ reclamo_servicio	reclamo_servicio	Bd_reduc
 reclamo_servicio_detalle	reclamo_servicio_detalle	Bd_reduc
 registro_servicio	registro_servicio	Bd_reduc
 registro_servicio_detalle	registro_servicio_detalle	Bd_reduc
-orden_trabajo	orden_trabajo	Bd_reduc
 articulos	articulos	Bd_reduc
-presupuesto_servicio	presupuesto_servicio	Bd_reduc
-diagnostico_servicio	diagnostico_servicio	Bd_reduc
 recepcion_servicio	recepcion_servicio	Bd_reduc
 clientes	clientes	Bd_reduc
 vehiculos	vehiculos	Bd_reduc
 modelo_auto	modelo_auto	Bd_reduc
-marcas	marcas	Bd_reduc
 
 Interfaz Gráfica de Usuario
 
@@ -1102,7 +1095,6 @@ El usuario ingresa al módulo Salida de Insumos.
 El sistema muestra las opciones Nuevo y Buscar.
 
 Nuevo
-El sistema muestra el formulario de salida de insumos.
 El usuario busca un empleado responsable escribiendo nombre, apellido o número de documento.
 El sistema busca empleados activos pertenecientes a la sucursal del usuario. Tablas consultadas para buscar empleado: empleados.
 El usuario selecciona el empleado responsable.
@@ -1121,7 +1113,6 @@ El usuario presiona Registrar salida.
 El sistema emite mensaje de confirmación.
 El usuario confirma la acción.
 El sistema valida permisos para registrar salida de insumos.
-El sistema valida que exista una sesión válida y una sucursal asociada.
 El sistema valida que se haya seleccionado empleado responsable.
 El sistema valida que exista al menos un insumo en el detalle.
 El sistema valida que cada insumo sea válido, esté activo y sea de tipo insumo. Tabla consultada: articulos.
