@@ -139,16 +139,45 @@ $accionesPermitidas = array_filter($acciones, function ($accion) {
 });
 
 $informes = [
-    ['permiso' => 'reportes.pedidos.ver', 'titulo' => 'Pedidos', 'url' => SERVERURL . 'reporte-pedidos/'],
-    ['permiso' => 'reportes.presupuestos_compra.ver', 'titulo' => 'Presupuestos', 'url' => SERVERURL . 'reporte-presupuestos/'],
-    ['permiso' => 'reportes.ordenes_compra.ver', 'titulo' => 'Ordenes de compra', 'url' => SERVERURL . 'reporte-ordenes-compra/'],
-    ['permiso' => 'reportes.compras.ver', 'titulo' => 'Compras', 'url' => SERVERURL . 'reporte-compras/'],
-    ['permiso' => 'reportes.stock.ver', 'titulo' => 'Stock', 'url' => SERVERURL . 'reporte-stock/'],
-    ['permiso' => 'reportes.registro_servicio.ver', 'titulo' => 'Servicios', 'url' => SERVERURL . 'reporte-registro-servicio/']
+    [
+        'permisos' => [
+            'reportes.articulos.ver',
+            'reportes.proveedores.ver',
+            'reportes.sucursales.ver',
+            'reportes.clientes.ver',
+            'reportes.vehiculos.ver',
+            'usuarios.ver'
+        ],
+        'titulo' => 'Referenciales',
+        'url' => SERVERURL . 'reporte-referenciales/'
+    ],
+    [
+        'permisos' => [
+            'reportes.pedidos.ver',
+            'reportes.presupuestos_compra.ver',
+            'reportes.ordenes_compra.ver',
+            'reportes.compras.ver',
+            'reportes.libro_compras.ver',
+            'reportes.stock.ver',
+            'reportes.movimientos_stock.ver',
+            'reportes.recepcion_servicio.ver',
+            'reportes.presupuesto_servicio.ver',
+            'reportes.orden_trabajo.ver',
+            'reportes.registro_servicio.ver'
+        ],
+        'titulo' => 'Movimientos',
+        'url' => SERVERURL . 'reporte-movimientos/'
+    ]
 ];
 
 $informesPermitidos = array_filter($informes, function ($informe) {
-    return mainModel::tienePermiso($informe['permiso']);
+    foreach ($informe['permisos'] as $permiso) {
+        if (mainModel::tienePermiso($permiso)) {
+            return true;
+        }
+    }
+
+    return false;
 });
 ?>
 

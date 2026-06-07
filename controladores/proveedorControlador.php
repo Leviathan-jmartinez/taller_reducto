@@ -187,6 +187,17 @@ class proveedorControlador extends proveedorModelo
             exit();
         }
 
+        $proveedorActual = $check->fetch();
+        if ((int)$proveedorActual['estado'] === 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Proveedor inactivo",
+                "Texto"  => "El proveedor ya se encuentra inactivo.",
+                "Tipo"   => "info"
+            ]);
+            exit();
+        }
+
         $stmt = proveedorModelo::eliminar_proveedor_modelo($id);
 
         if ($stmt->rowCount() > 0) {
@@ -204,7 +215,7 @@ class proveedorControlador extends proveedorModelo
                     $alerta = [
                         "Alerta" => "recargar",
                         "Titulo" => "Proveedor desactivado",
-                        "Texto"  => "El proveedor tiene registros relacionados (artículos o pedidos). Fue desactivado.",
+                        "Texto"  => "El proveedor tiene registros relacionados. Fue desactivado para conservar el historial.",
                         "Tipo"   => "warning"
                     ];
                 } else {
@@ -225,6 +236,13 @@ class proveedorControlador extends proveedorModelo
                     "Tipo"   => "success"
                 ];
             }
+        } else {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Sin cambios",
+                "Texto"  => "No se realizaron cambios sobre el proveedor.",
+                "Tipo"   => "info"
+            ];
         }
 
         echo json_encode($alerta);

@@ -18,6 +18,153 @@ class mainModel
         $sql->execute();
         return $sql;
     }
+
+    protected static function mov_stock_tiene_saldos(PDO $conexion)
+    {
+        static $disponible = null;
+
+        if ($disponible !== null) {
+            return $disponible;
+        }
+
+        try {
+            $sql = $conexion->prepare("SHOW COLUMNS FROM movimientostock LIKE 'MovStockSaldoActual'");
+            $sql->execute();
+            $disponible = $sql->rowCount() > 0;
+        } catch (Exception $e) {
+            $disponible = false;
+        }
+
+        return $disponible;
+    }
+
+    public static function registrar_movimiento_stock_modelo(PDO $conexion, array $datos)
+    {
+        $idSucursal = (int)($datos['id_sucursal'] ?? 0);
+        $idArticulo = (int)($datos['id_articulo'] ?? 0);
+        $cantidad = abs((float)($datos['cantidad'] ?? 0));
+        $signo = ((int)($datos['signo'] ?? 0) >= 0) ? 1 : -1;
+        $usuario = (int)($datos['usuario'] ?? 0);
+        $referencia = (string)($datos['referencia'] ?? '');
+
+        if ($idSucursal <= 0 || $idArticulo <= 0 || $cantidad <= 0 || $usuario <= 0) {
+            throw new Exception('Datos incompletos para registrar movimiento de stock');
+        }
+
+        $stock = $conexion->prepare("
+            SELECT stockDisponible
+            FROM stock
+            WHERE id_sucursal = :sucursal
+              AND id_articulo = :articulo
+            LIMIT 1
+            FOR UPDATE
+        ");
+        $stock->execute([
+            ':sucursal' => $idSucursal,
+            ':articulo' => $idArticulo
+        ]);
+
+        $filaStock = $stock->fetch(PDO::FETCH_ASSOC);
+        $saldoAnterior = $filaStock ? (float)$filaStock['stockDisponible'] : 0.0;
+        $saldoActual = $saldoAnterior + ($cantidad * $signo);
+
+        if ($saldoActual < 0) {
+            throw new Exception('Stock insuficiente para el articulo ID ' . $idArticulo);
+        }
+
+        if ($filaStock) {
+            $actualizar = $conexion->prepare("
+                UPDATE stock
+                SET stockDisponible = :saldo,
+                    stockUltActualizacion = NOW(),
+                    stockUsuActualizacion = :usuario,
+                    stockultimoIdActualizacion = :referencia
+                WHERE id_sucursal = :sucursal
+                  AND id_articulo = :articulo
+            ");
+            $actualizar->execute([
+                ':saldo' => $saldoActual,
+                ':usuario' => $usuario,
+                ':referencia' => (int)($datos['id_referencia_stock'] ?? 0),
+                ':sucursal' => $idSucursal,
+                ':articulo' => $idArticulo
+            ]);
+        } else {
+            $insertarStock = $conexion->prepare("
+                INSERT INTO stock
+                (id_sucursal, id_articulo, stockcant_max, stockcant_min,
+                 stockDisponible, stockUltActualizacion, stockUsuActualizacion, stockultimoIdActualizacion)
+                VALUES
+                (:sucursal, :articulo, 200, 15, :saldo, NOW(), :usuario, :referencia)
+            ");
+            $insertarStock->execute([
+                ':sucursal' => $idSucursal,
+                ':articulo' => $idArticulo,
+                ':saldo' => $saldoActual,
+                ':usuario' => $usuario,
+                ':referencia' => (int)($datos['id_referencia_stock'] ?? 0)
+            ]);
+        }
+
+        $camposSaldo = self::mov_stock_tiene_saldos($conexion)
+            ? ", MovStockSaldoAnterior, MovStockSaldoActual"
+            : "";
+        $valoresSaldo = self::mov_stock_tiene_saldos($conexion)
+            ? ", :saldo_anterior, :saldo_actual"
+            : "";
+
+        $sql = $conexion->prepare("
+            INSERT INTO movimientostock
+            (id_sucursal, TipoMovStockId, MovStockArticuloId, MovStockCantidad,
+             MovStockPrecioVenta, MovStockCosto, MovStockFechaHora,
+             MovStockNroTicket, MovStockPOS, MovStockUsuario,
+             MovStockSigno, MovStockReferencia{$camposSaldo})
+            VALUES
+            (:sucursal, :tipo, :articulo, :cantidad,
+             :precio_venta, :costo, COALESCE(:fecha, NOW()),
+             :nro_ticket, :pos, :usuario,
+             :signo, :referencia{$valoresSaldo})
+        ");
+
+        $params = [
+            ':sucursal' => $idSucursal,
+            ':tipo' => (string)($datos['tipo'] ?? 'MOVIMIENTO'),
+            ':articulo' => $idArticulo,
+            ':cantidad' => $cantidad,
+            ':precio_venta' => (float)($datos['precio_venta'] ?? 0),
+            ':costo' => (float)($datos['costo'] ?? 0),
+            ':fecha' => $datos['fecha'] ?? null,
+            ':nro_ticket' => $datos['nro_ticket'] ?? null,
+            ':pos' => $datos['pos'] ?? null,
+            ':usuario' => $usuario,
+            ':signo' => $signo,
+            ':referencia' => $referencia
+        ];
+
+        if (self::mov_stock_tiene_saldos($conexion)) {
+            $params[':saldo_anterior'] = $saldoAnterior;
+            $params[':saldo_actual'] = $saldoActual;
+        }
+
+        $sql->execute($params);
+        $idMovimiento = (int)$conexion->lastInsertId();
+
+        if ($idMovimiento > 0) {
+            $actualizarMovimiento = $conexion->prepare("
+                UPDATE stock
+                SET stockultimoIdActualizacion = :movimiento
+                WHERE id_sucursal = :sucursal
+                  AND id_articulo = :articulo
+            ");
+            $actualizarMovimiento->execute([
+                ':movimiento' => $idMovimiento,
+                ':sucursal' => $idSucursal,
+                ':articulo' => $idArticulo
+            ]);
+        }
+
+        return $idMovimiento;
+    }
     /** Encriptar */
     public static function encryption($string)
     {

@@ -380,54 +380,19 @@ class registroServicioModelo extends mainModel
 
         foreach ($items as $item) {
 
-            /* ===== 1. INSERTAR MOVIMIENTO STOCK ===== */
-            $mov = $pdo->prepare("
-            INSERT INTO movimientostock
-            (id_sucursal, TipoMovStockId, MovStockArticuloId, MovStockCantidad,
-             MovStockPrecioVenta, MovStockCosto,
-             MovStockFechaHora, MovStockUsuario,
-             MovStockSigno, MovStockReferencia)
-            VALUES (?, 'REG. SERVICIO', ?, ?, ?, ?, NOW(), ?, -1, ?)
-        ");
-            $mov->execute([
-                $idSucursal,
-                $item['id_articulo'],
-                $item['cantidad'],
-                $item['precio_unitario'],
-                0,
-                $usuario,
-                'REG_SERV #' . $idRegistro
+            $idMovimiento = self::registrar_movimiento_stock_modelo($pdo, [
+                "id_sucursal" => $idSucursal,
+                "tipo" => "REG. SERVICIO",
+                "id_articulo" => $item['id_articulo'],
+                "cantidad" => $item['cantidad'],
+                "precio_venta" => $item['precio_unitario'],
+                "costo" => 0,
+                "usuario" => $usuario,
+                "signo" => -1,
+                "referencia" => 'REG_SERV #' . $idRegistro
             ]);
-
-            $idMovimiento = $pdo->lastInsertId();
             if (!$idMovimiento) {
                 throw new Exception('No se pudo generar el movimiento de stock');
-            }
-
-            /* ===== 2. ACTUALIZAR STOCK ===== */
-            $upd = $pdo->prepare("
-            UPDATE stock
-            SET stockDisponible = stockDisponible - ?,
-                stockUltActualizacion = NOW(),
-                stockUsuActualizacion = ?,
-                stockUltimoIdActualizacion = ?
-            WHERE id_sucursal = ?
-              AND id_articulo = ?
-              AND stockDisponible >= ?
-        ");
-            $upd->execute([
-                $item['cantidad'],
-                $usuario,
-                $idMovimiento,
-                $idSucursal,
-                $item['id_articulo'],
-                $item['cantidad']
-            ]);
-
-            if ($upd->rowCount() === 0) {
-                throw new Exception(
-                    'No existe stock para el artículo ID ' . $item['id_articulo']
-                );
             }
         }
     }
@@ -446,45 +411,16 @@ class registroServicioModelo extends mainModel
 
         foreach ($sql->fetchAll(PDO::FETCH_ASSOC) as $item) {
 
-            /* ===== DEVOLVER STOCK ===== */
-            $upd = $pdo->prepare("
-            UPDATE stock
-            SET stockDisponible = stockDisponible + ?,
-                stockUltActualizacion = NOW(),
-                stockUsuActualizacion = ?
-            WHERE id_sucursal = ?
-              AND id_articulo = ?
-        ");
-            $upd->execute([
-                $item['cantidad'],
-                $usuario,
-                $idSucursal,
-                $item['id_articulo']
-            ]);
-
-            if ($upd->rowCount() === 0) {
-                throw new Exception(
-                    'No existe stock para el artículo ID ' . $item['id_articulo']
-                );
-            }
-
-            /* ===== MOVIMIENTO INVERSO ===== */
-            $mov = $pdo->prepare("
-            INSERT INTO movimientostock
-            (id_sucursal, TipoMovStockId, MovStockArticuloId, MovStockCantidad,
-             MovStockPrecioVenta, MovStockCosto,
-             MovStockFechaHora, MovStockUsuario,
-             MovStockSigno, MovStockReferencia)
-            VALUES (?, 'ANULACION REG. SERVICIO', ?, ?, ?, ?, NOW(), ?, 1, ?)
-        ");
-            $mov->execute([
-                $idSucursal,
-                $item['id_articulo'],
-                $item['cantidad'],
-                $item['precio_unitario'],
-                0,
-                $usuario,
-                'ANUL_REG_SERV #' . $idRegistro
+            self::registrar_movimiento_stock_modelo($pdo, [
+                "id_sucursal" => $idSucursal,
+                "tipo" => "ANULACION REG. SERVICIO",
+                "id_articulo" => $item['id_articulo'],
+                "cantidad" => $item['cantidad'],
+                "precio_venta" => $item['precio_unitario'],
+                "costo" => 0,
+                "usuario" => $usuario,
+                "signo" => 1,
+                "referencia" => 'ANUL_REG_SERV #' . $idRegistro
             ]);
         }
     }

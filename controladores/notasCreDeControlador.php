@@ -428,45 +428,16 @@ class notasCreDeControlador extends notasCreDeModelo
             if ($tipoNota === 'credito' && $movStock === 'DEVOLUCION') {
                 foreach ($detalle as $d) {
 
-                    $stockUpdate = $pdo->prepare("
-                    UPDATE stock
-                    SET stockDisponible = stockDisponible - :cant,
-                        stockUltActualizacion = NOW(),
-                        stockUsuActualizacion = :usu
-                    WHERE id_sucursal = :suc AND id_articulo = :art
-                      AND stockDisponible >= :cant_stock
-                ");
-
-                    $stockUpdate->execute([
-                        ':cant' => $d['cantidad'],
-                        ':cant_stock' => $d['cantidad'],
-                        ':usu'  => $_SESSION['id_str'],
-                        ':suc'  => $_SESSION['nick_sucursal'],
-                        ':art'  => $d['id_articulo']
-                    ]);
-
-                    if ($stockUpdate->rowCount() < 1) {
-                        throw new Exception("Stock insuficiente para devolver " . $d['descripcion']);
-                    }
-
-                    $pdo->prepare("
-                    INSERT INTO movimientostock
-                    (id_sucursal, TipoMovStockId, MovStockArticuloId,
-                     MovStockCantidad, MovStockPrecioVenta, MovStockCosto,
-                     MovStockFechaHora, MovStockUsuario,
-                     MovStockSigno, MovStockReferencia)
-                    VALUES
-                    (:suc, 'NC_COMPRA_DEV', :art,
-                     :cant, 0, :costo,
-                     NOW(), :usu,
-                     -1, :ref)
-                ")->execute([
-                        ':suc'   => $_SESSION['nick_sucursal'],
-                        ':art'   => $d['id_articulo'],
-                        ':cant'  => $d['cantidad'],
-                        ':costo' => $d['precio'],
-                        ':usu'   => $_SESSION['id_str'],
-                        ':ref'   => 'NC ' . $_POST['nro_nota']
+                    mainModel::registrar_movimiento_stock_modelo($pdo, [
+                        "id_sucursal" => $_SESSION['nick_sucursal'],
+                        "tipo" => "NC_COMPRA_DEV",
+                        "id_articulo" => $d['id_articulo'],
+                        "cantidad" => $d['cantidad'],
+                        "precio_venta" => 0,
+                        "costo" => $d['precio'],
+                        "usuario" => $_SESSION['id_str'],
+                        "signo" => -1,
+                        "referencia" => 'NC ' . $_POST['nro_nota']
                     ]);
                 }
             }
@@ -692,37 +663,16 @@ class notasCreDeControlador extends notasCreDeModelo
 
                 foreach ($items as $d) {
 
-                    $pdo->prepare("
-                    UPDATE stock
-                    SET stockDisponible = stockDisponible + :cant,
-                        stockUltActualizacion = NOW(),
-                        stockUsuActualizacion = :usu
-                    WHERE id_sucursal = :suc AND id_articulo = :art
-                ")->execute([
-                        ':cant' => $d['cantidad'],
-                        ':usu'  => $_SESSION['id_str'],
-                        ':suc'  => $nota['id_sucursal'],
-                        ':art'  => $d['id_articulo']
-                    ]);
-
-                    $pdo->prepare("
-                    INSERT INTO movimientostock
-                    (id_sucursal, TipoMovStockId, MovStockArticuloId,
-                     MovStockCantidad, MovStockPrecioVenta, MovStockCosto,
-                     MovStockFechaHora, MovStockUsuario,
-                     MovStockSigno, MovStockReferencia)
-                    VALUES
-                    (:suc, 'ANULA_NC_COMPRA', :art,
-                     :cant, 0, :costo,
-                     NOW(), :usu,
-                     1, :ref)
-                ")->execute([
-                        ':suc'   => $nota['id_sucursal'],
-                        ':art'   => $d['id_articulo'],
-                        ':cant'  => $d['cantidad'],
-                        ':costo' => $d['precio_unitario'],
-                        ':usu'   => $_SESSION['id_str'],
-                        ':ref'   => 'ANULA NC ' . $nota['nro_documento']
+                    mainModel::registrar_movimiento_stock_modelo($pdo, [
+                        "id_sucursal" => $nota['id_sucursal'],
+                        "tipo" => "ANULA_NC_COMPRA",
+                        "id_articulo" => $d['id_articulo'],
+                        "cantidad" => $d['cantidad'],
+                        "precio_venta" => 0,
+                        "costo" => $d['precio_unitario'],
+                        "usuario" => $_SESSION['id_str'],
+                        "signo" => 1,
+                        "referencia" => 'ANULA NC ' . $nota['nro_documento']
                     ]);
                 }
             }

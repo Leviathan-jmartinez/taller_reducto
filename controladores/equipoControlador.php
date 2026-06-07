@@ -371,6 +371,16 @@ class equipoControlador extends equipoModelo
             exit();
         }
 
+        if ((int)$equipo['estado'] === 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Equipo inactivo",
+                "Texto" => "El equipo ya se encuentra inactivo.",
+                "Tipo" => "info"
+            ]);
+            exit();
+        }
+
         $eliminar = equipoModelo::eliminar_equipo_modelo($id);
         if (!$eliminar['ok']) {
             echo json_encode([

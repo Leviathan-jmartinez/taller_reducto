@@ -405,6 +405,17 @@ class articuloControlador extends articuloModelo
             exit();
         }
 
+        $articuloActual = $check_article->fetch();
+        if ((int)$articuloActual['estado'] === 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Artículo inactivo",
+                "Texto"  => "El artículo ya se encuentra inactivo.",
+                "Tipo"   => "info"
+            ]);
+            exit();
+        }
+
         session_start(['name' => 'STR']);
         if (!mainModel::tienePermiso('articulo.eliminar')) {
             return json_encode([

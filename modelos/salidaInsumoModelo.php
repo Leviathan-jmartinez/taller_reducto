@@ -70,19 +70,29 @@ class salidaInsumoModelo extends mainModel
                 }
 
                 $q = $pdo->prepare("
-                    SELECT 
-                        a.id_articulo,
-                        a.desc_articulo,
-                        s.stockDisponible
-                    FROM articulos a
-                    INNER JOIN stock s 
-                        ON s.id_articulo = a.id_articulo
-                    WHERE a.id_articulo = ?
-                      AND a.tipo = 'insumo'
-                      AND a.estado = 1
-                      AND s.id_sucursal = ?
-                    FOR UPDATE
-                ");
+                SELECT 
+                    a.id_articulo,
+                    a.desc_articulo,
+                    s.stockDisponible,
+                    a.precio_venta,
+                    COALESCE(ap.precio_compra, 0) AS costo
+                FROM articulos a
+                INNER JOIN stock s 
+                    ON s.id_articulo = a.id_articulo
+                LEFT JOIN articulo_proveedor ap
+                    ON ap.id_articulo = a.id_articulo
+                AND ap.id = (
+                        SELECT MAX(ap2.id)
+                        FROM articulo_proveedor ap2
+                        WHERE ap2.id_articulo = a.id_articulo
+                        AND ap2.activo = 1
+                )
+                WHERE a.id_articulo = ?
+                AND a.tipo = 'insumo'
+                AND a.estado = 1
+                AND s.id_sucursal = ?
+                FOR UPDATE
+            ");
                 $q->execute([$idArticulo, $datos['id_sucursal']]);
                 $art = $q->fetch(PDO::FETCH_ASSOC);
 
@@ -105,46 +115,17 @@ class salidaInsumoModelo extends mainModel
                     $cantidad
                 ]);
 
-                $mov = $pdo->prepare("
-                    INSERT INTO movimientostock
-                    (id_sucursal, TipoMovStockId, MovStockArticuloId, MovStockCantidad,
-                     MovStockPrecioVenta, MovStockCosto, MovStockFechaHora,
-                     MovStockUsuario, MovStockSigno, MovStockReferencia)
-                    VALUES (?, 'SALIDA INSUMO', ?, ?, 0, 0, NOW(), ?, -1, ?)
-                ");
-                $mov->execute([
-                    $datos['id_sucursal'],
-                    $idArticulo,
-                    $cantidad,
-                    $datos['usuario'],
-                    'SAL_INS #' . $idSalida
+                mainModel::registrar_movimiento_stock_modelo($pdo, [
+                    "id_sucursal" => $datos['id_sucursal'],
+                    "tipo" => "SALIDA INSUMO",
+                    "id_articulo" => $idArticulo,
+                    "cantidad" => $cantidad,
+                    "precio_venta" => $art['precio_venta'],
+                    "costo" => $art['costo'],
+                    "usuario" => $datos['usuario'],
+                    "signo" => -1,
+                    "referencia" => 'SAL_INS #' . $idSalida
                 ]);
-
-                $idMovimiento = $pdo->lastInsertId();
-
-                $upd = $pdo->prepare("
-                    UPDATE stock
-                    SET stockDisponible = stockDisponible - ?,
-                        stockUltActualizacion = NOW(),
-                        stockUsuActualizacion = ?,
-                        stockultimoIdActualizacion = ?
-                    WHERE id_articulo = ?
-                      AND id_sucursal = ?
-                      AND stockDisponible >= ?
-                ");
-
-                $upd->execute([
-                    $cantidad,
-                    $datos['usuario'],
-                    $idMovimiento,
-                    $idArticulo,
-                    $datos['id_sucursal'],
-                    $cantidad
-                ]);
-
-                if ($upd->rowCount() === 0) {
-                    throw new Exception('No se pudo actualizar stock del artículo ID ' . $idArticulo);
-                }
             }
 
             $pdo->commit();
@@ -186,18 +167,38 @@ class salidaInsumoModelo extends mainModel
 
             /* ================= OBTENER DETALLE ================= */
             $det = $pdo->prepare("
-            SELECT 
-                d.id_articulo,
-                d.cantidad,
-                a.desc_articulo
-            FROM salida_insumo_detalle d
-            INNER JOIN articulos a 
-                ON a.id_articulo = d.id_articulo
-            WHERE d.idsalida_insumo = ?
-              AND a.tipo = 'insumo'
-              AND a.estado = 1
-        ");
-            $det->execute([$datos['idsalida_insumo']]);
+                SELECT 
+                    d.id_articulo,
+                    d.cantidad,
+                    a.desc_articulo,
+                    s.stockDisponible,
+                    a.precio_venta,
+                    COALESCE(ap.precio_compra, 0) AS costo
+                FROM salida_insumo_detalle d
+                INNER JOIN articulos a
+                    ON a.id_articulo = d.id_articulo
+                INNER JOIN stock s 
+                    ON s.id_articulo = a.id_articulo
+                AND s.id_sucursal = ?
+                LEFT JOIN articulo_proveedor ap
+                    ON ap.id_articulo = a.id_articulo
+                AND ap.id = (
+                        SELECT MAX(ap2.id)
+                        FROM articulo_proveedor ap2
+                        WHERE ap2.id_articulo = a.id_articulo
+                        AND ap2.activo = 1
+                )
+                WHERE d.idsalida_insumo = ?
+                AND a.tipo = 'insumo'
+                AND a.estado = 1
+                FOR UPDATE
+            ");
+
+            $det->execute([
+                $datos['id_sucursal'],
+                $datos['idsalida_insumo']
+            ]);
+
             $items = $det->fetchAll(PDO::FETCH_ASSOC);
 
             if (!$items) {
@@ -231,51 +232,17 @@ class salidaInsumoModelo extends mainModel
                     throw new Exception('No existe stock para el artículo ID ' . $idArticulo);
                 }
 
-                /* ================= MOVIMIENTO INVERSO ================= */
-                $mov = $pdo->prepare("
-                INSERT INTO movimientostock
-                (id_sucursal, TipoMovStockId, MovStockArticuloId, MovStockCantidad,
-                 MovStockPrecioVenta, MovStockCosto, MovStockFechaHora,
-                 MovStockUsuario, MovStockSigno, MovStockReferencia)
-                VALUES (?, 'ANUL SALIDA INSUMO', ?, ?, 0, 0, NOW(), ?, 1, ?)
-            ");
-
-                $mov->execute([
-                    $datos['id_sucursal'],
-                    $idArticulo,
-                    $cantidad,
-                    $datos['usuario'],
-                    'ANUL_SAL_INS #' . $datos['idsalida_insumo']
+                mainModel::registrar_movimiento_stock_modelo($pdo, [
+                    "id_sucursal" => $datos['id_sucursal'],
+                    "tipo" => "ANUL SALIDA INSUMO",
+                    "id_articulo" => $idArticulo,
+                    "cantidad" => $cantidad,
+                    "precio_venta" => $item['precio_venta'],
+                    "costo" => $item['costo'],
+                    "usuario" => $datos['usuario'],
+                    "signo" => 1,
+                    "referencia" => 'ANUL_SAL_INS #' . $datos['idsalida_insumo']
                 ]);
-
-                $idMovimiento = $pdo->lastInsertId();
-
-                if (!$idMovimiento) {
-                    throw new Exception('No se pudo generar el movimiento inverso de stock');
-                }
-
-                /* ================= DEVOLVER STOCK ================= */
-                $upd = $pdo->prepare("
-                UPDATE stock
-                SET stockDisponible = stockDisponible + ?,
-                    stockUltActualizacion = NOW(),
-                    stockUsuActualizacion = ?,
-                    stockultimoIdActualizacion = ?
-                WHERE id_articulo = ?
-                  AND id_sucursal = ?
-            ");
-
-                $upd->execute([
-                    $cantidad,
-                    $datos['usuario'],
-                    $idMovimiento,
-                    $idArticulo,
-                    $datos['id_sucursal']
-                ]);
-
-                if ($upd->rowCount() === 0) {
-                    throw new Exception('No se pudo actualizar stock del artículo ID ' . $idArticulo);
-                }
             }
 
             /* ================= ANULAR CABECERA ================= */

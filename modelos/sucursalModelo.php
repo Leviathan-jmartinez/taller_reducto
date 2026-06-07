@@ -108,7 +108,17 @@ class sucursalModelo extends mainModel
         }
 
         $stmt->bindParam(":id", $id, PDO::PARAM_INT);
-        $stmt->execute();
+        try {
+            $stmt->execute();
+        } catch (PDOException $e) {
+            $stmt = $pdo->prepare("
+            UPDATE sucursales
+            SET estado = 0
+            WHERE id_sucursal = :id
+        ");
+            $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+            $stmt->execute();
+        }
 
         return $stmt;
     }

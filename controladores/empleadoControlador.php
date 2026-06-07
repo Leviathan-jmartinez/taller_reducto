@@ -338,6 +338,17 @@ class empleadoControlador extends empleadoModelo
             exit();
         }
 
+        $empleadoActual = $check->fetch();
+        if ((int)$empleadoActual['estado'] === 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Empleado inactivo",
+                "Texto"  => "El empleado ya se encuentra inactivo.",
+                "Tipo"   => "info"
+            ]);
+            exit();
+        }
+
         session_start(['name' => 'STR']);
         if (!mainModel::tienePermiso('empleado.eliminar')) {
             return json_encode([

@@ -474,67 +474,20 @@ class inventarioControlador extends inventarioModelo
             $costo           = (float) $item['costo'];
             $cantidad_fisica = (float) $item['cantidad_fisica'];
 
-            /* ================= STOCK ================= */
-            $stock = mainModel::ejecutar_consulta_simple("
-            SELECT stockDisponible 
-            FROM stock
-            WHERE id_articulo = '$id_articulo'
-              AND id_sucursal = '$idsucursal'
-        ")->fetch();
-
-            if ($stock) {
-                $nuevo_stock = (float) $stock['stockDisponible'] + $cantidad;
-
-                mainModel::ejecutar_consulta_simple("
-                UPDATE stock
-                SET stockDisponible = '$nuevo_stock',
-                    stockUltActualizacion = '$fecha',
-                    stockUsuActualizacion = '$usuario',
-                    stockultimoIdActualizacion = '$idajuste'
-                WHERE id_articulo = '$id_articulo'
-                  AND id_sucursal = '$idsucursal'
-            ");
-            } else {
-                // Solo crear stock si hay diferencia real
-                mainModel::ejecutar_consulta_simple("
-                INSERT INTO stock
-                (id_sucursal, id_articulo, stockcant_max, stockcant_min,
-                 stockDisponible, stockUltActualizacion,
-                 stockUsuActualizacion, stockultimoIdActualizacion)
-                VALUES
-                ('$idsucursal', '$id_articulo', 200, 15,
-                 '$cantidad_fisica', '$fecha', '$usuario', '$idajuste')
-            ");
-            }
-
-            /* ================= MOVIMIENTO ================= */
             $signo = $cantidad > 0 ? 1 : -1;
-
-            mainModel::ejecutar_consulta_simple("
-            INSERT INTO movimientostock (
-                id_sucursal,
-                TipoMovStockId,
-                MovStockArticuloId,
-                MovStockCantidad,
-                MovStockPrecioVenta,
-                MovStockCosto,
-                MovStockFechaHora,
-                MovStockUsuario,
-                MovStockSigno,
-                MovStockReferencia
-            ) VALUES (
-                '$idsucursal',
-                'AJUSTE_INV',
-                '$id_articulo',
-                '" . abs($cantidad) . "',
-                0,
-                '$costo',
-                '$fecha',
-                '$usuario',
-                '$signo',
-                'AJUSTE #$idajuste'
-            )
-        ");
+            $conexionMovimiento = mainModel::conectar();
+            mainModel::registrar_movimiento_stock_modelo($conexionMovimiento, [
+                "id_sucursal" => $idsucursal,
+                "tipo" => "AJUSTE_INV",
+                "id_articulo" => $id_articulo,
+                "cantidad" => abs($cantidad),
+                "precio_venta" => 0,
+                "costo" => $costo,
+                "fecha" => $fecha,
+                "usuario" => $usuario,
+                "signo" => $signo,
+                "referencia" => 'AJUSTE #' . $idajuste
+            ]);
 
             $ajustesAplicados++;
         }
@@ -786,61 +739,6 @@ class inventarioControlador extends inventarioModelo
                 throw new Exception("No hay artículos en el detalle del ajuste");
             }
 
-            $stmtStock = $conexion->prepare("
-                SELECT stockDisponible
-                FROM stock
-                WHERE id_articulo = :id_articulo
-                  AND id_sucursal = :sucursal
-                LIMIT 1
-                FOR UPDATE
-            ");
-
-            $stmtUpdStock = $conexion->prepare("
-                UPDATE stock
-                SET stockDisponible = :stock,
-                    stockUltActualizacion = :fecha,
-                    stockUsuActualizacion = :usuario,
-                    stockultimoIdActualizacion = :idajuste
-                WHERE id_articulo = :id_articulo
-                  AND id_sucursal = :sucursal
-            ");
-
-            $stmtInsStock = $conexion->prepare("
-                INSERT INTO stock
-                (id_sucursal, id_articulo, stockcant_max, stockcant_min,
-                 stockDisponible, stockUltActualizacion,
-                 stockUsuActualizacion, stockultimoIdActualizacion)
-                VALUES
-                (:sucursal, :id_articulo, 200, 15,
-                 :stock, :fecha, :usuario, :idajuste)
-            ");
-
-            $stmtMovimiento = $conexion->prepare("
-                INSERT INTO movimientostock (
-                    id_sucursal,
-                    TipoMovStockId,
-                    MovStockArticuloId,
-                    MovStockCantidad,
-                    MovStockPrecioVenta,
-                    MovStockCosto,
-                    MovStockFechaHora,
-                    MovStockUsuario,
-                    MovStockSigno,
-                    MovStockReferencia
-                ) VALUES (
-                    :sucursal,
-                    'AJUSTE_INV',
-                    :id_articulo,
-                    :cantidad,
-                    0,
-                    :costo,
-                    :fecha,
-                    :usuario,
-                    :signo,
-                    :referencia
-                )
-            ");
-
             $ajustesAplicados = 0;
 
             foreach ($detalle as $item) {
@@ -854,51 +752,21 @@ class inventarioControlador extends inventarioModelo
                     throw new Exception("El ajuste contiene artículos, cantidades o costos inválidos");
                 }
 
-                $stmtStock->execute([
-                    ':id_articulo' => $id_articulo,
-                    ':sucursal' => $idsucursal
-                ]);
-                $stock = $stmtStock->fetch(PDO::FETCH_ASSOC);
-
-                if ($stock) {
-                    $nuevoStock = (float) $stock['stockDisponible'] + $cantidad;
-
-                    if ($nuevoStock < 0) {
-                        throw new Exception("El ajuste dejaría stock negativo para el artículo #" . $id_articulo);
-                    }
-
-                    $stmtUpdStock->execute([
-                        ':stock' => $nuevoStock,
-                        ':fecha' => $fecha,
-                        ':usuario' => $usuario,
-                        ':idajuste' => $idajuste,
-                        ':id_articulo' => $id_articulo,
-                        ':sucursal' => $idsucursal
-                    ]);
-                } else {
-                    $stmtInsStock->execute([
-                        ':sucursal' => $idsucursal,
-                        ':id_articulo' => $id_articulo,
-                        ':stock' => $cantidad_fisica,
-                        ':fecha' => $fecha,
-                        ':usuario' => $usuario,
-                        ':idajuste' => $idajuste
-                    ]);
-                }
-
                 if ($cantidad == 0) {
                     continue;
                 }
 
-                $stmtMovimiento->execute([
-                    ':sucursal' => $idsucursal,
-                    ':id_articulo' => $id_articulo,
-                    ':cantidad' => abs($cantidad),
-                    ':costo' => $costo,
-                    ':fecha' => $fecha,
-                    ':usuario' => $usuario,
-                    ':signo' => $cantidad > 0 ? 1 : -1,
-                    ':referencia' => 'AJUSTE #' . $idajuste
+                mainModel::registrar_movimiento_stock_modelo($conexion, [
+                    "id_sucursal" => $idsucursal,
+                    "tipo" => "AJUSTE_INV",
+                    "id_articulo" => $id_articulo,
+                    "cantidad" => abs($cantidad),
+                    "precio_venta" => 0,
+                    "costo" => $costo,
+                    "fecha" => $fecha,
+                    "usuario" => $usuario,
+                    "signo" => $cantidad > 0 ? 1 : -1,
+                    "referencia" => 'AJUSTE #' . $idajuste
                 ]);
 
                 $ajustesAplicados++;
@@ -1175,45 +1043,18 @@ class inventarioControlador extends inventarioModelo
 
                 foreach ($detalle as $d) {
 
-                    /* ===== REVERTIR STOCK ===== */
-                    $db->exec("
-                    UPDATE stock
-                    SET stockDisponible = stockDisponible - {$d['diferencia']},
-                        stockUltActualizacion = NOW(),
-                        stockUsuActualizacion = {$_SESSION['id_str']},
-                        stockultimoIdActualizacion = $id
-                    WHERE id_sucursal = {$ajuste['sucursal_id']}
-                      AND id_articulo = {$d['id_articulo']}
-                ");
-
-                    /* ===== MOVIMIENTO INVERSO ===== */
                     $signo = ($d['diferencia'] > 0) ? -1 : 1;
-
-                    $db->exec("
-                    INSERT INTO movimientostock (
-                        id_sucursal,
-                        TipoMovStockId,
-                        MovStockArticuloId,
-                        MovStockCantidad,
-                        MovStockPrecioVenta,
-                        MovStockCosto,
-                        MovStockFechaHora,
-                        MovStockUsuario,
-                        MovStockSigno,
-                        MovStockReferencia
-                    ) VALUES (
-                        {$ajuste['sucursal_id']},
-                        'ANULACION_AJUSTE_INV',
-                        {$d['id_articulo']},
-                        " . abs($d['diferencia']) . ",
-                        0,
-                        {$d['costo']},
-                        NOW(),
-                        {$_SESSION['id_str']},
-                        $signo,
-                        'Anulación ajuste inventario #$id'
-                    )
-                ");
+                    mainModel::registrar_movimiento_stock_modelo($db, [
+                        "id_sucursal" => $ajuste['sucursal_id'],
+                        "tipo" => "ANULACION_AJUSTE_INV",
+                        "id_articulo" => $d['id_articulo'],
+                        "cantidad" => abs($d['diferencia']),
+                        "precio_venta" => 0,
+                        "costo" => $d['costo'],
+                        "usuario" => $_SESSION['id_str'],
+                        "signo" => $signo,
+                        "referencia" => 'Anulación ajuste inventario #' . $id
+                    ]);
                 }
 
                 /* ===== MARCAR COMO ANULADO ===== */

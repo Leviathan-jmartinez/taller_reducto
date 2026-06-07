@@ -371,16 +371,6 @@ class compraControlador extends compraModelo
                     "referencia"   => $idcab
                 ];
                 compraModelo::agregar_movimiento_stock($mov);
-
-                $datos_stock = [
-                    "id_sucursal"                 => $_SESSION['nick_sucursal'],
-                    "id_articulo"                => $item['ID'],
-                    "cantidadIngreso"            => (float)$item['cantidad'],
-                    "stockUltActualizacion"      => date("Y-m-d H:i:s"),
-                    "stockUsuActualizacion"      => $_SESSION['id_str'],
-                    "stockultimoIdActualizacion" => $idcab
-                ];
-                compraModelo::upsert_stock_modelo($datos_stock);
             }
 
             /* ===============================
@@ -981,28 +971,18 @@ class compraControlador extends compraModelo
 
             // 3) Descontar stock y generar movimientos
             foreach ($detalles as $d) {
-                // Descontar stock
-                $descontarStock = compraModelo::descontar_stock_modelo([
+                mainModel::registrar_movimiento_stock_modelo($pdo, [
+                    "id_sucursal" => $id_sucursal,
+                    "tipo" => "ANULACION COMPRA",
                     "id_articulo" => $d['id_articulo'],
-                    "cantidad"    => $d['cantidad_recibida'],
-                    "usuario"     => $usuario,
-                    "id_sucursal"  => $id_sucursal,
-                    "referencia"  => $id,
-                    "conexion"    => $pdo
-                ]);
-                if ($descontarStock->rowCount() < 1) {
-                    throw new Exception("Stock insuficiente para anular el articulo " . $d['id_articulo']);
-                }
-
-                // Insertar movimiento de stock
-                compraModelo::movimiento_stock_anulacion_modelo([
-                    "LocalId"     => $id_sucursal,
-                    "ProductoId"  => $d['id_articulo'],
-                    "Cantidad"    => $d['cantidad_recibida'],
-                    "Costo"       => $d['precio_unitario'],
-                    "Usuario"     => $usuario,
-                    "Referencia"  => "ANUL_COMPRA# " . $id,
-                    "conexion"    => $pdo
+                    "cantidad" => $d['cantidad_recibida'],
+                    "precio_venta" => 0,
+                    "costo" => $d['precio_unitario'],
+                    "nro_ticket" => "ANUL_COMPRA# " . $id,
+                    "pos" => null,
+                    "usuario" => $usuario,
+                    "signo" => -1,
+                    "referencia" => "ANUL_COMPRA# " . $id
                 ]);
             }
 

@@ -100,7 +100,17 @@ class articuloModelo extends mainModel
         }
 
         $stmt->bindParam(":id", $id, PDO::PARAM_INT);
-        $stmt->execute();
+        try {
+            $stmt->execute();
+        } catch (PDOException $e) {
+            $stmt = $pdo->prepare("
+            UPDATE articulos
+            SET estado = 0
+            WHERE id_articulo = :id
+        ");
+            $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+            $stmt->execute();
+        }
 
         return $stmt;
     }

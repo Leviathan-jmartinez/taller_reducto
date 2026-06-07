@@ -362,7 +362,7 @@ class rolesControlador extends rolesModelo
         $id = mainModel::limpiar_string($id);
 
         $check_rol = mainModel::ejecutar_consulta_simple(
-            "SELECT id_rol FROM roles WHERE id_rol='$id'"
+            "SELECT id_rol, estado FROM roles WHERE id_rol='$id'"
         );
         if ($check_rol->rowCount() <= 0) {
             echo json_encode([
@@ -370,6 +370,17 @@ class rolesControlador extends rolesModelo
                 "Titulo" => "Error",
                 "Texto" => "El rol no existe en el sistema",
                 "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        $rolActual = $check_rol->fetch();
+        if ((int)$rolActual['estado'] === 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Rol inactivo",
+                "Texto" => "El rol ya se encuentra inactivo.",
+                "Tipo" => "info"
             ]);
             exit();
         }

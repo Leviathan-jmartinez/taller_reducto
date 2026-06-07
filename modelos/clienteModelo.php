@@ -94,7 +94,17 @@ class clienteModelo extends mainModel
         }
 
         $stmt->bindParam(":id", $id, PDO::PARAM_INT);
-        $stmt->execute();
+        try {
+            $stmt->execute();
+        } catch (PDOException $e) {
+            $stmt = $pdo->prepare("
+            UPDATE clientes
+            SET estado_cliente = 0
+            WHERE id_cliente = :id
+        ");
+            $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+            $stmt->execute();
+        }
 
         return $stmt;
     }

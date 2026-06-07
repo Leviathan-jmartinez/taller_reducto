@@ -171,7 +171,20 @@ class equipoModelo extends mainModel
         }
 
         $sql_equipo->bindParam(":id", $id_equipo, PDO::PARAM_INT);
-        if ($sql_equipo->execute() && $sql_equipo->rowCount() > 0) {
+        try {
+            $ejecutado = $sql_equipo->execute();
+        } catch (PDOException $e) {
+            $sql_equipo = $conexion->prepare(
+                "UPDATE equipo_trabajo
+                 SET estado = 0
+                 WHERE id_equipo = :id"
+            );
+            $sql_equipo->bindParam(":id", $id_equipo, PDO::PARAM_INT);
+            $ejecutado = $sql_equipo->execute();
+            $accion = "inactivado";
+        }
+
+        if ($ejecutado && $sql_equipo->rowCount() > 0) {
             return [
                 "ok" => true,
                 "accion" => $accion

@@ -83,6 +83,17 @@ class cargosControlador extends cargosModelo
             exit();
         }
 
+        $cargoActual = $check->fetch();
+        if ((int)$cargoActual['estado'] === 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Cargo inactivo",
+                "Texto"  => "El cargo ya se encuentra inactivo.",
+                "Tipo"   => "info"
+            ]);
+            exit();
+        }
+
         $stmt = cargosModelo::eliminar_cargo_modelo($id);
 
         if ($stmt->rowCount() > 0) {

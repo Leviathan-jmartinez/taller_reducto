@@ -69,7 +69,17 @@ class cargosModelo extends mainModel
         }
 
         $stmt->bindParam(":id", $id, PDO::PARAM_INT);
-        $stmt->execute();
+        try {
+            $stmt->execute();
+        } catch (PDOException $e) {
+            $stmt = $pdo->prepare("
+            UPDATE cargos
+            SET estado = 0
+            WHERE idcargos = :id
+        ");
+            $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+            $stmt->execute();
+        }
 
         return $stmt;
     }

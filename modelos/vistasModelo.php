@@ -14,9 +14,8 @@ class vistasModelo
         ,"inventario", "inventario-buscar", "remision-nuevo", "remision-buscar", "notasCreDe-nuevo", "notasCreDe-buscar","recepcionServicio-nuevo","recepcionServicio-buscar",
         "diagnostico-servicio-nuevo", "diagnostico-servicio-buscar","promocion-nuevo","promocion-lista","descuento-nuevo","descuento-lista","regla-comercial-nuevo","regla-comercial-lista","presupuesto-servicio-nuevo",
         "presupuesto-servicio-lista", "presupuesto-servicio-buscar", "ordenTrabajo-lista","ordenTrabajo-nuevo", "ordenTrabajo-asignar", "ordenTrabajo-buscar","registro-servicio-nuevo","registro-servicio-lista",
-        "registro-servicio-buscar"   ,"reclamo-servicio-nuevo","reclamo-servicio-lista","transferencia-nuevo","transferencia-historial","transferencia-recibir","reporte-stock",
-        "reporte-pedidos", "reporte-presupuestos", "reporte-ordenes-compra", "reporte-compras", "reporte-recepcion-servicio", "reporte-presupuesto-servicio","reporte-orden-trabajo"
-         ,"reporte-registro-servicio", "reporte-LibroCompras","reporte-articulos", "reporte-proveedores", "reporte-clientes", "reporte-empleados","reporte-sucursales","reporte-vehiculos","reporte-transferencias","reporte-movimientostock"
+        "registro-servicio-buscar"   ,"reclamo-servicio-nuevo","reclamo-servicio-lista","transferencia-nuevo","transferencia-historial","transferencia-recibir",
+        "reporte-referenciales", "reporte-movimientos"
          ,"registro-insumos","registro-insumos-buscar"];
         if (in_array($vistas, $lista_blanca)) {
             if (is_file("./vistas/contenidos/" . $vistas . "-vista.php")) {

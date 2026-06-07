@@ -137,57 +137,19 @@ class transferenciaModelo extends mainModel
                     ':cant' => $cantidad
                 ]);
 
-                // descontar stock
-                $pdo->prepare("
-                        UPDATE stock
-                        SET stockDisponible = stockDisponible - :cant
-                        WHERE id_articulo = :prod
-                        AND id_sucursal = :suc")->execute([
-                    ':cant' => $cantidad,
-                    ':prod' => $idProducto,
-                    ':suc'  => $d['id_sucursal_origen']
-                ]);
-
-                // ================= MOVIMIENTO DE STOCK (SALIDA) =================
-
-                // obtener costo (ya lo usás para remisión)
                 $costo = $costos[$idProducto];
 
-                $pdo->prepare("
-                INSERT INTO movimientostock
-                    (
-                        id_sucursal,
-                        TipoMovStockId,
-                        MovStockArticuloId,
-                        MovStockCantidad,
-                        MovStockPrecioVenta,
-                        MovStockCosto,
-                        MovStockFechaHora,
-                        MovStockNroTicket,
-                        MovStockUsuario,
-                        MovStockSigno,
-                        MovStockReferencia
-                    )
-                    VALUES
-                    (
-                        :local,
-                        'TRANSFERENCIA_SALIDA',
-                        :prod,
-                        :cant,
-                        0,
-                        :costo,
-                        NOW(),
-                        :nro,
-                        :usr,
-                        -1,
-                        :ref)")->execute([
-                    ':local' => $d['id_sucursal_origen'],
-                    ':prod'  => $idProducto,
-                    ':cant'  => $cantidad,
-                    ':costo' => $costo,
-                    ':nro'   => $nroRemision,
-                    ':usr'   => $d['id_usuario'],
-                    ':ref'   => 'TRANSFERENCIA #' . $idTransferencia
+                mainModel::registrar_movimiento_stock_modelo($pdo, [
+                    "id_sucursal" => $d['id_sucursal_origen'],
+                    "tipo" => "TRANSFERENCIA_SALIDA",
+                    "id_articulo" => $idProducto,
+                    "cantidad" => $cantidad,
+                    "precio_venta" => 0,
+                    "costo" => $costo,
+                    "nro_ticket" => $nroRemision,
+                    "usuario" => $d['id_usuario'],
+                    "signo" => -1,
+                    "referencia" => 'TRANSFERENCIA #' . $idTransferencia
                 ]);
             }
 
@@ -438,59 +400,16 @@ class transferenciaModelo extends mainModel
                 ]);
 
                 if ($recibido > 0) {
-                    // REGISTRAR MOVIMIENTO DE ENTRADA
-                    $pdo->prepare("
-                        INSERT INTO movimientostock
-                        (
-                            id_sucursal,
-                            TipoMovStockId,
-                            MovStockArticuloId,
-                            MovStockCantidad,
-                            MovStockPrecioVenta,
-                            MovStockCosto,
-                            MovStockFechaHora,
-                            MovStockUsuario,
-                            MovStockSigno,
-                            MovStockReferencia
-                        )
-                        VALUES
-                        (
-                            :suc,
-                            'TRANSFERENCIA_ENTRADA',
-                            :art,
-                            :cant,
-                            0,
-                            0,
-                            NOW(),
-                            :usr,
-                            1,
-                            :ref
-                        )
-                    ")->execute([
-                        ':suc' => $t['sucursal_destino'], 
-                        ':art' => $idArticulo,
-                        ':cant' => $recibido,
-                        ':usr' => $idUsuario,
-                        ':ref' => 'TRF-' . $idTransferencia
-                    ]);
-
-                    $pdo->prepare("
-                    INSERT INTO stock
-                        (id_articulo, id_sucursal, stockcant_max, stockcant_min, stockDisponible,
-                         stockUltActualizacion, stockUsuActualizacion, stockultimoIdActualizacion)
-                    VALUES
-                        (:art, :suc, 200, 15, :cant, NOW(), :usr, :id)
-                    ON DUPLICATE KEY UPDATE
-                        stockDisponible = stockDisponible + :cant,
-                        stockUltActualizacion = NOW(),
-                        stockUsuActualizacion = :usr,
-                        stockultimoIdActualizacion = :id
-                ")->execute([
-                        ':art' => $idArticulo,
-                        ':suc' => $t['sucursal_destino'],
-                        ':cant' => $recibido,
-                        ':usr' => $idUsuario,
-                        ':id'  => $idTransferencia
+                    mainModel::registrar_movimiento_stock_modelo($pdo, [
+                        "id_sucursal" => $t['sucursal_destino'],
+                        "tipo" => "TRANSFERENCIA_ENTRADA",
+                        "id_articulo" => $idArticulo,
+                        "cantidad" => $recibido,
+                        "precio_venta" => 0,
+                        "costo" => 0,
+                        "usuario" => $idUsuario,
+                        "signo" => 1,
+                        "referencia" => 'TRF-' . $idTransferencia
                     ]);
                 }
             }

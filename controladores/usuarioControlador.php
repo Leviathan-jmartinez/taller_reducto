@@ -435,6 +435,17 @@ class usuarioControlador extends usuarioModelo
             exit();
         }
 
+        $usuarioActual = $check_user->fetch();
+        if ((int)$usuarioActual['usu_estado'] === 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Usuario inactivo",
+                "Texto"  => "El usuario ya se encuentra inactivo.",
+                "Tipo"   => "info"
+            ]);
+            exit();
+        }
+
         session_start(['name' => 'STR']);
         if (!mainModel::tienePermiso('usuarios.eliminar')) {
             return json_encode([

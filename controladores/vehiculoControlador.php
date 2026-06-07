@@ -540,6 +540,17 @@ class vehiculoControlador extends vehiculoModelo
             exit();
         }
 
+        $vehiculoActual = $check->fetch();
+        if ((int)$vehiculoActual['estado'] === 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Vehículo inactivo",
+                "Texto"  => "El vehículo ya se encuentra inactivo.",
+                "Tipo"   => "info"
+            ]);
+            exit();
+        }
+
         session_start(['name' => 'STR']);
         if (!mainModel::tienePermiso('vehiculo.eliminar')) {
             return json_encode([

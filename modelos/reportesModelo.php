@@ -28,12 +28,34 @@ class reportesModelo extends mainModel
             $params[':codigo'] = $f['codigo'];
         }
 
+        if (!empty($f['buscar'])) {
+            $where .= " AND (
+                a.codigo LIKE :buscar OR
+                a.desc_articulo LIKE :buscar OR
+                c.cat_descri LIKE :buscar OR
+                m.mar_descri LIKE :buscar OR
+                p.razon_social LIKE :buscar
+            ) ";
+            $params[':buscar'] = '%' . $f['buscar'] . '%';
+        }
+
         if (!empty($f['estado']) && $f['estado'] != 'T') {
             if ($f['estado'] == 'A') {
                 $where .= " AND a.estado = 1 ";
             } elseif ($f['estado'] == 'I') {
                 $where .= " AND a.estado = 0 ";
             }
+        }
+
+        if (!empty($f['buscar'])) {
+            $where .= " AND (
+                a.codigo LIKE :buscar OR
+                a.desc_articulo LIKE :buscar OR
+                c.cat_descri LIKE :buscar OR
+                m.mar_descri LIKE :buscar OR
+                p.razon_social LIKE :buscar
+            ) ";
+            $params[':buscar'] = '%' . $f['buscar'] . '%';
         }
 
         $sql = self::conectar()->prepare("
@@ -68,7 +90,10 @@ class reportesModelo extends mainModel
         ");
 
         $sql->execute($params);
-        return $sql->fetchAll(PDO::FETCH_ASSOC);
+        return self::filtrar_movimientos_stock_por_naturaleza(
+            $sql->fetchAll(PDO::FETCH_ASSOC),
+            (string)($f['naturaleza'] ?? '')
+        );
     }
 
     protected static function reporte_articulos_modelo($f)
@@ -92,9 +117,25 @@ class reportesModelo extends mainModel
             $params[':proveedor'] = $f['proveedor'];
         }
 
+        if (!empty($f['articulo']) && $f['articulo'] != 0) {
+            $where .= " AND a.id_articulo = :articulo ";
+            $params[':articulo'] = $f['articulo'];
+        }
+
         if (!empty($f['codigo'])) {
             $where .= " AND a.codigo = :codigo ";
             $params[':codigo'] = $f['codigo'];
+        }
+
+        if (!empty($f['buscar'])) {
+            $where .= " AND (
+                a.codigo LIKE :buscar OR
+                a.desc_articulo LIKE :buscar OR
+                c.cat_descri LIKE :buscar OR
+                m.mar_descri LIKE :buscar OR
+                p.razon_social LIKE :buscar
+            ) ";
+            $params[':buscar'] = '%' . $f['buscar'] . '%';
         }
 
         if (!empty($f['estado']) && $f['estado'] != 'T') {
@@ -184,7 +225,10 @@ class reportesModelo extends mainModel
         FROM (
             SELECT DISTINCT a.id_articulo, a.estado
             FROM articulos a
+            LEFT JOIN categorias c ON c.id_categoria = a.id_categoria
+            LEFT JOIN marcas m ON m.id_marcas = a.id_marcas
             LEFT JOIN articulo_proveedor ap ON ap.id_articulo = a.id_articulo AND ap.activo = 1
+            LEFT JOIN proveedores p ON p.idproveedores = ap.idproveedores
             $where
         ) articulos_filtrados
         ");
@@ -637,7 +681,8 @@ class reportesModelo extends mainModel
             '' AS proveedor,
             s.suc_descri AS sucursal,
 
-            COUNT(pd.id_articulo) AS cantidad_items
+            COUNT(pd.id_articulo) AS cantidad_items,
+            GROUP_CONCAT(DISTINCT pd.id_articulo) AS articulos_ids
 
         FROM pedido_cabecera pc
 
@@ -702,6 +747,7 @@ class reportesModelo extends mainModel
             pc.fecha_venc,
             pc.estado,
             pc.total,
+            pc.idproveedores,
 
             pr.razon_social AS proveedor,
 
@@ -710,6 +756,7 @@ class reportesModelo extends mainModel
 
             COUNT(pd.id_articulo) AS cantidad_items,
             COALESCE(SUM(pd.cantidad), 0) AS cantidad_unidades,
+            GROUP_CONCAT(DISTINCT pd.id_articulo) AS articulos_ids,
 
             s.suc_descri AS sucursal
 
@@ -783,6 +830,7 @@ class reportesModelo extends mainModel
             oc.fecha_entrega,
             oc.estado,
             oc.presupuestoid,
+            oc.idproveedores,
 
             pr.razon_social AS proveedor,
 
@@ -795,7 +843,8 @@ class reportesModelo extends mainModel
             COALESCE(SUM(ocd.cantidad), 0) AS cantidad_total,
             COALESCE(SUM(ocd.cantidad_pendiente), 0) AS cantidad_pendiente,
 
-            COALESCE(SUM(ocd.cantidad * ocd.precio_unitario), 0) AS total
+            COALESCE(SUM(ocd.cantidad * ocd.precio_unitario), 0) AS total,
+            GROUP_CONCAT(DISTINCT ocd.id_articulo) AS articulos_ids
 
         FROM orden_compra oc
 
@@ -872,6 +921,7 @@ class reportesModelo extends mainModel
             cc.condicion,
             cc.compra_intervalo,
             cc.idOcompra,
+            cc.idproveedores,
 
             pr.razon_social AS proveedor,
 
@@ -881,7 +931,8 @@ class reportesModelo extends mainModel
             s.suc_descri AS sucursal,
 
             COUNT(cd.id_articulo) AS cantidad_items,
-            COALESCE(SUM(cd.cantidad_recibida), 0) AS cantidad_total
+            COALESCE(SUM(cd.cantidad_recibida), 0) AS cantidad_total,
+            GROUP_CONCAT(DISTINCT cd.id_articulo) AS articulos_ids
 
         FROM compra_cabecera cc
 
@@ -954,6 +1005,7 @@ class reportesModelo extends mainModel
             lc.nro_comprobante,
             lc.proveedor_nombre,
             lc.proveedor_ruc,
+            lc.idproveedores,
             lc.estado,
             lc.exenta,
             lc.gravada_5,
@@ -1058,12 +1110,15 @@ class reportesModelo extends mainModel
             nr.nro_remision,
             nr.fechaenvio,
             nr.fechallegada,
-            nr.motivo_remision
+            nr.motivo_remision,
+            GROUP_CONCAT(DISTINCT td.id_articulo) AS articulos_ids
         FROM transferencia_stock t
         INNER JOIN sucursales so ON so.id_sucursal = t.sucursal_origen
         INNER JOIN sucursales sd ON sd.id_sucursal = t.sucursal_destino
         LEFT JOIN nota_remision nr ON nr.idtransferencia = t.idtransferencia
+        LEFT JOIN transferencia_stock_detalle td ON td.idtransferencia = t.idtransferencia
         $where
+        GROUP BY t.idtransferencia
         ORDER BY t.fecha DESC
         ");
 
@@ -1113,12 +1168,60 @@ class reportesModelo extends mainModel
             $params[':tipo'] = $f['tipo'];
         }
 
-        if (!empty($f['signo']) && $f['signo'] != 'T') {
-            if ($f['signo'] == 'P') {
-                $where .= " AND m.MovStockSigno = 1 ";
-            } elseif ($f['signo'] == 'N') {
-                $where .= " AND m.MovStockSigno = -1 ";
+        if (!empty($f['naturaleza']) && $f['naturaleza'] != 'T') {
+
+            switch ($f['naturaleza']) {
+
+                case 'entrada':
+                    $where .= " AND m.MovStockSigno = 1 ";
+                    break;
+
+                case 'salida':
+                    $where .= " AND m.MovStockSigno = -1 ";
+                    break;
+
+                case 'ajuste':
+                    $where .= " AND m.TipoMovStockId IN (
+                'AJUSTE_INV',
+                'ANULACION_AJUSTE_INV'
+            ) ";
+                    break;
+
+                case 'compra':
+                    $where .= " AND m.TipoMovStockId IN (
+                'RECEPCION COMPRA',
+                'ANULACION COMPRA',
+                'NC_COMPRA_DEV',
+                'ANULA_NC_COMPRA'
+            ) ";
+                    break;
+
+                case 'transferencia':
+                    $where .= " AND m.TipoMovStockId IN (
+                'TRANSFERENCIA_SALIDA',
+                'TRANSFERENCIA_ENTRADA'
+            ) ";
+                    break;
+
+                case 'servicio':
+                    $where .= " AND m.TipoMovStockId IN (
+                'REG. SERVICIO',
+                'ANULACION REG. SERVICIO'
+            ) ";
+                    break;
+
+                case 'insumo':
+                    $where .= " AND m.TipoMovStockId IN (
+                'SALIDA INSUMO',
+                'ANUL SALIDA INSUMO'
+            ) ";
+                    break;
             }
+        }
+
+        if (!empty($f['articulo']) && $f['articulo'] != 0) {
+            $where .= " AND m.MovStockArticuloId = :articulo ";
+            $params[':articulo'] = $f['articulo'];
         }
 
         if (!empty($f['desde'])) {
@@ -1137,6 +1240,7 @@ class reportesModelo extends mainModel
             m.MovStockFechaHora,
             s.suc_descri AS sucursal,
             m.TipoMovStockId,
+            m.MovStockArticuloId AS id_articulo,
             a.desc_articulo,
             m.MovStockCantidad,
             m.MovStockSigno,
@@ -1175,11 +1279,54 @@ class reportesModelo extends mainModel
             $params[':tipo'] = $f['tipo'];
         }
 
-        if (!empty($f['signo']) && $f['signo'] != 'T') {
-            if ($f['signo'] == 'P') {
-                $where .= " AND m.MovStockSigno = 1 ";
-            } elseif ($f['signo'] == 'N') {
-                $where .= " AND m.MovStockSigno = -1 ";
+        if (!empty($f['naturaleza']) && $f['naturaleza'] != 'T') {
+
+            switch ($f['naturaleza']) {
+
+                case 'entrada':
+                    $where .= " AND m.MovStockSigno = 1 ";
+                    break;
+
+                case 'salida':
+                    $where .= " AND m.MovStockSigno = -1 ";
+                    break;
+
+                case 'ajuste':
+                    $where .= " AND m.TipoMovStockId IN (
+                'AJUSTE_INV',
+                'ANULACION_AJUSTE_INV'
+            ) ";
+                    break;
+
+                case 'compra':
+                    $where .= " AND m.TipoMovStockId IN (
+                'RECEPCION COMPRA',
+                'ANULACION COMPRA',
+                'NC_COMPRA_DEV',
+                'ANULA_NC_COMPRA'
+            ) ";
+                    break;
+
+                case 'transferencia':
+                    $where .= " AND m.TipoMovStockId IN (
+                'TRANSFERENCIA_SALIDA',
+                'TRANSFERENCIA_ENTRADA'
+            ) ";
+                    break;
+
+                case 'servicio':
+                    $where .= " AND m.TipoMovStockId IN (
+                'REG. SERVICIO',
+                'ANULACION REG. SERVICIO'
+            ) ";
+                    break;
+
+                case 'insumo':
+                    $where .= " AND m.TipoMovStockId IN (
+                'SALIDA INSUMO',
+                'ANUL SALIDA INSUMO'
+            ) ";
+                    break;
             }
         }
 
@@ -1219,6 +1366,7 @@ class reportesModelo extends mainModel
             rs.fecha_salida,
             rs.kilometraje,
             rs.estado,
+            rs.id_cliente,
 
             CONCAT(c.nombre_cliente, ' ',c.apellido_cliente) AS cliente,
             CONCAT(m.mar_descri, ' ', mo.mod_descri, ' ', v.anho) AS vehiculo,
@@ -1297,8 +1445,10 @@ class reportesModelo extends mainModel
             ps.subtotal,
             ps.total_descuento,
             ps.total_final,
+            ps.id_cliente,
 
             COUNT(pds.id_articulo) AS cantidad_items,
+            GROUP_CONCAT(DISTINCT pds.id_articulo) AS articulos_ids,
 
             CONCAT(u.usu_nombre, ' ', u.usu_apellido) AS usuario,
 
@@ -1388,6 +1538,7 @@ class reportesModelo extends mainModel
             ot.fecha_inicio,
             ot.fecha_fin,
             ot.estado,
+            ot.id_cliente,
 
             ps.idpresupuesto_servicio,
             rs.idrecepcion,
@@ -1401,7 +1552,8 @@ class reportesModelo extends mainModel
 
             s.suc_descri AS sucursal,
 
-            COUNT(otd.id_articulo) AS cantidad_items
+            COUNT(otd.id_articulo) AS cantidad_items,
+            GROUP_CONCAT(DISTINCT otd.id_articulo) AS articulos_ids
 
         FROM orden_trabajo ot
 
@@ -1489,6 +1641,7 @@ class reportesModelo extends mainModel
             rs.fecha_servicio,
             rs.fecha_registro,
             rs.estado,
+            rs.id_cliente,
 
             ot.idorden_trabajo,
 
@@ -1508,7 +1661,8 @@ class reportesModelo extends mainModel
             COALESCE(rd.cantidad_insumos, 0) AS cantidad_insumos,
             COALESCE(rd.total_repuestos, 0) AS total_repuestos,
             COALESCE(rd.total_insumos, 0) AS total_insumos,
-            COALESCE(rd.total, 0) AS total
+            COALESCE(rd.total, 0) AS total,
+            rd.articulos_ids
 
         FROM registro_servicio rs
 
@@ -1544,7 +1698,8 @@ class reportesModelo extends mainModel
                 COALESCE(SUM(CASE WHEN origen = 'INSUMO' THEN cantidad ELSE 0 END), 0) AS cantidad_insumos,
                 COALESCE(SUM(CASE WHEN origen = 'OT' THEN subtotal ELSE 0 END), 0) AS total_repuestos,
                 COALESCE(SUM(CASE WHEN origen = 'INSUMO' THEN subtotal ELSE 0 END), 0) AS total_insumos,
-                COALESCE(SUM(subtotal), 0) AS total
+                COALESCE(SUM(subtotal), 0) AS total,
+                GROUP_CONCAT(DISTINCT id_articulo) AS articulos_ids
             FROM registro_servicio_detalle
             GROUP BY idregistro_servicio
         ) rd
@@ -1592,6 +1747,312 @@ class reportesModelo extends mainModel
 
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function reporte_marcas_modelo($f)
+    {
+        $where = " WHERE 1=1 ";
+        $params = [];
+
+        if (!empty($f['buscar'])) {
+            $where .= " AND m.mar_descri LIKE :buscar ";
+            $params[':buscar'] = '%' . $f['buscar'] . '%';
+        }
+
+        $sql = self::conectar()->prepare("
+            SELECT
+                m.id_marcas,
+                m.mar_descri
+            FROM marcas m
+            $where
+            ORDER BY m.mar_descri ASC
+        ");
+
+        $sql->execute($params);
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    protected static function reporte_kardex_articulo_modelo($f)
+    {
+        $idArticulo = (int)($f['articulo'] ?? 0);
+        $idSucursal = (int)($f['sucursal'] ?? 0);
+
+        if ($idArticulo <= 0 || $idSucursal <= 0) {
+            return [];
+        }
+
+        $pdo = self::conectar();
+        $usaSaldos = self::mov_stock_tiene_saldos($pdo);
+        $saldoAnterior = 0.0;
+
+        if (!empty($f['desde'])) {
+            $sqlSaldo = $pdo->prepare("
+                SELECT COALESCE(SUM(MovStockCantidad * MovStockSigno), 0)
+                FROM movimientostock
+                WHERE MovStockArticuloId = :articulo
+                  AND id_sucursal = :sucursal
+                  AND DATE(MovStockFechaHora) < :desde
+            ");
+            $sqlSaldo->execute([
+                ':articulo' => $idArticulo,
+                ':sucursal' => $idSucursal,
+                ':desde' => $f['desde']
+            ]);
+            $saldoAnterior = (float)$sqlSaldo->fetchColumn();
+        }
+
+        $where = "
+            WHERE m.MovStockArticuloId = :articulo
+              AND m.id_sucursal = :sucursal
+        ";
+        $params = [
+            ':articulo' => $idArticulo,
+            ':sucursal' => $idSucursal
+        ];
+
+        if (!empty($f['desde'])) {
+            $where .= " AND DATE(m.MovStockFechaHora) >= :desde ";
+            $params[':desde'] = $f['desde'];
+        }
+
+        if (!empty($f['hasta'])) {
+            $where .= " AND DATE(m.MovStockFechaHora) <= :hasta ";
+            $params[':hasta'] = $f['hasta'];
+        }
+
+        $camposSaldo = $usaSaldos
+            ? "m.MovStockSaldoAnterior, m.MovStockSaldoActual,"
+            : "NULL AS MovStockSaldoAnterior, NULL AS MovStockSaldoActual,";
+
+        $sql = $pdo->prepare("
+            SELECT
+                m.MovStockId,
+                m.MovStockFechaHora,
+                s.suc_descri AS sucursal,
+                a.codigo,
+                a.desc_articulo,
+                m.TipoMovStockId,
+                m.MovStockCantidad,
+                m.MovStockSigno,
+                m.MovStockCosto,
+                m.MovStockPrecioVenta,
+                m.MovStockNroTicket,
+                m.MovStockReferencia,
+                {$camposSaldo}
+                CONCAT(u.usu_nombre, ' ', u.usu_apellido) AS usuario
+            FROM movimientostock m
+            INNER JOIN sucursales s ON s.id_sucursal = m.id_sucursal
+            LEFT JOIN articulos a ON a.id_articulo = m.MovStockArticuloId
+            INNER JOIN usuarios u ON u.id_usuario = m.MovStockUsuario
+            {$where}
+            ORDER BY m.MovStockFechaHora ASC, m.MovStockId ASC
+        ");
+        $sql->execute($params);
+
+        $filas = [];
+        $saldo = $saldoAnterior;
+        $naturaleza = (string)($f['naturaleza'] ?? '');
+        if ($naturaleza === 'T') {
+            $naturaleza = '';
+        }
+        $tipoStock = (string)($f['tipo_stock'] ?? '');
+
+        foreach ($sql->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $cantidad = (float)$row['MovStockCantidad'];
+            $signo = (int)$row['MovStockSigno'];
+            $entrada = $signo > 0 ? $cantidad : 0;
+            $salida = $signo < 0 ? $cantidad : 0;
+            $saldoFilaAnterior = $row['MovStockSaldoAnterior'] !== null ? (float)$row['MovStockSaldoAnterior'] : $saldo;
+            $saldoFilaActual = $row['MovStockSaldoActual'] !== null ? (float)$row['MovStockSaldoActual'] : ($saldo + ($cantidad * $signo));
+            $saldo = $saldoFilaActual;
+            $grupo = self::grupo_movimiento_stock((string)$row['TipoMovStockId'], $signo);
+
+            if ($tipoStock !== '' && $row['TipoMovStockId'] !== $tipoStock) {
+                continue;
+            }
+
+            if (!self::movimiento_stock_coincide_naturaleza($grupo, $signo, $naturaleza)) {
+                continue;
+            }
+
+            $filas[] = [
+                'MovStockId' => $row['MovStockId'],
+                'id_articulo' => $idArticulo,
+                'MovStockFechaHora' => $row['MovStockFechaHora'],
+                'sucursal' => $row['sucursal'],
+                'codigo' => $row['codigo'],
+                'desc_articulo' => $row['desc_articulo'],
+                'TipoMovStockId' => $row['TipoMovStockId'],
+                'grupo' => ucfirst($grupo),
+                'MovStockReferencia' => $row['MovStockReferencia'],
+                'entrada' => $entrada,
+                'salida' => $salida,
+                'MovStockCosto' => $row['MovStockCosto'],
+                'saldo_anterior' => $saldoFilaAnterior,
+                'saldo_actual' => $saldoFilaActual,
+                'usuario' => $row['usuario']
+            ];
+        }
+
+        return $filas;
+    }
+
+    private static function grupo_movimiento_stock($tipo, $signo)
+    {
+        if (in_array($tipo, ['AJUSTE_INV', 'ANULACION_AJUSTE_INV'], true)) {
+            return 'ajuste';
+        }
+
+        if (in_array($tipo, ['RECEPCION COMPRA', 'ANULACION COMPRA', 'NC_COMPRA_DEV', 'ANULA_NC_COMPRA'], true)) {
+            return 'compra';
+        }
+
+        if (in_array($tipo, ['TRANSFERENCIA_SALIDA', 'TRANSFERENCIA_ENTRADA'], true)) {
+            return 'transferencia';
+        }
+
+        if (in_array($tipo, ['REG. SERVICIO', 'ANULACION REG. SERVICIO'], true)) {
+            return 'servicio';
+        }
+
+        if (in_array($tipo, ['SALIDA INSUMO', 'ANUL SALIDA INSUMO'], true)) {
+            return 'insumo';
+        }
+
+        return $signo > 0 ? 'entrada' : 'salida';
+    }
+
+    private static function movimiento_stock_coincide_naturaleza($grupo, $signo, $naturaleza)
+    {
+        if ($naturaleza === '' || $naturaleza === 'T') {
+            return true;
+        }
+
+        if ($naturaleza === 'entrada') {
+            return (int)$signo > 0;
+        }
+
+        if ($naturaleza === 'salida') {
+            return (int)$signo < 0;
+        }
+
+        return $grupo === $naturaleza;
+    }
+
+    private static function filtrar_movimientos_stock_por_naturaleza($filas, $naturaleza)
+    {
+        if ($naturaleza === '' || $naturaleza === 'T') {
+            return $filas;
+        }
+
+        return array_values(array_filter($filas, function ($row) use ($naturaleza) {
+            $signo = (int)($row['MovStockSigno'] ?? 0);
+            $grupo = self::grupo_movimiento_stock((string)($row['TipoMovStockId'] ?? ''), $signo);
+
+            return self::movimiento_stock_coincide_naturaleza($grupo, $signo, $naturaleza);
+        }));
+    }
+
+    public static function resumen_marcas_modelo($f)
+    {
+        return [
+            "total" => count(self::reporte_marcas_modelo($f))
+        ];
+    }
+
+    public static function reporte_categorias_modelo($f)
+    {
+        $where = " WHERE 1=1 ";
+        $params = [];
+
+        if (!empty($f['buscar'])) {
+            $where .= " AND c.cat_descri LIKE :buscar ";
+            $params[':buscar'] = '%' . $f['buscar'] . '%';
+        }
+
+        $sql = self::conectar()->prepare("
+            SELECT
+                c.id_categoria,
+                c.cat_descri
+            FROM categorias c
+            $where
+            ORDER BY c.cat_descri ASC
+        ");
+
+        $sql->execute($params);
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function resumen_categorias_modelo($f)
+    {
+        return [
+            "total" => count(self::reporte_categorias_modelo($f))
+        ];
+    }
+
+    public static function reporte_usuarios_modelo($f)
+    {
+        $where = " WHERE 1=1 ";
+        $params = [];
+
+        if (!empty($f['estado']) && $f['estado'] != 'T') {
+            if ($f['estado'] == 'A') {
+                $where .= " AND u.usu_estado = 1 ";
+            } elseif ($f['estado'] == 'I') {
+                $where .= " AND u.usu_estado = 0 ";
+            }
+        }
+
+        if (!empty($f['buscar'])) {
+            $where .= " AND (
+                u.usu_nombre LIKE :buscar OR
+                u.usu_apellido LIKE :buscar OR
+                u.usu_nick LIKE :buscar OR
+                u.usu_email LIKE :buscar OR
+                u.usu_ci LIKE :buscar
+            ) ";
+            $params[':buscar'] = '%' . $f['buscar'] . '%';
+        }
+
+        $sql = self::conectar()->prepare("
+            SELECT
+                u.id_usuario,
+                u.usu_nombre,
+                u.usu_apellido,
+                u.usu_nick,
+                u.usu_email,
+                u.usu_telefono,
+                u.usu_ci,
+                u.usu_estado,
+                s.suc_descri AS sucursal
+            FROM usuarios u
+            LEFT JOIN sucursales s ON s.id_sucursal = u.sucursalid
+            $where
+            ORDER BY u.usu_nombre ASC, u.usu_apellido ASC
+        ");
+
+        $sql->execute($params);
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function resumen_usuarios_modelo($f)
+    {
+        $datos = self::reporte_usuarios_modelo($f);
+        $resumen = [
+            "total" => count($datos),
+            "activos" => 0,
+            "inactivos" => 0
+        ];
+
+        foreach ($datos as $row) {
+            if ((int)($row['usu_estado'] ?? 0) === 1) {
+                $resumen['activos']++;
+            } else {
+                $resumen['inactivos']++;
+            }
+        }
+
+        return $resumen;
     }
 
     public static function resumen_registro_servicio_modelo($desde, $hasta, $estado, $empleado, $sucursal)

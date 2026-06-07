@@ -136,52 +136,22 @@
         ============================== */
         protected static function agregar_movimiento_stock($detalle)
         {
+            $conexion = mainModel::conectar();
+            mainModel::registrar_movimiento_stock_modelo($conexion, [
+                "id_sucursal" => $detalle['local'],
+                "tipo" => $detalle['tipo'],
+                "id_articulo" => $detalle['producto'],
+                "cantidad" => $detalle['cantidad'],
+                "precio_venta" => $detalle['precioVenta'],
+                "costo" => $detalle['costo'],
+                "nro_ticket" => $detalle['nroTicket'],
+                "pos" => $detalle['pos'],
+                "usuario" => $detalle['usuario'],
+                "signo" => $detalle['signo'],
+                "referencia" => $detalle['referencia']
+            ]);
 
-            $sql = mainModel::conectar()->prepare("
-            INSERT INTO movimientostock
-            (
-                id_sucursal,
-                TipoMovStockId,
-                MovStockArticuloId,
-                MovStockCantidad,
-                MovStockPrecioVenta,
-                MovStockCosto,
-                MovStockFechaHora,
-                MovStockNroTicket,
-                MovStockPOS,
-                MovStockUsuario,
-                MovStockSigno,
-                MovStockReferencia
-            ) VALUES (
-                :local,
-                :tipo,
-                :producto,
-                :cantidad,
-                :precioVenta,
-                :costo,
-                NOW(),
-                :nroTicket,
-                :pos,
-                :usuario,
-                :signo,
-                :referencia
-            )");
-
-            // Bind de parámetros
-            $sql->bindParam(":local",        $detalle['local']);
-            $sql->bindParam(":tipo",         $detalle['tipo']);          // por ejemplo "COMPRA"
-            $sql->bindParam(":producto",     $detalle['producto']);      // id_articulo
-            $sql->bindParam(":cantidad",     $detalle['cantidad']);      // cantidad recibida
-            $sql->bindParam(":precioVenta",  $detalle['precioVenta']);   // 0 si no aplica
-            $sql->bindParam(":costo",        $detalle['costo']);         // costo de compra
-            $sql->bindParam(":nroTicket",    $detalle['nroTicket']);     // factura
-            $sql->bindParam(":pos",          $detalle['pos']);           // puede ir NULL
-            $sql->bindParam(":usuario",      $detalle['usuario']);       // id usuario
-            $sql->bindParam(":signo",        $detalle['signo']);         // 1 para compra
-            $sql->bindParam(":referencia",   $detalle['referencia']);    // ID de OC
-
-            $sql->execute();
-            return $sql;
+            return true;
         }
 
         /* ==============================
@@ -424,49 +394,38 @@
         protected static function descontar_stock_modelo($datos)
         {
             $conexion = $datos['conexion'] ?? mainModel::conectar();
-            $sql = $conexion->prepare("
-            UPDATE stock
-            SET stockDisponible = stockDisponible - :cantidad,
-                stockUltActualizacion = NOW(),
-                stockUsuActualizacion = :usuario,
-                stockultimoIdActualizacion = :referencia
-            WHERE id_sucursal = :id_sucursal
-            AND id_articulo = :id_articulo
-            AND stockDisponible >= :cantidad_check");
-            $sql->bindParam(":cantidad", $datos['cantidad']);
-            $sql->bindParam(":cantidad_check", $datos['cantidad']);
-            $sql->bindParam(":usuario", $datos['usuario']);
-            $sql->bindParam(":referencia", $datos['referencia']);
-            $sql->bindParam(":id_sucursal", $datos['id_sucursal']);
-            $sql->bindParam(":id_articulo", $datos['id_articulo']);
-            $sql->execute();
-            return $sql;
+            mainModel::registrar_movimiento_stock_modelo($conexion, [
+                "id_sucursal" => $datos['id_sucursal'],
+                "tipo" => $datos['tipo'] ?? "SALIDA STOCK",
+                "id_articulo" => $datos['id_articulo'],
+                "cantidad" => $datos['cantidad'],
+                "precio_venta" => 0,
+                "costo" => $datos['costo'] ?? 0,
+                "usuario" => $datos['usuario'],
+                "signo" => -1,
+                "referencia" => $datos['referencia']
+            ]);
+            return true;
         }
         /** fin modelo */
         /** modelo movimiento stock anulacion */
         protected static function movimiento_stock_anulacion_modelo($datos)
         {
             $conexion = $datos['conexion'] ?? mainModel::conectar();
-            $sql = $conexion->prepare("
-            INSERT INTO movimientostock
-            (id_sucursal, TipoMovStockId, MovStockArticuloId, MovStockCantidad,
-            MovStockPrecioVenta, MovStockCosto, MovStockFechaHora,
-            MovStockNroTicket, MovStockPOS, MovStockUsuario,
-            MovStockSigno, MovStockReferencia)
-            VALUES
-            (:LocalId, 'ANULACION COMPRA', :ProductoId, :Cantidad,
-            0, :Costo, NOW(),
-            :Referencia, NULL, :Usuario,
-            -1, :Referencia)");
-
-            $sql->bindParam(":LocalId", $datos['LocalId']);
-            $sql->bindParam(":ProductoId", $datos['ProductoId']);
-            $sql->bindParam(":Cantidad", $datos['Cantidad']);
-            $sql->bindParam(":Costo", $datos['Costo']);
-            $sql->bindParam(":Referencia", $datos['Referencia']);
-            $sql->bindParam(":Usuario", $datos['Usuario']);
-            $sql->execute();
-            return $sql;
+            mainModel::registrar_movimiento_stock_modelo($conexion, [
+                "id_sucursal" => $datos['LocalId'],
+                "tipo" => "ANULACION COMPRA",
+                "id_articulo" => $datos['ProductoId'],
+                "cantidad" => $datos['Cantidad'],
+                "precio_venta" => 0,
+                "costo" => $datos['Costo'],
+                "nro_ticket" => $datos['Referencia'],
+                "pos" => null,
+                "usuario" => $datos['Usuario'],
+                "signo" => -1,
+                "referencia" => $datos['Referencia']
+            ]);
+            return true;
         }
         /** fin modelo */
         /** modelo anular cuentas a pagar (multisucursal) */

@@ -159,7 +159,17 @@ class vehiculoModelo extends mainModel
         }
 
         $stmt->bindParam(":id", $id, PDO::PARAM_INT);
-        $stmt->execute();
+        try {
+            $stmt->execute();
+        } catch (PDOException $e) {
+            $stmt = $pdo->prepare("
+            UPDATE vehiculos
+            SET estado = 0
+            WHERE id_vehiculo = :id
+        ");
+            $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+            $stmt->execute();
+        }
 
         return $stmt;
     }

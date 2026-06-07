@@ -450,6 +450,17 @@ class sucursalControlador extends sucursalModelo
             exit();
         }
 
+        $sucursalActual = $check->fetch();
+        if ((int)$sucursalActual['estado'] === 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Sucursal inactiva",
+                "Texto"  => "La sucursal ya se encuentra inactiva.",
+                "Tipo"   => "info"
+            ]);
+            exit();
+        }
+
         $stmt = sucursalModelo::eliminar_sucursal_modelo($id);
 
         if ($stmt->rowCount() > 0) {

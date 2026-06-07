@@ -442,6 +442,17 @@ class clienteControlador extends clienteModelo
             exit();
         }
 
+        $clienteActual = $check_client->fetch();
+        if ((int)$clienteActual['estado_cliente'] === 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Cliente inactivo",
+                "Texto"  => "El cliente ya se encuentra inactivo.",
+                "Tipo"   => "info"
+            ]);
+            exit();
+        }
+
         session_start(['name' => 'STR']);
         if (!mainModel::tienePermiso('cliente.eliminar')) {
             return json_encode([

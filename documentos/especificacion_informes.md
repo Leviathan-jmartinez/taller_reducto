@@ -1,1223 +1,1216 @@
 # Especificaciones de Casos de Uso: Informes del Sistema
 
+## Consideraciones Generales
+
+El modulo de informes permite consultar informacion del sistema sin modificar los registros de origen. La implementacion actual utiliza vistas unificadas:
+
+- Informes Referenciales: una sola vista para datos maestros.
+- Informes de Movimientos: una sola vista para compras, stock y servicios.
+
+Cada informe se documenta de forma individual para conservar claridad funcional, pero su ejecucion se realiza dentro de la vista unificada correspondiente.
+
+### Reglas Generales
+
+- El usuario debe iniciar sesion.
+- El sistema valida permisos antes de mostrar la vista.
+- El sistema valida permisos nuevamente antes de previsualizar, exportar CSV o generar PDF.
+- La previsualizacion no se ejecuta automaticamente al abrir la vista.
+- El usuario debe presionar Previsualizar para consultar datos.
+- El usuario puede limpiar los filtros para volver a los valores iniciales y ocultar resultados previos.
+- En informes de movimientos, el sistema evita busquedas de texto libre sobre el detalle completo para no degradar el rendimiento. Se utilizan filtros exactos y contextuales: articulo acepta ID o codigo, cliente acepta ID o documento y tecnico acepta ID o cedula.
+- Los estados se muestran con descripcion textual.
+- Los importes y cantidades se muestran con separador de miles.
+- El CSV se genera con separador punto y coma. En informes referenciales se usa UTF-16LE con BOM para compatibilidad con Excel y acentos; en informes de movimientos se usa UTF-8 con BOM.
+- La informacion consultada no se modifica.
+
+### Fuente de Datos por Accion
+
+Las acciones Previsualizar, Generar PDF y Exportar CSV consultan las mismas tablas base del informe seleccionado. La diferencia entre ellas es solo la salida:
+
+- Previsualizar: devuelve datos en formato JSON y los muestra en pantalla.
+- Generar PDF: toma los mismos datos filtrados y los presenta en un documento PDF.
+- Exportar CSV: toma los mismos datos filtrados y los entrega en archivo CSV para planilla electronica.
+
+Por lo tanto, las tablas consultadas no cambian entre Previsualizar, PDF y CSV. Si el usuario aplica filtros, esos filtros se aplican en las tres acciones.
+
+#### Informes Referenciales
+
+| Informe | Tablas consultadas |
+|---|---|
+| Articulos | `articulos`, `categorias`, `marcas`, `articulo_proveedor`, `proveedores`, `unidad_medida`, `tipo_impuesto` |
+| Proveedores | `proveedores`, `ciudades` |
+| Clientes | `clientes`, `ciudades` |
+| Vehiculos | `vehiculos`, `clientes`, `modelo_auto`, `marcas` |
+| Sucursales | `sucursales`, `empresa` |
+| Marcas | `marcas` |
+| Categorias | `categorias` |
+| Usuarios | `usuarios`, `sucursales` |
+
+#### Informes de Movimientos
+
+| Informe | Tablas consultadas |
+|---|---|
+| Pedidos de Compra | `pedido_cabecera`, `pedido_detalle`, `usuarios`, `sucursales` |
+| Presupuestos de Compra | `presupuesto_compra`, `presupuesto_detalle`, `proveedores`, `usuarios`, `sucursales` |
+| Ordenes de Compra | `orden_compra`, `orden_compra_detalle`, `proveedores`, `usuarios`, `sucursales` |
+| Compras | `compra_cabecera`, `compra_detalle`, `proveedores`, `usuarios`, `sucursales` |
+| Libro de Compras | `libro_compra`, `sucursales` |
+| Stock | `articulos`, `stock`, `categorias`, `marcas`, `articulo_proveedor`, `proveedores`, `unidad_medida`, `sucursales` |
+| Transferencias | `transferencia_stock`, `transferencia_stock_detalle`, `sucursales`, `nota_remision` |
+| Movimientos de Stock | `movimientostock`, `sucursales`, `articulos`, `usuarios` |
+| Kardex de Articulo | `movimientostock`, `sucursales`, `articulos`, `usuarios` |
+| Recepcion de Servicios | `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `usuarios`, `sucursales` |
+| Presupuestos de Servicios | `presupuesto_servicio`, `presupuesto_detalleservicio`, `diagnostico_servicio`, `recepcion_servicio`, `usuarios`, `sucursales`, `clientes`, `vehiculos`, `modelo_auto`, `marcas` |
+| Ordenes de Trabajo | `orden_trabajo`, `orden_trabajo_detalle`, `presupuesto_servicio`, `diagnostico_servicio`, `recepcion_servicio`, `sucursales`, `usuarios`, `equipo_trabajo`, `clientes`, `vehiculos`, `modelo_auto`, `marcas` |
+| Registro de Servicios | `registro_servicio`, `registro_servicio_detalle`, `orden_trabajo`, `sucursales`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `usuarios`, `equipo_trabajo`, `empleados` |
+
+---
+
 ## Informe de Articulos
 
 ### Descripcion Basica
-Caso de uso que describe el proceso de generar informes de articulos registrados en el sistema.
+
+Caso de uso que describe el proceso de generar informes de articulos registrados. Se ejecuta desde la vista Informes Referenciales mediante el tipo Articulos.
 
 ### Actores Relacionados
+
 - Encargado de Compras
-- Personal de Recepcion
-- Encargado de dto. de Servicios
+- Encargado de Stock
 - Gerente general
 
 ### Pre Condicion
+
 - Conexion a base de datos.
-- El usuario accede al sistema mediante logeo.
+- El usuario accede al sistema mediante login.
 - El usuario tiene permiso `reportes.articulos.ver`.
-- El usuario ingresa al menu Informes Referenciales.
 - Existen articulos registrados.
 
 ### Flujo de Eventos
 
 #### Flujo Basico
-Este caso de uso se inicia cuando el usuario selecciona la opcion Informes Referenciales, Referenciales de Compras y habilita el informe de articulos.
 
-#### Generar
-- El sistema valida permiso `reportes.articulos.ver`.
-- El sistema carga categorias disponibles. Tabla consultada: categorias.
-- El sistema carga proveedores disponibles. Tabla consultada: proveedores.
-- El sistema muestra filtros de categoria, proveedor, estado y codigo.
-- El usuario selecciona o ingresa filtros.
-- El usuario presiona Previsualizar.
-- El sistema valida nuevamente permiso `reportes.articulos.ver`.
-- El sistema recibe los filtros.
-- El sistema consulta los articulos segun los filtros seleccionados.
-- Tablas consultadas: articulos, categorias, marcas, articulo_proveedor, proveedores, unidad_medida, tipo_impuesto.
-- El sistema calcula resumen de total, activos e inactivos.
-- El sistema carga los datos dentro de la grilla.
-- El sistema habilita el boton Generar PDF.
-- El usuario presiona Generar PDF.
-- El sistema envia los filtros al generador del reporte.
-- El sistema valida nuevamente permiso `reportes.articulos.ver`.
-- El sistema consulta nuevamente los datos.
-- El sistema carga la plantilla PDF de articulos.
-- El sistema genera el PDF del informe.
-
-#### Volver
-- El usuario selecciona otra opcion del menu o vuelve a la pantalla anterior.
-- El sistema redirecciona a la vista seleccionada.
-
-#### Salir
-- El usuario cierra sesion o sale del modulo.
-- El sistema finaliza la sesion o vuelve al menu principal.
+1. El usuario ingresa al menu Informes Referenciales.
+2. El sistema muestra la vista referencial unificada.
+3. El usuario selecciona el tipo Articulos.
+4. El sistema habilita filtros de busqueda, estado y categoria.
+5. El usuario ingresa filtros opcionales.
+6. El usuario presiona Previsualizar.
+7. El sistema valida permiso `reportes.articulos.ver`.
+8. El sistema consulta los articulos segun los filtros.
+9. El sistema muestra resumen y grilla de resultados.
+10. El usuario puede generar PDF o exportar CSV.
 
 ### Flujo Alternativo
+
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
+- Si no existen registros para los filtros, el sistema muestra la tabla sin resultados.
 - Si no se ingresan filtros, el sistema consulta todos los articulos permitidos.
-- Si no existen datos para los filtros seleccionados, el sistema muestra la grilla sin registros.
-- Si no se puede generar el PDF, el sistema no emite el informe.
 
 ### Post Condicion
+
 - El sistema muestra los articulos encontrados.
-- El sistema genera el PDF cuando la operacion se ejecuta correctamente.
+- El sistema genera PDF o CSV si corresponde.
 - La informacion consultada no se modifica.
 
 ### Tablas Involucradas
-- articulos
-- categorias
-- marcas
-- articulo_proveedor
-- proveedores
-- unidad_medida
-- tipo_impuesto
+
+- `articulos`
+- `categorias`
+- `marcas`
+- `articulo_proveedor`
+- `proveedores`
+- `unidad_medida`
+- `tipo_impuesto`
 
 ---
 
 ## Informe de Proveedores
 
 ### Descripcion Basica
-Caso de uso que describe el proceso de generar informes de proveedores registrados.
+
+Caso de uso que describe el proceso de generar informes de proveedores registrados. Se ejecuta desde la vista Informes Referenciales mediante el tipo Proveedores.
 
 ### Actores Relacionados
+
 - Encargado de Compras
-- Personal de Recepcion
-- Encargado de dto. de Servicios
 - Gerente general
 
 ### Pre Condicion
+
 - Conexion a base de datos.
-- El usuario accede al sistema mediante logeo.
+- El usuario accede al sistema mediante login.
 - El usuario tiene permiso `reportes.proveedores.ver`.
 - Existen proveedores registrados.
 
 ### Flujo de Eventos
 
 #### Flujo Basico
-Este caso de uso se inicia cuando el usuario selecciona Informes Referenciales, Referenciales de Compras y habilita el informe de proveedores.
 
-#### Generar
-- El sistema valida permiso `reportes.proveedores.ver`.
-- El sistema muestra filtros de estado y busqueda.
-- El usuario selecciona estado o ingresa texto de busqueda.
-- El usuario presiona Previsualizar.
-- El sistema valida nuevamente permiso `reportes.proveedores.ver`.
-- El sistema consulta proveedores segun los filtros.
-- Tabla consultada: proveedores.
-- El sistema calcula resumen de total, activos e inactivos.
-- El sistema carga datos dentro de la grilla.
-- El sistema habilita el boton Generar PDF.
-- El usuario presiona Generar PDF.
-- El sistema valida nuevamente permiso `reportes.proveedores.ver`.
-- El sistema consulta nuevamente los datos.
-- El sistema carga la plantilla PDF de proveedores.
-- El sistema genera el PDF del informe.
-
-#### Volver
-- El usuario selecciona otra opcion del menu o vuelve a la pantalla anterior.
-- El sistema redirecciona a la vista seleccionada.
-
-#### Salir
-- El usuario cierra sesion o sale del modulo.
-- El sistema finaliza la sesion o vuelve al menu principal.
+1. El usuario ingresa al menu Informes Referenciales.
+2. El usuario selecciona el tipo Proveedores.
+3. El sistema habilita filtros de busqueda y estado.
+4. El usuario ingresa filtros opcionales.
+5. El usuario presiona Previsualizar.
+6. El sistema valida permiso `reportes.proveedores.ver`.
+7. El sistema consulta proveedores segun los filtros.
+8. El sistema muestra resumen y grilla de resultados.
+9. El usuario puede generar PDF o exportar CSV.
 
 ### Flujo Alternativo
+
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema consulta todos los proveedores.
-- Si no existen datos para mostrar, el sistema muestra la grilla sin registros.
+- Si no existen registros, el sistema muestra la tabla sin resultados.
 
 ### Post Condicion
+
 - El sistema muestra los proveedores encontrados.
-- El sistema genera el PDF cuando corresponde.
 - La informacion consultada no se modifica.
 
 ### Tablas Involucradas
-- proveedores
 
----
-
-## Informe de Sucursales
-
-### Descripcion Basica
-Caso de uso que describe el proceso de generar informes de sucursales registradas.
-
-### Actores Relacionados
-- Encargado de Compras
-- Personal de Recepcion
-- Encargado de dto. de Servicios
-- Gerente general
-
-### Pre Condicion
-- Conexion a base de datos.
-- El usuario accede al sistema mediante logeo.
-- El usuario tiene permiso `reportes.sucursales.ver`.
-- Existen sucursales registradas.
-
-### Flujo de Eventos
-
-#### Flujo Basico
-Este caso de uso se inicia cuando el usuario selecciona Informes Referenciales, Referenciales de Compras y habilita el informe de sucursales.
-
-#### Generar
-- El sistema valida permiso `reportes.sucursales.ver`.
-- El sistema muestra filtros de estado y busqueda.
-- El usuario selecciona estado o ingresa texto de busqueda.
-- El usuario presiona Previsualizar.
-- El sistema valida nuevamente permiso `reportes.sucursales.ver`.
-- El sistema consulta sucursales segun los filtros.
-- Tablas consultadas: sucursales, empresa.
-- El sistema calcula resumen de total, activas e inactivas.
-- El sistema carga datos dentro de la grilla.
-- El sistema habilita el boton Generar PDF.
-- El usuario presiona Generar PDF.
-- El sistema valida nuevamente permiso `reportes.sucursales.ver`.
-- El sistema consulta nuevamente los datos.
-- El sistema carga la plantilla PDF de sucursales.
-- El sistema genera el PDF del informe.
-
-#### Volver
-- El usuario selecciona otra opcion del menu o vuelve a la pantalla anterior.
-- El sistema redirecciona a la vista seleccionada.
-
-#### Salir
-- El usuario cierra sesion o sale del modulo.
-- El sistema finaliza la sesion o vuelve al menu principal.
-
-### Flujo Alternativo
-- Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema consulta todas las sucursales.
-- Si no existen datos para mostrar, el sistema muestra la grilla sin registros.
-
-### Post Condicion
-- El sistema muestra las sucursales encontradas.
-- El sistema genera el PDF cuando corresponde.
-- La informacion consultada no se modifica.
-
-### Tablas Involucradas
-- sucursales
-- empresa
+- `proveedores`
+- `ciudades`
 
 ---
 
 ## Informe de Clientes
 
 ### Descripcion Basica
-Caso de uso que describe el proceso de generar informes de clientes registrados.
+
+Caso de uso que describe el proceso de generar informes de clientes registrados. Se ejecuta desde la vista Informes Referenciales mediante el tipo Clientes.
 
 ### Actores Relacionados
-- Encargado de Compras
+
 - Personal de Recepcion
-- Encargado de dto. de Servicios
+- Encargado de Servicios
 - Gerente general
 
 ### Pre Condicion
+
 - Conexion a base de datos.
-- El usuario accede al sistema mediante logeo.
+- El usuario accede al sistema mediante login.
 - El usuario tiene permiso `reportes.clientes.ver`.
 - Existen clientes registrados.
 
 ### Flujo de Eventos
 
 #### Flujo Basico
-Este caso de uso se inicia cuando el usuario selecciona Informes Referenciales, Referenciales de Servicios y habilita el informe de clientes.
 
-#### Generar
-- El sistema valida permiso `reportes.clientes.ver`.
-- El sistema muestra filtros de estado y busqueda.
-- El usuario selecciona estado o ingresa cliente, documento o correo.
-- El usuario presiona Previsualizar.
-- El sistema valida nuevamente permiso `reportes.clientes.ver`.
-- El sistema consulta clientes segun los filtros.
-- Tablas consultadas: clientes, ciudades.
-- El sistema calcula resumen de total, activos e inactivos.
-- El sistema carga datos dentro de la grilla.
-- El sistema habilita el boton Generar PDF.
-- El usuario presiona Generar PDF.
-- El sistema valida nuevamente permiso `reportes.clientes.ver`.
-- El sistema consulta nuevamente los datos.
-- El sistema carga la plantilla PDF de clientes.
-- El sistema genera el PDF del informe.
-
-#### Volver
-- El usuario selecciona otra opcion del menu o vuelve a la pantalla anterior.
-- El sistema redirecciona a la vista seleccionada.
-
-#### Salir
-- El usuario cierra sesion o sale del modulo.
-- El sistema finaliza la sesion o vuelve al menu principal.
+1. El usuario ingresa al menu Informes Referenciales.
+2. El usuario selecciona el tipo Clientes.
+3. El sistema habilita filtros de busqueda y estado.
+4. El usuario ingresa filtros opcionales.
+5. El usuario presiona Previsualizar.
+6. El sistema valida permiso `reportes.clientes.ver`.
+7. El sistema consulta clientes segun los filtros.
+8. El sistema muestra resumen y grilla de resultados.
+9. El usuario puede generar PDF o exportar CSV.
 
 ### Flujo Alternativo
+
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema consulta todos los clientes.
-- Si no existen datos para mostrar, el sistema muestra la grilla sin registros.
+- Si no existen registros, el sistema muestra la tabla sin resultados.
 
 ### Post Condicion
+
 - El sistema muestra los clientes encontrados.
-- El sistema genera el PDF cuando corresponde.
 - La informacion consultada no se modifica.
 
 ### Tablas Involucradas
-- clientes
-- ciudades
+
+- `clientes`
+- `ciudades`
 
 ---
 
 ## Informe de Vehiculos
 
 ### Descripcion Basica
-Caso de uso que describe el proceso de generar informes de vehiculos registrados.
+
+Caso de uso que describe el proceso de generar informes de vehiculos registrados. Se ejecuta desde la vista Informes Referenciales mediante el tipo Vehiculos.
 
 ### Actores Relacionados
-- Encargado de Compras
+
 - Personal de Recepcion
-- Encargado de dto. de Servicios
+- Encargado de Servicios
 - Gerente general
 
 ### Pre Condicion
+
 - Conexion a base de datos.
-- El usuario accede al sistema mediante logeo.
+- El usuario accede al sistema mediante login.
 - El usuario tiene permiso `reportes.vehiculos.ver`.
 - Existen vehiculos registrados.
 
 ### Flujo de Eventos
 
 #### Flujo Basico
-Este caso de uso se inicia cuando el usuario selecciona Informes Referenciales, Referenciales de Servicios y habilita el informe de vehiculos.
 
-#### Generar
-- El sistema valida permiso `reportes.vehiculos.ver`.
-- El sistema consulta modelos activos para el filtro. Tabla consultada: modelo_auto.
-- El sistema muestra filtros de modelo, estado y busqueda.
-- El usuario selecciona modelo, estado o ingresa placa, serie, color, documento o cliente.
-- El usuario presiona Previsualizar.
-- El sistema valida nuevamente permiso `reportes.vehiculos.ver`.
-- El sistema consulta vehiculos segun los filtros.
-- Tablas consultadas: vehiculos, clientes, modelo_auto.
-- El sistema calcula resumen de total, activos e inactivos.
-- El sistema carga datos dentro de la grilla.
-- El sistema habilita el boton Generar PDF.
-- El usuario presiona Generar PDF.
-- El sistema valida nuevamente permiso `reportes.vehiculos.ver`.
-- El sistema consulta nuevamente los datos.
-- El sistema carga la plantilla PDF de vehiculos.
-- El sistema genera el PDF del informe.
-
-#### Volver
-- El usuario selecciona otra opcion del menu o vuelve a la pantalla anterior.
-- El sistema redirecciona a la vista seleccionada.
-
-#### Salir
-- El usuario cierra sesion o sale del modulo.
-- El sistema finaliza la sesion o vuelve al menu principal.
+1. El usuario ingresa al menu Informes Referenciales.
+2. El usuario selecciona el tipo Vehiculos.
+3. El sistema habilita filtros de busqueda y estado.
+4. El usuario ingresa filtros opcionales.
+5. El usuario presiona Previsualizar.
+6. El sistema valida permiso `reportes.vehiculos.ver`.
+7. El sistema consulta vehiculos segun los filtros.
+8. El sistema muestra resumen y grilla de resultados.
+9. El usuario puede generar PDF o exportar CSV.
 
 ### Flujo Alternativo
+
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema consulta todos los vehiculos.
-- Si no existen datos para mostrar, el sistema muestra la grilla sin registros.
+- Si no existen registros, el sistema muestra la tabla sin resultados.
 
 ### Post Condicion
+
 - El sistema muestra los vehiculos encontrados.
-- El sistema genera el PDF cuando corresponde.
 - La informacion consultada no se modifica.
 
 ### Tablas Involucradas
-- vehiculos
-- clientes
-- modelo_auto
+
+- `vehiculos`
+- `clientes`
+- `modelo_auto`
+- `marcas`
 
 ---
 
-## Informe de Empleados
+## Informe de Sucursales
 
 ### Descripcion Basica
-Caso de uso que describe el proceso de generar informes de empleados registrados.
+
+Caso de uso que describe el proceso de generar informes de sucursales registradas. Se ejecuta desde la vista Informes Referenciales mediante el tipo Sucursales.
 
 ### Actores Relacionados
-- Encargado de Compras
-- Personal de Recepcion
-- Encargado de dto. de Servicios
+
+- Administrador
 - Gerente general
 
 ### Pre Condicion
+
 - Conexion a base de datos.
-- El usuario accede al sistema mediante logeo.
-- El usuario tiene permiso `reportes.empleados.ver`.
-- Existen empleados registrados.
+- El usuario accede al sistema mediante login.
+- El usuario tiene permiso `reportes.sucursales.ver`.
+- Existen sucursales registradas.
 
 ### Flujo de Eventos
 
 #### Flujo Basico
-Este caso de uso se inicia cuando el usuario selecciona Informes Referenciales, Referenciales de Servicios y habilita el informe de empleados.
 
-#### Generar
-- El sistema valida permiso `reportes.empleados.ver`.
-- El sistema consulta sucursales para el filtro. Tabla consultada: sucursales.
-- El sistema consulta cargos para el filtro. Tabla consultada: cargos.
-- El sistema muestra filtros de sucursal, cargo, estado y busqueda.
-- El usuario selecciona o ingresa filtros.
-- El usuario presiona Previsualizar.
-- El sistema valida nuevamente permiso `reportes.empleados.ver`.
-- El sistema consulta empleados segun los filtros.
-- Tablas consultadas: empleados, cargos, sucursales.
-- El sistema calcula resumen de total, activos e inactivos.
-- El sistema carga datos dentro de la grilla.
-- El sistema habilita el boton Generar PDF.
-- El usuario presiona Generar PDF.
-- El sistema valida nuevamente permiso `reportes.empleados.ver`.
-- El sistema consulta nuevamente los datos.
-- El sistema carga la plantilla PDF de empleados.
-- El sistema genera el PDF del informe.
-
-#### Volver
-- El usuario selecciona otra opcion del menu o vuelve a la pantalla anterior.
-- El sistema redirecciona a la vista seleccionada.
-
-#### Salir
-- El usuario cierra sesion o sale del modulo.
-- El sistema finaliza la sesion o vuelve al menu principal.
+1. El usuario ingresa al menu Informes Referenciales.
+2. El usuario selecciona el tipo Sucursales.
+3. El sistema habilita filtros de busqueda y estado.
+4. El usuario ingresa filtros opcionales.
+5. El usuario presiona Previsualizar.
+6. El sistema valida permiso `reportes.sucursales.ver`.
+7. El sistema consulta sucursales segun los filtros.
+8. El sistema muestra resumen y grilla de resultados.
+9. El usuario puede generar PDF o exportar CSV.
 
 ### Flujo Alternativo
+
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema consulta todos los empleados.
-- Si no existen datos para mostrar, el sistema muestra la grilla sin registros.
+- Si no existen registros, el sistema muestra la tabla sin resultados.
 
 ### Post Condicion
-- El sistema muestra los empleados encontrados.
-- El sistema genera el PDF cuando corresponde.
+
+- El sistema muestra las sucursales encontradas.
 - La informacion consultada no se modifica.
 
 ### Tablas Involucradas
-- empleados
-- cargos
-- sucursales
+
+- `sucursales`
+- `empresa`
+
+---
+
+## Informe de Marcas
+
+### Descripcion Basica
+
+Caso de uso que describe el proceso de generar informes de marcas registradas. Se ejecuta desde la vista Informes Referenciales mediante el tipo Marcas.
+
+### Actores Relacionados
+
+- Encargado de Compras
+- Encargado de Stock
+- Gerente general
+
+### Pre Condicion
+
+- Conexion a base de datos.
+- El usuario accede al sistema mediante login.
+- El usuario tiene permiso `reportes.articulos.ver`.
+- Existen marcas registradas.
+
+### Flujo de Eventos
+
+#### Flujo Basico
+
+1. El usuario ingresa al menu Informes Referenciales.
+2. El usuario selecciona el tipo Marcas.
+3. El sistema habilita filtro de busqueda.
+4. El usuario presiona Previsualizar.
+5. El sistema valida permiso `reportes.articulos.ver`.
+6. El sistema consulta marcas registradas.
+7. El sistema muestra grilla de resultados.
+8. El usuario puede generar PDF o exportar CSV.
+
+### Flujo Alternativo
+
+- Si el usuario no tiene permiso, el sistema muestra acceso denegado.
+- Si no existen registros, el sistema muestra la tabla sin resultados.
+
+### Post Condicion
+
+- El sistema muestra las marcas encontradas.
+- La informacion consultada no se modifica.
+
+### Tablas Involucradas
+
+- `marcas`
+
+---
+
+## Informe de Categorias
+
+### Descripcion Basica
+
+Caso de uso que describe el proceso de generar informes de categorias registradas. Se ejecuta desde la vista Informes Referenciales mediante el tipo Categorias.
+
+### Actores Relacionados
+
+- Encargado de Compras
+- Encargado de Stock
+- Gerente general
+
+### Pre Condicion
+
+- Conexion a base de datos.
+- El usuario accede al sistema mediante login.
+- El usuario tiene permiso `reportes.articulos.ver`.
+- Existen categorias registradas.
+
+### Flujo de Eventos
+
+#### Flujo Basico
+
+1. El usuario ingresa al menu Informes Referenciales.
+2. El usuario selecciona el tipo Categorias.
+3. El sistema habilita filtro de busqueda.
+4. El usuario presiona Previsualizar.
+5. El sistema valida permiso `reportes.articulos.ver`.
+6. El sistema consulta categorias registradas.
+7. El sistema muestra grilla de resultados.
+8. El usuario puede generar PDF o exportar CSV.
+
+### Flujo Alternativo
+
+- Si el usuario no tiene permiso, el sistema muestra acceso denegado.
+- Si no existen registros, el sistema muestra la tabla sin resultados.
+
+### Post Condicion
+
+- El sistema muestra las categorias encontradas.
+- La informacion consultada no se modifica.
+
+### Tablas Involucradas
+
+- `categorias`
+
+---
+
+## Informe de Usuarios
+
+### Descripcion Basica
+
+Caso de uso que describe el proceso de generar informes de usuarios registrados. Se ejecuta desde la vista Informes Referenciales mediante el tipo Usuarios.
+
+### Actores Relacionados
+
+- Administrador
+- Gerente general
+
+### Pre Condicion
+
+- Conexion a base de datos.
+- El usuario accede al sistema mediante login.
+- El usuario tiene permiso `usuarios.ver`.
+- Existen usuarios registrados.
+
+### Flujo de Eventos
+
+#### Flujo Basico
+
+1. El usuario ingresa al menu Informes Referenciales.
+2. El usuario selecciona el tipo Usuarios.
+3. El sistema habilita filtros de busqueda y estado.
+4. El usuario presiona Previsualizar.
+5. El sistema valida permiso `usuarios.ver`.
+6. El sistema consulta usuarios registrados.
+7. El sistema muestra grilla de resultados.
+8. El usuario puede generar PDF o exportar CSV.
+
+### Flujo Alternativo
+
+- Si el usuario no tiene permiso, el sistema muestra acceso denegado.
+- Si no existen registros, el sistema muestra la tabla sin resultados.
+
+### Post Condicion
+
+- El sistema muestra los usuarios encontrados.
+- La informacion consultada no se modifica.
+
+### Tablas Involucradas
+
+- `usuarios`
+- `sucursales`
 
 ---
 
 ## Informe de Pedidos de Compra
 
 ### Descripcion Basica
-Caso de uso que describe el proceso de generar informes de pedidos de compra.
+
+Caso de uso que describe el proceso de generar informes de pedidos de compra. Se ejecuta desde la vista Informes de Movimientos mediante el tipo Pedidos de Compra.
 
 ### Actores Relacionados
+
 - Encargado de Compras
-- Personal de Recepcion
-- Encargado de dto. de Servicios
 - Gerente general
 
 ### Pre Condicion
+
 - Conexion a base de datos.
-- El usuario accede al sistema mediante logeo.
+- El usuario accede al sistema mediante login.
 - El usuario tiene permiso `reportes.pedidos.ver`.
 - Existen pedidos de compra registrados.
 
 ### Flujo de Eventos
 
 #### Flujo Basico
-Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos, Informes de Compras y habilita el informe de pedidos.
 
-#### Generar
-- El sistema valida permiso `reportes.pedidos.ver`.
-- El sistema consulta sucursales para el filtro. Tabla consultada: sucursales.
-- El sistema muestra filtros de fecha desde, fecha hasta, estado (Pendiente, Procesado o Anulado) y sucursal.
-- El usuario selecciona o ingresa filtros.
-- El usuario presiona Previsualizar.
-- El sistema valida nuevamente permiso `reportes.pedidos.ver`.
-- El sistema consulta pedidos de compra segun los filtros.
-- Tablas consultadas: pedido_cabecera, pedido_detalle, usuarios, sucursales.
-- El sistema carga datos dentro de la grilla.
-- El sistema habilita el boton Generar PDF.
-- El usuario presiona Generar PDF.
-- El sistema envia los filtros al generador del reporte.
-- El sistema valida nuevamente permiso `reportes.pedidos.ver`.
-- El sistema consulta nuevamente los pedidos de compra segun los filtros.
-- El sistema carga la plantilla PDF de pedidos.
-- El sistema genera el PDF del informe.
-
-#### Volver
-- El usuario selecciona otra opcion del menu o vuelve a la pantalla anterior.
-- El sistema redirecciona a la vista seleccionada.
-
-#### Salir
-- El usuario cierra sesion o sale del modulo.
-- El sistema finaliza la sesion o vuelve al menu principal.
+1. El usuario ingresa al menu Informes de Movimientos.
+2. El usuario selecciona Pedidos de Compra.
+3. El sistema habilita filtros de fecha, sucursal, estado y busqueda.
+4. El usuario presiona Previsualizar.
+5. El sistema valida permiso `reportes.pedidos.ver`.
+6. El sistema consulta pedidos segun los filtros.
+7. El sistema muestra resumen, graficos y grilla de resultados.
+8. El usuario puede generar PDF o exportar CSV.
 
 ### Flujo Alternativo
+
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema consulta todos los pedidos permitidos.
-- Si no existen datos para mostrar, el sistema muestra la grilla sin registros y el PDF indica que no existen registros.
+- Si no existen datos, el sistema muestra resumen en cero y tabla sin registros.
 
 ### Post Condicion
+
 - El sistema muestra los pedidos encontrados.
-- El sistema genera el PDF de pedidos cuando corresponde.
 - La informacion consultada no se modifica.
 
 ### Tablas Involucradas
-- pedido_cabecera
-- pedido_detalle
-- usuarios
-- sucursales
+
+- `pedido_cabecera`
+- `pedido_detalle`
+- `usuarios`
+- `sucursales`
 
 ---
 
 ## Informe de Presupuestos de Compra
 
 ### Descripcion Basica
-Caso de uso que describe el proceso de generar informes de presupuestos de compra.
+
+Caso de uso que describe el proceso de generar informes de presupuestos de compra. Se ejecuta desde la vista Informes de Movimientos mediante el tipo Presupuestos de Compra.
 
 ### Actores Relacionados
+
 - Encargado de Compras
-- Personal de Recepcion
-- Encargado de dto. de Servicios
 - Gerente general
 
 ### Pre Condicion
+
 - Conexion a base de datos.
-- El usuario accede al sistema mediante logeo.
+- El usuario accede al sistema mediante login.
 - El usuario tiene permiso `reportes.presupuestos_compra.ver`.
 - Existen presupuestos de compra registrados.
 
 ### Flujo de Eventos
 
 #### Flujo Basico
-Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos, Informes de Compras y habilita el informe de presupuestos de compra.
 
-#### Generar
-- El sistema valida permiso `reportes.presupuestos_compra.ver`.
-- El sistema consulta sucursales para el filtro. Tabla consultada: sucursales.
-- El sistema muestra filtros de fecha desde, fecha hasta, estado (Pendiente, OC generada o Anulado) y sucursal.
-- El usuario selecciona o ingresa filtros.
-- El usuario presiona Previsualizar.
-- El sistema valida nuevamente permiso `reportes.presupuestos_compra.ver`.
-- El sistema consulta presupuestos de compra segun los filtros.
-- Tablas consultadas: presupuesto_compra, presupuesto_detalle, proveedores, usuarios, sucursales.
-- El sistema carga datos dentro de la grilla.
-- El sistema habilita el boton Generar PDF.
-- El usuario presiona Generar PDF.
-- El sistema envia los filtros al generador del reporte.
-- El sistema valida nuevamente permiso `reportes.presupuestos_compra.ver`.
-- El sistema consulta nuevamente los presupuestos de compra segun los filtros.
-- El sistema carga la plantilla PDF de presupuestos de compra.
-- El sistema genera el PDF del informe.
-
-#### Volver
-- El usuario selecciona otra opcion del menu o vuelve a la pantalla anterior.
-- El sistema redirecciona a la vista seleccionada.
-
-#### Salir
-- El usuario cierra sesion o sale del modulo.
-- El sistema finaliza la sesion o vuelve al menu principal.
+1. El usuario ingresa al menu Informes de Movimientos.
+2. El usuario selecciona Presupuestos de Compra.
+3. El sistema habilita filtros de fecha, sucursal, estado y busqueda.
+4. El usuario presiona Previsualizar.
+5. El sistema valida permiso `reportes.presupuestos_compra.ver`.
+6. El sistema consulta presupuestos segun los filtros.
+7. El sistema muestra resumen, graficos y grilla de resultados.
+8. El usuario puede generar PDF o exportar CSV.
 
 ### Flujo Alternativo
+
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema consulta todos los presupuestos permitidos.
-- Si no existen datos para mostrar, el sistema muestra la grilla sin registros y el PDF indica que no existen registros.
+- Si no existen datos, el sistema muestra resumen en cero y tabla sin registros.
 
 ### Post Condicion
-- El sistema muestra los presupuestos de compra encontrados.
-- El sistema genera el PDF de presupuestos de compra cuando corresponde.
+
+- El sistema muestra los presupuestos encontrados.
 - La informacion consultada no se modifica.
 
 ### Tablas Involucradas
-- presupuesto_compra
-- presupuesto_detalle
-- proveedores
-- usuarios
-- sucursales
+
+- `presupuesto_compra`
+- `presupuesto_detalle`
+- `proveedores`
+- `sucursales`
+- `usuarios`
 
 ---
 
 ## Informe de Ordenes de Compra
 
 ### Descripcion Basica
-Caso de uso que describe el proceso de generar informes de ordenes de compra.
+
+Caso de uso que describe el proceso de generar informes de ordenes de compra. Se ejecuta desde la vista Informes de Movimientos mediante el tipo Ordenes de Compra.
 
 ### Actores Relacionados
+
 - Encargado de Compras
-- Personal de Recepcion
-- Encargado de dto. de Servicios
 - Gerente general
 
 ### Pre Condicion
+
 - Conexion a base de datos.
-- El usuario accede al sistema mediante logeo.
+- El usuario accede al sistema mediante login.
 - El usuario tiene permiso `reportes.ordenes_compra.ver`.
 - Existen ordenes de compra registradas.
 
 ### Flujo de Eventos
 
 #### Flujo Basico
-Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos, Informes de Compras y habilita el informe de ordenes de compra.
 
-#### Generar
-- El sistema valida permiso `reportes.ordenes_compra.ver`.
-- El sistema consulta sucursales para el filtro. Tabla consultada: sucursales.
-- El sistema muestra filtros de fecha desde, fecha hasta, estado (Pendiente, Procesado o Anulado) y sucursal.
-- El usuario selecciona o ingresa filtros.
-- El usuario presiona Previsualizar.
-- El sistema valida nuevamente permiso `reportes.ordenes_compra.ver`.
-- El sistema consulta ordenes de compra segun los filtros.
-- Tablas consultadas: orden_compra, orden_compra_detalle, proveedores, usuarios, sucursales.
-- El sistema carga datos dentro de la grilla.
-- El sistema habilita el boton Generar PDF.
-- El usuario presiona Generar PDF.
-- El sistema envia los filtros al generador del reporte.
-- El sistema valida nuevamente permiso `reportes.ordenes_compra.ver`.
-- El sistema consulta nuevamente las ordenes de compra segun los filtros.
-- El sistema carga la plantilla PDF de ordenes de compra.
-- El sistema genera el PDF del informe.
-
-#### Volver
-- El usuario selecciona otra opcion del menu o vuelve a la pantalla anterior.
-- El sistema redirecciona a la vista seleccionada.
-
-#### Salir
-- El usuario cierra sesion o sale del modulo.
-- El sistema finaliza la sesion o vuelve al menu principal.
+1. El usuario ingresa al menu Informes de Movimientos.
+2. El usuario selecciona Ordenes de Compra.
+3. El sistema habilita filtros de fecha, sucursal, estado y busqueda.
+4. El usuario presiona Previsualizar.
+5. El sistema valida permiso `reportes.ordenes_compra.ver`.
+6. El sistema consulta ordenes segun los filtros.
+7. El sistema muestra resumen, graficos y grilla de resultados.
+8. El usuario puede generar PDF o exportar CSV.
 
 ### Flujo Alternativo
+
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema consulta todas las ordenes permitidas.
-- Si no existen datos para mostrar, el sistema muestra la grilla sin registros y el PDF indica que no existen registros.
+- Si no existen datos, el sistema muestra resumen en cero y tabla sin registros.
 
 ### Post Condicion
-- El sistema muestra las ordenes de compra encontradas.
-- El sistema genera el PDF de ordenes de compra cuando corresponde.
+
+- El sistema muestra las ordenes encontradas.
 - La informacion consultada no se modifica.
 
 ### Tablas Involucradas
-- orden_compra
-- orden_compra_detalle
-- proveedores
-- usuarios
-- sucursales
+
+- `orden_compra`
+- `orden_compra_detalle`
+- `presupuesto_compra`
+- `proveedores`
+- `sucursales`
+- `usuarios`
 
 ---
 
 ## Informe de Compras
 
 ### Descripcion Basica
-Caso de uso que describe el proceso de generar informes de compras registradas.
+
+Caso de uso que describe el proceso de generar informes de compras registradas. Se ejecuta desde la vista Informes de Movimientos mediante el tipo Compras.
 
 ### Actores Relacionados
+
 - Encargado de Compras
-- Personal de Recepcion
-- Encargado de dto. de Servicios
 - Gerente general
 
 ### Pre Condicion
+
 - Conexion a base de datos.
-- El usuario accede al sistema mediante logeo.
+- El usuario accede al sistema mediante login.
 - El usuario tiene permiso `reportes.compras.ver`.
-- Existen facturas de compra registradas.
+- Existen compras registradas.
 
 ### Flujo de Eventos
 
 #### Flujo Basico
-Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos, Informes de Compras y habilita el informe de compras.
 
-#### Generar
-- El sistema valida permiso `reportes.compras.ver`.
-- El sistema consulta sucursales para el filtro. Tabla consultada: sucursales.
-- El sistema muestra filtros de fecha desde, fecha hasta, estado (Activo, Procesado o Anulado) y sucursal.
-- El usuario selecciona o ingresa filtros.
-- El usuario presiona Previsualizar.
-- El sistema valida nuevamente permiso `reportes.compras.ver`.
-- El sistema consulta compras segun los filtros.
-- Tablas consultadas: compra_cabecera, compra_detalle, proveedores, usuarios, sucursales.
-- El sistema carga datos dentro de la grilla.
-- El sistema habilita el boton Generar PDF.
-- El usuario presiona Generar PDF.
-- El sistema envia los filtros al generador del reporte.
-- El sistema valida nuevamente permiso `reportes.compras.ver`.
-- El sistema consulta nuevamente las compras segun los filtros.
-- El sistema carga la plantilla PDF de compras.
-- El sistema genera el PDF del informe.
-
-#### Volver
-- El usuario selecciona otra opcion del menu o vuelve a la pantalla anterior.
-- El sistema redirecciona a la vista seleccionada.
-
-#### Salir
-- El usuario cierra sesion o sale del modulo.
-- El sistema finaliza la sesion o vuelve al menu principal.
+1. El usuario ingresa al menu Informes de Movimientos.
+2. El usuario selecciona Compras.
+3. El sistema habilita filtros de fecha, sucursal, estado y busqueda.
+4. El usuario presiona Previsualizar.
+5. El sistema valida permiso `reportes.compras.ver`.
+6. El sistema consulta compras segun los filtros.
+7. El sistema muestra resumen, graficos y grilla de resultados.
+8. El usuario puede generar PDF o exportar CSV.
 
 ### Flujo Alternativo
+
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema consulta todas las compras permitidas.
-- Si no existen datos para mostrar, el sistema muestra la grilla sin registros y el PDF indica que no existen registros.
+- Si no existen datos, el sistema muestra resumen en cero y tabla sin registros.
 
 ### Post Condicion
+
 - El sistema muestra las compras encontradas.
-- El sistema genera el PDF de compras cuando corresponde.
 - La informacion consultada no se modifica.
 
 ### Tablas Involucradas
-- compra_cabecera
-- compra_detalle
-- proveedores
-- usuarios
-- sucursales
+
+- `compra_cabecera`
+- `compra_detalle`
+- `orden_compra`
+- `proveedores`
+- `sucursales`
+- `usuarios`
 
 ---
 
 ## Informe Libro de Compras
 
 ### Descripcion Basica
-Caso de uso que describe el proceso de generar el informe del libro de compras.
+
+Caso de uso que describe el proceso de generar informes del libro de compras. Se ejecuta desde la vista Informes de Movimientos mediante el tipo Libro de Compras.
 
 ### Actores Relacionados
+
 - Encargado de Compras
-- Personal de Recepcion
-- Encargado de dto. de Servicios
 - Gerente general
 
 ### Pre Condicion
+
 - Conexion a base de datos.
-- El usuario accede al sistema mediante logeo.
+- El usuario accede al sistema mediante login.
 - El usuario tiene permiso `reportes.libro_compras.ver`.
-- Existen registros en el libro de compras.
+- Existen registros en libro de compras.
 
 ### Flujo de Eventos
 
 #### Flujo Basico
-Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos, Informes de Compras y habilita el informe Libro de Compras.
 
-#### Generar
-- El sistema valida permiso `reportes.libro_compras.ver`.
-- El sistema consulta sucursales para el filtro. Tabla consultada: sucursales.
-- El sistema muestra filtros de fecha desde, fecha hasta, proveedor, estado (Activo o Anulado) y sucursal.
-- El usuario selecciona o ingresa filtros.
-- El usuario presiona Previsualizar.
-- El sistema valida nuevamente permiso `reportes.libro_compras.ver`.
-- El sistema consulta el libro de compras segun los filtros.
-- Tablas consultadas: libro_compra, sucursales.
-- El sistema carga datos dentro de la grilla.
-- El sistema habilita el boton Generar PDF.
-- El usuario presiona Generar PDF.
-- El sistema envia los filtros al generador del reporte.
-- El sistema valida nuevamente permiso `reportes.libro_compras.ver`.
-- El sistema consulta nuevamente el libro de compras segun los filtros.
-- El sistema carga la plantilla PDF de libro de compras.
-- El sistema genera el PDF del informe.
-
-#### Volver
-- El usuario selecciona otra opcion del menu o vuelve a la pantalla anterior.
-- El sistema redirecciona a la vista seleccionada.
-
-#### Salir
-- El usuario cierra sesion o sale del modulo.
-- El sistema finaliza la sesion o vuelve al menu principal.
+1. El usuario ingresa al menu Informes de Movimientos.
+2. El usuario selecciona Libro de Compras.
+3. El sistema habilita filtros de fecha, sucursal, proveedor, estado y busqueda.
+4. El usuario presiona Previsualizar.
+5. El sistema valida permiso `reportes.libro_compras.ver`.
+6. El sistema consulta registros del libro segun los filtros.
+7. El sistema muestra resumen, graficos y grilla de resultados.
+8. El usuario puede generar PDF o exportar CSV.
 
 ### Flujo Alternativo
+
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema consulta todos los registros permitidos.
-- Si no existen datos para mostrar, el sistema muestra la grilla sin registros y el PDF indica que no existen registros.
+- Si no existen datos, el sistema muestra resumen en cero y tabla sin registros.
 
 ### Post Condicion
-- El sistema muestra los registros del libro de compras encontrados.
-- El sistema genera el PDF del libro de compras cuando corresponde.
+
+- El sistema muestra los registros encontrados.
 - La informacion consultada no se modifica.
 
 ### Tablas Involucradas
-- libro_compra
-- sucursales
+
+- `libro_compra`
+- `proveedores`
+- `sucursales`
 
 ---
 
 ## Informe de Stock
 
 ### Descripcion Basica
-Caso de uso que describe el proceso de generar informes de stock de articulos por filtros.
+
+Caso de uso que describe el proceso de generar informes de stock de articulos. Se ejecuta desde la vista Informes de Movimientos mediante el tipo Stock.
 
 ### Actores Relacionados
+
+- Encargado de Stock
 - Encargado de Compras
-- Personal de Recepcion
-- Encargado de dto. de Servicios
 - Gerente general
 
 ### Pre Condicion
+
 - Conexion a base de datos.
-- El usuario accede al sistema mediante logeo.
+- El usuario accede al sistema mediante login.
 - El usuario tiene permiso `reportes.stock.ver`.
-- Existen articulos y registros de stock.
+- Existen articulos con stock registrado.
 
 ### Flujo de Eventos
 
 #### Flujo Basico
-Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos, Informes de Compras y habilita el informe de stock.
 
-#### Generar
-- El sistema valida permiso `reportes.stock.ver`.
-- El sistema consulta sucursales, categorias y proveedores para los filtros.
-- Tablas consultadas: sucursales, categorias, proveedores.
-- El sistema muestra filtros de sucursal, categoria, proveedor, estado, codigo y stock.
-- El usuario selecciona o ingresa filtros.
-- El usuario presiona Previsualizar.
-- El sistema valida nuevamente permiso `reportes.stock.ver`.
-- El sistema consulta articulos y stock segun los filtros.
-- Tablas consultadas: articulos, categorias, marcas, articulo_proveedor, proveedores, unidad_medida, tipo_impuesto, stock, sucursales.
-- El sistema calcula resumen de total, activos, inactivos, con stock, sin stock y bajo minimo.
-- El sistema carga datos dentro de la grilla.
-- El sistema habilita el boton Generar PDF.
-- El usuario presiona Generar PDF.
-- El sistema valida nuevamente permiso `reportes.stock.ver`.
-- El sistema consulta nuevamente los datos.
-- El sistema carga la plantilla PDF de stock.
-- El sistema genera el PDF del informe.
-
-#### Volver
-- El usuario selecciona otra opcion del menu o vuelve a la pantalla anterior.
-- El sistema redirecciona a la vista seleccionada.
-
-#### Salir
-- El usuario cierra sesion o sale del modulo.
-- El sistema finaliza la sesion o vuelve al menu principal.
+1. El usuario ingresa al menu Informes de Movimientos.
+2. El usuario selecciona Stock.
+3. El sistema habilita filtros de sucursal, estado y busqueda.
+4. El usuario presiona Previsualizar.
+5. El sistema valida permiso `reportes.stock.ver`.
+6. El sistema consulta stock segun los filtros.
+7. El sistema muestra resumen, graficos y grilla de resultados.
+8. El usuario puede generar PDF o exportar CSV.
 
 ### Flujo Alternativo
+
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema consulta todo el stock permitido.
-- Si no existen datos para mostrar, el sistema muestra la grilla sin registros.
+- Si no existen datos, el sistema muestra resumen en cero y tabla sin registros.
 
 ### Post Condicion
+
 - El sistema muestra el stock encontrado.
-- El sistema genera el PDF cuando corresponde.
 - La informacion consultada no se modifica.
 
 ### Tablas Involucradas
-- articulos
-- categorias
-- marcas
-- articulo_proveedor
-- proveedores
-- unidad_medida
-- tipo_impuesto
-- stock
-- sucursales
 
----
-
-## Informe de Movimientos de Stock
-
-### Descripcion Basica
-Caso de uso que describe el proceso de generar informes de entradas y salidas de stock.
-
-### Actores Relacionados
-- Encargado de Compras
-- Personal de Recepcion
-- Encargado de dto. de Servicios
-- Gerente general
-
-### Pre Condicion
-- Conexion a base de datos.
-- El usuario accede al sistema mediante logeo.
-- El usuario tiene permiso `reportes.movimientos_stock.ver`.
-- Existen movimientos de stock registrados.
-
-### Flujo de Eventos
-
-#### Flujo Basico
-Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos, Informes de Compras y habilita el informe de movimientos de stock.
-
-#### Generar
-- El sistema valida permiso `reportes.movimientos_stock.ver`.
-- El sistema consulta sucursales para el filtro. Tabla consultada: sucursales.
-- El sistema muestra filtros de sucursal, tipo de movimiento, signo, fecha desde y fecha hasta.
-- El usuario selecciona o ingresa filtros.
-- El usuario presiona Previsualizar.
-- El sistema valida nuevamente permiso `reportes.movimientos_stock.ver`.
-- El sistema consulta movimientos de stock segun los filtros.
-- Tablas consultadas: movimientostock, sucursales, articulos, usuarios.
-- El sistema calcula resumen de total, entradas y salidas.
-- El sistema carga datos dentro de la grilla.
-- El sistema habilita el boton Generar PDF.
-- El usuario presiona Generar PDF.
-- El sistema valida nuevamente permiso `reportes.movimientos_stock.ver`.
-- El sistema consulta nuevamente los datos.
-- El sistema carga la plantilla PDF de movimientos de stock.
-- El sistema genera el PDF del informe.
-
-#### Volver
-- El usuario selecciona otra opcion del menu o vuelve a la pantalla anterior.
-- El sistema redirecciona a la vista seleccionada.
-
-#### Salir
-- El usuario cierra sesion o sale del modulo.
-- El sistema finaliza la sesion o vuelve al menu principal.
-
-### Flujo Alternativo
-- Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema consulta todos los movimientos permitidos.
-- Si no existen datos para mostrar, el sistema muestra la grilla sin registros.
-
-### Post Condicion
-- El sistema muestra los movimientos encontrados.
-- El sistema genera el PDF cuando corresponde.
-- La informacion consultada no se modifica.
-
-### Tablas Involucradas
-- movimientostock
-- sucursales
-- articulos
-- usuarios
+- `articulos`
+- `categorias`
+- `marcas`
+- `stock`
+- `sucursales`
 
 ---
 
 ## Informe de Transferencias
 
 ### Descripcion Basica
-Caso de uso que describe el proceso de generar informes de transferencias entre sucursales.
+
+Caso de uso que describe el proceso de generar informes de transferencias entre sucursales. Se ejecuta desde la vista Informes de Movimientos mediante el tipo Transferencias.
 
 ### Actores Relacionados
+
+- Encargado de Stock
 - Encargado de Compras
-- Personal de Recepcion
-- Encargado de dto. de Servicios
 - Gerente general
 
 ### Pre Condicion
+
 - Conexion a base de datos.
-- El usuario accede al sistema mediante logeo.
+- El usuario accede al sistema mediante login.
 - El usuario tiene permiso `reportes.transferencias.ver`.
 - Existen transferencias registradas.
 
 ### Flujo de Eventos
 
 #### Flujo Basico
-Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos, Informes de Compras y habilita el informe de transferencias.
 
-#### Generar
-- El sistema valida permiso `reportes.transferencias.ver`.
-- El sistema consulta sucursales para el filtro. Tabla consultada: sucursales.
-- El sistema muestra filtros de sucursal, estado, tipo, fecha desde y fecha hasta.
-- El usuario selecciona o ingresa filtros.
-- El usuario presiona Previsualizar.
-- El sistema valida nuevamente permiso `reportes.transferencias.ver`.
-- El sistema consulta transferencias segun los filtros.
-- Tablas consultadas: transferencia_stock, sucursales, nota_remision.
-- El sistema calcula resumen de transferencias en transito, recibidas y parciales.
-- El sistema carga datos dentro de la grilla.
-- El sistema habilita el boton Generar PDF.
-- El usuario presiona Generar PDF.
-- El sistema valida nuevamente permiso `reportes.transferencias.ver`.
-- El sistema consulta nuevamente los datos.
-- El sistema carga la plantilla PDF de transferencias.
-- El sistema genera el PDF del informe.
-
-#### Volver
-- El usuario selecciona otra opcion del menu o vuelve a la pantalla anterior.
-- El sistema redirecciona a la vista seleccionada.
-
-#### Salir
-- El usuario cierra sesion o sale del modulo.
-- El sistema finaliza la sesion o vuelve al menu principal.
+1. El usuario ingresa al menu Informes de Movimientos.
+2. El usuario selecciona Transferencias.
+3. El sistema habilita filtros de fecha, sucursal, estado y busqueda.
+4. El usuario presiona Previsualizar.
+5. El sistema valida permiso `reportes.transferencias.ver`.
+6. El sistema consulta transferencias segun los filtros.
+7. El sistema muestra resumen, graficos y grilla de resultados.
+8. El usuario puede generar PDF o exportar CSV.
 
 ### Flujo Alternativo
+
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema consulta todas las transferencias permitidas.
-- Si no existen datos para mostrar, el sistema muestra la grilla sin registros.
+- Si no existen datos, el sistema muestra resumen en cero y tabla sin registros.
 
 ### Post Condicion
+
 - El sistema muestra las transferencias encontradas.
-- El sistema genera el PDF cuando corresponde.
 - La informacion consultada no se modifica.
 
 ### Tablas Involucradas
-- transferencia_stock
-- sucursales
-- nota_remision
+
+- `transferencia_stock`
+- `transferencia_stock_detalle`
+- `sucursales`
+- `nota_remision`
+
+---
+
+## Informe de Movimientos de Stock
+
+### Descripcion Basica
+
+Caso de uso que describe el proceso de generar informes de entradas y salidas de stock. Se ejecuta desde la vista Informes de Movimientos mediante el tipo Movimientos de Stock.
+
+### Actores Relacionados
+
+- Encargado de Stock
+- Encargado de Compras
+- Gerente general
+
+### Pre Condicion
+
+- Conexion a base de datos.
+- El usuario accede al sistema mediante login.
+- El usuario tiene permiso `reportes.movimientos_stock.ver`.
+- Existen movimientos de stock registrados.
+
+### Flujo de Eventos
+
+#### Flujo Basico
+
+1. El usuario ingresa al menu Informes de Movimientos.
+2. El usuario selecciona Movimientos de Stock.
+3. El sistema habilita filtros de fecha, sucursal y busqueda.
+4. El usuario presiona Previsualizar.
+5. El sistema valida permiso `reportes.movimientos_stock.ver`.
+6. El sistema consulta movimientos segun los filtros.
+7. El sistema muestra resumen, graficos y grilla de resultados.
+8. El usuario puede generar PDF o exportar CSV.
+
+### Flujo Alternativo
+
+- Si el usuario no tiene permiso, el sistema muestra acceso denegado.
+- Si no existen datos, el sistema muestra resumen en cero y tabla sin registros.
+
+### Post Condicion
+
+- El sistema muestra los movimientos encontrados.
+- La informacion consultada no se modifica.
+
+### Tablas Involucradas
+
+- `movimientostock`
+- `articulos`
+- `sucursales`
+- `usuarios`
+
+---
+
+## Informe Kardex de Articulo
+
+### Descripcion Basica
+
+Caso de uso que describe el proceso de generar el Kardex de un articulo. Se ejecuta desde la vista Informes de Movimientos mediante el tipo Kardex de Articulo.
+
+El Kardex muestra el historial cronologico de movimientos de un articulo en una sucursal, indicando entradas, salidas, saldo anterior y saldo actual.
+
+### Actores Relacionados
+
+- Encargado de Stock
+- Encargado de Compras
+- Gerente general
+
+### Pre Condicion
+
+- Conexion a base de datos.
+- El usuario accede al sistema mediante login.
+- El usuario tiene permiso `reportes.movimientos_stock.ver`.
+- Existen movimientos de stock registrados para el articulo seleccionado.
+- El usuario debe indicar sucursal.
+- El usuario debe indicar articulo por ID o codigo exacto.
+
+### Flujo de Eventos
+
+#### Flujo Basico
+
+1. El usuario ingresa al menu Informes de Movimientos.
+2. El usuario selecciona Kardex de Articulo.
+3. El sistema habilita filtros de fecha, sucursal, articulo, naturaleza y tipo de movimiento.
+4. El usuario ingresa sucursal y articulo.
+5. El usuario ingresa filtros opcionales.
+6. El usuario presiona Previsualizar.
+7. El sistema valida permiso `reportes.movimientos_stock.ver`.
+8. El sistema valida que exista sucursal y articulo.
+9. El sistema consulta `movimientostock` segun articulo, sucursal y fechas.
+10. El sistema calcula o lee saldo anterior y saldo actual.
+11. El sistema muestra resumen, graficos y grilla de resultados.
+12. El usuario puede generar PDF o exportar CSV.
+
+### Flujo Alternativo
+
+- Si el usuario no tiene permiso, el sistema muestra acceso denegado.
+- Si no se indica sucursal, el sistema solicita seleccionar sucursal.
+- Si no se indica articulo, el sistema solicita ingresar ID o codigo exacto.
+- Si el articulo no existe, el sistema muestra tabla sin resultados.
+- Si no existen movimientos, el sistema muestra resumen en cero y tabla sin registros.
+- Si se filtra por naturaleza, el sistema muestra solo los movimientos coincidentes.
+
+### Post Condicion
+
+- El sistema muestra el Kardex del articulo seleccionado.
+- La informacion consultada no se modifica.
+- El saldo mostrado corresponde a la trazabilidad de movimientos registrados.
+
+### Tablas Involucradas
+
+- `movimientostock`
+- `articulos`
+- `sucursales`
+- `usuarios`
+
+### Reglas de Calculo
+
+- El saldo anterior se obtiene desde `MovStockSaldoAnterior` cuando existe.
+- Si el movimiento no tiene saldos guardados, el sistema calcula el saldo acumulando `MovStockCantidad * MovStockSigno`.
+- Las entradas se identifican con `MovStockSigno = 1`.
+- Las salidas se identifican con `MovStockSigno = -1`.
+- El saldo actual se obtiene desde `MovStockSaldoActual` cuando existe.
+- Si se filtra solo entrada, salida, ajuste u otra naturaleza, el filtro afecta las filas mostradas, pero el saldo representa la trazabilidad real del movimiento.
 
 ---
 
 ## Informe de Recepcion de Servicios
 
 ### Descripcion Basica
-Caso de uso que describe el proceso de generar informes de recepciones de servicio.
+
+Caso de uso que describe el proceso de generar informes de recepciones de servicio. Se ejecuta desde la vista Informes de Movimientos mediante el tipo Recepcion de Servicios.
 
 ### Actores Relacionados
-- Encargado de Compras
+
 - Personal de Recepcion
-- Encargado de dto. de Servicios
+- Encargado de Servicios
 - Gerente general
 
 ### Pre Condicion
+
 - Conexion a base de datos.
-- El usuario accede al sistema mediante logeo.
+- El usuario accede al sistema mediante login.
 - El usuario tiene permiso `reportes.recepcion_servicio.ver`.
 - Existen recepciones de servicio registradas.
 
 ### Flujo de Eventos
 
 #### Flujo Basico
-Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos, Informes de Servicios y habilita el informe de recepcion de servicios.
 
-#### Generar
-- El sistema valida permiso `reportes.recepcion_servicio.ver`.
-- El sistema consulta sucursales para el filtro. Tabla consultada: sucursales.
-- El sistema muestra filtros de fecha desde, fecha hasta, estado (Recepcionado, En proceso, Finalizado o Anulado) y sucursal.
-- El usuario selecciona o ingresa filtros.
-- El usuario presiona Previsualizar.
-- El sistema valida nuevamente permiso `reportes.recepcion_servicio.ver`.
-- El sistema consulta recepciones de servicio segun los filtros.
-- Tablas consultadas: recepcion_servicio, clientes, vehiculos, modelo_auto, marcas, usuarios, sucursales.
-- El sistema carga datos dentro de la grilla.
-- El sistema habilita el boton Generar PDF.
-- El usuario presiona Generar PDF.
-- El sistema envia los filtros al generador del reporte.
-- El sistema valida nuevamente permiso `reportes.recepcion_servicio.ver`.
-- El sistema consulta nuevamente las recepciones de servicio segun los filtros.
-- El sistema carga la plantilla PDF de recepcion de servicios.
-- El sistema genera el PDF del informe.
-
-#### Volver
-- El usuario selecciona otra opcion del menu o vuelve a la pantalla anterior.
-- El sistema redirecciona a la vista seleccionada.
-
-#### Salir
-- El usuario cierra sesion o sale del modulo.
-- El sistema finaliza la sesion o vuelve al menu principal.
+1. El usuario ingresa al menu Informes de Movimientos.
+2. El usuario selecciona Recepcion de Servicios.
+3. El sistema habilita filtros de fecha, sucursal, estado y busqueda.
+4. El usuario presiona Previsualizar.
+5. El sistema valida permiso `reportes.recepcion_servicio.ver`.
+6. El sistema consulta recepciones segun los filtros.
+7. El sistema muestra resumen, graficos y grilla de resultados.
+8. El usuario puede generar PDF o exportar CSV.
 
 ### Flujo Alternativo
+
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema consulta todas las recepciones permitidas.
-- Si no existen datos para mostrar, el sistema muestra la grilla sin registros y el PDF indica que no existen registros.
+- Si no existen datos, el sistema muestra resumen en cero y tabla sin registros.
 
 ### Post Condicion
-- El sistema muestra las recepciones de servicio encontradas.
-- El sistema genera el PDF de recepciones de servicio cuando corresponde.
+
+- El sistema muestra las recepciones encontradas.
 - La informacion consultada no se modifica.
 
 ### Tablas Involucradas
-- recepcion_servicio
-- clientes
-- vehiculos
-- modelo_auto
-- marcas
-- usuarios
-- sucursales
+
+- `recepcion_servicio`
+- `clientes`
+- `vehiculos`
+- `usuarios`
+- `sucursales`
 
 ---
 
 ## Informe de Presupuesto de Servicios
 
 ### Descripcion Basica
-Caso de uso que describe el proceso de generar informes de presupuestos de servicio.
+
+Caso de uso que describe el proceso de generar informes de presupuestos de servicio. Se ejecuta desde la vista Informes de Movimientos mediante el tipo Presupuestos de Servicios.
 
 ### Actores Relacionados
-- Encargado de Compras
-- Personal de Recepcion
-- Encargado de dto. de Servicios
+
+- Encargado de Servicios
 - Gerente general
 
 ### Pre Condicion
+
 - Conexion a base de datos.
-- El usuario accede al sistema mediante logeo.
+- El usuario accede al sistema mediante login.
 - El usuario tiene permiso `reportes.presupuesto_servicio.ver`.
 - Existen presupuestos de servicio registrados.
 
 ### Flujo de Eventos
 
 #### Flujo Basico
-Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos, Informes de Servicios y habilita el informe de presupuestos de servicio.
 
-#### Generar
-- El sistema valida permiso `reportes.presupuesto_servicio.ver`.
-- El sistema consulta sucursales para el filtro. Tabla consultada: sucursales.
-- El sistema muestra filtros de fecha desde, fecha hasta, estado (Pendiente, Aprobado, OT generada, Facturado o Anulado) y sucursal.
-- El usuario selecciona o ingresa filtros.
-- El usuario presiona Previsualizar.
-- El sistema valida nuevamente permiso `reportes.presupuesto_servicio.ver`.
-- El sistema consulta presupuestos de servicio segun los filtros.
-- Tablas consultadas: presupuesto_servicio, presupuesto_detalleservicio, diagnostico_servicio, recepcion_servicio, usuarios, sucursales, clientes, vehiculos, modelo_auto, marcas.
-- Cliente y vehiculo se obtienen desde `presupuesto_servicio.id_cliente` y `presupuesto_servicio.id_vehiculo`; diagnostico y recepcion se consultan solo para datos tecnicos o trazabilidad del origen.
-- El sistema carga datos dentro de la grilla.
-- El sistema habilita el boton Generar PDF.
-- El usuario presiona Generar PDF.
-- El sistema envia los filtros al generador del reporte.
-- El sistema valida nuevamente permiso `reportes.presupuesto_servicio.ver`.
-- El sistema consulta nuevamente los presupuestos de servicio segun los filtros.
-- El sistema carga la plantilla PDF de presupuestos de servicio.
-- El sistema genera el PDF del informe.
-
-#### Volver
-- El usuario selecciona otra opcion del menu o vuelve a la pantalla anterior.
-- El sistema redirecciona a la vista seleccionada.
-
-#### Salir
-- El usuario cierra sesion o sale del modulo.
-- El sistema finaliza la sesion o vuelve al menu principal.
+1. El usuario ingresa al menu Informes de Movimientos.
+2. El usuario selecciona Presupuestos de Servicios.
+3. El sistema habilita filtros de fecha, sucursal, estado y busqueda.
+4. El usuario presiona Previsualizar.
+5. El sistema valida permiso `reportes.presupuesto_servicio.ver`.
+6. El sistema consulta presupuestos segun los filtros.
+7. El sistema muestra resumen, graficos y grilla de resultados.
+8. El usuario puede generar PDF o exportar CSV.
 
 ### Flujo Alternativo
+
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema consulta todos los presupuestos permitidos.
-- Si no existen datos para mostrar, el sistema muestra la grilla sin registros y el PDF indica que no existen registros.
+- Si no existen datos, el sistema muestra resumen en cero y tabla sin registros.
 
 ### Post Condicion
-- El sistema muestra los presupuestos de servicio encontrados.
-- El sistema genera el PDF de presupuestos de servicio cuando corresponde.
+
+- El sistema muestra los presupuestos encontrados.
 - La informacion consultada no se modifica.
 
 ### Tablas Involucradas
-- presupuesto_servicio
-- presupuesto_detalleservicio
-- diagnostico_servicio
-- recepcion_servicio
-- usuarios
-- sucursales
-- clientes
-- vehiculos
-- modelo_auto
-- marcas
+
+- `presupuesto_servicio`
+- `presupuesto_detalleservicio`
+- `clientes`
+- `vehiculos`
+- `sucursales`
+- `usuarios`
 
 ---
 
 ## Informe de Ordenes de Trabajo
 
 ### Descripcion Basica
-Caso de uso que describe el proceso de generar informes de ordenes de trabajo.
+
+Caso de uso que describe el proceso de generar informes de ordenes de trabajo. Se ejecuta desde la vista Informes de Movimientos mediante el tipo Ordenes de Trabajo.
 
 ### Actores Relacionados
-- Encargado de Compras
-- Personal de Recepcion
-- Encargado de dto. de Servicios
+
+- Encargado de Servicios
 - Gerente general
 
 ### Pre Condicion
+
 - Conexion a base de datos.
-- El usuario accede al sistema mediante logeo.
+- El usuario accede al sistema mediante login.
 - El usuario tiene permiso `reportes.orden_trabajo.ver`.
 - Existen ordenes de trabajo registradas.
 
 ### Flujo de Eventos
 
 #### Flujo Basico
-Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos, Informes de Servicios y habilita el informe de ordenes de trabajo.
 
-#### Generar
-- El sistema valida permiso `reportes.orden_trabajo.ver`.
-- El sistema consulta sucursales para el filtro. Tabla consultada: sucursales.
-- El sistema muestra filtros de fecha desde, fecha hasta, estado (Activa, Servicio registrado, Pendiente completar o Anulada) y sucursal.
-- El usuario selecciona o ingresa filtros.
-- El usuario presiona Previsualizar.
-- El sistema valida nuevamente permiso `reportes.orden_trabajo.ver`.
-- El sistema consulta ordenes de trabajo segun los filtros.
-- Tablas consultadas: orden_trabajo, orden_trabajo_detalle, presupuesto_servicio, diagnostico_servicio, recepcion_servicio, sucursales, usuarios, equipo_trabajo, clientes, vehiculos, modelo_auto, marcas.
-- Cliente y vehiculo se obtienen desde `orden_trabajo.id_cliente` y `orden_trabajo.id_vehiculo`; diagnostico y recepcion se consultan solo cuando el informe expone datos propios de esos documentos.
-- El sistema carga datos dentro de la grilla.
-- El sistema habilita el boton Generar PDF.
-- El usuario presiona Generar PDF.
-- El sistema envia los filtros al generador del reporte.
-- El sistema valida nuevamente permiso `reportes.orden_trabajo.ver`.
-- El sistema consulta nuevamente las ordenes de trabajo segun los filtros.
-- El sistema carga la plantilla PDF de ordenes de trabajo.
-- El sistema genera el PDF del informe.
-
-#### Volver
-- El usuario selecciona otra opcion del menu o vuelve a la pantalla anterior.
-- El sistema redirecciona a la vista seleccionada.
-
-#### Salir
-- El usuario cierra sesion o sale del modulo.
-- El sistema finaliza la sesion o vuelve al menu principal.
+1. El usuario ingresa al menu Informes de Movimientos.
+2. El usuario selecciona Ordenes de Trabajo.
+3. El sistema habilita filtros de fecha, sucursal, estado y busqueda.
+4. El usuario presiona Previsualizar.
+5. El sistema valida permiso `reportes.orden_trabajo.ver`.
+6. El sistema consulta ordenes segun los filtros.
+7. El sistema muestra resumen, graficos y grilla de resultados.
+8. El usuario puede generar PDF o exportar CSV.
 
 ### Flujo Alternativo
+
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema consulta todas las ordenes permitidas.
-- Si no existen datos para mostrar, el sistema muestra la grilla sin registros y el PDF indica que no existen registros.
+- Si no existen datos, el sistema muestra resumen en cero y tabla sin registros.
 
 ### Post Condicion
-- El sistema muestra las ordenes de trabajo encontradas.
-- El sistema genera el PDF de ordenes de trabajo cuando corresponde.
+
+- El sistema muestra las ordenes encontradas.
 - La informacion consultada no se modifica.
 
 ### Tablas Involucradas
-- orden_trabajo
-- orden_trabajo_detalle
-- presupuesto_servicio
-- diagnostico_servicio
-- recepcion_servicio
-- sucursales
-- usuarios
-- equipo_trabajo
-- clientes
-- vehiculos
-- modelo_auto
-- marcas
+
+- `orden_trabajo`
+- `orden_trabajo_detalle`
+- `presupuesto_servicio`
+- `clientes`
+- `vehiculos`
+- `equipo_trabajo`
+- `empleados`
+- `sucursales`
+- `usuarios`
 
 ---
 
 ## Informe de Registro de Servicios
 
 ### Descripcion Basica
-Caso de uso que describe el proceso de generar informes de servicios registrados.
+
+Caso de uso que describe el proceso de generar informes de servicios registrados. Se ejecuta desde la vista Informes de Movimientos mediante el tipo Registro de Servicios.
 
 ### Actores Relacionados
-- Encargado de Compras
-- Personal de Recepcion
-- Encargado de dto. de Servicios
+
+- Encargado de Servicios
 - Gerente general
 
 ### Pre Condicion
+
 - Conexion a base de datos.
-- El usuario accede al sistema mediante logeo.
+- El usuario accede al sistema mediante login.
 - El usuario tiene permiso `reportes.registro_servicio.ver`.
 - Existen registros de servicio.
 
 ### Flujo de Eventos
 
 #### Flujo Basico
-Este caso de uso se inicia cuando el usuario selecciona Informes de Movimientos, Informes de Servicios y habilita el informe de registro de servicios.
 
-#### Generar
-- El sistema valida permiso `reportes.registro_servicio.ver`.
-- El sistema consulta sucursales para el filtro. Tabla consultada: sucursales.
-- El sistema consulta empleados activos para el filtro. Tabla consultada: empleados.
-- El sistema muestra filtros de fecha desde, fecha hasta, estado (Registrado, Facturado, Con Reclamo o Anulado), tecnico encargado y sucursal.
-- El usuario selecciona o ingresa filtros.
-- El usuario presiona Previsualizar.
-- El sistema valida nuevamente permiso `reportes.registro_servicio.ver`.
-- El sistema consulta registros de servicio segun los filtros.
-- Tablas consultadas: registro_servicio, registro_servicio_detalle, orden_trabajo, sucursales, clientes, vehiculos, modelo_auto, marcas, usuarios, equipo_trabajo, empleados.
-- La sucursal del informe se obtiene desde `registro_servicio.id_sucursal`.
-- Cliente y vehiculo se obtienen desde `registro_servicio.id_cliente` y `registro_servicio.id_vehiculo`.
-- La orden de trabajo se consulta para exponer OT, tecnico y equipo; no se usa para reconstruir cliente/vehiculo.
-- El sistema diferencia los articulos utilizados por origen del detalle: `OT` para repuestos e `INSUMO` para insumos.
-- El sistema calcula cantidad de repuestos, cantidad de insumos e importe total del servicio.
-- El sistema carga datos dentro de la grilla.
-- El sistema habilita el boton Generar PDF.
-- El usuario presiona Generar PDF.
-- El sistema envia los filtros al generador del reporte.
-- El sistema valida nuevamente permiso `reportes.registro_servicio.ver`.
-- El sistema consulta nuevamente los registros de servicio segun los filtros.
-- El sistema vuelve a calcular el resumen de servicios, repuestos e insumos para el PDF.
-- El sistema carga la plantilla PDF de registro de servicios.
-- El sistema genera el PDF del informe.
-
-#### Volver
-- El usuario selecciona otra opcion del menu o vuelve a la pantalla anterior.
-- El sistema redirecciona a la vista seleccionada.
-
-#### Salir
-- El usuario cierra sesion o sale del modulo.
-- El sistema finaliza la sesion o vuelve al menu principal.
+1. El usuario ingresa al menu Informes de Movimientos.
+2. El usuario selecciona Registro de Servicios.
+3. El sistema habilita filtros de fecha, sucursal, tecnico, estado y busqueda.
+4. El usuario presiona Previsualizar.
+5. El sistema valida permiso `reportes.registro_servicio.ver`.
+6. El sistema consulta registros segun los filtros.
+7. El sistema muestra resumen, graficos y grilla de resultados.
+8. El usuario puede generar PDF o exportar CSV.
 
 ### Flujo Alternativo
+
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no se ingresan filtros, el sistema consulta todos los registros permitidos.
-- Si no existen datos para mostrar, el sistema muestra la grilla sin registros y el PDF indica que no existen registros.
+- Si no existen datos, el sistema muestra resumen en cero y tabla sin registros.
 
 ### Post Condicion
-- El sistema muestra los registros de servicio encontrados.
-- El sistema genera el PDF de registros de servicio cuando corresponde.
+
+- El sistema muestra los registros encontrados.
 - La informacion consultada no se modifica.
 
 ### Tablas Involucradas
-- registro_servicio
-- registro_servicio_detalle
-- orden_trabajo
-- sucursales
-- clientes
-- vehiculos
-- modelo_auto
-- marcas
-- usuarios
-- equipo_trabajo
-- empleados
+
+- `registro_servicio`
+- `registro_servicio_detalle`
+- `orden_trabajo`
+- `clientes`
+- `vehiculos`
+- `empleados`
+- `sucursales`
+- `usuarios`
+
+---
+
+## Reglas de Graficos Estadisticos
+
+### Descripcion
+
+Los informes de movimientos muestran graficos estadisticos para apoyar el analisis visual de los datos consultados.
+
+La representacion visual se realiza con la libreria JavaScript Chart.js sobre elementos `canvas`, manteniendo la consulta y preparacion de datos en el backend del sistema. Los graficos se presentan en modo estatico para evitar modificaciones visuales por parte del usuario durante la consulta.
+
+### Graficos Disponibles
+
+- Movimientos por periodo mediante grafico de linea.
+- Distribucion por estado mediante grafico de dona.
+- Top relacionado mediante grafico de barras horizontales.
+
+### Top Relacionado
+
+El Top relacionado muestra la entidad mas representativa segun el informe seleccionado. En compras se orienta a proveedores; en servicios puede orientarse a clientes, tecnicos o vehiculos; en stock se orienta a articulos o tipos de movimiento.
+
+Los valores del grafico se muestran con separador de miles.
+
+---
+
+## Reglas de Exportacion CSV
+
+### Descripcion
+
+El sistema permite exportar los informes a CSV para su apertura en planillas electronicas.
+
+### Reglas
+
+- El archivo se genera desde el servidor.
+- En Informes Referenciales se usa codificacion UTF-16LE con BOM para evitar problemas de acentos al abrir en Excel.
+- En Informes de Movimientos se usa codificacion UTF-8 con BOM.
+- Se usa separador punto y coma.
+- Los encabezados corresponden a las columnas visibles del informe.
+- Los estados se exportan como texto descriptivo.
+- Los importes y cantidades se exportan con formato legible.
+
+---
+
+## Reglas de Exportacion PDF
+
+### Descripcion
+
+El sistema permite generar PDF con los resultados del informe seleccionado.
+
+### Reglas
+
+- El sistema valida permisos antes de generar el PDF.
+- El PDF respeta el tipo de informe y los filtros enviados.
+- El documento incluye titulo, columnas y registros filtrados.
+- Si no existen registros, el PDF informa que no hay datos.

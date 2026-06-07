@@ -373,27 +373,21 @@ $menuLateral = [
             'reportes.sucursales.ver',
             'reportes.clientes.ver',
             'reportes.vehiculos.ver',
-            'reportes.empleados.ver'
+            'usuarios.ver'
         ],
         'items' => [
             [
-                'titulo' => 'Referenciales de Compras',
-                'icono' => 'fas fa-shopping-cart',
-                'permiso' => ['reportes.articulos.ver', 'reportes.proveedores.ver', 'reportes.sucursales.ver'],
-                'items' => [
-                    ['titulo' => 'Articulos', 'icono' => 'fas fa-clipboard-list', 'href' => 'reporte-articulos/', 'vista' => 'reporte-articulos', 'permiso' => 'reportes.articulos.ver'],
-                    ['titulo' => 'Proveedores', 'icono' => 'fas fa-clipboard-list', 'href' => 'reporte-proveedores/', 'vista' => 'reporte-proveedores', 'permiso' => 'reportes.proveedores.ver'],
-                    ['titulo' => 'Sucursales', 'icono' => 'fas fa-clipboard-list', 'href' => 'reporte-sucursales/', 'vista' => 'reporte-sucursales', 'permiso' => 'reportes.sucursales.ver']
-                ]
-            ],
-            [
-                'titulo' => 'Referenciales de Servicios',
-                'icono' => 'fas fa-tools',
-                'permiso' => ['reportes.clientes.ver', 'reportes.vehiculos.ver', 'reportes.empleados.ver'],
-                'items' => [
-                    ['titulo' => 'Clientes', 'icono' => 'fas fa-clipboard-list', 'href' => 'reporte-clientes/', 'vista' => 'reporte-clientes', 'permiso' => 'reportes.clientes.ver'],
-                    ['titulo' => 'Vehiculos', 'icono' => 'fas fa-clipboard-list', 'href' => 'reporte-vehiculos/', 'vista' => 'reporte-vehiculos', 'permiso' => 'reportes.vehiculos.ver'],
-                    ['titulo' => 'Empleados', 'icono' => 'fas fa-clipboard-list', 'href' => 'reporte-empleados/', 'vista' => 'reporte-empleados', 'permiso' => 'reportes.empleados.ver']
+                'titulo' => 'Informes Referenciales',
+                'icono' => 'fas fa-table',
+                'href' => 'reporte-referenciales/',
+                'vista' => 'reporte-referenciales',
+                'permiso' => [
+                    'reportes.articulos.ver',
+                    'reportes.proveedores.ver',
+                    'reportes.sucursales.ver',
+                    'reportes.clientes.ver',
+                    'reportes.vehiculos.ver',
+                    'usuarios.ver'
                 ]
             ]
         ]
@@ -416,8 +410,10 @@ $menuLateral = [
         ],
         'items' => [
             [
-                'titulo' => 'Informes de Compras',
-                'icono' => 'fas fa-file-invoice',
+                'titulo' => 'Panel de Movimientos',
+                'icono' => 'fas fa-table',
+                'href' => 'reporte-movimientos/',
+                'vista' => 'reporte-movimientos',
                 'permiso' => [
                     'reportes.pedidos.ver',
                     'reportes.presupuestos_compra.ver',
@@ -425,32 +421,11 @@ $menuLateral = [
                     'reportes.compras.ver',
                     'reportes.libro_compras.ver',
                     'reportes.stock.ver',
-                    'reportes.movimientos_stock.ver'
-                ],
-                'items' => [
-                    ['titulo' => 'Informe de Pedidos', 'icono' => 'fas fa-clipboard-list', 'href' => 'reporte-pedidos/', 'vista' => 'reporte-pedidos', 'permiso' => 'reportes.pedidos.ver'],
-                    ['titulo' => 'Informe de Presupuestos', 'icono' => 'fas fa-clipboard-list', 'href' => 'reporte-presupuestos/', 'vista' => 'reporte-presupuestos', 'permiso' => 'reportes.presupuestos_compra.ver'],
-                    ['titulo' => 'Informe de Ordenes de Compra', 'icono' => 'fas fa-clipboard-list', 'href' => 'reporte-ordenes-compra/', 'vista' => 'reporte-ordenes-compra', 'permiso' => 'reportes.ordenes_compra.ver'],
-                    ['titulo' => 'Informe de Compras', 'icono' => 'fas fa-clipboard-list', 'href' => 'reporte-compras/', 'vista' => 'reporte-compras', 'permiso' => 'reportes.compras.ver'],
-                    ['titulo' => 'Informe Libro de Compras', 'icono' => 'fas fa-clipboard-list', 'href' => 'reporte-LibroCompras/', 'vista' => 'reporte-LibroCompras', 'permiso' => 'reportes.libro_compras.ver'],
-                    ['titulo' => 'Informe de Stock', 'icono' => 'fas fa-clipboard-list', 'href' => 'reporte-stock/', 'vista' => 'reporte-stock', 'permiso' => 'reportes.stock.ver'],
-                    ['titulo' => 'Movimientos de Stock', 'icono' => 'fas fa-clipboard-list', 'href' => 'reporte-movimientostock/', 'vista' => 'reporte-movimientostock', 'permiso' => 'reportes.movimientos_stock.ver']
-                ]
-            ],
-            [
-                'titulo' => 'Informes de Servicios',
-                'icono' => 'fas fa-tools',
-                'permiso' => [
+                    'reportes.movimientos_stock.ver',
                     'reportes.recepcion_servicio.ver',
                     'reportes.presupuesto_servicio.ver',
                     'reportes.orden_trabajo.ver',
                     'reportes.registro_servicio.ver'
-                ],
-                'items' => [
-                    ['titulo' => 'Informe de Rec. de Servicios', 'icono' => 'fas fa-clipboard-list', 'href' => 'reporte-recepcion-servicio/', 'vista' => 'reporte-recepcion-servicio', 'permiso' => 'reportes.recepcion_servicio.ver'],
-                    ['titulo' => 'Informe de Presupuestos', 'icono' => 'fas fa-clipboard-list', 'href' => 'reporte-presupuesto-servicio/', 'vista' => 'reporte-presupuesto-servicio', 'permiso' => 'reportes.presupuesto_servicio.ver'],
-                    ['titulo' => 'Informe de OT', 'icono' => 'fas fa-clipboard-list', 'href' => 'reporte-orden-trabajo/', 'vista' => 'reporte-orden-trabajo', 'permiso' => 'reportes.orden_trabajo.ver'],
-                    ['titulo' => 'Informe de Reg. Servicios', 'icono' => 'fas fa-clipboard-list', 'href' => 'reporte-registro-servicio/', 'vista' => 'reporte-registro-servicio', 'permiso' => 'reportes.registro_servicio.ver']
                 ]
             ]
         ]

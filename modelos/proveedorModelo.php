@@ -59,9 +59,17 @@ class proveedorModelo extends mainModel
 
 
         $check = $pdo->prepare("
-        SELECT 1 FROM articulo_proveedor WHERE idproveedores = :id LIMIT 1");
+            SELECT 1
+            WHERE EXISTS (SELECT 1 FROM articulo_proveedor WHERE idproveedores = ?)
+               OR EXISTS (SELECT 1 FROM presupuesto_compra WHERE idproveedores = ?)
+               OR EXISTS (SELECT 1 FROM orden_compra WHERE idproveedores = ?)
+               OR EXISTS (SELECT 1 FROM compra_cabecera WHERE idproveedores = ?)
+               OR EXISTS (SELECT 1 FROM libro_compra WHERE idproveedores = ?)
+        ");
 
-        $check->bindParam(":id", $id, PDO::PARAM_INT);
+        for ($i = 1; $i <= 5; $i++) {
+            $check->bindValue($i, (int)$id, PDO::PARAM_INT);
+        }
         $check->execute();
 
         if ($check->rowCount() > 0) {
@@ -82,7 +90,21 @@ class proveedorModelo extends mainModel
         }
 
         $stmt->bindParam(":id", $id, PDO::PARAM_INT);
-        $stmt->execute();
+        try {
+            $stmt->execute();
+        } catch (PDOException $e) {
+            if ($stmt->queryString && stripos($stmt->queryString, 'DELETE FROM proveedores') !== false) {
+                $stmt = $pdo->prepare("
+                    UPDATE proveedores
+                    SET estado = 0
+                    WHERE idproveedores = :id
+                ");
+                $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+                $stmt->execute();
+            } else {
+                throw $e;
+            }
+        }
 
         return $stmt;
     }
