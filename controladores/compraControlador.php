@@ -835,7 +835,8 @@ class compraControlador extends compraModelo
                                 <th>' . mainModel::link_orden_tabla($url, 'fecha', 'FECHA', $orden, $direccion, 'compra_orden', 'compra_direccion') . '</th>
                                 <th>TOTAL COMPRA</th>
                                 <th>CARGADO POR</th>
-                                <th>' . mainModel::link_orden_tabla($url, 'estado', 'ESTADO', $orden, $direccion, 'compra_orden', 'compra_direccion') . '</th>';
+                                <th>' . mainModel::link_orden_tabla($url, 'estado', 'ESTADO', $orden, $direccion, 'compra_orden', 'compra_direccion') . '</th>
+                                <th>DETALLE</th>';
         $puedeAnular = mainModel::tienePermiso('compra.anular');
 
         if ($puedeAnular) {
@@ -869,7 +870,12 @@ class compraControlador extends compraModelo
 								<td>' . date("d-m-Y", strtotime($rows['fecha_factura'])) . '</td>
 								<td>' . number_format($rows['total_compra'], 0, ',', '.') . '</td>
                                 <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
-                                <td>' . $estadoBadge . '</td>';
+                                <td>' . $estadoBadge . '</td>
+                                <td>
+                                    <button type="button" class="btn btn-info btn-sm" onclick="verDetalleCompra(\'' . mainModel::encryption($rows['idcompra_cabecera']) . '\')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>';
                 if ($puedeAnular) {
                     $tabla .= '<td>
 									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/compraAjax.php" method="POST" data-form="delete" data-anulacion="true" data-anulacion-titulo="Anular compra" autocomplete="off" action="">
@@ -886,7 +892,7 @@ class compraControlador extends compraModelo
             }
             $reg_final = $contador - 1;
         } else {
-            $colspan = $puedeAnular ? 8 : 7;
+            $colspan = $puedeAnular ? 9 : 8;
             if ($total >= 1) {
                 $tabla .= '<tr class="text-center"> <td colspan="' . $colspan . '"> <a href="' . $url . '" class="btn btn-reaised btn-primary btn-sm"> Haga click aqui para recargar el listado </a> </td> </tr> ';
             } else {
@@ -904,6 +910,115 @@ class compraControlador extends compraModelo
         echo $tabla;
     }
     /**fin controlador */
+
+    public function detalle_compra_controlador()
+    {
+        if (!mainModel::tienePermiso('compra.ver')) {
+            return json_encode([
+                'status' => 'error',
+                'html' => '<div class="alert alert-danger mb-0">Acceso no autorizado</div>'
+            ]);
+        }
+
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start(['name' => 'STR']);
+        }
+
+        $id = (int) mainModel::limpiar_string(mainModel::decryption($_POST['detalle_compra'] ?? ''));
+        $sucursal = (int) ($_SESSION['nick_sucursal'] ?? 0);
+
+        if ($id <= 0 || $sucursal <= 0) {
+            return json_encode([
+                'status' => 'error',
+                'html' => '<div class="alert alert-warning mb-0">No se pudo validar la compra solicitada.</div>'
+            ]);
+        }
+
+        $datos = compraModelo::detalle_compra_modelo($id, $sucursal);
+        if (!$datos['cabecera']) {
+            return json_encode([
+                'status' => 'error',
+                'html' => '<div class="alert alert-warning mb-0">No se encontro la compra en la sucursal activa.</div>'
+            ]);
+        }
+
+        $cab = $datos['cabecera'];
+        $libro = $datos['libro'] ?: [];
+        $cuentas = $datos['cuentas'] ?: [];
+        $estadoTexto = ['0' => 'Anulado', '1' => 'Activo', '2' => 'Procesado'];
+        $total = 0;
+
+        $html = '
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <strong>Compra:</strong> #' . (int)$cab['idcompra_cabecera'] . '<br>
+                    <strong>Factura:</strong> ' . htmlspecialchars($cab['nro_factura'], ENT_QUOTES, 'UTF-8') . '<br>
+                    <strong>Proveedor:</strong> ' . htmlspecialchars($cab['razon_social'], ENT_QUOTES, 'UTF-8') . '<br>
+                    <strong>RUC:</strong> ' . htmlspecialchars($cab['ruc'], ENT_QUOTES, 'UTF-8') . '
+                </div>
+                <div class="col-md-6">
+                    <strong>Fecha factura:</strong> ' . (!empty($cab['fecha_factura']) ? date('d/m/Y', strtotime($cab['fecha_factura'])) : '-') . '<br>
+                    <strong>Timbrado:</strong> ' . htmlspecialchars($cab['nro_timbrado'] ?? '-', ENT_QUOTES, 'UTF-8') . '<br>
+                    <strong>Condicion:</strong> ' . htmlspecialchars(ucfirst($cab['condicion'] ?? '-'), ENT_QUOTES, 'UTF-8') . '<br>
+                    <strong>Estado:</strong> ' . ($estadoTexto[(string)$cab['estado']] ?? 'Desconocido') . '<br>
+                    <strong>Usuario:</strong> ' . htmlspecialchars(trim($cab['usu_nombre'] . ' ' . $cab['usu_apellido']), ENT_QUOTES, 'UTF-8') . '
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered">
+                    <thead class="thead-light">
+                        <tr class="text-center">
+                            <th>Codigo</th>
+                            <th>Articulo</th>
+                            <th>Cantidad</th>
+                            <th>Precio</th>
+                            <th>IVA</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>';
+
+        foreach ($datos['detalle'] as $row) {
+            $total += (float)$row['subtotal'];
+            $html .= '
+                <tr>
+                    <td>' . htmlspecialchars($row['codigo'], ENT_QUOTES, 'UTF-8') . '</td>
+                    <td>' . htmlspecialchars($row['desc_articulo'], ENT_QUOTES, 'UTF-8') . '</td>
+                    <td class="text-right">' . number_format((float)$row['cantidad_recibida'], 0, ',', '.') . '</td>
+                    <td class="text-right">' . number_format((float)$row['precio_unitario'], 0, ',', '.') . '</td>
+                    <td class="text-right">' . number_format((float)$row['ivaPro'], 0, ',', '.') . '</td>
+                    <td class="text-right">' . number_format((float)$row['subtotal'], 0, ',', '.') . '</td>
+                </tr>';
+        }
+
+        $html .= '
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="5" class="text-right">Total detalle</th>
+                            <th class="text-right">Gs. ' . number_format($total, 0, ',', '.') . '</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <strong>Libro de compras</strong><br>
+                    Exenta: Gs. ' . number_format((float)($libro['exenta'] ?? 0), 0, ',', '.') . '<br>
+                    Gravada 5%: Gs. ' . number_format((float)($libro['gravada_5'] ?? 0), 0, ',', '.') . ' | IVA 5%: Gs. ' . number_format((float)($libro['iva_5'] ?? 0), 0, ',', '.') . '<br>
+                    Gravada 10%: Gs. ' . number_format((float)($libro['gravada_10'] ?? 0), 0, ',', '.') . ' | IVA 10%: Gs. ' . number_format((float)($libro['iva_10'] ?? 0), 0, ',', '.') . '<br>
+                    Total libro: Gs. ' . number_format((float)($libro['total'] ?? 0), 0, ',', '.') . '
+                </div>
+                <div class="col-md-6">
+                    <strong>Cuentas a pagar</strong><br>
+                    Cuotas activas: ' . number_format((float)($cuentas['cuotas'] ?? 0), 0, ',', '.') . '<br>
+                    Monto: Gs. ' . number_format((float)($cuentas['monto'] ?? 0), 0, ',', '.') . '<br>
+                    Saldo: Gs. ' . number_format((float)($cuentas['saldo'] ?? 0), 0, ',', '.') . '
+                </div>
+            </div>';
+
+        return json_encode(['status' => 'ok', 'html' => $html]);
+    }
 
     /**Controlador anular compra */
     public function anular_compra_controlador()

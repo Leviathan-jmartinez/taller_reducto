@@ -6,6 +6,7 @@ if (
     isset($_POST['buscar_proveedorPre']) || isset($_POST['id_agregar_proveedorPre']) || isset($_POST['id_eliminar_proveedorPre'])
     || isset($_POST['id_eliminar_articuloPre']) || isset($_POST['agregar_presupuesto']) || isset($_POST['limpiar_presupuesto'])
     || isset($_POST['buscar_pedidoPre']) || isset($_POST['id_pedido_seleccionado']) || isset($_POST['id_actualizar_precio']) || isset($_POST['presupuesto_id_del'])
+    || isset($_POST['detalle_presupuesto_compra'])
 ) {
     /** Instancia al controlador */
     require_once "../controladores/presupuestoControlador.php";
@@ -59,6 +60,10 @@ if (
 
     if (isset($_POST['presupuesto_id_del'])) {
         echo $inst_presu->anular_presupuesto_controlador();
+    }
+    if (isset($_POST['detalle_presupuesto_compra'])) {
+        header('Content-Type: application/json; charset=utf-8');
+        echo $inst_presu->detalle_presupuesto_compra_controlador();
     }
     if (isset($_POST['limpiar_presupuesto'])) {
         session_start(['name' => 'STR']);

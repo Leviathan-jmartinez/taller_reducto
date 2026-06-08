@@ -565,7 +565,7 @@ class notasCreDeControlador extends notasCreDeModelo
                                     <td>' . $estadoBadge . '</td>';
                 if ($puedeAnular) {
                     $tabla .= '<td>
-                                        <form class="FormularioAjax" action="' . SERVERURL . 'ajax/notasCreDeAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
+                                        <form class="FormularioAjax" action="' . SERVERURL . 'ajax/notasCreDeAjax.php" method="POST" data-form="delete" data-anulacion="true" data-anulacion-titulo="Anular nota de compra" autocomplete="off" action="">
                                         <input type="hidden" name="notaCreDe_id_del" value=' . mainModel::encryption($rows['idnota_compra']) . '>
                                             <button type="submit" class="btn btn-warning">
                                                 <i class="far fa-trash-alt"></i>
@@ -617,6 +617,7 @@ class notasCreDeControlador extends notasCreDeModelo
         }
 
         $idNota = mainModel::decryption($_POST['notaCreDe_id_del']);
+        $motivo = mainModel::limpiar_string($_POST['motivo_anulacion'] ?? '');
         $nota = notasCreDeModelo::obtenerNotaCompraPorId($idNota);
 
         if (!$nota) {
@@ -690,6 +691,18 @@ class notasCreDeControlador extends notasCreDeModelo
                 ':nro'      => $nota['nro_documento'],
                 ':tipo'     => ($nota['tipo'] === 'credito') ? 'NC' : 'ND',
                 ':suc'      => $nota['id_sucursal']
+            ]);
+
+            mainModel::registrar_anulacion_auditoria_modelo($pdo, [
+                'modulo' => 'nota_compra',
+                'tabla_afectada' => 'nota_compra',
+                'id_registro' => $idNota,
+                'id_sucursal' => $nota['id_sucursal'],
+                'estado_anterior' => $nota['estado'],
+                'estado_nuevo' => '0',
+                'motivo' => $motivo,
+                'usuario_anula' => $_SESSION['id_str'],
+                'referencia' => 'NOTA_COMPRA #' . $idNota
             ]);
 
             $pdo->commit();

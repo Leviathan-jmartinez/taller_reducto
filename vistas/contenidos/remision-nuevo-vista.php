@@ -174,17 +174,17 @@ $id_usuario = $_SESSION['id_usuario'] ?? null;
                                         <td class="text-left"><?= htmlspecialchars($item['descripcion']); ?></td>
                                         <td class="text-center">
                                             <input type="number" min="0" step="1"
-                                                name="cantidades[]"
                                                 class="form-control text-center cantidad"
                                                 value="<?= $item['cantidad']; ?>"
-                                                required>
+                                                readonly
+                                                tabindex="-1">
                                         </td>
                                         <td class="text-center">
                                             <input type="number" step="0.01"
-                                                name="costos[]"
                                                 class="form-control text-center costo"
                                                 value="<?= number_format($item['precio'], 2, '.', ''); ?>"
-                                                required>
+                                                readonly
+                                                tabindex="-1">
                                         </td>
                                         <td class="text-center subtotal"><?= number_format($item['subtotal'], 2, '.', '.'); ?></td>
                                     </tr>

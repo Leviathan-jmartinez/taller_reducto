@@ -941,7 +941,7 @@ class inventarioControlador extends inventarioModelo
                                 </td>';
                 if ($puedeAnular) {
                     $tabla .= '<td>
-									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/inventarioAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
+									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/inventarioAjax.php" method="POST" data-form="delete" data-anulacion="true" data-anulacion-titulo="Anular ajuste de inventario" autocomplete="off" action="">
                                     <input type="hidden" name="inv_id_del" value=' . mainModel::encryption($rows['idajuste_inventario']) . '>
 										<button type="submit" class="btn btn-warning">
 											<i class="far fa-trash-alt"></i>
@@ -984,6 +984,7 @@ class inventarioControlador extends inventarioModelo
         $id = (int) mainModel::limpiar_string(
             mainModel::decryption($_POST['inv_id_del'])
         );
+        $motivo = mainModel::limpiar_string($_POST['motivo_anulacion'] ?? '');
 
         $db = mainModel::conectar();
         $db->beginTransaction();
@@ -1016,6 +1017,18 @@ class inventarioControlador extends inventarioModelo
                 WHERE idajuste_inventario = $id
                 AND sucursal_id = {$ajuste['sucursal_id']}
             ");
+
+                mainModel::registrar_anulacion_auditoria_modelo($db, [
+                    'modulo' => 'ajuste_inventario',
+                    'tabla_afectada' => 'ajuste_inventario',
+                    'id_registro' => $id,
+                    'id_sucursal' => $ajuste['sucursal_id'],
+                    'estado_anterior' => $ajuste['estado'],
+                    'estado_nuevo' => '0',
+                    'motivo' => $motivo,
+                    'usuario_anula' => $_SESSION['id_str'],
+                    'referencia' => 'AJUSTE_INVENTARIO #' . $id
+                ]);
 
                 $db->commit();
 
@@ -1065,6 +1078,18 @@ class inventarioControlador extends inventarioModelo
                 AND sucursal_id = {$ajuste['sucursal_id']}
             ");
             }
+
+            mainModel::registrar_anulacion_auditoria_modelo($db, [
+                'modulo' => 'ajuste_inventario',
+                'tabla_afectada' => 'ajuste_inventario',
+                'id_registro' => $id,
+                'id_sucursal' => $ajuste['sucursal_id'],
+                'estado_anterior' => $ajuste['estado'],
+                'estado_nuevo' => '0',
+                'motivo' => $motivo,
+                'usuario_anula' => $_SESSION['id_str'],
+                'referencia' => 'AJUSTE_INVENTARIO #' . $id
+            ]);
 
             $db->commit();
 

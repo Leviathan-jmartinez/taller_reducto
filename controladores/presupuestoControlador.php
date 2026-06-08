@@ -412,7 +412,8 @@ class presupuestoControlador extends presupuestoModelo
                                 <th>PROVEEDOR</th>
                                 <th>' . mainModel::link_orden_tabla($url, 'fecha', 'FECHA', $orden, $direccion, 'presupuesto_orden', 'presupuesto_direccion') . '</th>
                                 <th>CREADO POR</th>
-                                <th>' . mainModel::link_orden_tabla($url, 'estado', 'ESTADO', $orden, $direccion, 'presupuesto_orden', 'presupuesto_direccion') . '</th>';
+                                <th>' . mainModel::link_orden_tabla($url, 'estado', 'ESTADO', $orden, $direccion, 'presupuesto_orden', 'presupuesto_direccion') . '</th>
+                                <th>DETALLE</th>';
         if (mainModel::tienePermiso('compra.presupuesto.anular')) {
             $tabla .=           '<th>ANULAR</th>';
         }
@@ -444,7 +445,12 @@ class presupuestoControlador extends presupuestoModelo
 								<td>' . $rows['razon_social'] . '</td>
 								<td>' . date("d-m-Y", strtotime($rows['fecha'])) . '</td>
                                 <td>' . $rows['usu_nombre'] . ' ' . $rows['usu_apellido'] . '</td>
-                                <td>' . $estadoBadge . '</td>';
+                                <td>' . $estadoBadge . '</td>
+                                <td>
+                                    <button type="button" class="btn btn-info btn-sm" onclick="verDetallePresupuestoCompra(\'' . mainModel::encryption($rows['idpresupuesto_compra']) . '\')">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>';
                 if (mainModel::tienePermiso('compra.presupuesto.anular')) {
                     $tabla .= '<td>
 									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/presupuestoAjax.php" method="POST" data-form="delete" data-anulacion="true" data-anulacion-titulo="Anular presupuesto de compra" autocomplete="off" action="">
@@ -461,10 +467,11 @@ class presupuestoControlador extends presupuestoModelo
             }
             $reg_final = $contador - 1;
         } else {
+            $colspan = mainModel::tienePermiso('compra.presupuesto.anular') ? 8 : 7;
             if ($total >= 1) {
-                $tabla .= '<tr class="text-center"> <td colspan="6"> <a href="' . $url . '" class="btn btn-reaised btn-primary btn-sm"> Haga click aqui para recargar el listado </a> </td> </tr> ';
+                $tabla .= '<tr class="text-center"> <td colspan="' . $colspan . '"> <a href="' . $url . '" class="btn btn-reaised btn-primary btn-sm"> Haga click aqui para recargar el listado </a> </td> </tr> ';
             } else {
-                $tabla .= '<tr class="text-center"> <td colspan="6"> No hay regitros en el sistema</td> </tr> ';
+                $tabla .= '<tr class="text-center"> <td colspan="' . $colspan . '"> No hay regitros en el sistema</td> </tr> ';
             }
         }
 
@@ -478,6 +485,93 @@ class presupuestoControlador extends presupuestoModelo
         echo $tabla;
     }
     /**fin controlador */
+
+    public function detalle_presupuesto_compra_controlador()
+    {
+        if (!mainModel::tienePermiso('compra.presupuesto.ver')) {
+            return json_encode([
+                'status' => 'error',
+                'html' => '<div class="alert alert-danger mb-0">Acceso no autorizado</div>'
+            ]);
+        }
+
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start(['name' => 'STR']);
+        }
+        $id = (int) mainModel::limpiar_string(mainModel::decryption($_POST['detalle_presupuesto_compra'] ?? ''));
+        $sucursal = (int) ($_SESSION['nick_sucursal'] ?? 0);
+
+        if ($id <= 0 || $sucursal <= 0) {
+            return json_encode([
+                'status' => 'error',
+                'html' => '<div class="alert alert-warning mb-0">No se pudo validar el presupuesto solicitado.</div>'
+            ]);
+        }
+
+        $datos = presupuestoModelo::detalle_presupuesto_compra_modelo($id, $sucursal);
+        if (!$datos['cabecera']) {
+            return json_encode([
+                'status' => 'error',
+                'html' => '<div class="alert alert-warning mb-0">No se encontro el presupuesto en la sucursal activa.</div>'
+            ]);
+        }
+
+        $cab = $datos['cabecera'];
+        $estadoTexto = ['0' => 'Anulado', '1' => 'Pendiente', '2' => 'Procesado'];
+        $total = 0;
+
+        $html = '
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <strong>Presupuesto:</strong> #' . (int)$cab['idpresupuesto_compra'] . '<br>
+                    <strong>Proveedor:</strong> ' . htmlspecialchars($cab['razon_social'], ENT_QUOTES, 'UTF-8') . '<br>
+                    <strong>RUC:</strong> ' . htmlspecialchars($cab['ruc'], ENT_QUOTES, 'UTF-8') . '
+                </div>
+                <div class="col-md-6">
+                    <strong>Fecha:</strong> ' . date('d/m/Y', strtotime($cab['fecha'])) . '<br>
+                    <strong>Vencimiento:</strong> ' . (!empty($cab['fecha_venc']) ? date('d/m/Y', strtotime($cab['fecha_venc'])) : '-') . '<br>
+                    <strong>Estado:</strong> ' . ($estadoTexto[(string)$cab['estado']] ?? 'Desconocido') . '<br>
+                    <strong>Usuario:</strong> ' . htmlspecialchars(trim($cab['usu_nombre'] . ' ' . $cab['usu_apellido']), ENT_QUOTES, 'UTF-8') . '
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered">
+                    <thead class="thead-light">
+                        <tr class="text-center">
+                            <th>Codigo</th>
+                            <th>Articulo</th>
+                            <th>Cantidad</th>
+                            <th>Precio</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>';
+
+        foreach ($datos['detalle'] as $row) {
+            $total += (float)$row['subtotal'];
+            $html .= '
+                <tr>
+                    <td>' . htmlspecialchars($row['codigo'], ENT_QUOTES, 'UTF-8') . '</td>
+                    <td>' . htmlspecialchars($row['desc_articulo'], ENT_QUOTES, 'UTF-8') . '</td>
+                    <td class="text-right">' . number_format((float)$row['cantidad'], 0, ',', '.') . '</td>
+                    <td class="text-right">' . number_format((float)$row['precio'], 0, ',', '.') . '</td>
+                    <td class="text-right">' . number_format((float)$row['subtotal'], 0, ',', '.') . '</td>
+                </tr>';
+        }
+
+        $html .= '
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="4" class="text-right">Total</th>
+                            <th class="text-right">Gs. ' . number_format($total, 0, ',', '.') . '</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>';
+
+        return json_encode(['status' => 'ok', 'html' => $html]);
+    }
 
     /**Controlador anular presupuesto */
     public function anular_presupuesto_controlador()

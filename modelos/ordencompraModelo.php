@@ -289,6 +289,7 @@ class ordencompraModelo extends mainModel
                 oc.idorden_compra,
                 oc.fecha,
                 oc.fecha_entrega,
+                oc.id_sucursal,
                 oc.estado,
 
                 p.razon_social,
@@ -297,10 +298,15 @@ class ordencompraModelo extends mainModel
                 p.direccion,
                 p.correo,
 
+                s.suc_descri AS sucursal_destino,
+                s.suc_direccion AS sucursal_destino_direccion,
+                s.suc_telefono AS sucursal_destino_telefono,
+
                 u.usu_nombre,
                 u.usu_apellido
             FROM orden_compra oc
             INNER JOIN proveedores p ON p.idproveedores = oc.idproveedores
+            INNER JOIN sucursales s ON s.id_sucursal = oc.id_sucursal
             INNER JOIN usuarios u ON u.id_usuario = oc.id_usuario
             WHERE oc.idorden_compra = :id
             LIMIT 1

@@ -141,14 +141,14 @@ $menuLateral = [
             [
                 'titulo' => 'Pedidos',
                 'icono' => 'fas fa-file-alt',
-                'href' => 'pedido-lista/',
+                'href' => 'pedido-buscar/',
                 'vistas' => ['pedido-nuevo', 'pedido-lista', 'pedido-buscar'],
                 'permiso' => 'compra.pedido.ver'
             ],
             [
                 'titulo' => 'Presupuestos',
                 'icono' => 'fas fa-file-invoice-dollar',
-                'href' => 'presupuesto-lista/',
+                'href' => 'presupuesto-buscar/',
                 'vistas' => ['presupuesto-nuevo', 'presupuesto-lista', 'presupuesto-buscar'],
                 'permiso' => 'compra.presupuesto.ver'
             ],
@@ -246,7 +246,7 @@ $menuLateral = [
             [
                 'titulo' => 'Ordenes de Trabajo',
                 'icono' => 'fas fa-clipboard-check',
-                'href' => 'ordenTrabajo-lista/',
+                'href' => 'ordenTrabajo-buscar/',
                 'vistas' => ['ordenTrabajo-nuevo', 'ordenTrabajo-lista', 'ordenTrabajo-asignar', 'ordenTrabajo-buscar'],
                 'permiso' => 'servicio.ot.ver'
             ],

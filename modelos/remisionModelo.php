@@ -78,19 +78,68 @@ class remisionModelo extends mainModel
     /**
      * Anular remisión
      */
-    protected static function anular_remision_modelo($id, $usuario, $id_sucursal)
+    protected static function anular_remision_modelo($id, $usuario, $id_sucursal, $motivo = '')
     {
-        $sql = mainModel::conectar()->prepare("
-        UPDATE nota_remision
-        SET estado = 0,
-            updated = NOW(),
-            updatedby = :usuario
-        WHERE idnota_remision = :id and id_sucursal = :id_sucursal");
+        $conexion = mainModel::conectar();
 
-        $sql->bindParam(":id", $id, PDO::PARAM_INT);
-        $sql->bindParam(":usuario", $usuario, PDO::PARAM_INT);
-        $sql->bindParam(":id_sucursal", $id_sucursal, PDO::PARAM_INT);
-        return $sql->execute();
+        try {
+            $conexion->beginTransaction();
+
+            $check = $conexion->prepare("
+                SELECT estado
+                FROM nota_remision
+                WHERE idnota_remision = :id
+                  AND id_sucursal = :id_sucursal
+                FOR UPDATE
+            ");
+            $check->execute([
+                ":id" => $id,
+                ":id_sucursal" => $id_sucursal
+            ]);
+            $remision = $check->fetch(PDO::FETCH_ASSOC);
+
+            if (!$remision) {
+                throw new Exception("Remision no encontrada");
+            }
+
+            if ((int)$remision['estado'] === 0) {
+                throw new Exception("La remision ya fue anulada");
+            }
+
+            $sql = $conexion->prepare("
+                UPDATE nota_remision
+                SET estado = 0,
+                    updated = NOW(),
+                    updatedby = :usuario
+                WHERE idnota_remision = :id
+                  AND id_sucursal = :id_sucursal
+            ");
+            $sql->execute([
+                ":id" => $id,
+                ":usuario" => $usuario,
+                ":id_sucursal" => $id_sucursal
+            ]);
+
+            mainModel::registrar_anulacion_auditoria_modelo($conexion, [
+                'modulo' => 'nota_remision',
+                'tabla_afectada' => 'nota_remision',
+                'id_registro' => $id,
+                'id_sucursal' => $id_sucursal,
+                'estado_anterior' => $remision['estado'],
+                'estado_nuevo' => '0',
+                'motivo' => $motivo,
+                'usuario_anula' => $usuario,
+                'referencia' => 'NOTA_REMISION #' . $id
+            ]);
+
+            $conexion->commit();
+            return true;
+        } catch (Exception $e) {
+            if ($conexion->inTransaction()) {
+                $conexion->rollBack();
+            }
+            return false;
+        }
     }
 
     protected static function listar_remisiones_modelo($inicio, $registros, $filtrosSQL, $orderSQL = "ORDER BY r.idnota_remision DESC")

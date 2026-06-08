@@ -569,7 +569,9 @@ class diagnosticoControlador extends diagnosticoModelo
                     <form class="FormularioAjax d-inline"
                         action="' . SERVERURL . 'ajax/diagnosticoAjax.php"
                         method="POST"
-                        data-form="delete">
+                        data-form="delete"
+                        data-anulacion="true"
+                        data-anulacion-titulo="Anular diagnostico">
 
                         <input type="hidden" name="accion" value="anular_diagnostico">
                         <input type="hidden" name="id_diagnostico" value="' . $rows['id_diagnostico'] . '">
@@ -627,8 +629,9 @@ class diagnosticoControlador extends diagnosticoModelo
         }
 
         $id = $_POST['id_diagnostico'];
+        $motivo = mainModel::limpiar_string($_POST['motivo_anulacion'] ?? '');
 
-        $resp = diagnosticoModelo::anular_diagnostico_modelo($id);
+        $resp = diagnosticoModelo::anular_diagnostico_modelo($id, $_SESSION['id_str'], $motivo);
 
         if (isset($resp['error'])) {
             return json_encode([

@@ -225,6 +225,90 @@
             );
         }
 
+        protected static function detalle_compra_modelo($idcompra_cabecera, $id_sucursal)
+        {
+            $conexion = mainModel::conectar();
+
+            $cabecera = $conexion->prepare("
+                SELECT
+                    co.idcompra_cabecera,
+                    co.nro_factura,
+                    co.fecha_factura,
+                    co.nro_timbrado,
+                    co.vencimiento_timbrado,
+                    co.condicion,
+                    co.compra_intervalo,
+                    co.total_compra,
+                    co.estado,
+                    p.razon_social,
+                    p.ruc,
+                    u.usu_nombre,
+                    u.usu_apellido
+                FROM compra_cabecera co
+                INNER JOIN proveedores p ON p.idproveedores = co.idproveedores
+                INNER JOIN usuarios u ON u.id_usuario = co.id_usuario
+                WHERE co.idcompra_cabecera = :idcompra
+                AND co.id_sucursal = :sucursal
+                LIMIT 1
+            ");
+            $cabecera->execute([
+                ':idcompra' => $idcompra_cabecera,
+                ':sucursal' => $id_sucursal
+            ]);
+
+            $detalle = $conexion->prepare("
+                SELECT
+                    a.codigo,
+                    a.desc_articulo,
+                    cd.cantidad_recibida,
+                    cd.precio_unitario,
+                    cd.tipo_iva,
+                    cd.ivaPro,
+                    cd.subtotal
+                FROM compra_detalle cd
+                INNER JOIN compra_cabecera co ON co.idcompra_cabecera = cd.idcompra_cabecera
+                INNER JOIN articulos a ON a.id_articulo = cd.id_articulo
+                WHERE cd.idcompra_cabecera = :idcompra
+                AND co.id_sucursal = :sucursal
+                ORDER BY a.desc_articulo ASC
+            ");
+            $detalle->execute([
+                ':idcompra' => $idcompra_cabecera,
+                ':sucursal' => $id_sucursal
+            ]);
+
+            $libro = $conexion->prepare("
+                SELECT exenta, gravada_5, iva_5, gravada_10, iva_10, total, estado
+                FROM libro_compra
+                WHERE idcompra_cabecera = :idcompra
+                AND id_sucursal = :sucursal
+                LIMIT 1
+            ");
+            $libro->execute([
+                ':idcompra' => $idcompra_cabecera,
+                ':sucursal' => $id_sucursal
+            ]);
+
+            $cuentas = $conexion->prepare("
+                SELECT COUNT(*) AS cuotas, COALESCE(SUM(monto), 0) AS monto, COALESCE(SUM(saldo), 0) AS saldo
+                FROM cuentas_a_pagar
+                WHERE idcompra_cabecera = :idcompra
+                AND id_sucursal = :sucursal
+                AND estado <> 0
+            ");
+            $cuentas->execute([
+                ':idcompra' => $idcompra_cabecera,
+                ':sucursal' => $id_sucursal
+            ]);
+
+            return [
+                'cabecera' => $cabecera->fetch(PDO::FETCH_ASSOC),
+                'detalle' => $detalle->fetchAll(PDO::FETCH_ASSOC),
+                'libro' => $libro->fetch(PDO::FETCH_ASSOC),
+                'cuentas' => $cuentas->fetch(PDO::FETCH_ASSOC)
+            ];
+        }
+
         /** modelo actualizar OC y restar cantidad pendiente */
         protected static function actualizar_oc_modelo($datos)
         {

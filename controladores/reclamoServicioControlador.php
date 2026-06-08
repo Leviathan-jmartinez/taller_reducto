@@ -301,6 +301,8 @@ class reclamoServicioControlador extends reclamoServicioModelo
                             action="' . SERVERURL . 'ajax/reclamoServicioAjax.php"
                             method="POST"
                             data-form="delete"
+                            data-anulacion="true"
+                            data-anulacion-titulo="Anular reclamo de servicio"
                             autocomplete="off">
 
                             <input type="hidden" name="accion" value="anular_reclamo">
@@ -372,6 +374,7 @@ class reclamoServicioControlador extends reclamoServicioModelo
 
         $id = mainModel::decryption($_POST['id']);
         $id = mainModel::limpiar_string($id);
+        $motivo = mainModel::limpiar_string($_POST['motivo_anulacion'] ?? '');
 
         $check = mainModel::conectar()->prepare("
             SELECT estado
@@ -411,7 +414,7 @@ class reclamoServicioControlador extends reclamoServicioModelo
             ]);
         }
 
-        $ok = self::anular_reclamo_modelo($id, $_SESSION['id_str']);
+        $ok = self::anular_reclamo_modelo($id, $_SESSION['id_str'], $motivo);
 
         if ($ok === true) {
             return json_encode([

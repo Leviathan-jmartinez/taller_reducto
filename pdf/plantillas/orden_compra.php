@@ -47,6 +47,12 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
         .center {
             text-align: center;
         }
+
+        .info-title {
+            color: #2f6f6f;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
     </style>
 </head>
 
@@ -59,27 +65,37 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
             </td>
             <td><strong>ORDEN DE COMPRA</strong></td>
             <td align="right">
-                OC Nº <?= str_pad($cabecera['idorden_compra'], 6, '0', STR_PAD_LEFT) ?><br>
+                OC Nro <?= str_pad($cabecera['idorden_compra'], 6, '0', STR_PAD_LEFT) ?><br>
                 Fecha: <?= date('d/m/Y', strtotime($cabecera['fecha'])) ?><br>
                 Entrega: <?= $cabecera['fecha_entrega'] ? date('d/m/Y', strtotime($cabecera['fecha_entrega'])) : '-' ?>
             </td>
         </tr>
     </table>
 
-    <strong>Proveedor</strong><br>
-    <?= $cabecera['razon_social'] ?><br>
-    RUC: <?= $cabecera['ruc'] ?><br>
-    Tel: <?= $cabecera['telefono'] ?><br>
-    Dir: <?= $cabecera['direccion'] ?><br><br>
-
-    <strong>Creado por:</strong>
-    <?= $cabecera['usu_nombre'] . ' ' . $cabecera['usu_apellido'] ?>
+    <table style="margin-bottom:10px;">
+        <tr>
+            <td width="50%" valign="top">
+                <div class="info-title">Proveedor</div>
+                <?= htmlspecialchars($cabecera['razon_social'] ?? '', ENT_QUOTES, 'UTF-8') ?><br>
+                RUC: <?= htmlspecialchars($cabecera['ruc'] ?? '-', ENT_QUOTES, 'UTF-8') ?><br>
+                Tel: <?= htmlspecialchars($cabecera['telefono'] ?? '-', ENT_QUOTES, 'UTF-8') ?><br>
+                Dir: <?= htmlspecialchars($cabecera['direccion'] ?? '-', ENT_QUOTES, 'UTF-8') ?>
+            </td>
+            <td width="50%" valign="top">
+                <div class="info-title">Sucursal destino / lugar de entrega</div>
+                <?= htmlspecialchars($cabecera['sucursal_destino'] ?? '-', ENT_QUOTES, 'UTF-8') ?><br>
+                Dir: <?= htmlspecialchars($cabecera['sucursal_destino_direccion'] ?? '-', ENT_QUOTES, 'UTF-8') ?><br>
+                Tel: <?= htmlspecialchars($cabecera['sucursal_destino_telefono'] ?? '-', ENT_QUOTES, 'UTF-8') ?><br>
+                Creado por: <?= htmlspecialchars(trim(($cabecera['usu_nombre'] ?? '') . ' ' . ($cabecera['usu_apellido'] ?? '')), ENT_QUOTES, 'UTF-8') ?>
+            </td>
+        </tr>
+    </table>
 
     <table style="margin-top:10px;">
         <thead>
             <tr>
-                <th>Código</th>
-                <th>Descripción</th>
+                <th>Codigo</th>
+                <th>Descripcion</th>
                 <th class="center">Cant.</th>
                 <th class="right">Precio</th>
                 <th class="right">Subtotal</th>
@@ -92,8 +108,8 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
                 $total += $d['subtotal'];
             ?>
                 <tr>
-                    <td><?= $d['codigo'] ?></td>
-                    <td><?= $d['desc_articulo'] ?></td>
+                    <td><?= htmlspecialchars($d['codigo'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
+                    <td><?= htmlspecialchars($d['desc_articulo'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
                     <td class="center"><?= number_format($d['cantidad'], 0, ',', '.') ?></td>
                     <td class="right"><?= number_format($d['precio_unitario'], 0, ',', '.') ?></td>
                     <td class="right"><?= number_format($d['subtotal'], 0, ',', '.') ?></td>

@@ -86,6 +86,12 @@ if (isset($_POST['compra_id_del'])) {
     exit();
 }
 
+if (isset($_POST['detalle_compra'])) {
+    header('Content-Type: application/json; charset=utf-8');
+    echo $inst_compra->detalle_compra_controlador();
+    exit();
+}
+
 if (isset($_POST['cancelar'])) {
     // Limpiar solo las variables de la compra
     unset($_SESSION['Cdatos_articuloCO']);

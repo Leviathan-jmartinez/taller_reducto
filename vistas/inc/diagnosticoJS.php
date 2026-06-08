@@ -442,12 +442,19 @@
         Swal.fire({
             title: 'Anular diagnostico?',
             text: 'El diagnostico sera anulado y no podra utilizarse en el flujo',
+            input: 'textarea',
+            inputPlaceholder: 'Motivo de anulacion',
             type: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#3085d6',
             confirmButtonText: 'Si, anular',
-            cancelButtonText: 'Cancelar'
+            cancelButtonText: 'Cancelar',
+            inputValidator: (value) => {
+                if (!value || value.trim().length < 5) {
+                    return 'Debe ingresar un motivo de al menos 5 caracteres';
+                }
+            }
         }).then((result) => {
             if (!result.value) return;
 
@@ -455,7 +462,8 @@
                     method: "POST",
                     body: new URLSearchParams({
                         accion: "anular_diagnostico",
-                        id_diagnostico: id
+                        id_diagnostico: id,
+                        motivo_anulacion: result.value
                     })
                 })
                 .then(r => r.json())

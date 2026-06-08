@@ -129,11 +129,10 @@ class remisionControlador extends remisionModelo
 
 
 
-        $_SESSION['datos_articulofactura'] = $_SESSION['datos_articulofactura'] ?? [];
+        $_SESSION['datos_articulofactura'] = [];
         foreach ($detalle as $i => $row) {
-            // Si ya existe en la sesión (modificado), no sobreescribas cantidad y precio
-            $cantidad = $_SESSION['datos_articulofactura'][$i]['cantidad'] ?? $row['cantidad_recibida'];
-            $precio   = $_SESSION['datos_articulofactura'][$i]['precio'] ?? $row['precio_unitario'];
+            $cantidad = (float)$row['cantidad_recibida'];
+            $precio = (float)$row['precio_unitario'];
             $subtotal = $cantidad * $precio;
 
             $_SESSION['datos_articulofactura'][$i] = [
@@ -190,6 +189,18 @@ class remisionControlador extends remisionModelo
         }
         $idcompra = intval($idcompra);
 
+        $idcompra_sesion = (int)($_SESSION['datos_dactura']['ID'] ?? 0);
+        if ($idcompra_sesion <= 0 || $idcompra_sesion !== $idcompra) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Debe cargar nuevamente la factura antes de guardar la remision",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
         // Validar otros campos obligatorios
         $id_usuario = mainModel::limpiar_string($_SESSION['id_str']);
         $id_sucursal = mainModel::limpiar_string($_SESSION['nick_sucursal']);
@@ -207,6 +218,44 @@ class remisionControlador extends remisionModelo
                 "Alerta" => "simple",
                 "Titulo" => "Error",
                 "Texto" => "Faltan datos obligatorios",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        if (empty($_SESSION['datos_articulofactura']) || !is_array($_SESSION['datos_articulofactura'])) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "Debe cargar una factura con detalle antes de guardar la remision",
+                "Tipo" => "error"
+            ];
+            echo json_encode($alerta);
+            exit();
+        }
+
+        // El detalle se arma desde la factura cargada en sesion, no desde campos editables.
+        $detalle = [];
+        foreach ($_SESSION['datos_articulofactura'] as $item) {
+            $id_articulo = (int)($item['ID'] ?? 0);
+            $cantidad = (float)($item['cantidad'] ?? 0);
+            $costo = (float)($item['precio'] ?? 0);
+            if ($id_articulo <= 0 || $cantidad <= 0) continue;
+
+            $detalle[] = [
+                "id_articulo" => $id_articulo,
+                "cantidad" => $cantidad,
+                "costo" => $costo,
+                "subtotal" => $cantidad * $costo
+            ];
+        }
+
+        if (empty($detalle)) {
+            $alerta = [
+                "Alerta" => "simple",
+                "Titulo" => "Error",
+                "Texto" => "La factura cargada no posee articulos validos para remitir",
                 "Tipo" => "error"
             ];
             echo json_encode($alerta);
@@ -245,25 +294,6 @@ class remisionControlador extends remisionModelo
             ];
             echo json_encode($alerta);
             exit();
-        }
-
-        // Guardar detalle
-        $cantidades = $_POST['cantidades'] ?? [];
-        $costos = $_POST['costos'] ?? [];
-        $detalle = [];
-
-        foreach ($cantidades as $i => $cantidad) {
-            $cantidad = floatval($cantidad);
-            $costo = floatval($costos[$i]);
-            $id_articulo = $_SESSION['datos_articulofactura'][$i]['ID'] ?? null;
-            if (!$id_articulo) continue;
-
-            $detalle[] = [
-                "id_articulo" => $id_articulo,
-                "cantidad" => $cantidad,
-                "costo" => $costo,
-                "subtotal" => $cantidad * $costo
-            ];
         }
 
         remisionModelo::guardar_remision_detalle_modelo($idnota, $detalle);
@@ -426,6 +456,8 @@ class remisionControlador extends remisionModelo
                           action="' . SERVERURL . 'ajax/remisionAjax.php"
                           method="POST"
                           data-form="delete"
+                          data-anulacion="true"
+                          data-anulacion-titulo="Anular nota de remision"
                           autocomplete="off">
 
                         <input type="hidden" name="remision_id_del"
@@ -506,8 +538,9 @@ class remisionControlador extends remisionModelo
 
         $usuario = $_SESSION['id_str'];
         $id_sucursal = $_SESSION['nick_sucursal'];
+        $motivo = mainModel::limpiar_string($_POST['motivo_anulacion'] ?? '');
 
-        $anular = remisionModelo::anular_remision_modelo($id, $usuario, $id_sucursal);
+        $anular = remisionModelo::anular_remision_modelo($id, $usuario, $id_sucursal, $motivo);
 
         if ($anular) {
             $alerta = [

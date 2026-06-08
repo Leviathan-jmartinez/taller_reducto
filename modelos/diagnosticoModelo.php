@@ -458,7 +458,7 @@ class diagnosticoModelo extends mainModel
         ];
     }
 
-    protected static function anular_diagnostico_modelo($id)
+    protected static function anular_diagnostico_modelo($id, $usuario = null, $motivo = '')
     {
         $pdo = mainModel::conectar();
 
@@ -466,7 +466,7 @@ class diagnosticoModelo extends mainModel
 
             // ================= OBTENER DATOS =================
             $sql = $pdo->prepare("
-            SELECT d.estado, d.idrecepcion, r.idreclamo_servicio
+            SELECT d.estado, d.idrecepcion, d.id_sucursal, r.idreclamo_servicio
             FROM diagnostico_servicio d
             INNER JOIN recepcion_servicio r ON r.idrecepcion = d.idrecepcion
             WHERE d.id_diagnostico = :id
@@ -540,6 +540,18 @@ class diagnosticoModelo extends mainModel
         ");
             $sql->execute([
                 ':idrecepcion' => $diag['idrecepcion']
+            ]);
+
+            mainModel::registrar_anulacion_auditoria_modelo($pdo, [
+                'modulo' => 'diagnostico_servicio',
+                'tabla_afectada' => 'diagnostico_servicio',
+                'id_registro' => $id,
+                'id_sucursal' => $diag['id_sucursal'],
+                'estado_anterior' => $diag['estado'],
+                'estado_nuevo' => '0',
+                'motivo' => $motivo,
+                'usuario_anula' => $usuario ?: ($_SESSION['id_str'] ?? 0),
+                'referencia' => 'DIAGNOSTICO #' . $id
             ]);
 
             $pdo->commit();

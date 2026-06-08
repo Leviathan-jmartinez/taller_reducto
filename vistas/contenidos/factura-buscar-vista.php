@@ -161,3 +161,48 @@ $ordenCompra = mainModel::cargar_ordenamiento_sesion('compra', ['fecha', 'estado
 <?php
 }
 ?>
+
+<div class="modal fade" id="modalDetalleCompra" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-eye"></i> &nbsp; Detalle de compra
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="contenidoDetalleCompra">
+                <div class="text-center text-muted py-4">Seleccione una compra para ver el detalle.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function verDetalleCompra(idCompra) {
+        const contenedor = document.getElementById('contenidoDetalleCompra');
+        if (!contenedor) return;
+
+        contenedor.innerHTML = '<div class="text-center text-muted py-4">Cargando detalle...</div>';
+        $('#modalDetalleCompra').modal('show');
+
+        fetch("<?php echo SERVERURL; ?>ajax/compraAjax.php", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: new URLSearchParams({
+                    detalle_compra: idCompra
+                })
+            })
+            .then(resp => resp.json())
+            .then(data => {
+                contenedor.innerHTML = data.html || '<div class="alert alert-warning mb-0">No se pudo cargar el detalle.</div>';
+            })
+            .catch(() => {
+                contenedor.innerHTML = '<div class="alert alert-danger mb-0">Error al cargar el detalle.</div>';
+            });
+    }
+</script>

@@ -174,6 +174,58 @@ class presupuestoModelo extends mainModel
         );
     }
 
+    protected static function detalle_presupuesto_compra_modelo($id, $sucursal)
+    {
+        $conexion = mainModel::conectar();
+
+        $cabecera = $conexion->prepare("
+            SELECT
+                pc.idpresupuesto_compra,
+                pc.fecha,
+                pc.fecha_venc,
+                pc.total,
+                pc.estado,
+                p.razon_social,
+                p.ruc,
+                u.usu_nombre,
+                u.usu_apellido
+            FROM presupuesto_compra pc
+            INNER JOIN proveedores p ON p.idproveedores = pc.idproveedores
+            INNER JOIN usuarios u ON u.id_usuario = pc.id_usuario
+            WHERE pc.idpresupuesto_compra = :id
+            AND pc.id_sucursal = :sucursal
+            LIMIT 1
+        ");
+        $cabecera->execute([
+            ':id' => $id,
+            ':sucursal' => $sucursal
+        ]);
+
+        $detalle = $conexion->prepare("
+            SELECT
+                a.codigo,
+                a.desc_articulo,
+                pd.cantidad,
+                pd.precio,
+                pd.subtotal
+            FROM presupuesto_detalle pd
+            INNER JOIN presupuesto_compra pc ON pc.idpresupuesto_compra = pd.idpresupuesto_compra
+            INNER JOIN articulos a ON a.id_articulo = pd.id_articulo
+            WHERE pd.idpresupuesto_compra = :id
+            AND pc.id_sucursal = :sucursal
+            ORDER BY a.desc_articulo ASC
+        ");
+        $detalle->execute([
+            ':id' => $id,
+            ':sucursal' => $sucursal
+        ]);
+
+        return [
+            'cabecera' => $cabecera->fetch(PDO::FETCH_ASSOC),
+            'detalle' => $detalle->fetchAll(PDO::FETCH_ASSOC)
+        ];
+    }
+
     /**modelo datos presupuesto detalle*/
     protected static function datos_presupuesto_modelo($tipo, $id = null)
     {

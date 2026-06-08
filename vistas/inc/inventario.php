@@ -411,14 +411,33 @@
 
 
     function anularInventario(id) {
+        Swal.fire({
+            title: "Anular ajuste de inventario",
+            text: "Ingrese el motivo de anulacion",
+            input: "textarea",
+            inputPlaceholder: "Motivo de anulacion",
+            type: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Si, anular",
+            cancelButtonText: "Cancelar",
+            inputValidator: (value) => {
+                if (!value || value.trim().length < 5) {
+                    return "Debe ingresar un motivo de al menos 5 caracteres";
+                }
+            }
+        }).then((result) => {
+            if (!result.value) return;
 
-        fetch("<?= SERVERURL ?>ajax/inventarioAjax.php", {
+            fetch("<?= SERVERURL ?>ajax/inventarioAjax.php", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded"
                 },
                 body: new URLSearchParams({
-                    inv_id_del: id
+                    inv_id_del: id,
+                    motivo_anulacion: result.value
                 })
             })
             .then(res => res.json())
@@ -435,6 +454,7 @@
                 });
 
             });
+        });
     }
 
     let inventarioDetalleActual = null;

@@ -36,11 +36,16 @@ Movimientos con auditoria de anulacion:
 | Presupuestos de Compra | `presupuesto_compra` | `anulacion_auditoria` |
 | Ordenes de Compra | `orden_compra` | `anulacion_auditoria` |
 | Compras | `compra_cabecera` | `anulacion_auditoria` |
+| Notas de Remision | `nota_remision` | `anulacion_auditoria` |
+| Notas de Credito/Debito de Compra | `nota_compra` | `anulacion_auditoria` |
+| Ajustes de Inventario | `ajuste_inventario` | `anulacion_auditoria` |
 | Recepcion de Servicios | `recepcion_servicio` | `anulacion_auditoria` |
+| Diagnosticos de Servicios | `diagnostico_servicio` | `anulacion_auditoria` |
 | Presupuestos de Servicios | `presupuesto_servicio` | `anulacion_auditoria` |
 | Ordenes de Trabajo | `orden_trabajo` | `anulacion_auditoria` |
 | Registro de Servicios | `registro_servicio` | `anulacion_auditoria` |
 | Salida de Insumos | `salida_insumo` | `anulacion_auditoria` |
+| Reclamos de Servicios | `reclamo_servicio` | `anulacion_auditoria` |
 
 La auditoria no modifica el calculo del informe; sirve para explicar por que un documento quedo anulado. Si se requiere auditar el motivo exacto, se consulta `anulacion_auditoria` por `tabla_afectada` e `id_registro`.
 

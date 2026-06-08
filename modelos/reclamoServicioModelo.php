@@ -369,7 +369,7 @@ class reclamoServicioModelo extends mainModel
     }
 
     /* ================= ANULAR RECLAMO ================= */
-    protected static function anular_reclamo_modelo($id, $usuario)
+    protected static function anular_reclamo_modelo($id, $usuario, $motivo = '')
     {
         $pdo = self::conectar();
 
@@ -378,7 +378,7 @@ class reclamoServicioModelo extends mainModel
 
             /* 🔍 OBTENER REGISTRO_SERVICIO */
             $q = $pdo->prepare("
-            SELECT idregistro_servicio, estado
+            SELECT idregistro_servicio, id_sucursal, estado
             FROM reclamo_servicio
             WHERE idreclamo_servicio = ?
             FOR UPDATE
@@ -418,6 +418,18 @@ class reclamoServicioModelo extends mainModel
             WHERE idreclamo_servicio = ?
         ");
             $upd->execute([$id]);
+
+            mainModel::registrar_anulacion_auditoria_modelo($pdo, [
+                'modulo' => 'reclamo_servicio',
+                'tabla_afectada' => 'reclamo_servicio',
+                'id_registro' => $id,
+                'id_sucursal' => $reclamo['id_sucursal'],
+                'estado_anterior' => $reclamo['estado'],
+                'estado_nuevo' => '0',
+                'motivo' => $motivo,
+                'usuario_anula' => $usuario,
+                'referencia' => 'RECLAMO_SERVICIO #' . $id
+            ]);
 
             /* 🔍 VERIFICAR SI QUEDAN RECLAMOS ACTIVOS */
             $v = $pdo->prepare("
