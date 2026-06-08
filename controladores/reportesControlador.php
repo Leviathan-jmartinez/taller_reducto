@@ -1,7 +1,5 @@
 <?php
 require_once __DIR__ . "/../modelos/reportesModelo.php";
-require_once __DIR__ . "/../vendor/autoload.php";
-require_once __DIR__ . "/../pdf/ReporteMpdf.php";
 
 class reporteControlador extends reportesModelo
 {
@@ -16,6 +14,9 @@ class reporteControlador extends reportesModelo
 
     private function imprimir_mpdf_html($html, $archivo, $orientacion = 'P')
     {
+        require_once __DIR__ . "/../vendor/autoload.php";
+        require_once __DIR__ . "/../pdf/ReporteMpdf.php";
+
         ReporteMpdf::desdeHtml($html, [
             'archivo' => $archivo,
             'orientacion' => strtoupper(substr($orientacion, 0, 1)) === 'L' ? 'L' : 'P',
@@ -67,6 +68,12 @@ class reporteControlador extends reportesModelo
     {
         $sql = mainModel::conectar()->query("SELECT idproveedores, razon_social FROM proveedores ORDER BY razon_social ASC");
         return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function listar_proveedores_json_controlador()
+    {
+        header('Content-Type: application/json; charset=UTF-8');
+        echo json_encode($this->listar_proveedores_controlador(), JSON_UNESCAPED_UNICODE);
     }
 
     public function listar_clientes_controlador()
@@ -359,13 +366,13 @@ class reporteControlador extends reportesModelo
 
         ob_start();
 ?>
-        <h3 style="text-align:center; margin-bottom:12px;"><?= htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8') ?></h3>
-        <p style="font-size:12px;">
+        <h3><?= htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8') ?></h3>
+        <div class="report-intro">
             Total filtrado: <?= (int)$totalFiltrado ?>
             <?php if ($totalFiltrado > 500): ?>
                 | Detalle limitado a los primeros 500 registros. Use CSV para exportar el detalle completo.
             <?php endif; ?>
-        </p>
+        </div>
         <table width="100%" cellspacing="0" cellpadding="5" border="1">
             <thead>
                 <tr>
@@ -453,7 +460,9 @@ class reporteControlador extends reportesModelo
                 "titulo" => "Pedidos de Compra",
                 "permiso" => "reportes.pedidos.ver",
                 "modelo" => "reporte_pedidos_modelo",
+                "detalle_modelo" => "reporte_pedidos_detalle_modelo",
                 "args" => ["desde", "hasta", "estado_int", "sucursal_int"],
+                "detalle_args" => ["desde", "hasta", "estado_int", "sucursal_int"],
                 "fecha" => "fecha",
                 "estado" => "estado",
                 "estado_labels" => [0 => "Anulado", 1 => "Pendiente", 2 => "Procesado"],
@@ -467,13 +476,25 @@ class reporteControlador extends reportesModelo
                     ["key" => "sucursal", "label" => "Sucursal"],
                     ["key" => "cantidad_items", "label" => "Items", "tipo" => "numero"],
                     ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
+                ],
+                "detalle_columnas" => [
+                    ["key" => "idpedido_cabecera", "label" => "Pedido"],
+                    ["key" => "fecha", "label" => "Fecha", "tipo" => "fecha"],
+                    ["key" => "sucursal", "label" => "Sucursal"],
+                    ["key" => "codigo", "label" => "Codigo"],
+                    ["key" => "articulo", "label" => "Articulo"],
+                    ["key" => "cantidad", "label" => "Cantidad", "tipo" => "numero"],
+                    ["key" => "stock_actual", "label" => "Stock", "tipo" => "numero"],
+                    ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
                 ]
             ],
             "presupuestos_compra" => [
                 "titulo" => "Presupuestos de Compra",
                 "permiso" => "reportes.presupuestos_compra.ver",
                 "modelo" => "reporte_presupuestos_modelo",
+                "detalle_modelo" => "reporte_presupuestos_detalle_modelo",
                 "args" => ["desde", "hasta", "estado_int", "sucursal_int"],
+                "detalle_args" => ["desde", "hasta", "estado_int", "sucursal_int"],
                 "fecha" => "fecha",
                 "estado" => "estado",
                 "estado_labels" => [0 => "Anulado", 1 => "Pendiente", 2 => "Procesado"],
@@ -489,13 +510,26 @@ class reporteControlador extends reportesModelo
                     ["key" => "cantidad_items", "label" => "Items", "tipo" => "numero"],
                     ["key" => "total", "label" => "Total", "tipo" => "moneda"],
                     ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
+                ],
+                "detalle_columnas" => [
+                    ["key" => "idpresupuesto_compra", "label" => "Presupuesto"],
+                    ["key" => "fecha", "label" => "Fecha", "tipo" => "fecha"],
+                    ["key" => "proveedor", "label" => "Proveedor"],
+                    ["key" => "codigo", "label" => "Codigo"],
+                    ["key" => "articulo", "label" => "Articulo"],
+                    ["key" => "cantidad", "label" => "Cantidad", "tipo" => "numero"],
+                    ["key" => "precio", "label" => "Precio", "tipo" => "moneda"],
+                    ["key" => "subtotal", "label" => "Subtotal", "tipo" => "moneda"],
+                    ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
                 ]
             ],
             "ordenes_compra" => [
                 "titulo" => "Ordenes de Compra",
                 "permiso" => "reportes.ordenes_compra.ver",
                 "modelo" => "reporte_ordenes_compra_modelo",
+                "detalle_modelo" => "reporte_ordenes_compra_detalle_modelo",
                 "args" => ["desde", "hasta", "estado_int", "sucursal_int"],
+                "detalle_args" => ["desde", "hasta", "estado_int", "sucursal_int"],
                 "fecha" => "fecha",
                 "estado" => "estado",
                 "estado_labels" => [0 => "Anulado", 1 => "Pendiente", 2 => "Procesado"],
@@ -512,13 +546,27 @@ class reporteControlador extends reportesModelo
                     ["key" => "cantidad_pendiente", "label" => "Pendiente", "tipo" => "numero"],
                     ["key" => "total", "label" => "Total", "tipo" => "moneda"],
                     ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
+                ],
+                "detalle_columnas" => [
+                    ["key" => "idorden_compra", "label" => "Orden"],
+                    ["key" => "fecha", "label" => "Fecha", "tipo" => "fecha"],
+                    ["key" => "proveedor", "label" => "Proveedor"],
+                    ["key" => "codigo", "label" => "Codigo"],
+                    ["key" => "articulo", "label" => "Articulo"],
+                    ["key" => "cantidad", "label" => "Cantidad", "tipo" => "numero"],
+                    ["key" => "cantidad_pendiente", "label" => "Pendiente", "tipo" => "numero"],
+                    ["key" => "precio_unitario", "label" => "Precio", "tipo" => "moneda"],
+                    ["key" => "subtotal", "label" => "Subtotal", "tipo" => "moneda"],
+                    ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
                 ]
             ],
             "compras" => [
                 "titulo" => "Compras",
                 "permiso" => "reportes.compras.ver",
                 "modelo" => "reporte_compras_modelo",
+                "detalle_modelo" => "reporte_compras_detalle_modelo",
                 "args" => ["desde", "hasta", "estado_int", "sucursal_int"],
+                "detalle_args" => ["desde", "hasta", "estado_int", "sucursal_int"],
                 "fecha" => "fecha_creacion",
                 "estado" => "estado",
                 "estado_labels" => [0 => "Anulado", 1 => "Activo", 2 => "Procesado"],
@@ -535,6 +583,18 @@ class reporteControlador extends reportesModelo
                     ["key" => "sucursal", "label" => "Sucursal"],
                     ["key" => "total_compra", "label" => "Total", "tipo" => "moneda"],
                     ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
+                ],
+                "detalle_columnas" => [
+                    ["key" => "idcompra_cabecera", "label" => "Compra"],
+                    ["key" => "fecha_factura", "label" => "Fecha", "tipo" => "fecha"],
+                    ["key" => "nro_factura", "label" => "Factura"],
+                    ["key" => "proveedor", "label" => "Proveedor"],
+                    ["key" => "codigo", "label" => "Codigo"],
+                    ["key" => "articulo", "label" => "Articulo"],
+                    ["key" => "cantidad_recibida", "label" => "Cantidad", "tipo" => "numero"],
+                    ["key" => "precio_unitario", "label" => "Precio", "tipo" => "moneda"],
+                    ["key" => "subtotal", "label" => "Subtotal", "tipo" => "moneda"],
+                    ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
                 ]
             ],
             "libro_compras" => [
@@ -550,11 +610,18 @@ class reporteControlador extends reportesModelo
                 "proveedor" => true,
                 "columnas" => [
                     ["key" => "fecha", "label" => "Fecha", "tipo" => "fecha"],
-                    ["key" => "nro_factura", "label" => "Factura"],
+                    ["key" => "tipo_comprobante", "label" => "Tipo"],
+                    ["key" => "serie", "label" => "Serie"],
+                    ["key" => "nro_comprobante", "label" => "Comprobante"],
                     ["key" => "proveedor_nombre", "label" => "Proveedor"],
                     ["key" => "proveedor_ruc", "label" => "RUC"],
-                    ["key" => "sucursal", "label" => "Sucursal"],
+                    ["key" => "exenta", "label" => "Exenta", "tipo" => "moneda"],
+                    ["key" => "gravada_5", "label" => "Gravada 5%", "tipo" => "moneda"],
+                    ["key" => "iva_5", "label" => "IVA 5%", "tipo" => "moneda"],
+                    ["key" => "gravada_10", "label" => "Gravada 10%", "tipo" => "moneda"],
+                    ["key" => "iva_10", "label" => "IVA 10%", "tipo" => "moneda"],
                     ["key" => "total", "label" => "Total", "tipo" => "moneda"],
+                    ["key" => "sucursal", "label" => "Sucursal"],
                     ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
                 ]
             ],
@@ -590,16 +657,19 @@ class reporteControlador extends reportesModelo
                 "args" => ["filtros_array"],
                 "fecha" => "MovStockFechaHora",
                 "estado" => "TipoMovStockId",
-                "importe" => "MovStockCosto",
+                "importe" => "importe_costo",
                 "entidad" => "desc_articulo",
                 "articulo" => true,
                 "columnas" => [
                     ["key" => "MovStockFechaHora", "label" => "Fecha", "tipo" => "fecha"],
                     ["key" => "sucursal", "label" => "Sucursal"],
                     ["key" => "TipoMovStockId", "label" => "Tipo"],
+                    ["key" => "naturaleza_movimiento", "label" => "Naturaleza"],
                     ["key" => "desc_articulo", "label" => "Articulo"],
                     ["key" => "MovStockCantidad", "label" => "Cantidad", "tipo" => "numero"],
-                    ["key" => "MovStockSigno", "label" => "Signo"],
+                    ["key" => "MovStockCosto", "label" => "Costo Unit.", "tipo" => "moneda"],
+                    ["key" => "MovStockPrecioVenta", "label" => "Precio Venta Unit.", "tipo" => "moneda"],
+                    ["key" => "importe_costo", "label" => "Importe Costo", "tipo" => "moneda"],
                     ["key" => "usuario", "label" => "Usuario"]
                 ]
             ],
@@ -675,7 +745,9 @@ class reporteControlador extends reportesModelo
                 "titulo" => "Presupuestos de Servicios",
                 "permiso" => "reportes.presupuesto_servicio.ver",
                 "modelo" => "reporte_presupuesto_servicio_modelo",
+                "detalle_modelo" => "reporte_presupuesto_servicio_detalle_modelo",
                 "args" => ["desde", "hasta", "estado_int", "sucursal_int"],
+                "detalle_args" => ["desde", "hasta", "estado_int", "sucursal_int"],
                 "fecha" => "fecha",
                 "estado" => "estado",
                 "estado_labels" => [0 => "Anulado", 1 => "Pendiente", 2 => "Aprobado", 3 => "Rechazado", 4 => "Facturado"],
@@ -691,13 +763,27 @@ class reporteControlador extends reportesModelo
                     ["key" => "cantidad_items", "label" => "Items", "tipo" => "numero"],
                     ["key" => "total_final", "label" => "Total", "tipo" => "moneda"],
                     ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
+                ],
+                "detalle_columnas" => [
+                    ["key" => "idpresupuesto_servicio", "label" => "Presupuesto"],
+                    ["key" => "fecha", "label" => "Fecha", "tipo" => "fecha"],
+                    ["key" => "cliente", "label" => "Cliente"],
+                    ["key" => "vehiculo", "label" => "Vehiculo"],
+                    ["key" => "codigo", "label" => "Codigo"],
+                    ["key" => "articulo", "label" => "Articulo"],
+                    ["key" => "cantidad", "label" => "Cantidad", "tipo" => "numero"],
+                    ["key" => "preciouni", "label" => "Precio", "tipo" => "moneda"],
+                    ["key" => "subtotal", "label" => "Subtotal", "tipo" => "moneda"],
+                    ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
                 ]
             ],
             "orden_trabajo" => [
                 "titulo" => "Ordenes de Trabajo",
                 "permiso" => "reportes.orden_trabajo.ver",
                 "modelo" => "reporte_orden_trabajo_modelo",
+                "detalle_modelo" => "reporte_orden_trabajo_detalle_modelo",
                 "args" => ["desde", "hasta", "estado_int", "sucursal_int"],
+                "detalle_args" => ["desde", "hasta", "estado_int", "sucursal_int"],
                 "fecha" => "fecha_inicio",
                 "estado" => "estado",
                 "estado_labels" => [0 => "Anulado", 1 => "Pendiente", 2 => "En proceso", 3 => "Pendiente completar"],
@@ -713,13 +799,27 @@ class reporteControlador extends reportesModelo
                     ["key" => "equipo", "label" => "Equipo"],
                     ["key" => "sucursal", "label" => "Sucursal"],
                     ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
+                ],
+                "detalle_columnas" => [
+                    ["key" => "idorden_trabajo", "label" => "Orden"],
+                    ["key" => "fecha_inicio", "label" => "Inicio", "tipo" => "fecha"],
+                    ["key" => "cliente", "label" => "Cliente"],
+                    ["key" => "vehiculo", "label" => "Vehiculo"],
+                    ["key" => "codigo", "label" => "Codigo"],
+                    ["key" => "articulo", "label" => "Articulo"],
+                    ["key" => "cantidad", "label" => "Cantidad", "tipo" => "numero"],
+                    ["key" => "precio_unitario", "label" => "Precio", "tipo" => "moneda"],
+                    ["key" => "subtotal", "label" => "Subtotal", "tipo" => "moneda"],
+                    ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
                 ]
             ],
             "registro_servicio" => [
                 "titulo" => "Registro de Servicios",
                 "permiso" => "reportes.registro_servicio.ver",
                 "modelo" => "reporte_registro_servicio_modelo",
+                "detalle_modelo" => "reporte_registro_servicio_detalle_modelo",
                 "args" => ["desde", "hasta", "estado_int", "empleado_int", "sucursal_int"],
+                "detalle_args" => ["desde", "hasta", "estado_int", "empleado_int", "sucursal_int"],
                 "fecha" => "fecha_servicio",
                 "estado" => "estado",
                 "estado_labels" => [0 => "Anulado", 1 => "Registrado", 2 => "Facturado", 3 => "Con Reclamo"],
@@ -735,6 +835,19 @@ class reporteControlador extends reportesModelo
                     ["key" => "sucursal", "label" => "Sucursal"],
                     ["key" => "cantidad_items", "label" => "Items", "tipo" => "numero"],
                     ["key" => "total", "label" => "Total", "tipo" => "moneda"],
+                    ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
+                ],
+                "detalle_columnas" => [
+                    ["key" => "idregistro_servicio", "label" => "Registro"],
+                    ["key" => "fecha_servicio", "label" => "Fecha", "tipo" => "fecha"],
+                    ["key" => "cliente", "label" => "Cliente"],
+                    ["key" => "tecnico", "label" => "Tecnico"],
+                    ["key" => "codigo", "label" => "Codigo"],
+                    ["key" => "articulo", "label" => "Articulo"],
+                    ["key" => "origen", "label" => "Origen"],
+                    ["key" => "cantidad", "label" => "Cantidad", "tipo" => "numero"],
+                    ["key" => "precio_unitario", "label" => "Precio", "tipo" => "moneda"],
+                    ["key" => "subtotal", "label" => "Subtotal", "tipo" => "moneda"],
                     ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
                 ]
             ]
@@ -754,9 +867,26 @@ class reporteControlador extends reportesModelo
             "empleado" => mainModel::limpiar_string($_POST['empleado'] ?? ''),
             "naturaleza" => mainModel::limpiar_string($_POST['naturaleza_stock'] ?? ''),
             "tipo_stock" => mainModel::limpiar_string($_POST['tipo_movimiento_stock'] ?? ''),
+            "vista" => ($_POST['vista_movimiento'] ?? '') === 'detalle' ? 'detalle' : 'resumen',
             "pagina" => max(1, (int)($_POST['pagina'] ?? 1)),
             "por_pagina" => min(500, max(25, (int)($_POST['por_pagina'] ?? 50)))
         ];
+    }
+
+    private function config_movimiento_aplicable($tipo, $config, $filtros)
+    {
+        $cfg = $config[$tipo];
+
+        if (($filtros['vista'] ?? 'resumen') === 'detalle' && !empty($cfg['detalle_modelo'])) {
+            $cfg['titulo'] .= ' - Detalle';
+            $cfg['modelo'] = $cfg['detalle_modelo'];
+            $cfg['args'] = $cfg['detalle_args'] ?? $cfg['args'];
+            $cfg['columnas'] = $cfg['detalle_columnas'];
+            $cfg['importe'] = $cfg['detalle_importe'] ?? 'subtotal';
+            $cfg['entidad'] = $cfg['detalle_entidad'] ?? $cfg['entidad'];
+        }
+
+        return $cfg;
     }
 
     private function filtro_int_nullable($valor)
@@ -800,9 +930,9 @@ class reporteControlador extends reportesModelo
         return $this->resolver_id_exacto('empleados', 'idempleados', 'nro_cedula', $valor);
     }
 
-    private function obtener_datos_movimientos($tipo, $config, $filtros)
+    private function obtener_datos_movimientos($tipo, $config, $filtros, $cfg = null)
     {
-        $cfg = $config[$tipo];
+        $cfg = $cfg ?? $this->config_movimiento_aplicable($tipo, $config, $filtros);
         if ($cfg['articulo'] ?? false) {
             $filtros['articulo'] = $this->resolver_articulo_movimiento($filtros['articulo']);
         }
@@ -976,6 +1106,26 @@ class reporteControlador extends reportesModelo
 
         $resumen['promedio'] = $resumen['total'] > 0 ? ($resumen['importe_total'] / $resumen['total']) : 0;
 
+        if (($cfg['titulo'] ?? '') === 'Libro de Compras') {
+            $totalesLibro = [
+                'exenta_total' => 0,
+                'gravada_5_total' => 0,
+                'iva_5_total' => 0,
+                'gravada_10_total' => 0,
+                'iva_10_total' => 0
+            ];
+
+            foreach ($datos as $row) {
+                $totalesLibro['exenta_total'] += (float)($row['exenta'] ?? 0);
+                $totalesLibro['gravada_5_total'] += (float)($row['gravada_5'] ?? 0);
+                $totalesLibro['iva_5_total'] += (float)($row['iva_5'] ?? 0);
+                $totalesLibro['gravada_10_total'] += (float)($row['gravada_10'] ?? 0);
+                $totalesLibro['iva_10_total'] += (float)($row['iva_10'] ?? 0);
+            }
+
+            $resumen = array_merge($resumen, $totalesLibro);
+        }
+
         return [
             "tarjetas" => $resumen,
             "estados" => $estados
@@ -1018,6 +1168,35 @@ class reporteControlador extends reportesModelo
         ];
     }
 
+    private function meta_kardex_desde_datos($datos, $filtros)
+    {
+        if (empty($datos)) {
+            return null;
+        }
+
+        $primera = reset($datos);
+        $ultima = end($datos);
+        $entradas = 0;
+        $salidas = 0;
+
+        foreach ($datos as $row) {
+            $entradas += (float)($row['entrada'] ?? 0);
+            $salidas += (float)($row['salida'] ?? 0);
+        }
+
+        return [
+            "codigo" => $primera['codigo'] ?? '',
+            "articulo" => $primera['desc_articulo'] ?? '',
+            "sucursal" => $primera['sucursal'] ?? '',
+            "desde" => $filtros['desde'] ?? '',
+            "hasta" => $filtros['hasta'] ?? '',
+            "saldo_inicial" => (float)($primera['saldo_anterior'] ?? 0),
+            "entradas" => $entradas,
+            "salidas" => $salidas,
+            "saldo_final" => (float)($ultima['saldo_actual'] ?? 0)
+        ];
+    }
+
     public function reporte_movimientos_unificado_controlador()
     {
         $tipo = mainModel::limpiar_string($_POST['tipo_movimiento'] ?? '');
@@ -1032,7 +1211,8 @@ class reporteControlador extends reportesModelo
         }
 
         $filtros = $this->filtros_movimientos();
-        $datos = $this->obtener_datos_movimientos($tipo, $config, $filtros);
+        $cfg = $this->config_movimiento_aplicable($tipo, $config, $filtros);
+        $datos = $this->obtener_datos_movimientos($tipo, $config, $filtros, $cfg);
         $total = count($datos);
         $porPagina = $filtros['por_pagina'];
         $totalPaginas = max(1, (int)ceil($total / $porPagina));
@@ -1041,11 +1221,12 @@ class reporteControlador extends reportesModelo
 
         return json_encode([
             "data" => array_slice($datos, $inicio, $porPagina),
-            "columnas" => $config[$tipo]['columnas'],
-            "estado_labels" => $config[$tipo]['estado_labels'] ?? [],
-            "titulo" => $config[$tipo]['titulo'],
-            "resumen" => $this->resumen_movimientos_desde_datos($datos, $config[$tipo]),
-            "graficos" => $this->grafico_movimientos_desde_datos($datos, $config[$tipo]),
+            "columnas" => $cfg['columnas'],
+            "estado_labels" => $cfg['estado_labels'] ?? [],
+            "titulo" => $cfg['titulo'],
+            "resumen" => $this->resumen_movimientos_desde_datos($datos, $cfg),
+            "graficos" => $this->grafico_movimientos_desde_datos($datos, $cfg),
+            "kardex" => $tipo === 'kardex_articulo' ? $this->meta_kardex_desde_datos($datos, $filtros) : null,
             "paginacion" => [
                 "pagina" => $pagina,
                 "por_pagina" => $porPagina,
@@ -1072,23 +1253,24 @@ class reporteControlador extends reportesModelo
         }
 
         $filtros = $this->filtros_movimientos();
-        $datosCompletos = $this->obtener_datos_movimientos($tipo, $config, $filtros);
+        $cfg = $this->config_movimiento_aplicable($tipo, $config, $filtros);
+        $datosCompletos = $this->obtener_datos_movimientos($tipo, $config, $filtros, $cfg);
         $datos = array_slice($datosCompletos, 0, 500);
-        $columnas = $config[$tipo]['columnas'];
-        $resumen = $this->resumen_movimientos_desde_datos($datosCompletos, $config[$tipo]);
-        $titulo = "Informe de Movimientos - " . $config[$tipo]['titulo'];
+        $columnas = $cfg['columnas'];
+        $resumen = $this->resumen_movimientos_desde_datos($datosCompletos, $cfg);
+        $titulo = "Informe de Movimientos - " . $cfg['titulo'];
 
         ob_start();
     ?>
-        <h3 style="text-align:center; margin-bottom:12px;"><?= htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8') ?></h3>
-        <p style="font-size:12px;">
+        <h3><?= htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8') ?></h3>
+        <div class="report-intro">
             Total filtrado: <?= count($datosCompletos) ?> |
             Importe total: <?= number_format((float)$resumen['tarjetas']['importe_total'], 0, ',', '.') ?> |
             Promedio: <?= number_format((float)$resumen['tarjetas']['promedio'], 0, ',', '.') ?>
             <?php if (count($datosCompletos) > 500): ?>
                 | Detalle limitado a 500 registros. Use CSV para exportar el detalle completo.
             <?php endif; ?>
-        </p>
+        </div>
         <table width="100%" cellspacing="0" cellpadding="5" border="1">
             <thead>
                 <tr>
@@ -1109,7 +1291,7 @@ class reporteControlador extends reportesModelo
                         <tr>
                             <td style="text-align:center;"><?= $i++ ?></td>
                             <?php foreach ($columnas as $columna): ?>
-                                <td><?= htmlspecialchars($this->valor_movimiento($row, $columna, $config[$tipo]), ENT_QUOTES, 'UTF-8') ?></td>
+                                <td><?= htmlspecialchars($this->valor_movimiento($row, $columna, $cfg), ENT_QUOTES, 'UTF-8') ?></td>
                             <?php endforeach; ?>
                         </tr>
                     <?php endforeach; ?>
@@ -1137,8 +1319,9 @@ class reporteControlador extends reportesModelo
         }
 
         $filtros = $this->filtros_movimientos();
-        $datos = $this->obtener_datos_movimientos($tipo, $config, $filtros);
-        $columnas = $config[$tipo]['columnas'];
+        $cfg = $this->config_movimiento_aplicable($tipo, $config, $filtros);
+        $datos = $this->obtener_datos_movimientos($tipo, $config, $filtros, $cfg);
+        $columnas = $cfg['columnas'];
 
         header('Content-Type: text/csv; charset=UTF-8');
         header('Content-Disposition: attachment; filename="reporte_movimientos_' . $tipo . '.csv"');
@@ -1155,7 +1338,7 @@ class reporteControlador extends reportesModelo
         foreach ($datos as $row) {
             $fila = [$i++];
             foreach ($columnas as $columna) {
-                $fila[] = $this->valor_movimiento($row, $columna, $config[$tipo]);
+                $fila[] = $this->valor_movimiento($row, $columna, $cfg);
             }
             fputcsv($salida, $fila, ';', '"', "\\");
         }

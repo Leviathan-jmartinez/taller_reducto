@@ -1,6 +1,42 @@
 const formulario_ajax = document.querySelectorAll(".FormularioAjax");
 
-function enviar_formulario_ajax(e) {
+async function solicitarMotivoAnulacion(opciones = {}) {
+    const titulo = opciones.titulo || 'Motivo de anulacion';
+    const texto = opciones.texto || 'Ingrese una observacion breve para registrar la anulacion.';
+
+    const result = await Swal.fire({
+        title: titulo,
+        text: texto,
+        type: 'question',
+        input: 'textarea',
+        inputAttributes: {
+            autocapitalize: 'sentences',
+            maxlength: '255'
+        },
+        inputPlaceholder: 'Escriba aqui el motivo de anulacion...',
+        showCancelButton: true,
+        confirmButtonColor: '#008000',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Confirmar',
+        cancelButtonText: 'Cancelar',
+        inputValidator: (value) => {
+            if (!String(value || '').trim()) {
+                return 'Debe ingresar la observacion o motivo de anulacion';
+            }
+            return null;
+        }
+    });
+
+    if (!result.value) {
+        return null;
+    }
+
+    return String(result.value).trim();
+}
+
+window.solicitarMotivoAnulacion = solicitarMotivoAnulacion;
+
+async function enviar_formulario_ajax(e) {
     if (this.dataset.customSubmit === "true") {
         return;
     }
@@ -44,6 +80,26 @@ function enviar_formulario_ajax(e) {
     } else {
         text_alerta = "Desea realizar la operación solicitada";
     }
+    if (this.dataset.anulacion === "true") {
+        const motivo = await solicitarMotivoAnulacion({
+            titulo: this.dataset.anulacionTitulo || 'Motivo de anulacion',
+            texto: text_alerta
+        });
+
+        if (motivo === null) {
+            return;
+        }
+
+        data.set('observacion_anulacion', motivo);
+
+        fetch(action, config)
+            .then(respuesta => respuesta.json())
+            .then(respuesta => {
+                return alertasAjax(respuesta, this);
+            });
+        return;
+    }
+
     Swal.fire({
         title: '¿Estas seguro?',
         text: text_alerta,

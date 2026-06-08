@@ -141,6 +141,8 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
                     action="' . SERVERURL . 'ajax/ordenTrabajoAjax.php"
                     method="POST"
                     data-form="delete"
+                    data-anulacion="true"
+                    data-anulacion-titulo="Anular orden de trabajo"
                     autocomplete="off">
 
                     <input type="hidden" name="accion" value="anular">
@@ -519,6 +521,17 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
 
         $idOT    = mainModel::decryption($_POST['id']);
         $usuario = $_SESSION['id_str'];
+        $motivo = trim(mainModel::limpiar_string($_POST['observacion_anulacion'] ?? ''));
+
+        if ($motivo === '') {
+            echo json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Motivo requerido',
+                'Texto'  => 'Debe ingresar la observacion o motivo de anulacion',
+                'Tipo'   => 'warning'
+            ]);
+            exit();
+        }
 
         $sucursalOT = mainModel::ejecutar_consulta_simple("
             SELECT id_sucursal
@@ -536,7 +549,7 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
             exit();
         }
 
-        $res = ordenTrabajoModelo::anular_ot_modelo($idOT, $usuario);
+        $res = ordenTrabajoModelo::anular_ot_modelo($idOT, $usuario, $motivo);
 
         if ($res === true) {
             echo json_encode([

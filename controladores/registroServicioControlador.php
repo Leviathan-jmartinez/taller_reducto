@@ -308,6 +308,8 @@ class registroServicioControlador extends registroServicioModelo
                     action="' . SERVERURL . 'ajax/registroServicioAjax.php"
                     method="POST"
                     data-form="delete"
+                    data-anulacion="true"
+                    data-anulacion-titulo="Anular registro de servicio"
                     autocomplete="off">
 
                     <input type="hidden" name="accion" value="anular">
@@ -381,6 +383,7 @@ class registroServicioControlador extends registroServicioModelo
         }
 
         $idRegistro = mainModel::decryption($_POST['id_registro']);
+        $motivo = trim(mainModel::limpiar_string($_POST['observacion_anulacion'] ?? ''));
 
         if (!$idRegistro) {
             return json_encode([
@@ -391,10 +394,20 @@ class registroServicioControlador extends registroServicioModelo
             ]);
         }
 
+        if ($motivo === '') {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Motivo requerido',
+                'Texto'  => 'Debe ingresar la observacion o motivo de anulacion',
+                'Tipo'   => 'warning'
+            ]);
+        }
+
         $datos = [
             'idregistro_servicio' => $idRegistro,
             'usuario'             => $idUsuario,
-            'id_sucursal'         => $idSucursal
+            'id_sucursal'         => $idSucursal,
+            'motivo'              => $motivo
         ];
 
         $res = self::anular_registro_servicio_modelo($datos);

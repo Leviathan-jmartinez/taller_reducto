@@ -694,7 +694,7 @@ class recepcionservicioModelo extends mainModel
         return $sql->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    protected static function anular_recepcion_modelo($id, $sucursal)
+    protected static function anular_recepcion_modelo($id, $sucursal, $usuario = null, $motivo = '')
     {
         $pdo = mainModel::conectar();
 
@@ -750,6 +750,20 @@ class recepcionservicioModelo extends mainModel
                     $pdo->rollBack();
                     return false;
                 }
+            }
+
+            if (!empty($usuario)) {
+                mainModel::registrar_anulacion_auditoria_modelo($pdo, [
+                    'modulo' => 'recepcion_servicio',
+                    'tabla_afectada' => 'recepcion_servicio',
+                    'id_registro' => $id,
+                    'id_sucursal' => $sucursal,
+                    'estado_anterior' => '1',
+                    'estado_nuevo' => '0',
+                    'motivo' => $motivo,
+                    'usuario_anula' => $usuario,
+                    'referencia' => 'RECEPCION #' . $id
+                ]);
             }
 
             $pdo->commit();

@@ -499,7 +499,7 @@ class ordenTrabajoModelo extends mainModel
         );
     }
 
-    protected static function anular_ot_modelo($idOT, $usuario)
+    protected static function anular_ot_modelo($idOT, $usuario, $motivo = '')
     {
         $pdo = self::conectar();
 
@@ -568,6 +568,18 @@ class ordenTrabajoModelo extends mainModel
                 ");
                 $updDiagnostico->execute([$ot['idreclamo_servicio']]);
             }
+
+            mainModel::registrar_anulacion_auditoria_modelo($pdo, [
+                'modulo' => 'orden_trabajo',
+                'tabla_afectada' => 'orden_trabajo',
+                'id_registro' => $idOT,
+                'id_sucursal' => null,
+                'estado_anterior' => (string)($ot['estado'] ?? '1'),
+                'estado_nuevo' => '0',
+                'motivo' => $motivo,
+                'usuario_anula' => $usuario,
+                'referencia' => 'OT #' . $idOT
+            ]);
 
             $pdo->commit();
             return true;

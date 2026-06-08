@@ -722,7 +722,7 @@ class reportesModelo extends mainModel
 
         $sql .= "
         GROUP BY pc.idpedido_cabecera
-        ORDER BY pc.fecha ASC
+        ORDER BY pc.fecha DESC, pc.idpedido_cabecera DESC
         ";
 
         $stmt = mainModel::conectar()->prepare($sql);
@@ -805,7 +805,7 @@ class reportesModelo extends mainModel
 
         $sql .= "
         GROUP BY pc.idpresupuesto_compra
-        ORDER BY pc.fecha ASC
+        ORDER BY pc.fecha DESC, pc.idpresupuesto_compra DESC
         ";
 
         $stmt = mainModel::conectar()->prepare($sql);
@@ -890,7 +890,7 @@ class reportesModelo extends mainModel
 
         $sql .= "
         GROUP BY oc.idorden_compra
-        ORDER BY oc.fecha ASC
+        ORDER BY oc.fecha DESC, oc.idorden_compra DESC
         ";
 
         $stmt = mainModel::conectar()->prepare($sql);
@@ -978,7 +978,7 @@ class reportesModelo extends mainModel
 
         $sql .= "
         GROUP BY cc.idcompra_cabecera
-        ORDER BY cc.fecha_factura ASC
+        ORDER BY cc.fecha_factura DESC, cc.idcompra_cabecera DESC
         ";
 
         $stmt = mainModel::conectar()->prepare($sql);
@@ -1047,7 +1047,7 @@ class reportesModelo extends mainModel
             $params[':sucursal'] = (int)$sucursal;
         }
 
-        $sql .= " ORDER BY lc.fecha ASC";
+        $sql .= " ORDER BY lc.fecha DESC, lc.idlibro_compra DESC";
 
         $stmt = mainModel::conectar()->prepare($sql);
 
@@ -1246,6 +1246,13 @@ class reportesModelo extends mainModel
             m.MovStockSigno,
             m.MovStockCosto,
             m.MovStockPrecioVenta,
+            CASE
+                WHEN m.MovStockSigno = 1 THEN 'Entrada'
+                WHEN m.MovStockSigno = -1 THEN 'Salida'
+                ELSE 'Ajuste'
+            END AS naturaleza_movimiento,
+            (ABS(m.MovStockCantidad) * COALESCE(m.MovStockCosto, 0)) AS importe_costo,
+            (ABS(m.MovStockCantidad) * COALESCE(m.MovStockPrecioVenta, 0)) AS importe_venta,
             m.MovStockNroTicket,
             m.MovStockReferencia,
             CONCAT(u.usu_nombre,' ',u.usu_apellido) AS usuario
@@ -1419,7 +1426,7 @@ class reportesModelo extends mainModel
             $params[':sucursal'] = (int)$sucursal;
         }
 
-        $sql .= " ORDER BY rs.fecha_ingreso ASC";
+        $sql .= " ORDER BY rs.fecha_ingreso DESC, rs.idrecepcion DESC";
 
         $stmt = mainModel::conectar()->prepare($sql);
 
@@ -1427,6 +1434,395 @@ class reportesModelo extends mainModel
             $stmt->bindValue($k, $v);
         }
 
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    protected static function reporte_pedidos_detalle_modelo($desde, $hasta, $estado, $sucursal)
+    {
+        $sql = "
+        SELECT
+            pc.idpedido_cabecera,
+            pc.fecha,
+            pc.estado,
+            CONCAT(u.usu_nombre, ' ', u.usu_apellido) AS usuario,
+            s.suc_descri AS sucursal,
+            pd.id_articulo,
+            a.codigo,
+            a.desc_articulo AS articulo,
+            pd.cantidad,
+            pd.stock_actual
+        FROM pedido_cabecera pc
+        INNER JOIN pedido_detalle pd ON pd.idpedido_cabecera = pc.idpedido_cabecera
+        LEFT JOIN articulos a ON a.id_articulo = pd.id_articulo
+        INNER JOIN usuarios u ON u.id_usuario = pc.id_usuario
+        INNER JOIN sucursales s ON s.id_sucursal = pc.id_sucursal
+        WHERE 1 = 1
+        ";
+        $params = [];
+
+        if (!empty($desde)) {
+            $sql .= " AND DATE(pc.fecha) >= :desde";
+            $params[':desde'] = $desde;
+        }
+        if (!empty($hasta)) {
+            $sql .= " AND DATE(pc.fecha) <= :hasta";
+            $params[':hasta'] = $hasta;
+        }
+        if ($estado !== null) {
+            $sql .= " AND pc.estado = :estado";
+            $params[':estado'] = (int)$estado;
+        }
+        if ($sucursal !== null) {
+            $sql .= " AND pc.id_sucursal = :sucursal";
+            $params[':sucursal'] = (int)$sucursal;
+        }
+
+        $sql .= " ORDER BY pc.fecha DESC, pc.idpedido_cabecera DESC, a.desc_articulo ASC";
+        $stmt = mainModel::conectar()->prepare($sql);
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    protected static function reporte_presupuestos_detalle_modelo($desde, $hasta, $estado, $sucursal)
+    {
+        $sql = "
+        SELECT
+            pc.idpresupuesto_compra,
+            pc.fecha,
+            pc.estado,
+            pc.idproveedores,
+            pr.razon_social AS proveedor,
+            s.suc_descri AS sucursal,
+            pd.id_articulo,
+            a.codigo,
+            a.desc_articulo AS articulo,
+            pd.cantidad,
+            pd.precio,
+            pd.subtotal
+        FROM presupuesto_compra pc
+        INNER JOIN presupuesto_detalle pd ON pd.idpresupuesto_compra = pc.idpresupuesto_compra
+        LEFT JOIN articulos a ON a.id_articulo = pd.id_articulo
+        LEFT JOIN proveedores pr ON pr.idproveedores = pc.idproveedores
+        INNER JOIN sucursales s ON s.id_sucursal = pc.id_sucursal
+        WHERE 1 = 1
+        ";
+        $params = [];
+
+        if (!empty($desde)) {
+            $sql .= " AND DATE(pc.fecha) >= :desde";
+            $params[':desde'] = $desde;
+        }
+        if (!empty($hasta)) {
+            $sql .= " AND DATE(pc.fecha) <= :hasta";
+            $params[':hasta'] = $hasta;
+        }
+        if ($estado !== null) {
+            $sql .= " AND pc.estado = :estado";
+            $params[':estado'] = (int)$estado;
+        }
+        if ($sucursal !== null) {
+            $sql .= " AND pc.id_sucursal = :sucursal";
+            $params[':sucursal'] = (int)$sucursal;
+        }
+
+        $sql .= " ORDER BY pc.fecha DESC, pc.idpresupuesto_compra DESC, a.desc_articulo ASC";
+        $stmt = mainModel::conectar()->prepare($sql);
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    protected static function reporte_ordenes_compra_detalle_modelo($desde, $hasta, $estado, $sucursal)
+    {
+        $sql = "
+        SELECT
+            oc.idorden_compra,
+            oc.fecha,
+            oc.estado,
+            oc.idproveedores,
+            pr.razon_social AS proveedor,
+            s.suc_descri AS sucursal,
+            ocd.id_articulo,
+            a.codigo,
+            a.desc_articulo AS articulo,
+            ocd.cantidad,
+            ocd.cantidad_pendiente,
+            ocd.precio_unitario,
+            (ocd.cantidad * ocd.precio_unitario) AS subtotal
+        FROM orden_compra oc
+        INNER JOIN orden_compra_detalle ocd ON ocd.idorden_compra = oc.idorden_compra
+        LEFT JOIN articulos a ON a.id_articulo = ocd.id_articulo
+        LEFT JOIN proveedores pr ON pr.idproveedores = oc.idproveedores
+        INNER JOIN sucursales s ON s.id_sucursal = oc.id_sucursal
+        WHERE 1 = 1
+        ";
+        $params = [];
+
+        if (!empty($desde)) {
+            $sql .= " AND DATE(oc.fecha) >= :desde";
+            $params[':desde'] = $desde;
+        }
+        if (!empty($hasta)) {
+            $sql .= " AND DATE(oc.fecha) <= :hasta";
+            $params[':hasta'] = $hasta;
+        }
+        if ($estado !== null) {
+            $sql .= " AND oc.estado = :estado";
+            $params[':estado'] = (int)$estado;
+        }
+        if ($sucursal !== null) {
+            $sql .= " AND oc.id_sucursal = :sucursal";
+            $params[':sucursal'] = (int)$sucursal;
+        }
+
+        $sql .= " ORDER BY oc.fecha DESC, oc.idorden_compra DESC, a.desc_articulo ASC";
+        $stmt = mainModel::conectar()->prepare($sql);
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    protected static function reporte_compras_detalle_modelo($desde, $hasta, $estado, $sucursal)
+    {
+        $sql = "
+        SELECT
+            cc.idcompra_cabecera,
+            cc.fecha_creacion,
+            cc.fecha_factura,
+            cc.nro_factura,
+            cc.estado,
+            cc.idproveedores,
+            pr.razon_social AS proveedor,
+            s.suc_descri AS sucursal,
+            cd.id_articulo,
+            a.codigo,
+            a.desc_articulo AS articulo,
+            cd.cantidad_recibida,
+            cd.precio_unitario,
+            cd.subtotal
+        FROM compra_cabecera cc
+        INNER JOIN compra_detalle cd ON cd.idcompra_cabecera = cc.idcompra_cabecera
+        LEFT JOIN articulos a ON a.id_articulo = cd.id_articulo
+        LEFT JOIN proveedores pr ON pr.idproveedores = cc.idproveedores
+        INNER JOIN sucursales s ON s.id_sucursal = cc.id_sucursal
+        WHERE 1 = 1
+        ";
+        $params = [];
+
+        if (!empty($desde)) {
+            $sql .= " AND DATE(cc.fecha_factura) >= :desde";
+            $params[':desde'] = $desde;
+        }
+        if (!empty($hasta)) {
+            $sql .= " AND DATE(cc.fecha_factura) <= :hasta";
+            $params[':hasta'] = $hasta;
+        }
+        if ($estado !== null) {
+            $sql .= " AND cc.estado = :estado";
+            $params[':estado'] = (int)$estado;
+        }
+        if ($sucursal !== null) {
+            $sql .= " AND cc.id_sucursal = :sucursal";
+            $params[':sucursal'] = (int)$sucursal;
+        }
+
+        $sql .= " ORDER BY cc.fecha_factura DESC, cc.idcompra_cabecera DESC, a.desc_articulo ASC";
+        $stmt = mainModel::conectar()->prepare($sql);
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    protected static function reporte_presupuesto_servicio_detalle_modelo($desde, $hasta, $estado, $sucursal)
+    {
+        $sql = "
+        SELECT
+            ps.idpresupuesto_servicio,
+            ps.fecha,
+            ps.estado,
+            ps.id_cliente,
+            CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) AS cliente,
+            COALESCE(
+                NULLIF(CONCAT_WS(' ', mp.mar_descri, mop.mod_descri, vp.anho), ''),
+                NULLIF(CONCAT_WS(' ', mr.mar_descri, mor.mod_descri, vr.anho), ''),
+                vp.placa,
+                vr.placa,
+                '-'
+            ) AS vehiculo,
+            s.suc_descri AS sucursal,
+            pds.id_articulo,
+            a.codigo,
+            a.desc_articulo AS articulo,
+            pds.cantidad,
+            pds.preciouni,
+            pds.subtotal
+        FROM presupuesto_servicio ps
+        INNER JOIN presupuesto_detalleservicio pds ON pds.idpresupuesto_servicio = ps.idpresupuesto_servicio
+        LEFT JOIN articulos a ON a.id_articulo = pds.id_articulo
+        LEFT JOIN clientes c ON c.id_cliente = ps.id_cliente
+        LEFT JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
+        LEFT JOIN recepcion_servicio rs ON rs.idrecepcion = ds.idrecepcion
+        LEFT JOIN vehiculos vp ON vp.id_vehiculo = ps.id_vehiculo
+        LEFT JOIN modelo_auto mop ON mop.id_modeloauto = vp.id_modeloauto
+        LEFT JOIN marcas mp ON mp.id_marcas = mop.id_marcas
+        LEFT JOIN vehiculos vr ON vr.id_vehiculo = rs.id_vehiculo
+        LEFT JOIN modelo_auto mor ON mor.id_modeloauto = vr.id_modeloauto
+        LEFT JOIN marcas mr ON mr.id_marcas = mor.id_marcas
+        INNER JOIN sucursales s ON s.id_sucursal = ps.id_sucursal
+        WHERE 1 = 1
+        ";
+        $params = [];
+
+        if (!empty($desde)) {
+            $sql .= " AND ps.fecha >= :desde";
+            $params[':desde'] = $desde;
+        }
+        if (!empty($hasta)) {
+            $sql .= " AND ps.fecha <= :hasta";
+            $params[':hasta'] = $hasta;
+        }
+        if ($estado !== null) {
+            $sql .= " AND ps.estado = :estado";
+            $params[':estado'] = (int)$estado;
+        }
+        if ($sucursal !== null) {
+            $sql .= " AND ps.id_sucursal = :sucursal";
+            $params[':sucursal'] = (int)$sucursal;
+        }
+
+        $sql .= " ORDER BY ps.fecha DESC, ps.idpresupuesto_servicio DESC, a.desc_articulo ASC";
+        $stmt = mainModel::conectar()->prepare($sql);
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    protected static function reporte_orden_trabajo_detalle_modelo($desde, $hasta, $estado, $sucursal)
+    {
+        $sql = "
+        SELECT
+            ot.idorden_trabajo,
+            ot.fecha_inicio,
+            ot.estado,
+            ot.id_cliente,
+            CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) AS cliente,
+            CONCAT(m.mar_descri, ' ', mo.mod_descri, ' ', v.anho) AS vehiculo,
+            s.suc_descri AS sucursal,
+            otd.id_articulo,
+            a.codigo,
+            a.desc_articulo AS articulo,
+            otd.cantidad,
+            otd.precio_unitario,
+            otd.subtotal
+        FROM orden_trabajo ot
+        INNER JOIN orden_trabajo_detalle otd ON otd.idorden_trabajo = ot.idorden_trabajo
+        LEFT JOIN articulos a ON a.id_articulo = otd.id_articulo
+        INNER JOIN clientes c ON c.id_cliente = ot.id_cliente
+        INNER JOIN vehiculos v ON v.id_vehiculo = ot.id_vehiculo
+        INNER JOIN modelo_auto mo ON mo.id_modeloauto = v.id_modeloauto
+        INNER JOIN marcas m ON m.id_marcas = mo.id_marcas
+        INNER JOIN sucursales s ON s.id_sucursal = ot.id_sucursal
+        WHERE 1 = 1
+        ";
+        $params = [];
+
+        if (!empty($desde)) {
+            $sql .= " AND DATE(ot.fecha_inicio) >= :desde";
+            $params[':desde'] = $desde;
+        }
+        if (!empty($hasta)) {
+            $sql .= " AND DATE(ot.fecha_inicio) <= :hasta";
+            $params[':hasta'] = $hasta;
+        }
+        if ($estado !== null) {
+            $sql .= " AND ot.estado = :estado";
+            $params[':estado'] = (int)$estado;
+        }
+        if ($sucursal !== null) {
+            $sql .= " AND ot.id_sucursal = :sucursal";
+            $params[':sucursal'] = (int)$sucursal;
+        }
+
+        $sql .= " ORDER BY ot.fecha_inicio DESC, ot.idorden_trabajo DESC, a.desc_articulo ASC";
+        $stmt = mainModel::conectar()->prepare($sql);
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    protected static function reporte_registro_servicio_detalle_modelo($desde, $hasta, $estado, $empleado, $sucursal)
+    {
+        $sql = "
+        SELECT
+            rs.idregistro_servicio,
+            rs.fecha_servicio,
+            rs.estado,
+            rs.id_cliente,
+            CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) AS cliente,
+            CONCAT(m.mar_descri, ' ', mo.mod_descri, ' ', v.anho) AS vehiculo,
+            CONCAT(em.nombre, ' ', em.apellido) AS tecnico,
+            s.suc_descri AS sucursal,
+            rsd.id_articulo,
+            a.codigo,
+            a.desc_articulo AS articulo,
+            rsd.origen,
+            rsd.cantidad,
+            rsd.precio_unitario,
+            rsd.subtotal
+        FROM registro_servicio rs
+        INNER JOIN registro_servicio_detalle rsd ON rsd.idregistro_servicio = rs.idregistro_servicio
+        LEFT JOIN articulos a ON a.id_articulo = rsd.id_articulo
+        INNER JOIN orden_trabajo ot ON ot.idorden_trabajo = rs.idorden_trabajo
+        LEFT JOIN empleados em ON em.idempleados = ot.tecnico_responsable
+        INNER JOIN clientes c ON c.id_cliente = rs.id_cliente
+        LEFT JOIN vehiculos v ON v.id_vehiculo = rs.id_vehiculo
+        LEFT JOIN modelo_auto mo ON mo.id_modeloauto = v.id_modeloauto
+        LEFT JOIN marcas m ON m.id_marcas = mo.id_marcas
+        INNER JOIN sucursales s ON s.id_sucursal = rs.id_sucursal
+        WHERE 1 = 1
+        ";
+        $params = [];
+
+        if (!empty($desde)) {
+            $sql .= " AND DATE(rs.fecha_servicio) >= :desde";
+            $params[':desde'] = $desde;
+        }
+        if (!empty($hasta)) {
+            $sql .= " AND DATE(rs.fecha_servicio) <= :hasta";
+            $params[':hasta'] = $hasta;
+        }
+        if ($estado !== null) {
+            $sql .= " AND rs.estado = :estado";
+            $params[':estado'] = (int)$estado;
+        }
+        if ($empleado !== null) {
+            $sql .= " AND ot.tecnico_responsable = :tecnico_responsable";
+            $params[':tecnico_responsable'] = (int)$empleado;
+        }
+        if ($sucursal !== null) {
+            $sql .= " AND rs.id_sucursal = :sucursal";
+            $params[':sucursal'] = (int)$sucursal;
+        }
+
+        $sql .= " ORDER BY rs.fecha_servicio DESC, rs.idregistro_servicio DESC, a.desc_articulo ASC";
+        $stmt = mainModel::conectar()->prepare($sql);
+        foreach ($params as $k => $v) {
+            $stmt->bindValue($k, $v);
+        }
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -1456,7 +1852,13 @@ class reportesModelo extends mainModel
             s.suc_descri AS sucursal,
 
             CONCAT(c.nombre_cliente, ' ',c.apellido_cliente) AS cliente,
-            CONCAT(m.mar_descri, ' ', mo.mod_descri, ' ', v.anho) AS vehiculo
+            COALESCE(
+                NULLIF(CONCAT_WS(' ', mp.mar_descri, mop.mod_descri, vp.anho), ''),
+                NULLIF(CONCAT_WS(' ', mr.mar_descri, mor.mod_descri, vr.anho), ''),
+                vp.placa,
+                vr.placa,
+                '-'
+            ) AS vehiculo
 
         FROM presupuesto_servicio ps
 
@@ -1475,14 +1877,23 @@ class reportesModelo extends mainModel
         LEFT JOIN clientes c
             ON c.id_cliente = ps.id_cliente
 
-        LEFT JOIN vehiculos v
-            ON v.id_vehiculo = ps.id_vehiculo
+        LEFT JOIN vehiculos vp
+            ON vp.id_vehiculo = ps.id_vehiculo
 
-        INNER JOIN modelo_auto mo
-            ON mo.id_modeloauto = v.id_modeloauto
+        LEFT JOIN modelo_auto mop
+            ON mop.id_modeloauto = vp.id_modeloauto
 
-        INNER JOIN marcas m
-            ON m.id_marcas = mo.id_marcas
+        LEFT JOIN marcas mp
+            ON mp.id_marcas = mop.id_marcas
+
+        LEFT JOIN vehiculos vr
+            ON vr.id_vehiculo = rs.id_vehiculo
+
+        LEFT JOIN modelo_auto mor
+            ON mor.id_modeloauto = vr.id_modeloauto
+
+        LEFT JOIN marcas mr
+            ON mr.id_marcas = mor.id_marcas
 
         LEFT JOIN presupuesto_detalleservicio pds
             ON pds.idpresupuesto_servicio = ps.idpresupuesto_servicio
@@ -1514,7 +1925,7 @@ class reportesModelo extends mainModel
 
         $sql .= "
         GROUP BY ps.idpresupuesto_servicio
-        ORDER BY ps.fecha ASC
+        ORDER BY ps.fecha DESC, ps.idpresupuesto_servicio DESC
         ";
 
         $stmt = mainModel::conectar()->prepare($sql);
@@ -1617,7 +2028,7 @@ class reportesModelo extends mainModel
 
         $sql .= "
         GROUP BY ot.idorden_trabajo
-        ORDER BY ot.fecha_inicio ASC
+        ORDER BY ot.fecha_inicio DESC, ot.idorden_trabajo DESC
         ";
 
         $stmt = mainModel::conectar()->prepare($sql);
@@ -1737,7 +2148,7 @@ class reportesModelo extends mainModel
             $params[':sucursal'] = (int)$sucursal;
         }
 
-        $sql .= " ORDER BY rs.fecha_servicio ASC";
+        $sql .= " ORDER BY rs.fecha_servicio DESC, rs.idregistro_servicio DESC";
 
         $stmt = mainModel::conectar()->prepare($sql);
 

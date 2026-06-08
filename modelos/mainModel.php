@@ -38,6 +38,60 @@ class mainModel
         return $disponible;
     }
 
+    protected static function anulacion_auditoria_disponible(PDO $conexion)
+    {
+        static $disponible = null;
+
+        if ($disponible !== null) {
+            return $disponible;
+        }
+
+        try {
+            $sql = $conexion->prepare("SHOW TABLES LIKE 'anulacion_auditoria'");
+            $sql->execute();
+            $disponible = $sql->rowCount() > 0;
+        } catch (Exception $e) {
+            $disponible = false;
+        }
+
+        return $disponible;
+    }
+
+    public static function registrar_anulacion_auditoria_modelo(PDO $conexion, array $datos)
+    {
+        if (!self::anulacion_auditoria_disponible($conexion)) {
+            return false;
+        }
+
+        $motivo = trim((string)($datos['motivo'] ?? ''));
+        if ($motivo === '') {
+            throw new Exception('Debe ingresar un motivo de anulacion');
+        }
+
+        $sql = $conexion->prepare("
+            INSERT INTO anulacion_auditoria
+            (modulo, tabla_afectada, id_registro, id_sucursal, estado_anterior, estado_nuevo,
+             motivo, usuario_anula, fecha_anulacion, referencia)
+            VALUES
+            (:modulo, :tabla_afectada, :id_registro, :id_sucursal, :estado_anterior, :estado_nuevo,
+             :motivo, :usuario_anula, NOW(), :referencia)
+        ");
+
+        $sql->execute([
+            ':modulo' => (string)($datos['modulo'] ?? ''),
+            ':tabla_afectada' => (string)($datos['tabla_afectada'] ?? ''),
+            ':id_registro' => (int)($datos['id_registro'] ?? 0),
+            ':id_sucursal' => !empty($datos['id_sucursal']) ? (int)$datos['id_sucursal'] : null,
+            ':estado_anterior' => isset($datos['estado_anterior']) ? (string)$datos['estado_anterior'] : null,
+            ':estado_nuevo' => isset($datos['estado_nuevo']) ? (string)$datos['estado_nuevo'] : '0',
+            ':motivo' => $motivo,
+            ':usuario_anula' => (int)($datos['usuario_anula'] ?? 0),
+            ':referencia' => !empty($datos['referencia']) ? (string)$datos['referencia'] : null
+        ]);
+
+        return true;
+    }
+
     public static function registrar_movimiento_stock_modelo(PDO $conexion, array $datos)
     {
         $idSucursal = (int)($datos['id_sucursal'] ?? 0);

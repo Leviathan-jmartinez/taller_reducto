@@ -117,7 +117,7 @@
             });
     }
 
-    function anularOT(idOT) {
+    async function anularOT(idOT) {
 
         if (!confirm('¿Desea anular esta Orden de Trabajo?')) return;
 

@@ -37,7 +37,7 @@ CREATE TABLE `ajuste_inventario` (
   KEY `ajuste_inventario_FKIndex3` (`sucursal_id`),
   CONSTRAINT `ajuste_inventarioSucu` FOREIGN KEY (`sucursal_id`) REFERENCES `sucursales` (`id_sucursal`),
   CONSTRAINT `ajuste_inventarioUsu` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -46,7 +46,7 @@ CREATE TABLE `ajuste_inventario` (
 
 LOCK TABLES `ajuste_inventario` WRITE;
 /*!40000 ALTER TABLE `ajuste_inventario` DISABLE KEYS */;
-INSERT INTO `ajuste_inventario` VALUES (19,1,1,3,'2026-05-31','Producto','inv pastillas','2026-05-31',1),(20,1,1,3,'2026-06-02','Producto','alta stock aceite','2026-06-02',1),(21,1,1,3,'2026-06-03','Producto','alta wd40','2026-06-03',1);
+INSERT INTO `ajuste_inventario` VALUES (19,1,1,3,'2026-05-31','Producto','inv pastillas','2026-05-31',1),(20,1,1,3,'2026-06-02','Producto','alta stock aceite','2026-06-02',1),(21,1,1,3,'2026-06-03','Producto','alta wd40','2026-06-03',1),(22,1,1,3,'2026-06-07','Producto','aceites','2026-06-07',1);
 /*!40000 ALTER TABLE `ajuste_inventario` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -78,8 +78,46 @@ CREATE TABLE `ajuste_inventario_detalle` (
 
 LOCK TABLES `ajuste_inventario_detalle` WRITE;
 /*!40000 ALTER TABLE `ajuste_inventario_detalle` DISABLE KEYS */;
-INSERT INTO `ajuste_inventario_detalle` VALUES (4,19,0,10,0,10),(21,21,0,10,0,10),(33,20,0,10,0,10);
+INSERT INTO `ajuste_inventario_detalle` VALUES (4,19,0,10,0,10),(21,21,0,10,0,10),(33,20,0,10,0,10),(33,22,10,8,0,-2);
 /*!40000 ALTER TABLE `ajuste_inventario_detalle` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `anulacion_auditoria`
+--
+
+DROP TABLE IF EXISTS `anulacion_auditoria`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `anulacion_auditoria` (
+  `idanulacion` int unsigned NOT NULL AUTO_INCREMENT,
+  `modulo` varchar(80) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tabla_afectada` varchar(80) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id_registro` int unsigned NOT NULL,
+  `id_sucursal` int unsigned DEFAULT NULL,
+  `estado_anterior` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `estado_nuevo` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '0',
+  `motivo` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `usuario_anula` int unsigned NOT NULL,
+  `fecha_anulacion` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `referencia` varchar(120) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`idanulacion`),
+  KEY `idx_anulacion_modulo_registro` (`modulo`,`id_registro`),
+  KEY `idx_anulacion_sucursal` (`id_sucursal`),
+  KEY `idx_anulacion_usuario` (`usuario_anula`),
+  CONSTRAINT `fk_anulacion_auditoria_sucursal` FOREIGN KEY (`id_sucursal`) REFERENCES `sucursales` (`id_sucursal`),
+  CONSTRAINT `fk_anulacion_auditoria_usuario` FOREIGN KEY (`usuario_anula`) REFERENCES `usuarios` (`id_usuario`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `anulacion_auditoria`
+--
+
+LOCK TABLES `anulacion_auditoria` WRITE;
+/*!40000 ALTER TABLE `anulacion_auditoria` DISABLE KEYS */;
+INSERT INTO `anulacion_auditoria` VALUES (1,'pedido_compra','pedido_cabecera',9001,1,'1','0','test',1,'2026-06-07 15:03:06','PEDIDO #9001'),(2,'pedido_compra','pedido_cabecera',9005,2,'1','0','Prueba de anulacion',7,'2026-06-07 15:43:16','PEDIDO #9005');
+/*!40000 ALTER TABLE `anulacion_auditoria` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -110,7 +148,7 @@ CREATE TABLE `articulo_proveedor` (
 
 LOCK TABLES `articulo_proveedor` WRITE;
 /*!40000 ALTER TABLE `articulo_proveedor` DISABLE KEYS */;
-INSERT INTO `articulo_proveedor` VALUES (43,6,1,220000.00,1),(44,21,1,45000.00,1);
+INSERT INTO `articulo_proveedor` VALUES (43,6,9001,220000.00,1),(44,21,9001,45000.00,1);
 /*!40000 ALTER TABLE `articulo_proveedor` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -301,7 +339,7 @@ CREATE TABLE `compra_cabecera` (
   CONSTRAINT `compra_cabeceraPro` FOREIGN KEY (`idproveedores`) REFERENCES `proveedores` (`idproveedores`),
   CONSTRAINT `compra_cabeceraSucu` FOREIGN KEY (`id_sucursal`) REFERENCES `sucursales` (`id_sucursal`),
   CONSTRAINT `compra_cabeceraUsu` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9005 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -310,7 +348,7 @@ CREATE TABLE `compra_cabecera` (
 
 LOCK TABLES `compra_cabecera` WRITE;
 /*!40000 ALTER TABLE `compra_cabecera` DISABLE KEYS */;
-INSERT INTO `compra_cabecera` VALUES (6,1,1,1,'2026-06-06 08:56:45','001-001-0000056','2026-06-06',12345678,'2026-06-30',1,2290000,'contado','7',18,NULL,NULL);
+INSERT INTO `compra_cabecera` VALUES (6,1,9001,1,'2026-06-06 08:56:45','001-001-0000056','2026-06-06',12345678,'2026-06-30',1,2290000,'contado','7',18,NULL,NULL),(9001,1,9002,1,'2026-02-20 09:30:00','001-001-009001','2026-02-20',12345678,'2026-12-31',2,2340000,'contado','0',9002,NULL,NULL),(9002,1,9001,1,'2026-04-28 10:00:00','001-001-009002','2026-04-28',12345678,'2026-12-31',2,3120000,'credito','30',9004,NULL,NULL),(9003,1,9003,1,'2026-05-16 11:20:00','001-001-009003','2026-05-16',12345678,'2026-12-31',1,980000,'contado','0',NULL,NULL,NULL),(9004,1,9002,1,'2026-06-03 08:45:00','001-001-009004','2026-06-03',12345678,'2026-12-31',0,620000,'contado','0',NULL,'2026-06-04 09:00:00',1);
 /*!40000 ALTER TABLE `compra_cabecera` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -343,7 +381,7 @@ CREATE TABLE `compra_detalle` (
 
 LOCK TABLES `compra_detalle` WRITE;
 /*!40000 ALTER TABLE `compra_detalle` DISABLE KEYS */;
-INSERT INTO `compra_detalle` VALUES (6,6,220000.00,10,2200000.00,'2',200000.00),(6,21,45000.00,2,90000.00,'1',4285.71);
+INSERT INTO `compra_detalle` VALUES (6,6,220000.00,10,2200000.00,'2',200000.00),(6,21,45000.00,2,90000.00,'1',4285.71),(9001,2,220000.00,8,1760000.00,'2',160000.00),(9001,3,145000.00,4,580000.00,'2',52727.27),(9002,2,190000.00,12,2280000.00,'2',207272.73),(9002,3,140000.00,6,840000.00,'2',76363.64),(9003,2,196000.00,5,980000.00,'2',89090.91),(9004,3,155000.00,4,620000.00,'2',56363.64);
 /*!40000 ALTER TABLE `compra_detalle` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -558,7 +596,7 @@ CREATE TABLE `diagnostico_servicio` (
 
 LOCK TABLES `diagnostico_servicio` WRITE;
 /*!40000 ALTER TABLE `diagnostico_servicio` DISABLE KEYS */;
-INSERT INTO `diagnostico_servicio` VALUES (25,1,21,1,1,'2026-05-31 21:43:41',NULL,NULL,2,'cambio de pastillas normal','2026-06-01 00:43:41','2026-06-01 00:44:28',1,1,0),(26,1,22,1,1,'2026-06-01 20:53:20',NULL,NULL,0,'','2026-06-01 23:53:20','2026-06-01 23:55:00',1,1,0),(27,1,22,1,1,'2026-06-01 20:56:24',NULL,NULL,1,'test','2026-06-01 23:56:24','2026-06-01 23:56:24',1,1,0),(28,1,23,1,1,'2026-06-02 16:53:05',NULL,NULL,2,'verificacion de vehiculo, recibido se agrega detalle para presupuesto','2026-06-02 19:53:05','2026-06-03 00:23:55',1,1,0),(29,1,24,1,1,'2026-06-06 08:46:01',NULL,NULL,1,'Diagnostico pruea','2026-06-06 11:46:01','2026-06-06 11:46:01',1,1,0);
+INSERT INTO `diagnostico_servicio` VALUES (25,1,21,1,1,'2026-05-31 21:43:41',NULL,NULL,2,'cambio de pastillas normal','2026-06-01 00:43:41','2026-06-01 00:44:28',1,1,0),(26,1,22,1,1,'2026-06-01 20:53:20',NULL,NULL,0,'','2026-06-01 23:53:20','2026-06-01 23:55:00',1,1,0),(27,1,22,1,1,'2026-06-01 20:56:24',NULL,NULL,1,'test','2026-06-01 23:56:24','2026-06-01 23:56:24',1,1,0),(28,1,23,1,1,'2026-06-02 16:53:05',NULL,NULL,2,'verificacion de vehiculo, recibido se agrega detalle para presupuesto','2026-06-02 19:53:05','2026-06-03 00:23:55',1,1,0),(29,1,24,1,1,'2026-06-06 08:46:01',NULL,NULL,2,'Diagnostico pruea','2026-06-06 11:46:01','2026-06-06 23:42:25',1,1,0);
 /*!40000 ALTER TABLE `diagnostico_servicio` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -718,7 +756,7 @@ CREATE TABLE `libro_compra` (
   KEY `Libro_compra_FKIndex2` (`id_sucursal`),
   CONSTRAINT `libro_compraCab` FOREIGN KEY (`idcompra_cabecera`) REFERENCES `compra_cabecera` (`idcompra_cabecera`),
   CONSTRAINT `libro_compraSuc` FOREIGN KEY (`id_sucursal`) REFERENCES `sucursales` (`id_sucursal`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9005 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -727,7 +765,7 @@ CREATE TABLE `libro_compra` (
 
 LOCK TABLES `libro_compra` WRITE;
 /*!40000 ALTER TABLE `libro_compra` DISABLE KEYS */;
-INSERT INTO `libro_compra` VALUES (8,1,6,'2026-06-06','factura','001-001','001-001-0000056',1,'Repuestos Central S.A.','80012345-6',0.00,85714.29,4285.71,2000000.00,200000.00,2290000.00,1,'2026-06-06 08:56:45');
+INSERT INTO `libro_compra` VALUES (8,1,6,'2026-06-06','factura','001-001','001-001-0000056',9001,'Repuestos Central S.A.','80012345-6',0.00,85714.29,4285.71,2000000.00,200000.00,2290000.00,1,'2026-06-06 08:56:45'),(9001,1,9001,'2026-02-20','factura','001-001','001-001-009001',9002,'Autopartes del Sur S.R.L.','80045678-1',0.00,0.00,0.00,2127272.73,212727.27,2340000.00,1,'2026-02-20 09:30:00'),(9002,1,9002,'2026-04-28','factura','001-001','001-001-009002',9001,'Repuestos Central S.A.','80012345-6',0.00,0.00,0.00,2836363.64,283636.36,3120000.00,1,'2026-04-28 10:00:00'),(9003,1,9003,'2026-05-16','factura','001-001','001-001-009003',9003,'Lubricantes Asuncion S.A.','80078912-3',0.00,0.00,0.00,890909.09,89090.91,980000.00,1,'2026-05-16 11:20:00'),(9004,1,9004,'2026-06-03','factura','001-001','001-001-009004',9002,'Autopartes del Sur S.R.L.','80045678-1',0.00,0.00,0.00,563636.36,56363.64,620000.00,0,'2026-06-03 08:45:00');
 /*!40000 ALTER TABLE `libro_compra` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -804,13 +842,15 @@ CREATE TABLE `movimientostock` (
   `MovStockPOS` varchar(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `MovStockUsuario` bigint NOT NULL,
   `MovStockSigno` smallint NOT NULL,
+  `MovStockSaldoAnterior` decimal(12,4) DEFAULT NULL,
+  `MovStockSaldoActual` decimal(12,4) DEFAULT NULL,
   `MovStockReferencia` varchar(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`MovStockId`),
   KEY `sucmovimientostock_FKIndex1` (`id_sucursal`),
   KEY `fk_mov_articulo` (`MovStockArticuloId`),
   CONSTRAINT `fk_mov_articulo` FOREIGN KEY (`MovStockArticuloId`) REFERENCES `articulos` (`id_articulo`),
   CONSTRAINT `fk_sucursalesSucmo` FOREIGN KEY (`id_sucursal`) REFERENCES `sucursales` (`id_sucursal`)
-) ENGINE=InnoDB AUTO_INCREMENT=87 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9010 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -819,7 +859,7 @@ CREATE TABLE `movimientostock` (
 
 LOCK TABLES `movimientostock` WRITE;
 /*!40000 ALTER TABLE `movimientostock` DISABLE KEYS */;
-INSERT INTO `movimientostock` VALUES (77,1,'AJUSTE_INV',4,10.0000,0.00,0.00,'2026-05-31 20:42:46',NULL,NULL,1,1,'AJUSTE #19'),(78,1,'REG. SERVICIO',4,2.0000,50000.00,0.00,'2026-05-31 21:46:00',NULL,NULL,1,-1,'REG_SERV #28'),(79,1,'AJUSTE_INV',33,10.0000,0.00,0.00,'2026-06-02 15:51:53',NULL,NULL,1,1,'AJUSTE #20'),(81,1,'REG. SERVICIO',4,1.0000,0.00,0.00,'2026-06-03 20:46:20',NULL,NULL,1,-1,'REG_SERV #30'),(82,1,'AJUSTE_INV',21,10.0000,0.00,0.00,'2026-06-03 21:12:20',NULL,NULL,1,1,'AJUSTE #21'),(83,1,'SALIDA INSUMO',21,1.0000,0.00,0.00,'2026-06-03 22:12:48',NULL,NULL,1,-1,'SAL_INS #9'),(84,1,'ANUL SALIDA INSUMO',21,1.0000,0.00,0.00,'2026-06-03 23:33:48',NULL,NULL,1,1,'ANUL_SAL_INS #9'),(85,1,'RECEPCION COMPRA',6,10.0000,0.00,220000.00,'2026-06-06 08:56:45','001-001-0000056',NULL,1,1,'6'),(86,1,'RECEPCION COMPRA',21,2.0000,0.00,45000.00,'2026-06-06 08:56:45','001-001-0000056',NULL,1,1,'6');
+INSERT INTO `movimientostock` VALUES (77,1,'AJUSTE_INV',4,10.0000,0.00,0.00,'2026-05-31 20:42:46',NULL,NULL,1,1,NULL,NULL,'AJUSTE #19'),(78,1,'REG. SERVICIO',4,2.0000,50000.00,0.00,'2026-05-31 21:46:00',NULL,NULL,1,-1,NULL,NULL,'REG_SERV #28'),(79,1,'AJUSTE_INV',33,10.0000,0.00,0.00,'2026-06-02 15:51:53',NULL,NULL,1,1,NULL,NULL,'AJUSTE #20'),(81,1,'REG. SERVICIO',4,1.0000,0.00,0.00,'2026-06-03 20:46:20',NULL,NULL,1,-1,NULL,NULL,'REG_SERV #30'),(82,1,'AJUSTE_INV',21,10.0000,0.00,0.00,'2026-06-03 21:12:20',NULL,NULL,1,1,NULL,NULL,'AJUSTE #21'),(83,1,'SALIDA INSUMO',21,1.0000,0.00,0.00,'2026-06-03 22:12:48',NULL,NULL,1,-1,NULL,NULL,'SAL_INS #9'),(84,1,'ANUL SALIDA INSUMO',21,1.0000,0.00,0.00,'2026-06-03 23:33:48',NULL,NULL,1,1,NULL,NULL,'ANUL_SAL_INS #9'),(85,1,'RECEPCION COMPRA',6,10.0000,0.00,220000.00,'2026-06-06 08:56:45','001-001-0000056',NULL,1,1,NULL,NULL,'6'),(86,1,'RECEPCION COMPRA',21,2.0000,0.00,45000.00,'2026-06-06 08:56:45','001-001-0000056',NULL,1,1,NULL,NULL,'6'),(9001,1,'RECEPCION COMPRA',2,8.0000,0.00,220000.00,'2026-02-20 09:30:00','001-001-009001',NULL,1,1,NULL,NULL,'COMPRA #9001'),(9002,1,'RECEPCION COMPRA',3,4.0000,0.00,145000.00,'2026-02-20 09:30:00','001-001-009001',NULL,1,1,NULL,NULL,'COMPRA #9001'),(9003,1,'TRANSFERENCIA ENVIO',2,6.0000,0.00,0.00,'2026-03-12 09:20:00',NULL,NULL,1,-1,NULL,NULL,'TRANSF #9002'),(9004,1,'REG. SERVICIO',3,2.0000,165000.00,0.00,'2026-05-22 17:10:00',NULL,NULL,1,-1,NULL,NULL,'REG_SERV #9002'),(9005,1,'REG. SERVICIO',6,2.0000,350000.00,0.00,'2026-06-06 20:43:35',NULL,NULL,1,-1,10.0000,8.0000,'REG_SERV #9004'),(9006,1,'REG. SERVICIO',4,2.0000,50000.00,0.00,'2026-06-06 20:43:35',NULL,NULL,1,-1,7.0000,5.0000,'REG_SERV #9004'),(9007,1,'SALIDA INSUMO',21,1.0000,0.00,45000.00,'2026-06-06 20:44:33',NULL,NULL,1,-1,12.0000,11.0000,'SAL_INS #10'),(9008,1,'ANUL SALIDA INSUMO',21,1.0000,0.00,45000.00,'2026-06-06 20:49:48',NULL,NULL,1,1,11.0000,12.0000,'ANUL_SAL_INS #10'),(9009,1,'AJUSTE_INV',33,2.0000,0.00,0.00,'2026-06-07 08:40:26',NULL,NULL,1,-1,10.0000,8.0000,'AJUSTE #22');
 /*!40000 ALTER TABLE `movimientostock` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1002,7 +1042,7 @@ CREATE TABLE `orden_compra` (
   CONSTRAINT `orden_compraPro` FOREIGN KEY (`idproveedores`) REFERENCES `proveedores` (`idproveedores`),
   CONSTRAINT `orden_compraSucu` FOREIGN KEY (`id_sucursal`) REFERENCES `sucursales` (`id_sucursal`),
   CONSTRAINT `orden_compraUsu` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9005 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1011,7 +1051,7 @@ CREATE TABLE `orden_compra` (
 
 LOCK TABLES `orden_compra` WRITE;
 /*!40000 ALTER TABLE `orden_compra` DISABLE KEYS */;
-INSERT INTO `orden_compra` VALUES (18,1,11,1,1,'2026-06-06',2,'2026-06-06',1,'2026-06-06 08:56:45');
+INSERT INTO `orden_compra` VALUES (18,1,11,9001,1,'2026-06-06',2,'2026-06-06',1,'2026-06-06 08:56:45'),(9001,1,9001,9001,1,'2026-01-10',1,'2026-01-18',NULL,NULL),(9002,1,9002,9002,1,'2026-02-14',2,'2026-02-20',1,'2026-02-20 09:30:00'),(9003,1,9003,9003,1,'2026-03-24',0,'2026-03-30',1,'2026-03-25 15:10:00'),(9004,1,9004,9001,1,'2026-04-22',2,'2026-04-28',1,'2026-04-28 10:00:00');
 /*!40000 ALTER TABLE `orden_compra` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1042,7 +1082,7 @@ CREATE TABLE `orden_compra_detalle` (
 
 LOCK TABLES `orden_compra_detalle` WRITE;
 /*!40000 ALTER TABLE `orden_compra_detalle` DISABLE KEYS */;
-INSERT INTO `orden_compra_detalle` VALUES (18,6,10,220000,0),(18,21,2,45000,0);
+INSERT INTO `orden_compra_detalle` VALUES (18,6,10,220000,0),(18,21,2,45000,0),(9001,2,5,180000,5),(9001,3,2,175000,2),(9002,2,8,220000,0),(9002,3,4,145000,0),(9003,3,3,150000,3),(9004,2,12,190000,0),(9004,3,6,140000,0);
 /*!40000 ALTER TABLE `orden_compra_detalle` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1084,7 +1124,7 @@ CREATE TABLE `orden_trabajo` (
   CONSTRAINT `fk_orden_trabajo_vehiculos1` FOREIGN KEY (`id_vehiculo`) REFERENCES `vehiculos` (`id_vehiculo`),
   CONSTRAINT `fk_prespuestoServicio` FOREIGN KEY (`idpresupuesto_servicio`) REFERENCES `presupuesto_servicio` (`idpresupuesto_servicio`),
   CONSTRAINT `fk_usuarios` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9005 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1093,7 +1133,7 @@ CREATE TABLE `orden_trabajo` (
 
 LOCK TABLES `orden_trabajo` WRITE;
 /*!40000 ALTER TABLE `orden_trabajo` DISABLE KEYS */;
-INSERT INTO `orden_trabajo` VALUES (27,1,6,18,1,11,17,1,'2026-05-31 21:45:22','2026-05-31 21:46:00',2,'cambio simple','2026-06-01 00:46:00',1,'2026-05-31 21:45:22','NORMAL',NULL),(28,NULL,NULL,NULL,1,11,17,1,'2026-06-01 20:53:22',NULL,0,NULL,'2026-06-01 23:54:35',1,'2026-06-01 20:53:22','RECLAMO',12),(29,NULL,NULL,NULL,1,11,17,1,'2026-06-01 20:54:46',NULL,0,NULL,'2026-06-01 23:54:52',1,'2026-06-01 20:54:46','RECLAMO',12),(30,1,6,NULL,1,11,17,1,'2026-06-01 20:56:26','2026-06-03 20:46:20',2,'asd','2026-06-03 23:46:20',1,'2026-06-01 20:56:26','RECLAMO',12),(31,1,6,21,1,19,18,1,'2026-06-02 22:01:11',NULL,0,'verificar y ajustar partes flojas en el motor','2026-06-03 01:11:51',1,'2026-06-02 22:01:11','NORMAL',NULL);
+INSERT INTO `orden_trabajo` VALUES (27,1,6,18,1,11,17,1,'2026-05-31 21:45:22','2026-05-31 21:46:00',2,'cambio simple','2026-06-01 00:46:00',1,'2026-05-31 21:45:22','NORMAL',NULL),(28,NULL,NULL,NULL,1,11,17,1,'2026-06-01 20:53:22',NULL,0,NULL,'2026-06-01 23:54:35',1,'2026-06-01 20:53:22','RECLAMO',12),(29,NULL,NULL,NULL,1,11,17,1,'2026-06-01 20:54:46',NULL,0,NULL,'2026-06-01 23:54:52',1,'2026-06-01 20:54:46','RECLAMO',12),(30,1,6,NULL,1,11,17,1,'2026-06-01 20:56:26','2026-06-03 20:46:20',2,'asd','2026-06-03 23:46:20',1,'2026-06-01 20:56:26','RECLAMO',12),(31,1,6,21,1,19,18,1,'2026-06-02 22:01:11',NULL,0,'verificar y ajustar partes flojas en el motor','2026-06-03 01:11:51',1,'2026-06-02 22:01:11','NORMAL',NULL),(9001,1,1,9001,1,1,17,1,'2026-02-05 08:00:00',NULL,1,'Pendiente de asignacion final de repuestos','2026-02-05 11:00:00',1,'2026-02-05 08:00:00','NORMAL',NULL),(9002,1,1,9002,1,1,17,1,'2026-03-12 08:00:00','2026-03-12 17:00:00',2,'Trabajo terminado y entregado','2026-03-12 20:00:00',1,'2026-03-12 08:00:00','NORMAL',NULL),(9003,1,1,9003,1,1,17,1,'2026-04-16 13:30:00',NULL,0,'Orden anulada por presupuesto rechazado','2026-04-16 18:00:00',1,'2026-04-16 13:30:00','NORMAL',NULL),(9004,1,7,9004,1,11,17,1,'2026-06-06 20:42:57','2026-06-06 20:43:35',2,'','2026-06-06 23:43:35',1,'2026-06-06 20:42:57','NORMAL',NULL);
 /*!40000 ALTER TABLE `orden_trabajo` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1116,7 +1156,7 @@ CREATE TABLE `orden_trabajo_detalle` (
   KEY `fk_orden_trabajo_detalle_articulos1_idx` (`id_articulo`),
   CONSTRAINT `fk_orden_trabajo_detalle_articulos1` FOREIGN KEY (`id_articulo`) REFERENCES `articulos` (`id_articulo`),
   CONSTRAINT `fk_orden_trabajo_detalle_orden_trabajo1` FOREIGN KEY (`idorden_trabajo`) REFERENCES `orden_trabajo` (`idorden_trabajo`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=71 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9013 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1125,7 +1165,7 @@ CREATE TABLE `orden_trabajo_detalle` (
 
 LOCK TABLES `orden_trabajo_detalle` WRITE;
 /*!40000 ALTER TABLE `orden_trabajo_detalle` DISABLE KEYS */;
-INSERT INTO `orden_trabajo_detalle` VALUES (63,1,80000.00,80000.00,27,37),(64,2,50000.00,100000.00,27,4),(66,1,50000.00,50000.00,31,36),(67,4,35000.00,140000.00,31,33),(68,1,80000.00,80000.00,31,37),(69,1,0.00,0.00,30,4),(70,1,0.00,0.00,30,37);
+INSERT INTO `orden_trabajo_detalle` VALUES (63,1,80000.00,80000.00,27,37),(64,2,50000.00,100000.00,27,4),(66,1,50000.00,50000.00,31,36),(67,4,35000.00,140000.00,31,33),(68,1,80000.00,80000.00,31,37),(69,1,0.00,0.00,30,4),(70,1,0.00,0.00,30,37),(9001,1,220000.00,220000.00,9001,2),(9002,2,180000.00,360000.00,9001,3),(9003,2,220000.00,440000.00,9002,2),(9004,2,160000.00,320000.00,9002,3),(9005,3,140000.00,420000.00,9003,3),(9006,1,150000.00,150000.00,9004,35),(9007,2,350000.00,700000.00,9004,6),(9008,1,80000.00,80000.00,9004,37),(9009,2,50000.00,100000.00,9004,4);
 /*!40000 ALTER TABLE `orden_trabajo_detalle` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1149,7 +1189,7 @@ CREATE TABLE `pedido_cabecera` (
   KEY `pedido_cabecera_FKIndex2` (`id_sucursal`),
   CONSTRAINT `fk_sucursalesPedCab` FOREIGN KEY (`id_sucursal`) REFERENCES `sucursales` (`id_sucursal`),
   CONSTRAINT `fk_usuarioPedCab` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9006 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1158,7 +1198,7 @@ CREATE TABLE `pedido_cabecera` (
 
 LOCK TABLES `pedido_cabecera` WRITE;
 /*!40000 ALTER TABLE `pedido_cabecera` DISABLE KEYS */;
-INSERT INTO `pedido_cabecera` VALUES (14,1,1,'2026-06-06 08:52:23',2,'2026-06-06 08:53:54','1');
+INSERT INTO `pedido_cabecera` VALUES (14,1,1,'2026-06-06 08:52:23',2,'2026-06-06 08:53:54','1'),(9001,1,1,'2026-01-08 09:10:00',0,'2026-06-07 15:03:06','1'),(9002,1,1,'2026-02-12 10:30:00',2,'2026-02-13 08:00:00','1'),(9003,1,1,'2026-03-20 14:05:00',0,'2026-03-21 11:00:00','1'),(9004,1,1,'2026-04-18 16:22:00',2,'2026-04-19 09:40:00','1'),(9005,2,7,'2026-06-07 15:40:52',0,'2026-06-07 15:43:16','7');
 /*!40000 ALTER TABLE `pedido_cabecera` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1188,7 +1228,7 @@ CREATE TABLE `pedido_detalle` (
 
 LOCK TABLES `pedido_detalle` WRITE;
 /*!40000 ALTER TABLE `pedido_detalle` DISABLE KEYS */;
-INSERT INTO `pedido_detalle` VALUES (14,6,10,0),(14,21,2,10);
+INSERT INTO `pedido_detalle` VALUES (14,6,10,0),(14,21,2,10),(9001,2,6,12),(9001,3,3,7),(9002,2,10,5),(9002,3,4,9),(9003,2,2,11),(9004,3,12,2),(9005,27,1,0);
 /*!40000 ALTER TABLE `pedido_detalle` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1243,7 +1283,7 @@ CREATE TABLE `presupuesto_compra` (
   CONSTRAINT `fk_proveedorPrC` FOREIGN KEY (`idproveedores`) REFERENCES `proveedores` (`idproveedores`),
   CONSTRAINT `fk_sucursalesPrc` FOREIGN KEY (`id_sucursal`) REFERENCES `sucursales` (`id_sucursal`),
   CONSTRAINT `fk_usuarioPrC` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9005 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1252,7 +1292,7 @@ CREATE TABLE `presupuesto_compra` (
 
 LOCK TABLES `presupuesto_compra` WRITE;
 /*!40000 ALTER TABLE `presupuesto_compra` DISABLE KEYS */;
-INSERT INTO `presupuesto_compra` VALUES (11,1,1,1,'2026-06-06',2,'2026-06-18',NULL,NULL,2290000.00,14);
+INSERT INTO `presupuesto_compra` VALUES (11,1,9001,1,'2026-06-06',2,'2026-06-18',NULL,NULL,2290000.00,14),(9001,1,9001,1,'2026-01-09',1,'2026-01-25',NULL,NULL,1250000.00,9001),(9002,1,9002,1,'2026-02-13',2,'2026-02-28',1,'2026-02-14 09:00:00',2340000.00,9002),(9003,1,9003,1,'2026-03-22',0,'2026-04-05',1,'2026-03-23 10:00:00',450000.00,9003),(9004,1,9001,1,'2026-04-20',2,'2026-05-05',1,'2026-04-21 08:30:00',3120000.00,9004);
 /*!40000 ALTER TABLE `presupuesto_compra` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1320,7 +1360,7 @@ CREATE TABLE `presupuesto_detalle` (
 
 LOCK TABLES `presupuesto_detalle` WRITE;
 /*!40000 ALTER TABLE `presupuesto_detalle` DISABLE KEYS */;
-INSERT INTO `presupuesto_detalle` VALUES (11,6,10.00,220000.00,2200000.00),(11,21,2.00,45000.00,90000.00);
+INSERT INTO `presupuesto_detalle` VALUES (11,6,10.00,220000.00,2200000.00),(11,21,2.00,45000.00,90000.00),(9001,2,5.00,180000.00,900000.00),(9001,3,2.00,175000.00,350000.00),(9002,2,8.00,220000.00,1760000.00),(9002,3,4.00,145000.00,580000.00),(9003,3,3.00,150000.00,450000.00),(9004,2,12.00,190000.00,2280000.00),(9004,3,6.00,140000.00,840000.00);
 /*!40000 ALTER TABLE `presupuesto_detalle` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1346,7 +1386,7 @@ CREATE TABLE `presupuesto_detalleservicio` (
   CONSTRAINT `fk_presupuesto_detalleservicio_articulos1` FOREIGN KEY (`id_articulo`) REFERENCES `articulos` (`id_articulo`),
   CONSTRAINT `fk_presupuesto_detalleservicio_diagnostico_detalle1` FOREIGN KEY (`id_diagnostico_detalle`) REFERENCES `diagnostico_detalle` (`id_diagnostico_detalle`) ON DELETE SET NULL,
   CONSTRAINT `fk_presupuesto_detalleservicio_presupuesto_servicio1` FOREIGN KEY (`idpresupuesto_servicio`) REFERENCES `presupuesto_servicio` (`idpresupuesto_servicio`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=44 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9010 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1355,7 +1395,7 @@ CREATE TABLE `presupuesto_detalleservicio` (
 
 LOCK TABLES `presupuesto_detalleservicio` WRITE;
 /*!40000 ALTER TABLE `presupuesto_detalleservicio` DISABLE KEYS */;
-INSERT INTO `presupuesto_detalleservicio` VALUES (36,18,37,NULL,1.00,80000.00,80000.00),(37,18,4,NULL,2.00,50000.00,100000.00),(38,19,37,NULL,1.00,80000.00,80000.00),(39,19,4,NULL,2.00,50000.00,100000.00),(40,20,35,NULL,1.00,150000.00,150000.00),(41,21,36,NULL,1.00,50000.00,50000.00),(42,21,33,NULL,4.00,35000.00,140000.00),(43,21,37,NULL,1.00,80000.00,80000.00);
+INSERT INTO `presupuesto_detalleservicio` VALUES (36,18,37,NULL,1.00,80000.00,80000.00),(37,18,4,NULL,2.00,50000.00,100000.00),(38,19,37,NULL,1.00,80000.00,80000.00),(39,19,4,NULL,2.00,50000.00,100000.00),(40,20,35,NULL,1.00,150000.00,150000.00),(41,21,36,NULL,1.00,50000.00,50000.00),(42,21,33,NULL,4.00,35000.00,140000.00),(43,21,37,NULL,1.00,80000.00,80000.00),(9001,9001,2,NULL,1.00,220000.00,220000.00),(9002,9001,3,NULL,2.00,180000.00,360000.00),(9003,9002,2,NULL,2.00,220000.00,440000.00),(9004,9002,3,NULL,2.00,160000.00,320000.00),(9005,9003,3,NULL,3.00,140000.00,420000.00),(9006,9004,35,NULL,1.00,150000.00,150000.00),(9007,9004,6,NULL,2.00,350000.00,700000.00),(9008,9004,37,NULL,1.00,80000.00,80000.00),(9009,9004,4,NULL,2.00,50000.00,100000.00);
 /*!40000 ALTER TABLE `presupuesto_detalleservicio` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1386,7 +1426,7 @@ CREATE TABLE `presupuesto_promocion` (
   CONSTRAINT `fk_prespromo_detalle` FOREIGN KEY (`id_detalle_presupuesto`) REFERENCES `presupuesto_detalleservicio` (`id_detalle_presupuesto`) ON DELETE CASCADE,
   CONSTRAINT `fk_prespromo_presupuesto` FOREIGN KEY (`idpresupuesto_servicio`) REFERENCES `presupuesto_servicio` (`idpresupuesto_servicio`),
   CONSTRAINT `fk_prespromo_promocion` FOREIGN KEY (`id_promocion`) REFERENCES `promociones` (`id_promocion`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1395,7 +1435,7 @@ CREATE TABLE `presupuesto_promocion` (
 
 LOCK TABLES `presupuesto_promocion` WRITE;
 /*!40000 ALTER TABLE `presupuesto_promocion` DISABLE KEYS */;
-INSERT INTO `presupuesto_promocion` VALUES (6,18,36,5,37,1.00,15000.00,15000.00,'2026-05-31 21:44:28'),(7,19,39,6,4,2.00,12500.00,25000.00,'2026-06-01 23:34:50');
+INSERT INTO `presupuesto_promocion` VALUES (6,18,36,5,37,1.00,15000.00,15000.00,'2026-05-31 21:44:28'),(7,19,39,6,4,2.00,12500.00,25000.00,'2026-06-01 23:34:50'),(8,9004,9009,6,4,2.00,12500.00,25000.00,'2026-06-06 20:42:25');
 /*!40000 ALTER TABLE `presupuesto_promocion` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1434,7 +1474,7 @@ CREATE TABLE `presupuesto_servicio` (
   CONSTRAINT `fk_presupuesto_servicio_vehiculos1` FOREIGN KEY (`id_vehiculo`) REFERENCES `vehiculos` (`id_vehiculo`),
   CONSTRAINT `fk_presupuesto_sucursal` FOREIGN KEY (`id_sucursal`) REFERENCES `sucursales` (`id_sucursal`),
   CONSTRAINT `fk_presupuesto_usuario` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9005 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1443,7 +1483,7 @@ CREATE TABLE `presupuesto_servicio` (
 
 LOCK TABLES `presupuesto_servicio` WRITE;
 /*!40000 ALTER TABLE `presupuesto_servicio` DISABLE KEYS */;
-INSERT INTO `presupuesto_servicio` VALUES (18,25,1,1,11,17,'2026-05-31',3,'2026-06-06',180000.00,16500.00,148500.00,'DIAGNOSTICO',NULL),(19,NULL,1,1,11,17,'2026-06-01',1,'2026-06-30',180000.00,37500.00,117500.00,'PRELIMINAR',NULL),(20,NULL,1,1,19,18,'2026-06-02',1,'2026-06-02',150000.00,0.00,150000.00,'PRELIMINAR',NULL),(21,28,1,1,19,18,'2026-06-02',2,'2026-06-02',270000.00,0.00,270000.00,'DIAGNOSTICO',NULL);
+INSERT INTO `presupuesto_servicio` VALUES (18,25,1,1,11,17,'2026-05-31',3,'2026-06-06',180000.00,16500.00,148500.00,'DIAGNOSTICO',NULL),(19,NULL,1,1,11,17,'2026-06-01',1,'2026-06-30',180000.00,37500.00,117500.00,'PRELIMINAR',NULL),(20,NULL,1,1,19,18,'2026-06-02',1,'2026-06-02',150000.00,0.00,150000.00,'PRELIMINAR',NULL),(21,28,1,1,19,18,'2026-06-02',2,'2026-06-02',270000.00,0.00,270000.00,'DIAGNOSTICO',NULL),(9001,NULL,1,1,1,17,'2026-02-04',1,'2026-02-15',580000.00,0.00,580000.00,'DIAGNOSTICO',NULL),(9002,NULL,1,1,1,17,'2026-03-11',4,'2026-03-25',760000.00,50000.00,710000.00,'DIAGNOSTICO',NULL),(9003,NULL,1,1,1,17,'2026-04-15',0,'2026-04-30',420000.00,0.00,420000.00,'DIAGNOSTICO',NULL),(9004,29,1,1,11,17,'2026-06-06',3,'2026-06-06',1030000.00,0.00,1005000.00,'DIAGNOSTICO',NULL);
 /*!40000 ALTER TABLE `presupuesto_servicio` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1536,7 +1576,7 @@ CREATE TABLE `proveedores` (
   PRIMARY KEY (`idproveedores`),
   KEY `proveedores_FKIndex1` (`id_ciudad`),
   CONSTRAINT `fk_ciudadesPro` FOREIGN KEY (`id_ciudad`) REFERENCES `ciudades` (`id_ciudad`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9004 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1545,7 +1585,7 @@ CREATE TABLE `proveedores` (
 
 LOCK TABLES `proveedores` WRITE;
 /*!40000 ALTER TABLE `proveedores` DISABLE KEYS */;
-INSERT INTO `proveedores` VALUES (1,1,'Repuestos Central S.A.','80012345-6','0981-123456','Av. Eusebio Ayala Km 5','ventas@repuestoscentral.com.py',1),(2,9,'Auto Partes Guaraní SRL','80023456-1','0982-234567','Av. Artigas 1234','contacto1@autopartesg.com.py',1),(3,1,'Importadora del Motor S.A.','80034567-8','0983-345678','Ruta Transchaco Km 10','info@importmotor.com.py',1),(4,1,'Lubricantes Paraguay SRL','80045678-9','0984-456789','Av. Madame Lynch 456','ventas@lubripar.com.py',1),(5,1,'Distribuidora del Automotor','80056789-0','0985-567890','Av. Mariscal López 789','contacto@distauto.com.py',1),(6,1,'Neumáticos del Sur S.A.','80067890-1','0986-678901','Av. Fernando de la Mora 321','ventas@neumaticosdelsur.com.py',1),(7,1,'Repuestos Japón Import','80078901-2','0981-789012','Barrio San Vicente','info@repuestosjapon.com.py',1),(8,1,'Casa del Filtro SRL','80089012-3','0982-890123','Av. Boggiani 654','ventas@casafiltro.com.py',1),(9,1,'MotorParts Paraguay','80090123-4','0983-901234','Zona Mercado 4','contacto@motorparts.com.py',1),(10,1,'Distribuidora Técnica Automotriz','80101234-5','0984-012345','Av. Defensores del Chaco 987','info@dta.com.py',1),(11,1,'Repuestos y Servicios del Este SRL','80123456-7','0985-112233','Av. Acceso Sur Km 12','ventas@repuestoseste.com.py',1),(13,197,'test','12345678','456789','asdads','asdasda@gmail.com',1);
+INSERT INTO `proveedores` VALUES (2,9,'Auto Partes Guaraní SRL','80023456-1','0982-234567','Av. Artigas 1234','contacto1@autopartesg.com.py',1),(3,1,'Importadora del Motor S.A.','80034567-8','0983-345678','Ruta Transchaco Km 10','info@importmotor.com.py',1),(4,1,'Lubricantes Paraguay SRL','80045678-9','0984-456789','Av. Madame Lynch 456','ventas@lubripar.com.py',1),(5,1,'Distribuidora del Automotor','80056789-0','0985-567890','Av. Mariscal López 789','contacto@distauto.com.py',1),(6,1,'Neumáticos del Sur S.A.','80067890-1','0986-678901','Av. Fernando de la Mora 321','ventas@neumaticosdelsur.com.py',1),(7,1,'Repuestos Japón Import','80078901-2','0981-789012','Barrio San Vicente','info@repuestosjapon.com.py',1),(8,1,'Casa del Filtro SRL','80089012-3','0982-890123','Av. Boggiani 654','ventas@casafiltro.com.py',1),(9,1,'MotorParts Paraguay','80090123-4','0983-901234','Zona Mercado 4','contacto@motorparts.com.py',1),(10,1,'Distribuidora Técnica Automotriz','80101234-5','0984-012345','Av. Defensores del Chaco 987','info@dta.com.py',1),(11,1,'Repuestos y Servicios del Este SRL','80123456-7','0985-112233','Av. Acceso Sur Km 12','ventas@repuestoseste.com.py',1),(9001,1,'Repuestos Central S.A.','80012345-6','021555100','Avda. Artigas 1540','ventas@repuestoscentral.com.py',0),(9002,1,'Autopartes del Sur S.R.L.','80045678-1','021555220','Ruta Acceso Sur Km 12','contacto@autopartesdelsur.com.py',1),(9003,1,'Lubricantes Asuncion S.A.','80078912-3','021555330','Avda. Eusebio Ayala 2990','pedidos@lubricantesasuncion.com.py',1);
 /*!40000 ALTER TABLE `proveedores` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1614,7 +1654,7 @@ CREATE TABLE `recepcion_servicio` (
   CONSTRAINT `fk_recepcion_sucursales1` FOREIGN KEY (`id_sucursal`) REFERENCES `sucursales` (`id_sucursal`),
   CONSTRAINT `fk_usuariosRS` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`),
   CONSTRAINT `fk_vehiculosRS` FOREIGN KEY (`id_vehiculo`) REFERENCES `vehiculos` (`id_vehiculo`)
-) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9004 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1623,7 +1663,7 @@ CREATE TABLE `recepcion_servicio` (
 
 LOCK TABLES `recepcion_servicio` WRITE;
 /*!40000 ALTER TABLE `recepcion_servicio` DISABLE KEYS */;
-INSERT INTO `recepcion_servicio` VALUES (21,1,17,11,'2026-05-31 21:41:39','2026-05-31 21:46:00','155000','1/2','sin_danos','','reparacion','frenos','normal','llave,herramientas,rueda_auxilio','cambio de pastillas de freno',3,'2026-05-31 21:41:39','2026-05-31 21:46:00',1,'NORMAL',NULL),(22,1,17,11,'2026-05-31 21:48:18','2026-06-03 20:46:20','155070','3/4','sin_danos','','garantia','motor','normal','llave,herramientas','reclamo por problemas en repuesto',3,'2026-05-31 21:48:18','2026-06-03 20:46:20',1,'RECLAMO',12),(23,1,18,19,'2026-06-02 16:51:18',NULL,'95000','1/4','sin_danos','','mantenimiento','motor','normal','llave,herramientas,rueda_auxilio','mantenimiento del motor, cambio de aceite etc',2,'2026-06-02 16:51:18','2026-06-02 16:53:05',1,'NORMAL',NULL),(24,1,17,11,'2026-06-06 08:44:34',NULL,'55000','1/2','rayones','','diagnostico','motor','normal','llave,herramientas','test',2,'2026-06-06 08:44:34','2026-06-06 08:46:01',1,'NORMAL',NULL);
+INSERT INTO `recepcion_servicio` VALUES (21,1,17,11,'2026-05-31 21:41:39','2026-05-31 21:46:00','155000','1/2','sin_danos','','reparacion','frenos','normal','llave,herramientas,rueda_auxilio','cambio de pastillas de freno',3,'2026-05-31 21:41:39','2026-05-31 21:46:00',1,'NORMAL',NULL),(22,1,17,11,'2026-05-31 21:48:18','2026-06-03 20:46:20','155070','3/4','sin_danos','','garantia','motor','normal','llave,herramientas','reclamo por problemas en repuesto',3,'2026-05-31 21:48:18','2026-06-03 20:46:20',1,'RECLAMO',12),(23,1,18,19,'2026-06-02 16:51:18',NULL,'95000','1/4','sin_danos','','mantenimiento','motor','normal','llave,herramientas,rueda_auxilio','mantenimiento del motor, cambio de aceite etc',2,'2026-06-02 16:51:18','2026-06-02 16:53:05',1,'NORMAL',NULL),(24,1,17,11,'2026-06-06 08:44:34','2026-06-06 20:43:35','55000','1/2','rayones','','diagnostico','motor','normal','llave,herramientas','test',3,'2026-06-06 08:44:34','2026-06-06 20:43:35',1,'NORMAL',NULL),(9001,1,17,1,'2026-02-03 08:15:00',NULL,'82000','1/2','sin_danos','','mantenimiento','motor','normal','llave,rueda_auxilio','Mantenimiento preventivo de 80.000 km',1,'2026-02-03 08:15:00',NULL,1,'NORMAL',NULL),(9002,1,17,1,'2026-03-10 10:40:00','2026-03-12 17:00:00','83500','3/4','rayones_leves','','reparacion','frenos','alta','llave','Ruido al frenar y vibracion',3,'2026-03-10 10:40:00','2026-03-12 17:00:00',1,'NORMAL',NULL),(9003,1,17,1,'2026-04-14 09:30:00',NULL,'84850','1/4','sin_danos','','diagnostico','suspension','normal','llave','Revision por golpe en tren delantero',2,'2026-04-14 09:30:00','2026-04-14 11:00:00',1,'NORMAL',NULL);
 /*!40000 ALTER TABLE `recepcion_servicio` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1733,7 +1773,7 @@ CREATE TABLE `registro_servicio` (
   CONSTRAINT `fk_registro_servicio_vehiculos1` FOREIGN KEY (`id_vehiculo`) REFERENCES `vehiculos` (`id_vehiculo`),
   CONSTRAINT `fk_registro_servicioordenTrabajo` FOREIGN KEY (`idorden_trabajo`) REFERENCES `orden_trabajo` (`idorden_trabajo`),
   CONSTRAINT `fk_registro_serviciousuarios` FOREIGN KEY (`usuario_registra`) REFERENCES `usuarios` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9005 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1742,7 +1782,7 @@ CREATE TABLE `registro_servicio` (
 
 LOCK TABLES `registro_servicio` WRITE;
 /*!40000 ALTER TABLE `registro_servicio` DISABLE KEYS */;
-INSERT INTO `registro_servicio` VALUES (28,27,17,11,1,'2026-05-31','2026-05-31 21:46:00',155001,1,3,'sin novedades en particular'),(30,30,17,11,1,'2026-06-03','2026-06-03 20:46:20',85000,1,3,'asd');
+INSERT INTO `registro_servicio` VALUES (28,27,17,11,1,'2026-05-31','2026-05-31 21:46:00',155001,1,3,'sin novedades en particular'),(30,30,17,11,1,'2026-06-03','2026-06-03 20:46:20',85000,1,3,'asd'),(9001,9002,17,1,1,'2026-03-12','2026-03-12 17:10:00',83600,1,1,'Servicio registrado y pendiente de facturacion'),(9002,9002,17,1,1,'2026-05-22','2026-05-22 17:10:00',85600,1,2,'Servicio facturado correctamente'),(9003,9002,17,1,1,'2026-06-01','2026-06-01 12:00:00',86100,1,3,'Cliente reporta reclamo por ruido residual'),(9004,9004,17,11,1,'2026-06-06','2026-06-06 20:43:35',55001,1,1,'finalizado el cambio');
 /*!40000 ALTER TABLE `registro_servicio` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1766,7 +1806,7 @@ CREATE TABLE `registro_servicio_detalle` (
   KEY `fk_registro_servicio_detalle_articulos1_idx` (`id_articulo`),
   CONSTRAINT `fk_registro_servicio_detalle_articulos1` FOREIGN KEY (`id_articulo`) REFERENCES `articulos` (`id_articulo`),
   CONSTRAINT `fk_registro_servicio_detalle_registro_servicio1` FOREIGN KEY (`idregistro_servicio`) REFERENCES `registro_servicio` (`idregistro_servicio`)
-) ENGINE=InnoDB AUTO_INCREMENT=74 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9013 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1775,112 +1815,8 @@ CREATE TABLE `registro_servicio_detalle` (
 
 LOCK TABLES `registro_servicio_detalle` WRITE;
 /*!40000 ALTER TABLE `registro_servicio_detalle` DISABLE KEYS */;
-INSERT INTO `registro_servicio_detalle` VALUES (65,1.00,80000.00,80000.00,'OT',28,37),(66,2.00,50000.00,100000.00,'OT',28,4),(71,1.00,0.00,0.00,'OT',30,4),(72,1.00,0.00,0.00,'OT',30,37);
+INSERT INTO `registro_servicio_detalle` VALUES (65,1.00,80000.00,80000.00,'OT',28,37),(66,2.00,50000.00,100000.00,'OT',28,4),(71,1.00,0.00,0.00,'OT',30,4),(72,1.00,0.00,0.00,'OT',30,37),(9001,2.00,220000.00,440000.00,'OT',9001,2),(9002,2.00,160000.00,320000.00,'OT',9001,3),(9003,1.00,220000.00,220000.00,'OT',9002,2),(9004,2.00,165000.00,330000.00,'OT',9002,3),(9005,1.00,150000.00,150000.00,'OT',9003,3),(9006,1.00,150000.00,150000.00,'OT',9004,35),(9007,2.00,350000.00,700000.00,'OT',9004,6),(9008,1.00,80000.00,80000.00,'OT',9004,37),(9009,2.00,50000.00,100000.00,'OT',9004,4);
 /*!40000 ALTER TABLE `registro_servicio_detalle` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `regla_comercial`
---
-
-DROP TABLE IF EXISTS `regla_comercial`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `regla_comercial` (
-  `id_regla` int unsigned NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(100) NOT NULL,
-  `descripcion` text,
-  `fecha_inicio` date NOT NULL,
-  `fecha_fin` date NOT NULL,
-  `id_sucursal` int unsigned DEFAULT NULL,
-  `prioridad` int NOT NULL DEFAULT '0',
-  `modo_competencia` varchar(30) NOT NULL DEFAULT 'COMPITE_MISMO_ALCANCE',
-  `estado` tinyint(1) NOT NULL DEFAULT '1',
-  `id_usuario_crea` int unsigned NOT NULL,
-  `id_usuario_modifica` int unsigned DEFAULT NULL,
-  `fecha_creacion` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `fecha_actualizacion` datetime DEFAULT NULL,
-  PRIMARY KEY (`id_regla`),
-  KEY `idx_regla_comercial_filtros` (`estado`,`fecha_inicio`,`fecha_fin`,`id_sucursal`),
-  KEY `fk_regla_comercial_sucursal_idx` (`id_sucursal`),
-  KEY `fk_regla_comercial_usuario_crea_idx` (`id_usuario_crea`),
-  KEY `fk_regla_comercial_usuario_modifica_idx` (`id_usuario_modifica`),
-  CONSTRAINT `fk_regla_comercial_sucursal` FOREIGN KEY (`id_sucursal`) REFERENCES `sucursales` (`id_sucursal`),
-  CONSTRAINT `fk_regla_comercial_usuario_crea` FOREIGN KEY (`id_usuario_crea`) REFERENCES `usuarios` (`id_usuario`),
-  CONSTRAINT `fk_regla_comercial_usuario_modifica` FOREIGN KEY (`id_usuario_modifica`) REFERENCES `usuarios` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `regla_comercial`
---
-
-LOCK TABLES `regla_comercial` WRITE;
-/*!40000 ALTER TABLE `regla_comercial` DISABLE KEYS */;
-/*!40000 ALTER TABLE `regla_comercial` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `regla_comercial_condicion`
---
-
-DROP TABLE IF EXISTS `regla_comercial_condicion`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `regla_comercial_condicion` (
-  `id_condicion` int unsigned NOT NULL AUTO_INCREMENT,
-  `id_regla` int unsigned NOT NULL,
-  `tipo_condicion` varchar(30) NOT NULL,
-  `operador` varchar(20) NOT NULL DEFAULT '=',
-  `valor_ref` int unsigned DEFAULT NULL,
-  `valor_texto` varchar(120) DEFAULT NULL,
-  PRIMARY KEY (`id_condicion`),
-  KEY `idx_regla_condicion_regla` (`id_regla`),
-  KEY `idx_regla_condicion_tipo` (`tipo_condicion`,`valor_ref`),
-  CONSTRAINT `fk_regla_condicion_regla` FOREIGN KEY (`id_regla`) REFERENCES `regla_comercial` (`id_regla`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `regla_comercial_condicion`
---
-
-LOCK TABLES `regla_comercial_condicion` WRITE;
-/*!40000 ALTER TABLE `regla_comercial_condicion` DISABLE KEYS */;
-/*!40000 ALTER TABLE `regla_comercial_condicion` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `regla_comercial_descuento`
---
-
-DROP TABLE IF EXISTS `regla_comercial_descuento`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `regla_comercial_descuento` (
-  `id_regla_descuento` int unsigned NOT NULL AUTO_INCREMENT,
-  `id_regla` int unsigned NOT NULL,
-  `nombre` varchar(100) NOT NULL,
-  `tipo` varchar(20) NOT NULL,
-  `valor` decimal(12,2) NOT NULL,
-  `cantidad_requerida` decimal(12,2) DEFAULT NULL,
-  `cantidad_cobrada` decimal(12,2) DEFAULT NULL,
-  `aplica_a` varchar(20) NOT NULL DEFAULT 'TOTAL',
-  `alcance_tipo` varchar(30) DEFAULT NULL,
-  `alcance_ref` int unsigned DEFAULT NULL,
-  PRIMARY KEY (`id_regla_descuento`),
-  KEY `idx_regla_descuento_regla` (`id_regla`),
-  CONSTRAINT `fk_regla_descuento_regla` FOREIGN KEY (`id_regla`) REFERENCES `regla_comercial` (`id_regla`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `regla_comercial_descuento`
---
-
-LOCK TABLES `regla_comercial_descuento` WRITE;
-/*!40000 ALTER TABLE `regla_comercial_descuento` DISABLE KEYS */;
-/*!40000 ALTER TABLE `regla_comercial_descuento` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -1907,7 +1843,7 @@ CREATE TABLE `rol_permiso` (
 
 LOCK TABLES `rol_permiso` WRITE;
 /*!40000 ALTER TABLE `rol_permiso` DISABLE KEYS */;
-INSERT INTO `rol_permiso` VALUES (1,1),(1,2),(1,7),(1,9),(1,11),(1,62),(1,171),(1,199),(7,1),(7,2),(7,3),(7,4),(7,5),(7,6),(7,7),(7,8),(7,9),(7,10),(7,11),(7,12),(7,13),(7,14),(7,15),(7,16),(7,17),(7,18),(7,19),(7,20),(7,21),(7,22),(7,23),(7,24),(7,25),(7,26),(7,27),(7,47),(7,48),(7,49),(7,50),(7,51),(7,52),(7,53),(7,54),(7,55),(7,56),(7,57),(7,58),(7,59),(7,60),(7,61),(7,62),(7,63),(7,64),(7,71),(7,120),(7,121),(7,122),(7,123),(7,124),(7,125),(7,126),(7,127),(7,128),(7,129),(7,130),(7,131),(7,160),(7,161),(7,162),(7,164),(7,165),(7,166),(7,167),(7,168),(7,169),(7,170),(7,171),(7,172),(7,173),(7,175),(7,176),(7,177),(7,178),(7,179),(7,180),(7,181),(7,182),(7,183),(7,184),(7,185),(7,186),(7,187),(7,188),(7,189),(7,190),(7,191),(7,192),(7,193),(7,194),(7,195),(7,196),(7,197),(7,198),(7,199),(7,200),(7,201),(7,202),(7,203),(7,204),(7,205),(7,206),(7,207),(7,208),(7,209),(7,210),(7,211),(7,215),(7,216),(7,217),(7,218),(7,219),(7,220),(7,221),(7,222),(7,223),(7,224),(7,225),(7,226),(7,227),(7,228),(7,230),(7,235),(7,236),(7,238),(7,239),(7,240),(7,241),(8,1),(8,2),(8,3),(8,4),(8,5),(8,6),(8,7),(8,8),(8,9),(8,10),(8,11),(8,12),(8,13),(8,14),(8,15),(8,16),(8,17),(8,18),(8,19),(8,20),(8,21),(8,22),(8,23),(8,24),(8,25),(8,26),(8,27),(8,47),(8,48),(8,49),(8,50),(8,51),(8,52),(8,53),(8,54),(8,55),(8,56),(8,57),(8,58),(8,59),(8,60),(8,61),(8,62),(8,63),(8,64),(8,71),(8,120),(8,121),(8,122),(8,123),(8,124),(8,125),(8,126),(8,127),(8,128),(8,129),(8,130),(8,131),(8,160),(8,161),(8,162),(9,1),(9,2),(9,3),(9,9),(9,11),(9,22),(9,23),(9,25),(9,26),(10,1),(10,2),(10,3),(10,4),(10,5),(10,6),(10,7),(10,8),(10,9),(10,10),(10,11),(10,14),(10,22),(10,23),(10,24),(10,25),(10,26),(10,27),(10,57),(10,60),(10,61),(10,62),(10,63),(10,64),(10,165),(10,166),(10,167),(10,179),(10,180),(10,181),(10,182),(10,183),(10,184),(10,195),(10,196),(10,197),(10,198),(10,199),(10,201),(10,202),(11,5),(11,6),(11,61),(11,64),(12,47),(12,50),(12,51),(12,52),(12,54),(12,120),(12,121),(12,126),(12,127),(12,128),(12,129),(12,130),(12,131),(12,168),(12,169),(12,193),(13,14),(13,20),(13,21),(13,47),(13,48),(13,49),(13,50),(13,51),(13,52),(13,53),(13,58),(13,120),(13,121),(13,122),(13,123),(13,124),(13,125),(13,126),(13,127),(13,128),(13,129),(13,130),(13,131),(13,160),(13,161),(13,162),(13,164),(13,168),(13,169),(13,170),(13,176),(13,177),(13,178),(13,188),(13,189),(13,190),(13,191),(13,192),(13,193),(13,194),(14,2),(14,11),(14,12),(14,16),(14,18),(14,20),(14,22),(14,25),(14,50),(14,51),(14,54),(14,56),(14,57),(14,58),(14,59);
+INSERT INTO `rol_permiso` VALUES (1,1),(1,2),(1,7),(1,9),(1,11),(1,62),(1,171),(1,199),(7,1),(7,2),(7,3),(7,4),(7,5),(7,6),(7,7),(7,8),(7,9),(7,10),(7,11),(7,12),(7,13),(7,14),(7,15),(7,16),(7,17),(7,18),(7,19),(7,20),(7,21),(7,22),(7,23),(7,24),(7,25),(7,26),(7,27),(7,47),(7,48),(7,49),(7,50),(7,51),(7,52),(7,53),(7,54),(7,55),(7,56),(7,57),(7,58),(7,59),(7,60),(7,61),(7,62),(7,63),(7,64),(7,71),(7,120),(7,121),(7,122),(7,123),(7,124),(7,125),(7,126),(7,127),(7,128),(7,129),(7,130),(7,131),(7,160),(7,161),(7,162),(7,164),(7,165),(7,166),(7,167),(7,168),(7,169),(7,170),(7,171),(7,172),(7,173),(7,175),(7,176),(7,177),(7,178),(7,179),(7,180),(7,181),(7,182),(7,183),(7,184),(7,185),(7,186),(7,187),(7,188),(7,189),(7,190),(7,191),(7,192),(7,193),(7,194),(7,195),(7,196),(7,197),(7,198),(7,199),(7,200),(7,201),(7,202),(7,203),(7,204),(7,205),(7,206),(7,207),(7,208),(7,209),(7,210),(7,211),(7,215),(7,216),(7,217),(7,218),(7,219),(7,220),(7,221),(7,222),(7,223),(7,224),(7,225),(7,226),(7,227),(7,228),(7,229),(7,230),(7,231),(7,232),(7,233),(7,234),(7,235),(7,236),(7,237),(7,238),(7,239),(7,240),(7,241),(8,1),(8,2),(8,3),(8,4),(8,5),(8,6),(8,7),(8,8),(8,9),(8,10),(8,11),(8,12),(8,13),(8,14),(8,15),(8,16),(8,17),(8,18),(8,19),(8,20),(8,21),(8,22),(8,23),(8,24),(8,25),(8,26),(8,27),(8,47),(8,48),(8,49),(8,50),(8,51),(8,52),(8,53),(8,54),(8,55),(8,56),(8,57),(8,58),(8,59),(8,60),(8,61),(8,62),(8,63),(8,64),(8,71),(8,120),(8,121),(8,122),(8,123),(8,124),(8,125),(8,126),(8,127),(8,128),(8,129),(8,130),(8,131),(8,160),(8,161),(8,162),(9,1),(9,2),(9,3),(9,9),(9,11),(9,22),(9,23),(9,25),(9,26),(10,1),(10,2),(10,3),(10,4),(10,5),(10,6),(10,7),(10,8),(10,9),(10,10),(10,11),(10,14),(10,22),(10,23),(10,24),(10,25),(10,26),(10,27),(10,57),(10,60),(10,61),(10,62),(10,63),(10,64),(10,165),(10,166),(10,167),(10,179),(10,180),(10,181),(10,182),(10,183),(10,184),(10,195),(10,196),(10,197),(10,198),(10,199),(10,201),(10,202),(11,5),(11,6),(11,61),(11,64),(12,12),(12,13),(12,14),(12,15),(12,22),(12,23),(12,24),(12,47),(12,50),(12,51),(12,52),(12,53),(12,54),(12,56),(12,59),(12,120),(12,121),(12,122),(12,123),(12,124),(12,125),(12,126),(12,127),(12,128),(12,129),(12,130),(12,131),(12,167),(12,168),(12,169),(12,171),(12,172),(12,173),(12,178),(12,179),(12,185),(12,186),(12,187),(12,188),(12,193),(12,199),(12,200),(12,201),(12,223),(12,224),(12,227),(12,229),(12,230),(13,14),(13,20),(13,21),(13,47),(13,48),(13,49),(13,50),(13,51),(13,52),(13,53),(13,58),(13,120),(13,121),(13,122),(13,123),(13,124),(13,125),(13,126),(13,127),(13,128),(13,129),(13,130),(13,131),(13,160),(13,161),(13,162),(13,164),(13,168),(13,169),(13,170),(13,176),(13,177),(13,178),(13,188),(13,189),(13,190),(13,191),(13,192),(13,193),(13,194),(14,2),(14,11),(14,12),(14,16),(14,18),(14,20),(14,22),(14,25),(14,50),(14,51),(14,54),(14,56),(14,57),(14,58),(14,59);
 /*!40000 ALTER TABLE `rol_permiso` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1959,7 +1895,7 @@ CREATE TABLE `salida_insumo` (
   CONSTRAINT `fk_salida_insumo_empleados1` FOREIGN KEY (`id_tecnico`) REFERENCES `empleados` (`idempleados`),
   CONSTRAINT `fk_salida_insumo_sucursales1` FOREIGN KEY (`id_sucursal`) REFERENCES `sucursales` (`id_sucursal`),
   CONSTRAINT `fk_salida_insumo_usuarios1` FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1968,7 +1904,7 @@ CREATE TABLE `salida_insumo` (
 
 LOCK TABLES `salida_insumo` WRITE;
 /*!40000 ALTER TABLE `salida_insumo` DISABLE KEYS */;
-INSERT INTO `salida_insumo` VALUES (9,1,1,'2026-06-03 22:12:48','test',0,1);
+INSERT INTO `salida_insumo` VALUES (9,1,1,'2026-06-03 22:12:48','test',0,1),(10,1,1,'2026-06-06 20:44:33','test',0,1);
 /*!40000 ALTER TABLE `salida_insumo` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1997,7 +1933,7 @@ CREATE TABLE `salida_insumo_detalle` (
 
 LOCK TABLES `salida_insumo_detalle` WRITE;
 /*!40000 ALTER TABLE `salida_insumo_detalle` DISABLE KEYS */;
-INSERT INTO `salida_insumo_detalle` VALUES (9,21,1.000);
+INSERT INTO `salida_insumo_detalle` VALUES (9,21,1.000),(10,21,1.000);
 /*!40000 ALTER TABLE `salida_insumo_detalle` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2031,7 +1967,7 @@ CREATE TABLE `stock` (
 
 LOCK TABLES `stock` WRITE;
 /*!40000 ALTER TABLE `stock` DISABLE KEYS */;
-INSERT INTO `stock` VALUES (4,1,200,15,7.0000,'2026-06-03 20:46:20',1,81),(6,1,200,15,10.0000,'2026-06-06 07:56:45',1,6),(21,1,200,15,12.0000,'2026-06-06 07:56:45',1,6),(33,1,200,15,10.0000,'2026-06-02 15:51:53',1,20);
+INSERT INTO `stock` VALUES (4,1,200,15,5.0000,'2026-06-06 20:43:35',1,9006),(6,1,200,15,8.0000,'2026-06-06 20:43:35',1,9005),(21,1,200,15,12.0000,'2026-06-06 20:49:48',1,9008),(33,1,200,15,8.0000,'2026-06-07 09:40:26',1,9009);
 /*!40000 ALTER TABLE `stock` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2174,7 +2110,7 @@ CREATE TABLE `transferencia_stock` (
   `idtransferencia_origen` int unsigned DEFAULT NULL,
   `fecha_actualizacion` datetime DEFAULT NULL,
   PRIMARY KEY (`idtransferencia`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9004 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2183,6 +2119,7 @@ CREATE TABLE `transferencia_stock` (
 
 LOCK TABLES `transferencia_stock` WRITE;
 /*!40000 ALTER TABLE `transferencia_stock` DISABLE KEYS */;
+INSERT INTO `transferencia_stock` VALUES (9001,1,2,'2026-02-25 14:00:00','en_transito','Reposicion preventiva de filtros',1,NULL,NULL,NULL),(9002,1,2,'2026-03-12 09:20:00','recibido','Transferencia completa para mostrador',1,1,NULL,'2026-03-13 08:10:00'),(9003,1,2,'2026-04-05 15:40:00','recibido_parcial','Recepcion parcial por diferencia de conteo',1,1,NULL,'2026-04-06 10:00:00');
 /*!40000 ALTER TABLE `transferencia_stock` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2212,6 +2149,7 @@ CREATE TABLE `transferencia_stock_detalle` (
 
 LOCK TABLES `transferencia_stock_detalle` WRITE;
 /*!40000 ALTER TABLE `transferencia_stock_detalle` DISABLE KEYS */;
+INSERT INTO `transferencia_stock_detalle` VALUES (9001,2,4.00,0.00),(9001,3,2.00,0.00),(9002,2,6.00,6.00),(9002,3,5.00,5.00),(9003,2,8.00,5.00),(9003,3,3.00,3.00);
 /*!40000 ALTER TABLE `transferencia_stock_detalle` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2264,7 +2202,7 @@ CREATE TABLE `usuario_rol` (
 
 LOCK TABLES `usuario_rol` WRITE;
 /*!40000 ALTER TABLE `usuario_rol` DISABLE KEYS */;
-INSERT INTO `usuario_rol` VALUES (1,7),(7,13),(10,7),(11,11),(12,13);
+INSERT INTO `usuario_rol` VALUES (1,7),(7,12),(10,7),(11,11),(12,13);
 /*!40000 ALTER TABLE `usuario_rol` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2358,4 +2296,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-06-06 13:58:41
+-- Dump completed on 2026-06-07 22:24:53

@@ -676,7 +676,7 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
                         $tabla .= '
                     <form class="FormularioAjax d-inline"
                         action="' . SERVERURL . 'ajax/presupuestoServicioAjax.php"
-                        method="POST" data-form="delete">
+                        method="POST" data-form="delete" data-anulacion="true" data-anulacion-titulo="Anular presupuesto de servicio">
                         <input type="hidden" name="accion" value="anular">
                         <input type="hidden" name="id" value="' . mainModel::encryption($rows['idpresupuesto_servicio']) . '">
                         <button class="btn btn-warning btn-sm">
@@ -788,8 +788,18 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
         }
 
         $id = mainModel::decryption($_POST['id']);
+        $motivo = trim(mainModel::limpiar_string($_POST['observacion_anulacion'] ?? ''));
 
-        $res = presupuestoServicioModelo::anular_presupuesto_modelo($id);
+        if ($motivo === '') {
+            return json_encode([
+                'Alerta' => 'simple',
+                'Titulo' => 'Motivo requerido',
+                'Texto' => 'Debe ingresar la observacion o motivo de anulacion',
+                'Tipo' => 'warning'
+            ]);
+        }
+
+        $res = presupuestoServicioModelo::anular_presupuesto_modelo($id, $_SESSION['id_str'], $motivo);
 
         if (isset($res['error'])) {
             return json_encode([

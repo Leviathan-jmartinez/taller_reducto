@@ -21,6 +21,7 @@ class ReporteMpdf
         ]);
 
         $mpdf->SetTitle($opciones['titulo'] ?? $archivo);
+        $mpdf->SetHTMLFooter(self::footer());
         if (($opciones['estilo_reporte'] ?? false) === true) {
             $html = self::aplicarFormatoReporte($html, $opciones);
         }
@@ -87,71 +88,71 @@ class ReporteMpdf
             <meta charset="UTF-8">
             <style>
                 body {
-                    color: #263238;
+                    color: #273142;
                     font-family: dejavusans, sans-serif;
                     font-size: 9px;
                 }
 
                 .header {
-                    background: #2f6f6f;
-                    color: #fff;
-                    margin-bottom: 10px;
+                    border-bottom: 2px solid #1f3a5f;
+                    margin-bottom: 12px;
                     width: 100%;
+                    border-collapse: collapse;
                 }
 
                 .logo {
-                    width: 72px;
+                    width: 68px;
                 }
 
                 .header td {
                     border: 0;
-                    color: #fff;
-                    padding: 8px;
+                    color: #273142;
+                    padding: 8px 6px;
                 }
 
                 .title {
-                    color: #fff;
-                    font-size: 18px;
+                    color: #1f3a5f;
+                    font-size: 16px;
                     font-weight: bold;
                     margin: 0;
                     text-transform: uppercase;
                 }
 
                 .subtitle {
-                    color: #fff;
-                    font-size: 10px;
+                    color: #5b6573;
+                    font-size: 9.5px;
                     margin-top: 2px;
                 }
 
                 .meta {
-                    color: #fff;
+                    color: #5b6573;
                     font-size: 8.5px;
                     text-align: right;
                 }
 
                 .panel {
-                    background: #f4f7f7;
-                    border: 1px solid #d6e0e0;
+                    background: #f7f9fb;
+                    border: 1px solid #d9dee5;
                     margin-bottom: 10px;
-                    padding: 6px;
+                    padding: 7px 8px;
                 }
 
                 .panel-title {
-                    color: #245f63;
+                    color: #1f3a5f;
                     font-size: 9px;
                     font-weight: bold;
-                    margin-bottom: 4px;
+                    margin-bottom: 5px;
                     text-transform: uppercase;
                 }
 
                 .filters td,
                 .summary td {
                     border: 0;
-                    padding: 2px 6px 2px 0;
+                    padding: 3px 10px 3px 0;
                 }
 
                 .label {
-                    color: #607d8b;
+                    color: #5b6573;
                     font-weight: bold;
                 }
 
@@ -161,22 +162,23 @@ class ReporteMpdf
                 }
 
                 table.data th {
-                    background: #2f6f6f;
-                    border: 1px solid #2f6f6f;
-                    color: #fff;
+                    background: #eef2f6;
+                    border: 1px solid #d9dee5;
+                    color: #1f3a5f;
                     font-size: 8.5px;
-                    padding: 5px 4px;
+                    font-weight: bold;
+                    padding: 6px 5px;
                     text-align: left;
                 }
 
                 table.data td {
-                    border: 1px solid #d8e0e0;
-                    padding: 4px;
+                    border: 1px solid #d9dee5;
+                    padding: 5px;
                     vertical-align: top;
                 }
 
                 table.data tbody tr:nth-child(even) td {
-                    background: #f8fbfb;
+                    background: #fafbfd;
                 }
 
                 .center {
@@ -188,7 +190,7 @@ class ReporteMpdf
                 }
 
                 .empty {
-                    color: #607d8b;
+                    color: #5b6573;
                     margin-top: 20px;
                     text-align: center;
                 }
@@ -295,7 +297,7 @@ class ReporteMpdf
 
     private static function footer(): string
     {
-        return '<table width="100%" style="border-top:1px solid #d6e0e0; color:#607d8b; font-size:8px; padding-top:4px;">
+        return '<table width="100%" style="border-top:1px solid #d9dee5; color:#5b6573; font-size:8px; padding-top:4px;">
             <tr>
                 <td>Documento generado por el sistema</td>
                 <td style="text-align:right;">Pagina {PAGENO} de {nbpg}</td>
@@ -317,6 +319,7 @@ class ReporteMpdf
 
         $html = preg_replace('/<div\s+class=["\']header["\'][\s\S]*?<\/div>\s*/i', '', $html, 1);
         $html = preg_replace('/<div\s+class=["\']info["\'][\s\S]*?<\/div>\s*/i', '', $html, 1);
+        $html = preg_replace('/<h[23][^>]*>[\s\S]*?<\/h[23]>\s*/i', '', $html, 1);
 
         $cabecera = self::cabeceraReporteHtml($titulo, $empresa, $usuario, $logo);
         $css = self::cssReportePedido();
@@ -346,6 +349,10 @@ class ReporteMpdf
             return trim(strip_tags($m[1]));
         }
 
+        if (preg_match('/<h3[^>]*>([\s\S]*?)<\/h3>/i', $html, $m)) {
+            return trim(strip_tags($m[1]));
+        }
+
         return 'REPORTE';
     }
 
@@ -358,12 +365,12 @@ class ReporteMpdf
         return '
             <table class="reporte-header">
                 <tr>
-                    <td width="20%" align="left" style="padding:8px;">' . $logoHtml . '</td>
-                    <td width="50%" align="center">
+                    <td width="18%" align="left" style="padding:6px 4px;">' . $logoHtml . '</td>
+                    <td width="52%" align="center">
                         <h2 style="margin:0;">' . self::e($titulo) . '</h2>
                         <div class="reporte-empresa">' . $empresa . '</div>
                     </td>
-                    <td width="30%" align="right" style="padding:8px; font-size:9px;">
+                    <td width="30%" align="right" style="padding:6px 4px; font-size:9px;">
                         <strong>Emitido por:</strong> ' . $usuario . '<br>
                         <strong>Fecha:</strong> ' . date('d/m/Y H:i') . '
                     </td>
@@ -379,32 +386,42 @@ class ReporteMpdf
                 body {
                     font-family: DejaVu Sans, sans-serif;
                     font-size: 10px;
-                    color: #333;
+                    color: #273142;
                 }
 
                 .reporte-header {
-                    background: #2f6f6f;
-                    color: #fff;
-                    margin-bottom: 10px;
+                    border-bottom: 2px solid #1f3a5f;
+                    margin-bottom: 12px;
                     width: 100%;
                     border-collapse: collapse;
                 }
 
                 .reporte-header td {
                     border: 0;
-                    color: #fff;
+                    color: #273142;
                 }
 
                 .reporte-header h2 {
-                    color: #fff;
-                    font-size: 17px;
+                    color: #1f3a5f;
+                    font-size: 16px;
                     letter-spacing: 0;
                     text-transform: uppercase;
                 }
 
                 .reporte-empresa {
                     font-size: 9px;
+                    color: #5b6573;
                     margin-top: 2px;
+                }
+
+                .report-intro {
+                    background: #f7f9fb;
+                    border: 1px solid #d9dee5;
+                    color: #4a5563;
+                    font-size: 9px;
+                    line-height: 1.5;
+                    margin: 0 0 10px 0;
+                    padding: 7px 8px;
                 }
 
                 table {
@@ -414,18 +431,18 @@ class ReporteMpdf
 
                 th,
                 td {
-                    border: 1px solid #ddd;
+                    border: 1px solid #d9dee5;
                     padding: 5px;
                 }
 
                 th {
-                    background: #2f6f6f;
-                    color: #fff;
+                    background: #eef2f6;
+                    color: #1f3a5f;
                     font-weight: bold;
                 }
 
                 tbody tr:nth-child(even) td {
-                    background: #f7fafa;
+                    background: #fafbfd;
                 }
 
                 .text-center,

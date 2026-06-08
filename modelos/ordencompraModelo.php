@@ -261,6 +261,18 @@ class ordencompraModelo extends mainModel
                 $actualizar_presupuesto->execute();
             }
 
+            mainModel::registrar_anulacion_auditoria_modelo($conexion, [
+                'modulo' => 'orden_compra',
+                'tabla_afectada' => 'orden_compra',
+                'id_registro' => $datos['idorden_compra'],
+                'id_sucursal' => $datos['idsucursal'],
+                'estado_anterior' => '1',
+                'estado_nuevo' => '0',
+                'motivo' => $datos['motivo'] ?? '',
+                'usuario_anula' => $datos['updatedby'],
+                'referencia' => 'ORDEN_COMPRA #' . $datos['idorden_compra']
+            ]);
+
             $conexion->commit();
             return $sql;
         } catch (Exception $e) {

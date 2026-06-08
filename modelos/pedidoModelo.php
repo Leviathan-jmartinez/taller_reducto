@@ -53,14 +53,52 @@ class pedidoModelo extends mainModel
     /**modelo anular pedido */
     protected static function anular_pedido_modelo($datos)
     {
-        $sql = mainModel::conectar()->prepare("UPDATE pedido_cabecera
-        SET estado=0, updatedby=:updatedby, updated=now()
-        WHERE idpedido_cabecera=:idpedido_cabecera and id_sucursal = :sucursal");
-        $sql->bindParam(":updatedby", $datos['updatedby']);
-        $sql->bindParam(":idpedido_cabecera", $datos['idpedido_cabecera']);
-        $sql->bindParam(":sucursal", $datos['sucursal']);
-        $sql->execute();
-        return $sql;
+        $conexion = $datos['conexion'] ?? mainModel::conectar();
+        $propia = !isset($datos['conexion']);
+
+        try {
+            if ($propia) {
+                $conexion->beginTransaction();
+            }
+
+            $sql = $conexion->prepare("UPDATE pedido_cabecera
+            SET estado=0, updatedby=:updatedby, updated=now()
+            WHERE idpedido_cabecera=:idpedido_cabecera and id_sucursal = :sucursal");
+            $sql->bindParam(":updatedby", $datos['updatedby']);
+            $sql->bindParam(":idpedido_cabecera", $datos['idpedido_cabecera']);
+            $sql->bindParam(":sucursal", $datos['sucursal']);
+            $sql->execute();
+
+            if ($sql->rowCount() <= 0) {
+                if ($propia && $conexion->inTransaction()) {
+                    $conexion->rollBack();
+                }
+                return false;
+            }
+
+            mainModel::registrar_anulacion_auditoria_modelo($conexion, [
+                'modulo' => 'pedido_compra',
+                'tabla_afectada' => 'pedido_cabecera',
+                'id_registro' => $datos['idpedido_cabecera'],
+                'id_sucursal' => $datos['sucursal'],
+                'estado_anterior' => '1',
+                'estado_nuevo' => '0',
+                'motivo' => $datos['motivo'] ?? '',
+                'usuario_anula' => $datos['updatedby'],
+                'referencia' => 'PEDIDO #' . $datos['idpedido_cabecera']
+            ]);
+
+            if ($propia) {
+                $conexion->commit();
+            }
+
+            return true;
+        } catch (Exception $e) {
+            if ($propia && $conexion->inTransaction()) {
+                $conexion->rollBack();
+            }
+            throw $e;
+        }
     }
     /**fin modelo */
 

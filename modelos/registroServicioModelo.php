@@ -590,6 +590,18 @@ class registroServicioModelo extends mainModel
                 $updReclamo->execute([$origen['idreclamo_servicio']]);
             }
 
+            mainModel::registrar_anulacion_auditoria_modelo($pdo, [
+                'modulo' => 'registro_servicio',
+                'tabla_afectada' => 'registro_servicio',
+                'id_registro' => $datos['idregistro_servicio'],
+                'id_sucursal' => $datos['id_sucursal'],
+                'estado_anterior' => (string)($reg['estado'] ?? '1'),
+                'estado_nuevo' => '0',
+                'motivo' => $datos['motivo'] ?? '',
+                'usuario_anula' => $datos['usuario'],
+                'referencia' => 'REGISTRO_SERVICIO #' . $datos['idregistro_servicio']
+            ]);
+
 
             $pdo->commit();
             return true;

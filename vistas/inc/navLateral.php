@@ -141,49 +141,49 @@ $menuLateral = [
             [
                 'titulo' => 'Pedidos',
                 'icono' => 'fas fa-file-alt',
-                'href' => 'pedido-nuevo/',
+                'href' => 'pedido-lista/',
                 'vistas' => ['pedido-nuevo', 'pedido-lista', 'pedido-buscar'],
                 'permiso' => 'compra.pedido.ver'
             ],
             [
                 'titulo' => 'Presupuestos',
                 'icono' => 'fas fa-file-invoice-dollar',
-                'href' => 'presupuesto-nuevo/',
+                'href' => 'presupuesto-lista/',
                 'vistas' => ['presupuesto-nuevo', 'presupuesto-lista', 'presupuesto-buscar'],
                 'permiso' => 'compra.presupuesto.ver'
             ],
             [
                 'titulo' => 'Ordenes de Compra',
                 'icono' => 'fas fa-file-invoice',
-                'href' => 'oc-nuevo/',
+                'href' => 'oc-buscar/',
                 'vistas' => ['oc-nuevo', 'oc-lista', 'oc-buscar'],
                 'permiso' => 'compra.oc.ver'
             ],
             [
                 'titulo' => 'Ingreso de Facturas',
                 'icono' => 'fas fa-shopping-cart',
-                'href' => 'factura-nuevo/',
+                'href' => 'factura-buscar/',
                 'vistas' => ['factura-nuevo', 'factura-lista', 'factura-buscar'],
                 'permiso' => 'compra.factura.ver'
             ],
             [
                 'titulo' => 'Remisiones',
                 'icono' => 'fas fa-box',
-                'href' => 'remision-nuevo/',
+                'href' => 'remision-buscar/',
                 'vistas' => ['remision-nuevo', 'remision-buscar'],
                 'permiso' => 'compra.remision.ver'
             ],
             [
                 'titulo' => 'Notas de Credito y Debito',
                 'icono' => 'fas fa-file-alt',
-                'href' => 'notasCreDe-nuevo/',
+                'href' => 'notasCreDe-buscar/',
                 'vistas' => ['notasCreDe-nuevo', 'notasCreDe-buscar'],
                 'permiso' => 'compra.nota.ver'
             ],
             [
                 'titulo' => 'Transferencias',
                 'icono' => 'fas fa-exchange-alt',
-                'href' => 'transferencia-nuevo/',
+                'href' => 'transferencia-historial/',
                 'vistas' => ['transferencia-nuevo', 'transferencia-historial', 'transferencia-recibir'],
                 'permiso' => 'compra.transferencia.ver'
             ],
@@ -204,72 +204,72 @@ $menuLateral = [
             [
                 'titulo' => 'Solicitud de Servicios',
                 'icono' => 'fas fa-file-signature',
-                'href' => 'recepcionServicio-nuevo/',
+                'href' => 'recepcionServicio-buscar/',
                 'vistas' => ['recepcionServicio-nuevo', 'recepcionServicio-buscar'],
                 'permiso' => 'servicio.recepcion.ver'
             ],
             [
                 'titulo' => 'Diagnostico',
                 'icono' => 'fas fa-stethoscope',
-                'href' => 'diagnostico-servicio-nuevo/',
+                'href' => 'diagnostico-servicio-buscar/',
                 'vistas' => ['diagnostico-servicio-nuevo', 'diagnostico-servicio-buscar'],
                 'permiso' => 'servicio.diagnostico.ver'
             ],
             [
                 'titulo' => 'Promociones',
                 'icono' => 'fas fa-tags',
-                'href' => 'promocion-nuevo/',
+                'href' => 'promocion-lista/',
                 'vistas' => ['promocion-nuevo', 'promocion-lista'],
                 'permiso' => 'servicio.promocion.ver'
             ],
             [
                 'titulo' => 'Descuentos',
                 'icono' => 'fas fa-percent',
-                'href' => 'descuento-nuevo/',
+                'href' => 'descuento-lista/',
                 'vistas' => ['descuento-nuevo', 'descuento-lista'],
                 'permiso' => 'servicio.descuento.ver'
             ],
             [
                 'titulo' => 'Reglas Comerciales',
                 'icono' => 'fas fa-project-diagram',
-                'href' => 'regla-comercial-nuevo/',
+                'href' => 'regla-comercial-lista/',
                 'vistas' => ['regla-comercial-nuevo', 'regla-comercial-lista'],
                 'permiso' => 'servicio.regla_comercial.ver'
             ],
             [
                 'titulo' => 'Presupuesto de Trabajo',
                 'icono' => 'fas fa-file-invoice-dollar',
-                'href' => 'presupuesto-servicio-nuevo/',
+                'href' => 'presupuesto-servicio-buscar/',
                 'vistas' => ['presupuesto-servicio-nuevo', 'presupuesto-servicio-lista', 'presupuesto-servicio-buscar'],
                 'permiso' => 'servicio.presupuesto.ver'
             ],
             [
                 'titulo' => 'Ordenes de Trabajo',
                 'icono' => 'fas fa-clipboard-check',
-                'href' => 'ordenTrabajo-nuevo/',
+                'href' => 'ordenTrabajo-lista/',
                 'vistas' => ['ordenTrabajo-nuevo', 'ordenTrabajo-lista', 'ordenTrabajo-asignar', 'ordenTrabajo-buscar'],
                 'permiso' => 'servicio.ot.ver'
             ],
             [
                 'titulo' => 'Registro de Servicios',
                 'icono' => 'fas fa-cogs',
-                'href' => 'registro-servicio-nuevo/',
+                'href' => 'registro-servicio-buscar/',
                 'vistas' => ['registro-servicio-nuevo', 'registro-servicio-lista', 'registro-servicio-buscar'],
                 'permiso' => 'servicio.registro.ver'
             ],
             [
                 'titulo' => 'Reclamos',
                 'icono' => 'fas fa-exclamation-circle',
-                'href' => 'reclamo-servicio-nuevo/',
+                'href' => 'reclamo-servicio-lista/',
                 'vistas' => ['reclamo-servicio-nuevo', 'reclamo-servicio-lista'],
                 'permiso' => 'servicio.reclamo.ver'
             ],
             [
                 'titulo' => 'Registro de Insumos',
                 'icono' => 'fas fa-boxes',
-                'href' => 'registro-insumos/',
-                'vistas' => ['registro-insumos'],
-                'permiso' => 'servicio.insumo.crear'
+                'href' => 'registro-insumos-buscar/',
+                'vistas' => ['registro-insumos', 'registro-insumos-buscar'],
+                'permiso' => ['servicio.insumo.ver', 'servicio.insumo.crear']
             ]
         ]
     ],
@@ -309,12 +309,12 @@ $menuLateral = [
             [
                 'titulo' => 'Servicios',
                 'icono' => 'fas fa-tools',
-                'permiso' => ['servicio.ver', 'equipo.crear', 'equipo.editar'],
+                'permiso' => ['servicio.ver'],
                 'items' => [
                     [
                         'titulo' => 'Clientes',
                         'icono' => 'fas fa-users',
-                        'href' => 'cliente-nuevo/',
+                        'href' => 'cliente-lista/',
                         'vistas' => ['cliente-nuevo', 'cliente-lista', 'cliente-actualizar', 'cliente-buscar'],
                         'permiso' => 'cliente.ver'
                     ],
@@ -328,7 +328,7 @@ $menuLateral = [
                     [
                         'titulo' => 'Empleados',
                         'icono' => 'fas fa-user',
-                        'href' => 'empleado-nuevo/',
+                        'href' => 'empleado-lista/',
                         'vistas' => ['empleado-nuevo', 'empleado-lista', 'empleado-actualizar', 'empleado-buscar'],
                         'permiso' => 'empleado.ver'
                     ],

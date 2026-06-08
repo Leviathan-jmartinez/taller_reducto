@@ -108,6 +108,18 @@ class presupuestoModelo extends mainModel
                 $sql_pedido->execute();
             }
 
+            mainModel::registrar_anulacion_auditoria_modelo($conexion, [
+                'modulo' => 'presupuesto_compra',
+                'tabla_afectada' => 'presupuesto_compra',
+                'id_registro' => $datos['idpresupuesto_compra'],
+                'id_sucursal' => $datos['sucursal'],
+                'estado_anterior' => '1',
+                'estado_nuevo' => '0',
+                'motivo' => $datos['motivo'] ?? '',
+                'usuario_anula' => $datos['updatedby'],
+                'referencia' => 'PRESUPUESTO_COMPRA #' . $datos['idpresupuesto_compra']
+            ]);
+
             $conexion->commit();
             return $sql;
         } catch (Exception $e) {

@@ -30,22 +30,21 @@ if (!$tieneAccesoMovimientos) {
 require_once "./controladores/reportesControlador.php";
 $repMov = new reporteControlador();
 $sucursalesMov = $repMov->listar_sucursales_controlador();
-$proveedoresMov = $repMov->listar_proveedores_controlador();
 
 $tiposMovimientos = [
-    'pedidos' => ['titulo' => 'Pedidos de Compra', 'permiso' => 'reportes.pedidos.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false],
-    'presupuestos_compra' => ['titulo' => 'Presupuestos de Compra', 'permiso' => 'reportes.presupuestos_compra.ver', 'proveedor' => true, 'cliente' => false, 'articulo' => true, 'empleado' => false],
-    'ordenes_compra' => ['titulo' => 'Ordenes de Compra', 'permiso' => 'reportes.ordenes_compra.ver', 'proveedor' => true, 'cliente' => false, 'articulo' => true, 'empleado' => false],
-    'compras' => ['titulo' => 'Compras', 'permiso' => 'reportes.compras.ver', 'proveedor' => true, 'cliente' => false, 'articulo' => true, 'empleado' => false],
-    'libro_compras' => ['titulo' => 'Libro de Compras', 'permiso' => 'reportes.libro_compras.ver', 'proveedor' => true, 'cliente' => false, 'articulo' => false, 'empleado' => false],
-    'stock' => ['titulo' => 'Stock', 'permiso' => 'reportes.stock.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false],
-    'transferencias' => ['titulo' => 'Transferencias', 'permiso' => 'reportes.transferencias.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false],
-    'movimientos_stock' => ['titulo' => 'Movimientos de Stock', 'permiso' => 'reportes.movimientos_stock.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'stock_filtros' => true],
-    'kardex_articulo' => ['titulo' => 'Kardex de Articulo', 'permiso' => 'reportes.movimientos_stock.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'stock_filtros' => true, 'requiere_sucursal' => true, 'requiere_articulo' => true],
-    'recepcion_servicio' => ['titulo' => 'Recepcion de Servicios', 'permiso' => 'reportes.recepcion_servicio.ver', 'proveedor' => false, 'cliente' => true, 'articulo' => false, 'empleado' => false],
-    'presupuesto_servicio' => ['titulo' => 'Presupuestos de Servicios', 'permiso' => 'reportes.presupuesto_servicio.ver', 'proveedor' => false, 'cliente' => true, 'articulo' => true, 'empleado' => false],
-    'orden_trabajo' => ['titulo' => 'Ordenes de Trabajo', 'permiso' => 'reportes.orden_trabajo.ver', 'proveedor' => false, 'cliente' => true, 'articulo' => true, 'empleado' => false],
-    'registro_servicio' => ['titulo' => 'Registro de Servicios', 'permiso' => 'reportes.registro_servicio.ver', 'proveedor' => false, 'cliente' => true, 'articulo' => true, 'empleado' => true]
+    'pedidos' => ['titulo' => 'Pedidos de Compra', 'permiso' => 'reportes.pedidos.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'sucursal' => true],
+    'presupuestos_compra' => ['titulo' => 'Presupuestos de Compra', 'permiso' => 'reportes.presupuestos_compra.ver', 'proveedor' => true, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'sucursal' => true],
+    'ordenes_compra' => ['titulo' => 'Ordenes de Compra', 'permiso' => 'reportes.ordenes_compra.ver', 'proveedor' => true, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'sucursal' => true],
+    'compras' => ['titulo' => 'Compras', 'permiso' => 'reportes.compras.ver', 'proveedor' => true, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'sucursal' => true],
+    'libro_compras' => ['titulo' => 'Libro de Compras', 'permiso' => 'reportes.libro_compras.ver', 'proveedor' => true, 'cliente' => false, 'articulo' => false, 'empleado' => false, 'vista' => false, 'fecha' => true, 'estado' => true, 'sucursal' => true],
+    'stock' => ['titulo' => 'Stock', 'permiso' => 'reportes.stock.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => false, 'fecha' => false, 'estado' => true, 'sucursal' => true],
+    'transferencias' => ['titulo' => 'Transferencias', 'permiso' => 'reportes.transferencias.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => false, 'fecha' => true, 'estado' => true, 'sucursal' => true],
+    'movimientos_stock' => ['titulo' => 'Movimientos de Stock', 'permiso' => 'reportes.movimientos_stock.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'stock_filtros' => true, 'vista' => false, 'fecha' => true, 'estado' => false, 'sucursal' => true],
+    'kardex_articulo' => ['titulo' => 'Kardex de Articulo', 'permiso' => 'reportes.movimientos_stock.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'stock_filtros' => true, 'requiere_sucursal' => true, 'requiere_articulo' => true, 'vista' => false, 'fecha' => true, 'estado' => false, 'sucursal' => true],
+    'recepcion_servicio' => ['titulo' => 'Recepcion de Servicios', 'permiso' => 'reportes.recepcion_servicio.ver', 'proveedor' => false, 'cliente' => true, 'articulo' => false, 'empleado' => false, 'vista' => false, 'fecha' => true, 'estado' => true, 'sucursal' => true],
+    'presupuesto_servicio' => ['titulo' => 'Presupuestos de Servicios', 'permiso' => 'reportes.presupuesto_servicio.ver', 'proveedor' => false, 'cliente' => true, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'sucursal' => true],
+    'orden_trabajo' => ['titulo' => 'Ordenes de Trabajo', 'permiso' => 'reportes.orden_trabajo.ver', 'proveedor' => false, 'cliente' => true, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'sucursal' => true],
+    'registro_servicio' => ['titulo' => 'Registro de Servicios', 'permiso' => 'reportes.registro_servicio.ver', 'proveedor' => false, 'cliente' => true, 'articulo' => true, 'empleado' => true, 'vista' => true, 'fecha' => true, 'estado' => true, 'sucursal' => true]
 ];
 
 $tiposMovVisibles = [];
@@ -79,17 +78,25 @@ foreach ($tiposMovimientos as $clave => $tipo) {
                     </select>
                 </div>
 
-                <div class="col-md-2">
+                <div class="col-md-2" id="grupoVistaMovimiento">
+                    <label>Vista</label>
+                    <select name="vista_movimiento" class="form-control">
+                        <option value="resumen" selected>Resumen</option>
+                        <option value="detalle">Detallado</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2" id="grupoDesdeMovimiento">
                     <label>Desde</label>
                     <input type="date" name="desde" class="form-control">
                 </div>
 
-                <div class="col-md-2">
+                <div class="col-md-2" id="grupoHastaMovimiento">
                     <label>Hasta</label>
                     <input type="date" name="hasta" class="form-control">
                 </div>
 
-                <div class="col-md-2">
+                <div class="col-md-2" id="grupoEstadoMovimiento">
                     <label>Estado</label>
                     <select name="estado" class="form-control">
                         <option value="">Todos</option>
@@ -103,7 +110,7 @@ foreach ($tiposMovimientos as $clave => $tipo) {
                     </select>
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-3" id="grupoSucursalMovimiento">
                     <label>Sucursal</label>
                     <select name="sucursal" class="form-control">
                         <option value="">Todas</option>
@@ -119,11 +126,6 @@ foreach ($tiposMovimientos as $clave => $tipo) {
                     <label>Proveedor</label>
                     <select name="proveedor" class="form-control">
                         <option value="">Todos</option>
-                        <?php foreach ($proveedoresMov as $proveedor): ?>
-                            <option value="<?= (int)$proveedor['idproveedores'] ?>">
-                                <?= htmlspecialchars($proveedor['razon_social'], ENT_QUOTES, 'UTF-8') ?>
-                            </option>
-                        <?php endforeach; ?>
                     </select>
                 </div>
 
@@ -208,6 +210,36 @@ foreach ($tiposMovimientos as $clave => $tipo) {
 
     <div id="resumenMovimientos" class="row mt-3 d-none"></div>
 
+    <div id="kardexArticuloMeta" class="card mt-3 d-none">
+        <div class="card-body py-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-start">
+                <div class="mb-2">
+                    <small class="text-muted d-block">Articulo</small>
+                    <h5 class="mb-1" id="kardexArticuloTitulo">-</h5>
+                    <small class="text-muted" id="kardexArticuloPeriodo">-</small>
+                </div>
+                <div class="kardex-metricas">
+                    <div>
+                        <small>Saldo inicial</small>
+                        <strong id="kardexSaldoInicial">0</strong>
+                    </div>
+                    <div>
+                        <small>Entradas</small>
+                        <strong id="kardexEntradas">0</strong>
+                    </div>
+                    <div>
+                        <small>Salidas</small>
+                        <strong id="kardexSalidas">0</strong>
+                    </div>
+                    <div>
+                        <small>Saldo final</small>
+                        <strong id="kardexSaldoFinal">0</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="panelGraficosMovimientos" class="row mt-3 d-none">
         <div class="col-xl-4 col-lg-6 col-12 mb-3">
             <div class="card movimiento-grafico-card">
@@ -260,6 +292,7 @@ foreach ($tiposMovimientos as $clave => $tipo) {
 <form id="formPdfMovimientos" action="<?= SERVERURL ?>ajax/reportesAjax.php" method="POST" target="_blank" class="d-none">
     <input type="hidden" name="accion" value="imprimir_reporte_movimientos_unificado">
     <input type="hidden" name="tipo_movimiento">
+    <input type="hidden" name="vista_movimiento">
     <input type="hidden" name="desde">
     <input type="hidden" name="hasta">
     <input type="hidden" name="estado">
@@ -275,6 +308,7 @@ foreach ($tiposMovimientos as $clave => $tipo) {
 <form id="formCsvMovimientos" action="<?= SERVERURL ?>ajax/reportesAjax.php" method="POST" target="_blank" class="d-none">
     <input type="hidden" name="accion" value="exportar_reporte_movimientos_csv">
     <input type="hidden" name="tipo_movimiento">
+    <input type="hidden" name="vista_movimiento">
     <input type="hidden" name="desde">
     <input type="hidden" name="hasta">
     <input type="hidden" name="estado">
@@ -314,6 +348,29 @@ foreach ($tiposMovimientos as $clave => $tipo) {
         width: 100% !important;
     }
 
+    .kardex-metricas {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(4, minmax(120px, 1fr));
+        min-width: min(100%, 560px);
+    }
+
+    .kardex-metricas div {
+        border-left: 3px solid #17a2b8;
+        padding-left: 0.75rem;
+    }
+
+    .kardex-metricas small {
+        color: #6c757d;
+        display: block;
+    }
+
+    .kardex-metricas strong {
+        display: block;
+        font-size: 1.05rem;
+        line-height: 1.2;
+    }
+
     @media (max-width: 767.98px) {
         .movimiento-grafico-card .card-body {
             height: 320px;
@@ -330,6 +387,11 @@ foreach ($tiposMovimientos as $clave => $tipo) {
         .acciones-movimientos .accion-movimiento {
             width: 100%;
         }
+
+        .kardex-metricas {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            width: 100%;
+        }
     }
 </style>
 <script src="<?= SERVERURL ?>vistas/js/chart.js"></script>
@@ -338,13 +400,26 @@ foreach ($tiposMovimientos as $clave => $tipo) {
         const tipos = <?= json_encode($tiposMovVisibles, JSON_UNESCAPED_UNICODE) ?>;
         const form = document.getElementById('formMovimientos');
         const tipo = document.getElementById('tipoMovimiento');
+        const grupoVista = document.getElementById('grupoVistaMovimiento');
+        const grupoDesde = document.getElementById('grupoDesdeMovimiento');
+        const grupoHasta = document.getElementById('grupoHastaMovimiento');
+        const grupoEstado = document.getElementById('grupoEstadoMovimiento');
+        const grupoSucursal = document.getElementById('grupoSucursalMovimiento');
         const grupoProveedor = document.getElementById('grupoProveedorMovimiento');
+        const selectProveedor = form.elements.proveedor;
         const grupoCliente = document.getElementById('grupoClienteMovimiento');
         const grupoArticulo = document.getElementById('grupoArticuloMovimiento');
         const grupoEmpleado = document.getElementById('grupoEmpleadoMovimiento');
         const grupoNaturalezaStock = document.getElementById('grupoNaturalezaStock');
         const grupoTipoStock = document.getElementById('grupoTipoStock');
         const resumen = document.getElementById('resumenMovimientos');
+        const kardexMeta = document.getElementById('kardexArticuloMeta');
+        const kardexArticuloTitulo = document.getElementById('kardexArticuloTitulo');
+        const kardexArticuloPeriodo = document.getElementById('kardexArticuloPeriodo');
+        const kardexSaldoInicial = document.getElementById('kardexSaldoInicial');
+        const kardexEntradas = document.getElementById('kardexEntradas');
+        const kardexSalidas = document.getElementById('kardexSalidas');
+        const kardexSaldoFinal = document.getElementById('kardexSaldoFinal');
         const panelGraficos = document.getElementById('panelGraficosMovimientos');
         const panelTabla = document.getElementById('panelTablaMovimientos');
         const tabla = document.getElementById('tablaMovimientos');
@@ -369,20 +444,78 @@ foreach ($tiposMovimientos as $clave => $tipo) {
         };
         let estadoLabels = {};
         let graficosInstancias = {};
+        let proveedoresCargados = false;
 
         const texto = valor => (valor === null || valor === undefined || valor === '') ? '-' : String(valor);
         const escapeHtml = valor => texto(valor).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
         const numero = valor => new Intl.NumberFormat('es-PY').format(Number(valor || 0));
+        const fechaPy = valor => {
+            const partes = String(valor || '').split('-');
+            return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : texto(valor);
+        };
 
         function configurarFiltros() {
             const cfg = tipos[tipo.value] || {};
+            grupoVista.classList.toggle('d-none', !cfg.vista);
+            grupoDesde.classList.toggle('d-none', !cfg.fecha);
+            grupoHasta.classList.toggle('d-none', !cfg.fecha);
+            grupoEstado.classList.toggle('d-none', !cfg.estado);
+            grupoSucursal.classList.toggle('d-none', !cfg.sucursal);
             grupoProveedor.classList.toggle('d-none', !cfg.proveedor);
             grupoCliente.classList.toggle('d-none', !cfg.cliente);
             grupoArticulo.classList.toggle('d-none', !cfg.articulo);
             grupoEmpleado.classList.toggle('d-none', !cfg.empleado);
             grupoNaturalezaStock.classList.toggle('d-none', !cfg.stock_filtros);
             grupoTipoStock.classList.toggle('d-none', !cfg.stock_filtros);
+
+            if (!cfg.vista && form.elements.vista_movimiento) form.elements.vista_movimiento.value = 'resumen';
+            if (!cfg.fecha) {
+                form.elements.desde.value = '';
+                form.elements.hasta.value = '';
+            }
+            if (!cfg.estado && form.elements.estado) form.elements.estado.value = '';
+            if (!cfg.sucursal && form.elements.sucursal) form.elements.sucursal.value = '';
+            if (!cfg.proveedor && form.elements.proveedor) form.elements.proveedor.value = '';
+            if (!cfg.cliente && form.elements.cliente) form.elements.cliente.value = '';
+            if (!cfg.articulo && form.elements.articulo) form.elements.articulo.value = '';
+            if (!cfg.empleado && form.elements.empleado) form.elements.empleado.value = '';
+            if (!cfg.stock_filtros) {
+                form.elements.naturaleza_stock.value = '';
+                form.elements.tipo_movimiento_stock.value = '';
+            }
+
+            if (cfg.proveedor) {
+                cargarProveedoresSiHaceFalta();
+            }
+
             form.elements.pagina.value = 1;
+        }
+
+        function cargarProveedoresSiHaceFalta() {
+            if (proveedoresCargados || !selectProveedor) return;
+
+            fetch("<?= SERVERURL ?>ajax/reportesAjax.php", {
+                    method: 'POST',
+                    body: new URLSearchParams({
+                        accion: 'listar_proveedores_movimientos'
+                    })
+                })
+                .then(resp => resp.json())
+                .then(data => {
+                    if (!Array.isArray(data)) return;
+
+                    const actual = selectProveedor.value;
+                    const opciones = ['<option value="">Todos</option>'];
+                    data.forEach(item => {
+                        opciones.push(`<option value="${Number(item.idproveedores)}">${escapeHtml(item.razon_social)}</option>`);
+                    });
+                    selectProveedor.innerHTML = opciones.join('');
+                    if (actual) {
+                        selectProveedor.value = actual;
+                    }
+                    proveedoresCargados = true;
+                })
+                .catch(() => {});
         }
 
         function valorCelda(row, col) {
@@ -395,15 +528,26 @@ foreach ($tiposMovimientos as $clave => $tipo) {
 
         function renderResumen(data) {
             const tarjetas = data.tarjetas || {};
-            const items = [
-                ['TOTAL', tarjetas.total || 0],
-                ['IMPORTE TOTAL', numero(tarjetas.importe_total || 0)],
-                ['PROMEDIO', numero(tarjetas.promedio || 0)],
-                ['ITEMS', numero(tarjetas.items || 0)]
-            ];
+            const esLibroCompras = form.elements.tipo_movimiento.value === 'libro_compras';
+            const items = esLibroCompras
+                ? [
+                    ['COMPROBANTES', tarjetas.total || 0],
+                    ['EXENTA', numero(tarjetas.exenta_total || 0)],
+                    ['GRAVADA 5%', numero(tarjetas.gravada_5_total || 0)],
+                    ['IVA 5%', numero(tarjetas.iva_5_total || 0)],
+                    ['GRAVADA 10%', numero(tarjetas.gravada_10_total || 0)],
+                    ['IVA 10%', numero(tarjetas.iva_10_total || 0)],
+                    ['TOTAL GENERAL', numero(tarjetas.importe_total || 0)]
+                ]
+                : [
+                    ['TOTAL', tarjetas.total || 0],
+                    ['IMPORTE TOTAL', numero(tarjetas.importe_total || 0)],
+                    ['PROMEDIO', numero(tarjetas.promedio || 0)],
+                    ['ITEMS', numero(tarjetas.items || 0)]
+                ];
 
             resumen.innerHTML = items.map(item => `
-            <div class="col-md-3 mb-2">
+            <div class="col-md-${esLibroCompras ? '4 col-lg-3' : '3'} mb-2">
                 <div class="card">
                     <div class="card-body py-3">
                         <small class="text-muted">${item[0]}</small>
@@ -413,6 +557,27 @@ foreach ($tiposMovimientos as $clave => $tipo) {
             </div>
         `).join('');
             resumen.classList.remove('d-none');
+        }
+
+        function renderKardexMeta(data) {
+            if (!data) {
+                kardexMeta.classList.add('d-none');
+                return;
+            }
+
+            const periodo = [
+                data.sucursal ? `Sucursal: ${data.sucursal}` : '',
+                data.desde ? `Desde: ${fechaPy(data.desde)}` : '',
+                data.hasta ? `Hasta: ${fechaPy(data.hasta)}` : ''
+            ].filter(Boolean).join(' | ');
+
+            kardexArticuloTitulo.textContent = `${data.codigo || '-'} - ${data.articulo || '-'}`;
+            kardexArticuloPeriodo.textContent = periodo || 'Periodo completo';
+            kardexSaldoInicial.textContent = numero(data.saldo_inicial || 0);
+            kardexEntradas.textContent = numero(data.entradas || 0);
+            kardexSalidas.textContent = numero(data.salidas || 0);
+            kardexSaldoFinal.textContent = numero(data.saldo_final || 0);
+            kardexMeta.classList.remove('d-none');
         }
 
         function dibujarFallback(canvas, datos) {
@@ -661,7 +826,7 @@ foreach ($tiposMovimientos as $clave => $tipo) {
 
         function sincronizar(formExportacion) {
             const fd = new FormData(form);
-            ['tipo_movimiento', 'desde', 'hasta', 'estado', 'sucursal', 'proveedor', 'cliente', 'articulo', 'empleado', 'naturaleza_stock', 'tipo_movimiento_stock'].forEach(name => {
+            ['tipo_movimiento', 'vista_movimiento', 'desde', 'hasta', 'estado', 'sucursal', 'proveedor', 'cliente', 'articulo', 'empleado', 'naturaleza_stock', 'tipo_movimiento_stock'].forEach(name => {
                 formExportacion.elements[name].value = fd.get(name) || '';
             });
         }
@@ -678,6 +843,7 @@ foreach ($tiposMovimientos as $clave => $tipo) {
             estadoLabels = {};
             resumen.innerHTML = '';
             resumen.classList.add('d-none');
+            kardexMeta.classList.add('d-none');
             limpiarGraficos();
             tabla.querySelector('thead').innerHTML = '';
             tabla.querySelector('tbody').innerHTML = '';
@@ -696,6 +862,7 @@ foreach ($tiposMovimientos as $clave => $tipo) {
             ['desde', 'hasta', 'estado', 'sucursal', 'proveedor', 'cliente', 'articulo', 'empleado', 'naturaleza_stock', 'tipo_movimiento_stock'].forEach(name => {
                 if (form.elements[name]) form.elements[name].value = '';
             });
+            form.elements.vista_movimiento.value = 'resumen';
             form.elements.por_pagina.value = '50';
             form.elements.pagina.value = 1;
             configurarFiltros();
@@ -729,6 +896,7 @@ foreach ($tiposMovimientos as $clave => $tipo) {
                         return;
                     }
                     renderResumen(resp.resumen || {});
+                    renderKardexMeta(resp.kardex || null);
                     renderGraficos(resp.graficos || {});
                     renderTabla(resp);
                     sincronizar(formPdf);
@@ -750,7 +918,7 @@ foreach ($tiposMovimientos as $clave => $tipo) {
             formCsv.submit();
         });
 
-        ['desde', 'hasta', 'estado', 'sucursal', 'proveedor', 'cliente', 'articulo', 'empleado', 'naturaleza_stock', 'tipo_movimiento_stock', 'por_pagina'].forEach(name => {
+        ['vista_movimiento', 'desde', 'hasta', 'estado', 'sucursal', 'proveedor', 'cliente', 'articulo', 'empleado', 'naturaleza_stock', 'tipo_movimiento_stock', 'por_pagina'].forEach(name => {
             const control = form.elements[name];
             if (control) control.addEventListener('change', () => {
                 form.elements.pagina.value = 1;

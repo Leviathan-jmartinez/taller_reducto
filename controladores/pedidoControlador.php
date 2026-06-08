@@ -349,6 +349,8 @@ class pedidoControlador extends pedidoModelo
                               action="' . SERVERURL . 'ajax/pedidoAjax.php"
                               method="POST"
                               data-form="delete"
+                              data-anulacion="true"
+                              data-anulacion-titulo="Anular pedido"
                               autocomplete="off">
                             <input type="hidden" name="pedido_id_del"
                                    value="' . mainModel::encryption($rows['idpedido_cabecera']) . '">
@@ -407,7 +409,18 @@ class pedidoControlador extends pedidoModelo
     {
         $id = mainModel::decryption($_POST['pedido_id_del']);
         $id = mainModel::limpiar_string($id);
+        $motivo = trim(mainModel::limpiar_string($_POST['observacion_anulacion'] ?? ''));
         session_start(['name' => 'STR']);
+
+        if ($motivo === '') {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Motivo requerido",
+                "Texto" => "Debe ingresar la observacion o motivo de anulacion",
+                "Tipo" => "warning"
+            ]);
+            exit();
+        }
 
         $check_pedido = mainModel::ejecutar_consulta_simple("SELECT idpedido_cabecera FROM pedido_cabecera WHERE idpedido_cabecera = '$id' AND id_sucursal = '" . $_SESSION['nick_sucursal'] . "'");
         if ($check_pedido->rowCount() < 0) {
@@ -443,7 +456,8 @@ class pedidoControlador extends pedidoModelo
         $datos_pedido_del = [
             "updatedby" => $_SESSION['id_str'],
             "sucursal" => $_SESSION['nick_sucursal'],
-            "idpedido_cabecera" => $id
+            "idpedido_cabecera" => $id,
+            "motivo" => $motivo
         ];
 
         if (pedidoModelo::anular_pedido_modelo($datos_pedido_del)) {

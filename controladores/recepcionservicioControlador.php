@@ -609,7 +609,7 @@ class recepcionservicioControlador extends recepcionservicioModelo
                     $tabla .= '
                 
                 <td>
-                    <form class="FormularioAjax" action="' . SERVERURL . 'ajax/recepcionservicioAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
+                    <form class="FormularioAjax" action="' . SERVERURL . 'ajax/recepcionservicioAjax.php" method="POST" data-form="delete" data-anulacion="true" data-anulacion-titulo="Anular recepcion de servicio" autocomplete="off" action="">
                         <input type="hidden" name="recepcion_id_del" value=' . mainModel::encryption($rows['idrecepcion']) . '>
 					    	<button type="submit" class="btn btn-warning">
 								<i class="far fa-trash-alt"></i>
@@ -709,8 +709,18 @@ class recepcionservicioControlador extends recepcionservicioModelo
         session_start(['name' => 'STR']);
         $id = mainModel::decryption($_POST['recepcion_id_del']);
         $id = mainModel::limpiar_string($id);
+        $motivo = trim(mainModel::limpiar_string($_POST['observacion_anulacion'] ?? ''));
 
-        $anular = recepcionServicioModelo::anular_recepcion_modelo($id, $_SESSION['nick_sucursal']);
+        if ($motivo === '') {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Motivo requerido",
+                "Texto"  => "Debe ingresar la observacion o motivo de anulacion",
+                "Tipo"   => "warning"
+            ]);
+        }
+
+        $anular = recepcionServicioModelo::anular_recepcion_modelo($id, $_SESSION['nick_sucursal'], $_SESSION['id_str'], $motivo);
 
         if ($anular === true) {
             return json_encode([

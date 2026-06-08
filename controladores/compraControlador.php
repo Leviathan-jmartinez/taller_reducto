@@ -872,7 +872,7 @@ class compraControlador extends compraModelo
                                 <td>' . $estadoBadge . '</td>';
                 if ($puedeAnular) {
                     $tabla .= '<td>
-									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/compraAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
+									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/compraAjax.php" method="POST" data-form="delete" data-anulacion="true" data-anulacion-titulo="Anular compra" autocomplete="off" action="">
                                     <input type="hidden" name="compra_id_del" value=' . mainModel::encryption($rows['idcompra_cabecera']) . '>
 										<button type="submit" class="btn btn-warning">
 											<i class="far fa-trash-alt"></i>
@@ -910,6 +910,17 @@ class compraControlador extends compraModelo
     {
         $id = mainModel::decryption($_POST['compra_id_del']);
         $id = mainModel::limpiar_string($id);
+        $motivo = trim(mainModel::limpiar_string($_POST['observacion_anulacion'] ?? ''));
+
+        if ($motivo === '') {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Motivo requerido",
+                "Texto" => "Debe ingresar la observacion o motivo de anulacion",
+                "Tipo" => "warning"
+            ]);
+            exit();
+        }
 
         // Verificar que la compra exista
         $check_compra = mainModel::ejecutar_consulta_simple(
@@ -1002,6 +1013,17 @@ class compraControlador extends compraModelo
 
             // 6) Anular libro de compras
             compraModelo::anular_libro_compra_modelo($id, $id_sucursal, $pdo);
+            mainModel::registrar_anulacion_auditoria_modelo($pdo, [
+                'modulo' => 'compra',
+                'tabla_afectada' => 'compra_cabecera',
+                'id_registro' => $id,
+                'id_sucursal' => $id_sucursal,
+                'estado_anterior' => (string)$compra['estado'],
+                'estado_nuevo' => '0',
+                'motivo' => $motivo,
+                'usuario_anula' => $usuario,
+                'referencia' => 'COMPRA #' . $id
+            ]);
 
             // Confirmar transacción
             $pdo->commit();

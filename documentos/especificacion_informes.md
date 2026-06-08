@@ -64,6 +64,407 @@ Por lo tanto, las tablas consultadas no cambian entre Previsualizar, PDF y CSV. 
 | Ordenes de Trabajo | `orden_trabajo`, `orden_trabajo_detalle`, `presupuesto_servicio`, `diagnostico_servicio`, `recepcion_servicio`, `sucursales`, `usuarios`, `equipo_trabajo`, `clientes`, `vehiculos`, `modelo_auto`, `marcas` |
 | Registro de Servicios | `registro_servicio`, `registro_servicio_detalle`, `orden_trabajo`, `sucursales`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `usuarios`, `equipo_trabajo`, `empleados` |
 
+### Flujo Detallado de Generacion por Informe
+
+Esta seccion describe el comportamiento real de la interfaz unificada. En todos los casos la accion Previsualizar, Generar PDF y Exportar CSV utiliza los mismos filtros seleccionados por el usuario. La diferencia es el formato de salida.
+
+Los informes de movimientos generales se ordenan de forma descendente por fecha e identificador, mostrando primero los registros mas recientes. El Kardex de Articulo es la excepcion: se ordena de forma ascendente por fecha e identificador para conservar la lectura cronologica del saldo.
+
+La interfaz de Informes de Movimientos permite seleccionar Vista Resumen o Vista Detallado. La Vista Resumen muestra una fila por documento o movimiento principal. La Vista Detallado, cuando corresponde, muestra una fila por articulo o linea interna del documento, permitiendo verificar que articulos componen cada compra, pedido, presupuesto, orden o servicio.
+
+#### Informe Referencial: Articulos
+
+Generar
+
+El sistema valida permiso `reportes.articulos.ver`.
+El sistema muestra la vista Informes Referenciales.
+El sistema muestra el tipo Articulos si el usuario tiene permiso.
+El sistema consulta categorias para el filtro de categoria. Tabla consultada: `categorias`.
+El sistema muestra filtros de tipo referencial, estado, busqueda y categoria.
+El usuario selecciona Articulos.
+El usuario selecciona o ingresa filtros.
+El usuario presiona Previsualizar.
+El sistema valida nuevamente permiso `reportes.articulos.ver`.
+El sistema consulta articulos segun los filtros.
+Tablas consultadas: `articulos`, `categorias`, `marcas`, `articulo_proveedor`, `proveedores`, `unidad_medida`, `tipo_impuesto`.
+El sistema carga resumen y datos dentro de la grilla.
+El sistema habilita los botones PDF y CSV si existen registros.
+El usuario presiona Generar PDF.
+El sistema envia los filtros al generador del reporte.
+El sistema valida nuevamente permiso `reportes.articulos.ver`.
+El sistema consulta nuevamente articulos segun los filtros.
+El sistema genera el PDF del informe.
+El usuario puede presionar Exportar CSV.
+El sistema valida nuevamente permiso `reportes.articulos.ver`.
+El sistema consulta nuevamente articulos segun los filtros.
+El sistema genera CSV con separador punto y coma.
+
+#### Informe Referencial: Proveedores
+
+Generar
+
+El sistema valida permiso `reportes.proveedores.ver`.
+El sistema muestra la vista Informes Referenciales.
+El sistema muestra filtros de tipo referencial, estado y busqueda.
+El usuario selecciona Proveedores.
+El usuario selecciona o ingresa filtros.
+El usuario presiona Previsualizar.
+El sistema valida nuevamente permiso `reportes.proveedores.ver`.
+El sistema consulta proveedores segun los filtros.
+Tablas consultadas: `proveedores`, `ciudades`.
+El sistema carga resumen y datos dentro de la grilla.
+El sistema habilita los botones PDF y CSV si existen registros.
+Para PDF o CSV, el sistema envia los mismos filtros, valida permiso nuevamente y consulta las mismas tablas.
+
+#### Informe Referencial: Clientes
+
+Generar
+
+El sistema valida permiso `reportes.clientes.ver`.
+El sistema muestra la vista Informes Referenciales.
+El sistema muestra filtros de tipo referencial, estado y busqueda.
+El usuario selecciona Clientes.
+El usuario selecciona o ingresa filtros.
+El usuario presiona Previsualizar.
+El sistema valida nuevamente permiso `reportes.clientes.ver`.
+El sistema consulta clientes segun los filtros.
+Tablas consultadas: `clientes`, `ciudades`.
+El sistema carga resumen y datos dentro de la grilla.
+El sistema habilita los botones PDF y CSV si existen registros.
+Para PDF o CSV, el sistema envia los mismos filtros, valida permiso nuevamente y consulta las mismas tablas.
+
+#### Informe Referencial: Vehiculos
+
+Generar
+
+El sistema valida permiso `reportes.vehiculos.ver`.
+El sistema muestra la vista Informes Referenciales.
+El sistema muestra filtros de tipo referencial, estado y busqueda.
+El usuario selecciona Vehiculos.
+El usuario selecciona o ingresa filtros.
+El usuario presiona Previsualizar.
+El sistema valida nuevamente permiso `reportes.vehiculos.ver`.
+El sistema consulta vehiculos segun los filtros.
+Tablas consultadas: `vehiculos`, `clientes`, `modelo_auto`, `marcas`.
+El sistema carga resumen y datos dentro de la grilla.
+El sistema habilita los botones PDF y CSV si existen registros.
+Para PDF o CSV, el sistema envia los mismos filtros, valida permiso nuevamente y consulta las mismas tablas.
+
+#### Informe Referencial: Sucursales
+
+Generar
+
+El sistema valida permiso `reportes.sucursales.ver`.
+El sistema muestra la vista Informes Referenciales.
+El sistema muestra filtros de tipo referencial, estado y busqueda.
+El usuario selecciona Sucursales.
+El usuario selecciona o ingresa filtros.
+El usuario presiona Previsualizar.
+El sistema valida nuevamente permiso `reportes.sucursales.ver`.
+El sistema consulta sucursales segun los filtros.
+Tablas consultadas: `sucursales`, `empresa`.
+El sistema carga resumen y datos dentro de la grilla.
+El sistema habilita los botones PDF y CSV si existen registros.
+Para PDF o CSV, el sistema envia los mismos filtros, valida permiso nuevamente y consulta las mismas tablas.
+
+#### Informe Referencial: Marcas
+
+Generar
+
+El sistema valida permiso `reportes.articulos.ver`.
+El sistema muestra la vista Informes Referenciales.
+El sistema muestra filtros de tipo referencial y busqueda.
+El usuario selecciona Marcas.
+El usuario ingresa filtro opcional.
+El usuario presiona Previsualizar.
+El sistema valida nuevamente permiso `reportes.articulos.ver`.
+El sistema consulta marcas segun los filtros.
+Tabla consultada: `marcas`.
+El sistema carga datos dentro de la grilla.
+El sistema habilita los botones PDF y CSV si existen registros.
+Para PDF o CSV, el sistema envia los mismos filtros, valida permiso nuevamente y consulta la misma tabla.
+
+#### Informe Referencial: Categorias
+
+Generar
+
+El sistema valida permiso `reportes.articulos.ver`.
+El sistema muestra la vista Informes Referenciales.
+El sistema muestra filtros de tipo referencial y busqueda.
+El usuario selecciona Categorias.
+El usuario ingresa filtro opcional.
+El usuario presiona Previsualizar.
+El sistema valida nuevamente permiso `reportes.articulos.ver`.
+El sistema consulta categorias segun los filtros.
+Tabla consultada: `categorias`.
+El sistema carga datos dentro de la grilla.
+El sistema habilita los botones PDF y CSV si existen registros.
+Para PDF o CSV, el sistema envia los mismos filtros, valida permiso nuevamente y consulta la misma tabla.
+
+#### Informe Referencial: Usuarios
+
+Generar
+
+El sistema valida permiso `usuarios.ver`.
+El sistema muestra la vista Informes Referenciales.
+El sistema muestra filtros de tipo referencial, estado y busqueda.
+El usuario selecciona Usuarios.
+El usuario selecciona o ingresa filtros.
+El usuario presiona Previsualizar.
+El sistema valida nuevamente permiso `usuarios.ver`.
+El sistema consulta usuarios segun los filtros.
+Tablas consultadas: `usuarios`, `sucursales`.
+El sistema carga resumen y datos dentro de la grilla.
+El sistema habilita los botones PDF y CSV si existen registros.
+Para PDF o CSV, el sistema envia los mismos filtros, valida permiso nuevamente y consulta las mismas tablas.
+
+#### Informe de Movimientos: Pedidos de Compra
+
+Generar
+
+El sistema valida permiso `reportes.pedidos.ver`.
+El sistema consulta sucursales para el filtro. Tabla consultada: `sucursales`.
+El sistema consulta proveedores para filtros de informes que lo requieran. Tabla consultada: `proveedores`.
+El sistema muestra filtros de vista, fecha desde, fecha hasta, estado, sucursal, articulo por ID o codigo exacto y cantidad de registros.
+El usuario selecciona Pedidos de Compra.
+El usuario selecciona o ingresa filtros.
+El usuario presiona Previsualizar.
+El sistema valida nuevamente permiso `reportes.pedidos.ver`.
+El sistema consulta pedidos de compra segun los filtros.
+Tablas consultadas en Vista Resumen: `pedido_cabecera`, `pedido_detalle`, `usuarios`, `sucursales`.
+Tablas consultadas en Vista Detallado: `pedido_cabecera`, `pedido_detalle`, `articulos`, `usuarios`, `sucursales`.
+El sistema carga resumen, graficos y datos dentro de la grilla. En Vista Detallado, cada fila representa un articulo solicitado.
+El sistema habilita los botones PDF y CSV si existen registros.
+El usuario presiona Generar PDF.
+El sistema envia los filtros al generador del reporte.
+El sistema valida nuevamente permiso `reportes.pedidos.ver`.
+El sistema consulta nuevamente pedidos de compra segun los filtros.
+El sistema genera el PDF del informe.
+El usuario puede presionar Exportar CSV.
+El sistema consulta nuevamente pedidos de compra segun los filtros y genera el CSV.
+
+#### Informe de Movimientos: Presupuestos de Compra
+
+Generar
+
+El sistema valida permiso `reportes.presupuestos_compra.ver`.
+El sistema consulta sucursales para el filtro. Tabla consultada: `sucursales`.
+El sistema consulta proveedores para el filtro. Tabla consultada: `proveedores`.
+El sistema muestra filtros de vista, fecha desde, fecha hasta, estado, sucursal, proveedor, articulo por ID o codigo exacto y cantidad de registros.
+El usuario selecciona Presupuestos de Compra.
+El usuario selecciona o ingresa filtros.
+El usuario presiona Previsualizar.
+El sistema valida nuevamente permiso `reportes.presupuestos_compra.ver`.
+El sistema consulta presupuestos de compra segun los filtros.
+Tablas consultadas en Vista Resumen: `presupuesto_compra`, `presupuesto_detalle`, `proveedores`, `usuarios`, `sucursales`.
+Tablas consultadas en Vista Detallado: `presupuesto_compra`, `presupuesto_detalle`, `articulos`, `proveedores`, `sucursales`.
+El sistema carga resumen, graficos y datos dentro de la grilla. En Vista Detallado, cada fila representa un articulo presupuestado con cantidad, precio y subtotal.
+El sistema habilita los botones PDF y CSV si existen registros.
+Para PDF o CSV, el sistema envia los mismos filtros, valida permiso nuevamente y consulta las mismas tablas.
+
+#### Informe de Movimientos: Ordenes de Compra
+
+Generar
+
+El sistema valida permiso `reportes.ordenes_compra.ver`.
+El sistema consulta sucursales para el filtro. Tabla consultada: `sucursales`.
+El sistema consulta proveedores para el filtro. Tabla consultada: `proveedores`.
+El sistema muestra filtros de vista, fecha desde, fecha hasta, estado, sucursal, proveedor, articulo por ID o codigo exacto y cantidad de registros.
+El usuario selecciona Ordenes de Compra.
+El usuario selecciona o ingresa filtros.
+El usuario presiona Previsualizar.
+El sistema valida nuevamente permiso `reportes.ordenes_compra.ver`.
+El sistema consulta ordenes de compra segun los filtros.
+Tablas consultadas en Vista Resumen: `orden_compra`, `orden_compra_detalle`, `proveedores`, `usuarios`, `sucursales`.
+Tablas consultadas en Vista Detallado: `orden_compra`, `orden_compra_detalle`, `articulos`, `proveedores`, `sucursales`.
+El sistema carga resumen, graficos y datos dentro de la grilla. En Vista Detallado, cada fila representa un articulo ordenado con cantidad, pendiente, precio y subtotal.
+El sistema habilita los botones PDF y CSV si existen registros.
+Para PDF o CSV, el sistema envia los mismos filtros, valida permiso nuevamente y consulta las mismas tablas.
+
+#### Informe de Movimientos: Compras
+
+Generar
+
+El sistema valida permiso `reportes.compras.ver`.
+El sistema consulta sucursales para el filtro. Tabla consultada: `sucursales`.
+El sistema consulta proveedores para el filtro. Tabla consultada: `proveedores`.
+El sistema muestra filtros de vista, fecha desde, fecha hasta, estado, sucursal, proveedor, articulo por ID o codigo exacto y cantidad de registros.
+El usuario selecciona Compras.
+El usuario selecciona o ingresa filtros.
+El usuario presiona Previsualizar.
+El sistema valida nuevamente permiso `reportes.compras.ver`.
+El sistema consulta compras segun los filtros.
+Tablas consultadas en Vista Resumen: `compra_cabecera`, `compra_detalle`, `proveedores`, `usuarios`, `sucursales`.
+Tablas consultadas en Vista Detallado: `compra_cabecera`, `compra_detalle`, `articulos`, `proveedores`, `sucursales`.
+El sistema carga resumen, graficos y datos dentro de la grilla. En Vista Detallado, cada fila representa un articulo comprado con cantidad recibida, precio y subtotal.
+El sistema habilita los botones PDF y CSV si existen registros.
+Para PDF o CSV, el sistema envia los mismos filtros, valida permiso nuevamente y consulta las mismas tablas.
+
+#### Informe de Movimientos: Libro de Compras
+
+Generar
+
+El sistema valida permiso `reportes.libro_compras.ver`.
+El sistema consulta sucursales para el filtro. Tabla consultada: `sucursales`.
+El sistema consulta proveedores para el filtro. Tabla consultada: `proveedores`.
+El sistema muestra filtros de fecha desde, fecha hasta, estado, sucursal, proveedor y cantidad de registros.
+El usuario selecciona Libro de Compras.
+El usuario selecciona o ingresa filtros.
+El usuario presiona Previsualizar.
+El sistema valida nuevamente permiso `reportes.libro_compras.ver`.
+El sistema consulta libro de compras segun los filtros.
+Tablas consultadas: `libro_compra`, `sucursales`.
+El sistema carga resumen, graficos y datos dentro de la grilla.
+El sistema habilita los botones PDF y CSV si existen registros.
+Para PDF o CSV, el sistema envia los mismos filtros, valida permiso nuevamente y consulta las mismas tablas.
+
+#### Informe de Movimientos: Stock
+
+Generar
+
+El sistema valida permiso `reportes.stock.ver`.
+El sistema consulta sucursales para el filtro. Tabla consultada: `sucursales`.
+El sistema muestra filtros de estado, sucursal, articulo por ID o codigo exacto y cantidad de registros.
+El usuario selecciona Stock.
+El usuario selecciona o ingresa filtros.
+El usuario presiona Previsualizar.
+El sistema valida nuevamente permiso `reportes.stock.ver`.
+El sistema consulta stock segun los filtros.
+Tablas consultadas: `articulos`, `stock`, `categorias`, `marcas`, `articulo_proveedor`, `proveedores`, `unidad_medida`, `sucursales`.
+El sistema carga resumen, graficos y datos dentro de la grilla.
+El sistema habilita los botones PDF y CSV si existen registros.
+Para PDF o CSV, el sistema envia los mismos filtros, valida permiso nuevamente y consulta las mismas tablas.
+
+#### Informe de Movimientos: Transferencias
+
+Generar
+
+El sistema valida permiso `reportes.transferencias.ver`.
+El sistema consulta sucursales para el filtro. Tabla consultada: `sucursales`.
+El sistema muestra filtros de fecha desde, fecha hasta, estado, sucursal, articulo por ID o codigo exacto y cantidad de registros.
+El usuario selecciona Transferencias.
+El usuario selecciona o ingresa filtros.
+El usuario presiona Previsualizar.
+El sistema valida nuevamente permiso `reportes.transferencias.ver`.
+El sistema consulta transferencias segun los filtros.
+Tablas consultadas: `transferencia_stock`, `transferencia_stock_detalle`, `sucursales`, `nota_remision`.
+El sistema carga resumen, graficos y datos dentro de la grilla.
+El sistema habilita los botones PDF y CSV si existen registros.
+Para PDF o CSV, el sistema envia los mismos filtros, valida permiso nuevamente y consulta las mismas tablas.
+
+#### Informe de Movimientos: Movimientos de Stock
+
+Generar
+
+El sistema valida permiso `reportes.movimientos_stock.ver`.
+El sistema consulta sucursales para el filtro. Tabla consultada: `sucursales`.
+El sistema muestra filtros de fecha desde, fecha hasta, estado, sucursal, articulo por ID o codigo exacto, naturaleza, tipo de movimiento de stock y cantidad de registros.
+El usuario selecciona Movimientos de Stock.
+El usuario selecciona o ingresa filtros.
+El usuario presiona Previsualizar.
+El sistema valida nuevamente permiso `reportes.movimientos_stock.ver`.
+El sistema consulta movimientos de stock segun los filtros.
+Tablas consultadas: `movimientostock`, `sucursales`, `articulos`, `usuarios`.
+El sistema filtra por naturaleza cuando corresponde: entradas, salidas, ajustes, compras, transferencias, servicios o insumos.
+El sistema carga resumen, graficos y datos dentro de la grilla.
+El sistema habilita los botones PDF y CSV si existen registros.
+Para PDF o CSV, el sistema envia los mismos filtros, valida permiso nuevamente y consulta las mismas tablas.
+
+#### Informe de Movimientos: Kardex de Articulo
+
+Generar
+
+El sistema valida permiso `reportes.movimientos_stock.ver`.
+El sistema consulta sucursales para el filtro. Tabla consultada: `sucursales`.
+El sistema muestra filtros de fecha desde, fecha hasta, sucursal, articulo por ID o codigo exacto, naturaleza, tipo de movimiento de stock y cantidad de registros.
+El usuario selecciona Kardex de Articulo.
+El sistema exige sucursal y articulo.
+El usuario selecciona sucursal.
+El usuario ingresa articulo por ID o codigo exacto.
+El usuario selecciona o ingresa filtros opcionales.
+El usuario presiona Previsualizar.
+El sistema valida nuevamente permiso `reportes.movimientos_stock.ver`.
+El sistema valida que sucursal y articulo esten informados.
+El sistema consulta movimientos del articulo en la sucursal.
+Tablas consultadas: `movimientostock`, `sucursales`, `articulos`, `usuarios`.
+El sistema obtiene saldo anterior y saldo actual desde `MovStockSaldoAnterior` y `MovStockSaldoActual` cuando existen.
+Si los saldos no existen en movimientos antiguos, el sistema calcula saldo acumulado con `MovStockCantidad * MovStockSigno`.
+El sistema muestra una ficha del articulo con codigo, descripcion, sucursal, periodo, saldo inicial, total de entradas, total de salidas y saldo final.
+El sistema carga entradas, salidas, saldo anterior, saldo actual, referencia y usuario dentro de la grilla.
+El sistema habilita los botones PDF y CSV si existen registros.
+Para PDF o CSV, el sistema envia los mismos filtros, valida permiso nuevamente y consulta las mismas tablas.
+
+#### Informe de Movimientos: Recepcion de Servicios
+
+Generar
+
+El sistema valida permiso `reportes.recepcion_servicio.ver`.
+El sistema consulta sucursales para el filtro. Tabla consultada: `sucursales`.
+El sistema muestra filtros de fecha desde, fecha hasta, estado, sucursal, cliente por ID o documento exacto y cantidad de registros.
+El usuario selecciona Recepcion de Servicios.
+El usuario selecciona o ingresa filtros.
+El usuario presiona Previsualizar.
+El sistema valida nuevamente permiso `reportes.recepcion_servicio.ver`.
+El sistema consulta recepciones segun los filtros.
+Tablas consultadas: `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `usuarios`, `sucursales`.
+El sistema carga resumen, graficos y datos dentro de la grilla.
+El sistema habilita los botones PDF y CSV si existen registros.
+Para PDF o CSV, el sistema envia los mismos filtros, valida permiso nuevamente y consulta las mismas tablas.
+
+#### Informe de Movimientos: Presupuestos de Servicios
+
+Generar
+
+El sistema valida permiso `reportes.presupuesto_servicio.ver`.
+El sistema consulta sucursales para el filtro. Tabla consultada: `sucursales`.
+El sistema muestra filtros de vista, fecha desde, fecha hasta, estado, sucursal, cliente por ID o documento exacto, articulo por ID o codigo exacto y cantidad de registros.
+El usuario selecciona Presupuestos de Servicios.
+El usuario selecciona o ingresa filtros.
+El usuario presiona Previsualizar.
+El sistema valida nuevamente permiso `reportes.presupuesto_servicio.ver`.
+El sistema consulta presupuestos de servicios segun los filtros.
+Tablas consultadas en Vista Resumen: `presupuesto_servicio`, `presupuesto_detalleservicio`, `diagnostico_servicio`, `recepcion_servicio`, `usuarios`, `sucursales`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`.
+Tablas consultadas en Vista Detallado: `presupuesto_servicio`, `presupuesto_detalleservicio`, `articulos`, `diagnostico_servicio`, `recepcion_servicio`, `sucursales`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`.
+El sistema carga resumen, graficos y datos dentro de la grilla. En Vista Detallado, cada fila representa un repuesto o articulo presupuestado para el servicio.
+El sistema habilita los botones PDF y CSV si existen registros.
+Para PDF o CSV, el sistema envia los mismos filtros, valida permiso nuevamente y consulta las mismas tablas.
+
+#### Informe de Movimientos: Ordenes de Trabajo
+
+Generar
+
+El sistema valida permiso `reportes.orden_trabajo.ver`.
+El sistema consulta sucursales para el filtro. Tabla consultada: `sucursales`.
+El sistema muestra filtros de vista, fecha desde, fecha hasta, estado, sucursal, cliente por ID o documento exacto, articulo por ID o codigo exacto y cantidad de registros.
+El usuario selecciona Ordenes de Trabajo.
+El usuario selecciona o ingresa filtros.
+El usuario presiona Previsualizar.
+El sistema valida nuevamente permiso `reportes.orden_trabajo.ver`.
+El sistema consulta ordenes de trabajo segun los filtros.
+Tablas consultadas en Vista Resumen: `orden_trabajo`, `orden_trabajo_detalle`, `presupuesto_servicio`, `diagnostico_servicio`, `recepcion_servicio`, `sucursales`, `usuarios`, `equipo_trabajo`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`.
+Tablas consultadas en Vista Detallado: `orden_trabajo`, `orden_trabajo_detalle`, `articulos`, `sucursales`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`.
+El sistema carga resumen, graficos y datos dentro de la grilla. En Vista Detallado, cada fila representa un articulo utilizado o previsto en la orden.
+El sistema habilita los botones PDF y CSV si existen registros.
+Para PDF o CSV, el sistema envia los mismos filtros, valida permiso nuevamente y consulta las mismas tablas.
+
+#### Informe de Movimientos: Registro de Servicios
+
+Generar
+
+El sistema valida permiso `reportes.registro_servicio.ver`.
+El sistema consulta sucursales para el filtro. Tabla consultada: `sucursales`.
+El sistema muestra filtros de vista, fecha desde, fecha hasta, estado, sucursal, cliente por ID o documento exacto, articulo por ID o codigo exacto, tecnico por ID o cedula exacta y cantidad de registros.
+El usuario selecciona Registro de Servicios.
+El usuario selecciona o ingresa filtros.
+El usuario presiona Previsualizar.
+El sistema valida nuevamente permiso `reportes.registro_servicio.ver`.
+El sistema consulta registros de servicios segun los filtros.
+Tablas consultadas en Vista Resumen: `registro_servicio`, `registro_servicio_detalle`, `orden_trabajo`, `sucursales`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `usuarios`, `equipo_trabajo`, `empleados`.
+Tablas consultadas en Vista Detallado: `registro_servicio`, `registro_servicio_detalle`, `articulos`, `orden_trabajo`, `sucursales`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `empleados`.
+El sistema carga resumen, graficos y datos dentro de la grilla. En Vista Detallado, cada fila representa un repuesto o insumo registrado en el servicio.
+El sistema habilita los botones PDF y CSV si existen registros.
+Para PDF o CSV, el sistema envia los mismos filtros, valida permiso nuevamente y consulta las mismas tablas.
+
 ---
 
 ## Informe de Articulos
@@ -913,7 +1314,7 @@ El Kardex muestra el historial cronologico de movimientos de un articulo en una 
 8. El sistema valida que exista sucursal y articulo.
 9. El sistema consulta `movimientostock` segun articulo, sucursal y fechas.
 10. El sistema calcula o lee saldo anterior y saldo actual.
-11. El sistema muestra resumen, graficos y grilla de resultados.
+11. El sistema muestra ficha del articulo, resumen, graficos y grilla de resultados.
 12. El usuario puede generar PDF o exportar CSV.
 
 ### Flujo Alternativo
@@ -946,6 +1347,7 @@ El Kardex muestra el historial cronologico de movimientos de un articulo en una 
 - Las salidas se identifican con `MovStockSigno = -1`.
 - El saldo actual se obtiene desde `MovStockSaldoActual` cuando existe.
 - Si se filtra solo entrada, salida, ajuste u otra naturaleza, el filtro afecta las filas mostradas, pero el saldo representa la trazabilidad real del movimiento.
+- El Kardex se ordena de forma ascendente por fecha e identificador para que el saldo pueda leerse de inicio a fin.
 
 ---
 

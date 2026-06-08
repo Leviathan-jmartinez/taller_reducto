@@ -729,7 +729,7 @@ class presupuestoservicioModelo extends mainModel
         );
     }
     
-    protected static function anular_presupuesto_modelo($id)
+    protected static function anular_presupuesto_modelo($id, $usuario = null, $motivo = '')
     {
         $pdo = mainModel::conectar();
 
@@ -793,6 +793,20 @@ class presupuestoservicioModelo extends mainModel
                 ");
                 $sql->execute([
                     ':id_preliminar' => $pres['convertido_desde']
+                ]);
+            }
+
+            if (!empty($usuario)) {
+                mainModel::registrar_anulacion_auditoria_modelo($pdo, [
+                    'modulo' => 'presupuesto_servicio',
+                    'tabla_afectada' => 'presupuesto_servicio',
+                    'id_registro' => $id,
+                    'id_sucursal' => $pres['id_sucursal'] ?? null,
+                    'estado_anterior' => (string)($pres['estado'] ?? '1'),
+                    'estado_nuevo' => '0',
+                    'motivo' => $motivo,
+                    'usuario_anula' => $usuario,
+                    'referencia' => 'PRESUPUESTO_SERVICIO #' . $id
                 ]);
             }
 

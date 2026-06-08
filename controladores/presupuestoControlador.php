@@ -447,7 +447,7 @@ class presupuestoControlador extends presupuestoModelo
                                 <td>' . $estadoBadge . '</td>';
                 if (mainModel::tienePermiso('compra.presupuesto.anular')) {
                     $tabla .= '<td>
-									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/presupuestoAjax.php" method="POST" data-form="delete" autocomplete="off" action="">
+									<form class="FormularioAjax" action="' . SERVERURL . 'ajax/presupuestoAjax.php" method="POST" data-form="delete" data-anulacion="true" data-anulacion-titulo="Anular presupuesto de compra" autocomplete="off" action="">
                                     <input type="hidden" name="presupuesto_id_del" value=' . mainModel::encryption($rows['idpresupuesto_compra']) . '>
 										<button type="submit" class="btn btn-warning">
 											<i class="far fa-trash-alt"></i>
@@ -493,7 +493,18 @@ class presupuestoControlador extends presupuestoModelo
         }
         $id = mainModel::decryption($_POST['presupuesto_id_del']);
         $id = mainModel::limpiar_string($id);
+        $motivo = trim(mainModel::limpiar_string($_POST['observacion_anulacion'] ?? ''));
         session_start(['name' => 'STR']);
+
+        if ($motivo === '') {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Motivo requerido",
+                "Texto" => "Debe ingresar la observacion o motivo de anulacion",
+                "Tipo" => "warning"
+            ]);
+            exit();
+        }
         $check_presupuesto = mainModel::ejecutar_consulta_simple("SELECT idpresupuesto_compra FROM presupuesto_compra WHERE idpresupuesto_compra = '$id' AND id_sucursal = '" . $_SESSION['nick_sucursal'] . "'");
         if ($check_presupuesto->rowCount() <= 0) {
             $alerta = [
@@ -522,7 +533,8 @@ class presupuestoControlador extends presupuestoModelo
         $datos_presupuesto_del = [
             "updatedby" => $_SESSION['id_str'],
             "sucursal" => $_SESSION['nick_sucursal'],
-            "idpresupuesto_compra" => $id
+            "idpresupuesto_compra" => $id,
+            "motivo" => $motivo
         ];
 
         if (presupuestoModelo::anular_presupuesto_modelo($datos_presupuesto_del)) {

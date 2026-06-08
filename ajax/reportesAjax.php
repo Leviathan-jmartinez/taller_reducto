@@ -34,6 +34,10 @@ if ($modulo === "movimientos_unificado") {
 
 switch ($accion) {
 
+    case 'listar_proveedores_movimientos':
+        $inst_reporte->listar_proveedores_json_controlador();
+        exit();
+
     case 'imprimir_reporte_referenciales':
         $inst_reporte->imprimir_reporte_referenciales_controlador();
         exit();

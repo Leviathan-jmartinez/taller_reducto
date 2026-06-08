@@ -647,7 +647,9 @@ class ordencompraControlador extends ordencompraModelo
                     <form class="FormularioAjax"
                         action="' . SERVERURL . 'ajax/ordencompraAjax.php"
                         method="POST"
-                        data-form="delete">
+                        data-form="delete"
+                        data-anulacion="true"
+                        data-anulacion-titulo="Anular orden de compra">
 
                         <input type="hidden" name="ordencompra_id_del"
                             value="' . $this->encryption($rows['idorden_compra']) . '">
@@ -692,6 +694,16 @@ class ordencompraControlador extends ordencompraModelo
     {
         $id = mainModel::decryption($_POST['ordencompra_id_del']);
         $id = mainModel::limpiar_string($id);
+        $motivo = trim(mainModel::limpiar_string($_POST['observacion_anulacion'] ?? ''));
+
+        if ($motivo === '') {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Motivo requerido",
+                "Texto" => "Debe ingresar la observacion o motivo de anulacion",
+                "Tipo" => "warning"
+            ]);
+        }
 
         $check_presupuesto = mainModel::ejecutar_consulta_simple("SELECT idorden_compra FROM orden_compra WHERE idorden_compra = '$id' AND id_sucursal = " . $_SESSION['nick_sucursal'] . "");
         if ($check_presupuesto->rowCount() <= 0) {
@@ -726,7 +738,8 @@ class ordencompraControlador extends ordencompraModelo
         $datos_oc_del = [
             "updatedby" => $_SESSION['id_str'],
             "idsucursal" => $_SESSION['nick_sucursal'],
-            "idorden_compra" => $id
+            "idorden_compra" => $id,
+            "motivo" => $motivo
         ];
 
         if (ordencompraModelo::anular_ordencompra_modelo($datos_oc_del)) {
