@@ -22,6 +22,27 @@ Cada informe se documenta de forma individual para conservar claridad funcional,
 - Los importes y cantidades se muestran con separador de miles.
 - El CSV se genera con separador punto y coma. En informes referenciales se usa UTF-16LE con BOM para compatibilidad con Excel y acentos; en informes de movimientos se usa UTF-8 con BOM.
 - La informacion consultada no se modifica.
+- Los documentos anulados no se eliminan de los informes. Se muestran mediante su estado. Cuando la anulacion pertenece a movimientos criticos de compras o servicios, el motivo, usuario y fecha quedan registrados en `anulacion_auditoria`.
+
+### Auditoria de Anulaciones e Informes
+
+La tabla `anulacion_auditoria` se utiliza como respaldo de trazabilidad para anulaciones transaccionales. Los informes principales consultan las tablas operativas del movimiento y muestran el estado del documento. La auditoria central conserva la justificacion administrativa de la anulacion.
+
+Movimientos con auditoria de anulacion:
+
+| Informe relacionado | Tabla operativa | Tabla de auditoria |
+|---|---|---|
+| Pedidos de Compra | `pedido_cabecera` | `anulacion_auditoria` |
+| Presupuestos de Compra | `presupuesto_compra` | `anulacion_auditoria` |
+| Ordenes de Compra | `orden_compra` | `anulacion_auditoria` |
+| Compras | `compra_cabecera` | `anulacion_auditoria` |
+| Recepcion de Servicios | `recepcion_servicio` | `anulacion_auditoria` |
+| Presupuestos de Servicios | `presupuesto_servicio` | `anulacion_auditoria` |
+| Ordenes de Trabajo | `orden_trabajo` | `anulacion_auditoria` |
+| Registro de Servicios | `registro_servicio` | `anulacion_auditoria` |
+| Salida de Insumos | `salida_insumo` | `anulacion_auditoria` |
+
+La auditoria no modifica el calculo del informe; sirve para explicar por que un documento quedo anulado. Si se requiere auditar el motivo exacto, se consulta `anulacion_auditoria` por `tabla_afectada` e `id_registro`.
 
 ### Fuente de Datos por Accion
 

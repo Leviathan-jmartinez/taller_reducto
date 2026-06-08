@@ -259,6 +259,18 @@ class salidaInsumoModelo extends mainModel
                 throw new Exception('No se pudo anular la salida');
             }
 
+            mainModel::registrar_anulacion_auditoria_modelo($pdo, [
+                'modulo' => 'salida_insumo',
+                'tabla_afectada' => 'salida_insumo',
+                'id_registro' => $datos['idsalida_insumo'],
+                'id_sucursal' => $datos['id_sucursal'],
+                'estado_anterior' => (string)($salida['estado'] ?? '1'),
+                'estado_nuevo' => '0',
+                'motivo' => $datos['motivo'] ?? '',
+                'usuario_anula' => $datos['usuario'],
+                'referencia' => 'SALIDA_INSUMO #' . $datos['idsalida_insumo']
+            ]);
+
             $pdo->commit();
             return true;
         } catch (Exception $e) {

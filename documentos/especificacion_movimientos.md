@@ -14,6 +14,45 @@ Ademas de controladores y modelos, los movimientos usan scripts en `vistas/inc` 
 
 Estas validaciones de interfaz no reemplazan las validaciones del controlador; sirven como apoyo para evitar errores antes del envio.
 
+## Auditoria central de anulaciones
+
+Los movimientos transaccionales que pueden afectar trazabilidad operativa registran la anulacion en la tabla `anulacion_auditoria`. Esta tabla no reemplaza el cambio de estado del documento; complementa el proceso guardando motivo, usuario, fecha, modulo, tabla afectada y referencia del registro anulado.
+
+El registro se realiza mediante el metodo central `mainModel::registrar_anulacion_auditoria_modelo()`. El metodo valida que la tabla `anulacion_auditoria` exista y exige que el motivo no este vacio. Si la tabla aun no existe, el sistema puede continuar con el flujo funcional, pero no persiste la auditoria central hasta ejecutar el script `database/create_anulacion_auditoria.sql` o contar con la tabla en el dump final.
+
+Movimientos que actualmente registran auditoria de anulacion:
+
+| Movimiento | Modulo registrado | Tabla afectada | Referencia |
+|---|---|---|---|
+| Pedido de compra | `pedido_compra` | `pedido_cabecera` | `PEDIDO #id` |
+| Presupuesto de compra | `presupuesto_compra` | `presupuesto_compra` | `PRESUPUESTO_COMPRA #id` |
+| Orden de compra | `orden_compra` | `orden_compra` | `ORDEN_COMPRA #id` |
+| Compra / factura proveedor | `compra` | `compra_cabecera` | `COMPRA #id` |
+| Recepcion de servicio | `recepcion_servicio` | `recepcion_servicio` | `RECEPCION #id` |
+| Presupuesto de servicio | `presupuesto_servicio` | `presupuesto_servicio` | `PRESUPUESTO_SERVICIO #id` |
+| Orden de trabajo | `orden_trabajo` | `orden_trabajo` | `OT #id` |
+| Registro de servicio | `registro_servicio` | `registro_servicio` | `REGISTRO_SERVICIO #id` |
+| Salida de insumos | `salida_insumo` | `salida_insumo` | `SALIDA_INSUMO #id` |
+
+Datos guardados en `anulacion_auditoria`:
+
+| Campo | Descripcion |
+|---|---|
+| `modulo` | Nombre logico del modulo que ejecuto la anulacion. |
+| `tabla_afectada` | Tabla principal cuyo registro cambio de estado. |
+| `id_registro` | Identificador del documento o movimiento anulado. |
+| `id_sucursal` | Sucursal relacionada, cuando el movimiento la posee. |
+| `estado_anterior` | Estado previo del documento antes de anular. |
+| `estado_nuevo` | Estado final de anulacion, normalmente `0`. |
+| `motivo` | Justificacion ingresada por el usuario en el modal de anulacion. |
+| `usuario_anula` | Usuario autenticado que confirmo la anulacion. |
+| `fecha_anulacion` | Fecha y hora del registro de auditoria. |
+| `referencia` | Texto identificador para lectura rapida del documento. |
+
+Defensa funcional:
+
+> La anulacion no elimina el documento. El sistema cambia el estado del registro original y guarda una auditoria central con motivo, usuario y fecha. Si el movimiento afecta stock, adicionalmente se registra el movimiento inverso correspondiente en `movimientostock`.
+
 ## Movimiento "Gestion de Pedidos"
 
 * **Nombre de Caso de Uso**  

@@ -184,8 +184,9 @@ class salidaInsumoControlador extends salidaInsumoModelo
 
         $datos = [
             'idsalida_insumo' => $idSalida,
-            'usuario'             => $idUsuario,
-            'id_sucursal'         => $idSucursal
+            'usuario'         => $idUsuario,
+            'id_sucursal'     => $idSucursal,
+            'motivo'          => mainModel::limpiar_string($_POST['motivo_anulacion'] ?? '')
         ];
 
         $res = self::anular_salida_insumo_modelo($datos);
@@ -324,7 +325,9 @@ class salidaInsumoControlador extends salidaInsumoModelo
                 <form class="FormularioAjax d-inline"
                     action="' . SERVERURL . 'ajax/salidaInsumoAjax.php"
                     method="POST"
-                    data-form="delete">
+                    data-form="delete"
+                    data-anulacion="true"
+                    data-anulacion-titulo="Anular salida de insumos">
 
                     <input type="hidden" name="accion" value="anular">
                     <input type="hidden" name="id_salida" value="' . mainModel::encryption($row['idsalida_insumo']) . '">
