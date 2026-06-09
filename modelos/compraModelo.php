@@ -43,13 +43,14 @@
         {
             $sql = mainModel::conectar()->prepare("
             INSERT INTO compra_detalle
-            (idcompra_cabecera, id_articulo, precio_unitario, cantidad_recibida, subtotal, tipo_iva, ivaPro)
-            VALUES (:idcab, :articulo, :precio, :cantidad, :subtotal, :tipo_iva, :iva)");
+            (idcompra_cabecera, id_articulo, precio_unitario, cantidad_facturada, cantidad_recibida, subtotal, tipo_iva, ivaPro)
+            VALUES (:idcab, :articulo, :precio, :cantidad_facturada, :cantidad_recibida, :subtotal, :tipo_iva, :iva)");
 
             $sql->bindParam(":idcab", $detalle['idcab']);
             $sql->bindParam(":articulo", $detalle['id_articulo']);
             $sql->bindParam(":precio", $detalle['precio']);
-            $sql->bindParam(":cantidad", $detalle['cantidad']);
+            $sql->bindParam(":cantidad_facturada", $detalle['cantidad_facturada']);
+            $sql->bindParam(":cantidad_recibida", $detalle['cantidad_recibida']);
             $sql->bindParam(":subtotal", $detalle['subtotal']);
             $sql->bindParam(":tipo_iva", $detalle['tipo_iva']);
             $sql->bindParam(":iva", $detalle['iva']);
@@ -260,6 +261,7 @@
                 SELECT
                     a.codigo,
                     a.desc_articulo,
+                    cd.cantidad_facturada,
                     cd.cantidad_recibida,
                     cd.precio_unitario,
                     cd.tipo_iva,
@@ -458,6 +460,7 @@
 
             $sql = $conexion->prepare("
             SELECT d.id_articulo,
+                d.cantidad_facturada,
                 d.cantidad_recibida,
                 d.precio_unitario
             FROM compra_detalle d

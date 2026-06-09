@@ -331,7 +331,7 @@ class clienteControlador extends clienteModelo
                 <th>DIRECCIÓN</th>';
 
         if (mainModel::tienePermiso('cliente.editar')) {
-            $tabla .= '<th>ACTUALIZAR</th>';
+            $tabla .= '<th>EDITAR</th>';
         }
         if (mainModel::tienePermiso('cliente.eliminar')) {
             $tabla .= '<th>ELIMINAR</th>';
@@ -367,7 +367,7 @@ class clienteControlador extends clienteModelo
                 <td>
                     <a href="' . SERVERURL . 'cliente-actualizar/' . mainModel::encryption($rows['id_cliente']) . '/"
                     class="btn btn-success">
-                        <i class="fas fa-sync-alt"></i>
+                        <i class="fas fa-edit"></i>
                     </a>
                 </td>';
                 }

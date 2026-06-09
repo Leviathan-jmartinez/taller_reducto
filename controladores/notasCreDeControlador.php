@@ -72,6 +72,7 @@ class notasCreDeControlador extends notasCreDeModelo
             'nro_factura'       => $factura['nro_factura'],
             'fecha_factura'     => $factura['fecha_factura'],
             'total'             => $factura['total_compra'],
+            'estado_compra'     => (int)$factura['estado'],
             'idproveedor'       => (int)$factura['idproveedores'],
             'ruc'               => $factura['ruc'],
             'proveedor'         => $factura['razon_social']
@@ -83,7 +84,11 @@ class notasCreDeControlador extends notasCreDeModelo
 
         foreach ($detalleBD as $d) {
 
-            $subtotal = round($d['cantidad_recibida'] * $d['precio_unitario'], 2);
+            $cantidadBase = (int)$factura['estado'] === 3
+                ? max((float)($d['cantidad_facturada'] ?? $d['cantidad_recibida']) - (float)$d['cantidad_recibida'], 0)
+                : (float)$d['cantidad_recibida'];
+
+            $subtotal = round($cantidadBase * $d['precio_unitario'], 2);
 
             $exenta = 0;
             $iva5   = 0;
@@ -103,8 +108,10 @@ class notasCreDeControlador extends notasCreDeModelo
             $_SESSION['NC_DETALLE'][] = [
                 'id_articulo' => $d['id_articulo'],
                 'descripcion' => $d['desc_articulo'],
-                'cantidad'    => $d['cantidad_recibida'],
-                'cantidad_original' => $d['cantidad_recibida'],
+                'cantidad'    => $cantidadBase,
+                'cantidad_original' => $cantidadBase,
+                'cantidad_facturada' => $d['cantidad_facturada'] ?? $d['cantidad_recibida'],
+                'cantidad_recibida' => $d['cantidad_recibida'],
                 'precio'      => $d['precio_unitario'],
                 'precio_original' => $d['precio_unitario'],
                 'iva_tipo'    => $d['tipo_impuesto_descri'],
@@ -321,6 +328,63 @@ class notasCreDeControlador extends notasCreDeModelo
             }
         }
 
+        $regularizaDiferencia = false;
+        if ((int)($factura['estado_compra'] ?? 0) === 3) {
+            if ($tipoNota !== 'credito' || $movStock !== 'NINGUNO') {
+                return [
+                    "Alerta" => "simple",
+                    "Titulo" => "Regularizacion requerida",
+                    "Texto"  => "Una compra con diferencia debe regularizarse con Nota de Credito sin movimiento de stock.",
+                    "Tipo"   => "error"
+                ];
+            }
+
+            $diferencias = notasCreDeModelo::diferenciaCompraModelo($factura['idcompra_cabecera']);
+            $diferenciasPorArticulo = [];
+            $totalDiferencia = 0;
+            foreach ($diferencias as $dif) {
+                $cantidadDif = (float)$dif['cantidad_diferencia'];
+                $montoDif = round((float)$dif['monto_diferencia'], 2);
+                if ($cantidadDif > 0) {
+                    $diferenciasPorArticulo[(int)$dif['id_articulo']] = $cantidadDif;
+                    $totalDiferencia = round($totalDiferencia + $montoDif, 2);
+                }
+            }
+
+            if ($totalDiferencia <= 0) {
+                return [
+                    "Alerta" => "simple",
+                    "Titulo" => "Sin diferencia pendiente",
+                    "Texto"  => "La compra no posee diferencia pendiente para regularizar.",
+                    "Tipo"   => "error"
+                ];
+            }
+
+            foreach ($detalle as $d) {
+                $idArticulo = (int)$d['id_articulo'];
+                $cantidadPermitida = $diferenciasPorArticulo[$idArticulo] ?? 0;
+                if ((float)$d['cantidad'] > $cantidadPermitida) {
+                    return [
+                        "Alerta" => "simple",
+                        "Titulo" => "Cantidad excedida",
+                        "Texto"  => "La NC no puede superar la diferencia pendiente del articulo " . $d['descripcion'] . ".",
+                        "Tipo"   => "error"
+                    ];
+                }
+            }
+
+            if (abs(round($total, 2) - round($totalDiferencia, 2)) > 0.01) {
+                return [
+                    "Alerta" => "simple",
+                    "Titulo" => "Debe cubrir la diferencia",
+                    "Texto"  => "La NC debe cubrir exactamente la diferencia pendiente: " . number_format($totalDiferencia, 0, ',', '.'),
+                    "Tipo"   => "error"
+                ];
+            }
+
+            $regularizaDiferencia = true;
+        }
+
         $montoMovimiento = $total;
         if ($tipoNota === 'credito') {
             $montoMovimiento *= -1;
@@ -450,6 +514,15 @@ class notasCreDeControlador extends notasCreDeModelo
                 'monto'      => $montoMovimiento,
                 'obs'        => 'Nota ' . $tipoNota . ' ' . $_POST['nro_nota']
             ]);
+
+            if ($regularizaDiferencia) {
+                notasCreDeModelo::regularizarCompraModelo(
+                    $pdo,
+                    $factura['idcompra_cabecera'],
+                    $_SESSION['nick_sucursal'],
+                    $_SESSION['id_str']
+                );
+            }
 
             $pdo->commit();
 
@@ -617,7 +690,7 @@ class notasCreDeControlador extends notasCreDeModelo
         }
 
         $idNota = mainModel::decryption($_POST['notaCreDe_id_del']);
-        $motivo = mainModel::limpiar_string($_POST['motivo_anulacion'] ?? '');
+        $motivo = mainModel::limpiar_string($_POST['observacion_anulacion'] ?? '');
         $nota = notasCreDeModelo::obtenerNotaCompraPorId($idNota);
 
         if (!$nota) {
@@ -652,6 +725,15 @@ class notasCreDeControlador extends notasCreDeModelo
             ]);
 
             /* 3️⃣ Revertir stock si correspondía */
+            if ($nota['tipo'] === 'credito' && $nota['movimiento_stock'] === 'NINGUNO') {
+                notasCreDeModelo::marcarCompraConDiferenciaModelo(
+                    $pdo,
+                    $nota['idcompra_cabecera'],
+                    $nota['id_sucursal'],
+                    $_SESSION['id_str']
+                );
+            }
+
             if ($nota['movimiento_stock'] === 'DEVOLUCION') {
 
                 $det = $pdo->prepare("

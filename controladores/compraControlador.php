@@ -108,8 +108,9 @@ class compraControlador extends compraModelo
 
             // Si ya existe en la sesión (modificado), no sobreescribas cantidad y precio
             $cantidad = $_SESSION['Cdatos_articuloCO'][$i]['cantidad'] ?? $row['cantidad_pendiente'];
+            $cantidadFacturada = $_SESSION['Cdatos_articuloCO'][$i]['cantidad_facturada'] ?? $cantidad;
             $precio   = $_SESSION['Cdatos_articuloCO'][$i]['precio'] ?? $row['precio_unitario'];
-            $subtotal = $cantidad * $precio;
+            $subtotal = $cantidadFacturada * $precio;
             if ($row['divisor'] == 0) {
                 $iva = 0;
             } else {
@@ -120,6 +121,7 @@ class compraControlador extends compraModelo
                 "codigo" => $row['codigo'],
                 "descripcion" => $row['desc_articulo'],
                 "cantidad" => $cantidad,
+                "cantidad_facturada" => $cantidadFacturada,
                 "cantidad_pendiente" => $row['cantidad_pendiente'],
                 "precio" => $precio,
                 "subtotal" => $subtotal,
@@ -158,18 +160,60 @@ class compraControlador extends compraModelo
             ];
         }
 
-        // 1) Filtrar solo artículos con cantidad > 0
+        // 1) Sincronizar y filtrar articulos con cantidad facturada > 0
+        if (!empty($_POST['detalle_indices']) && is_array($_POST['detalle_indices'])) {
+            foreach ($_POST['detalle_indices'] as $pos => $indice) {
+                if (!isset($_SESSION['Cdatos_articuloCO'][$indice])) {
+                    continue;
+                }
+
+                $cantidadRecibidaPost = (float)($_POST['cantidades'][$pos] ?? 0);
+                $cantidadFacturadaPost = (float)($_POST['cantidades_facturadas'][$pos] ?? $cantidadRecibidaPost);
+                $precioPost = (float)($_POST['precios'][$pos] ?? 0);
+                $divisorPost = (float)($_SESSION['Cdatos_articuloCO'][$indice]['divisor'] ?? 0);
+                $subtotalPost = round($cantidadFacturadaPost * $precioPost, 2);
+                $ivaPost = $divisorPost > 0 ? round($subtotalPost / $divisorPost, 2) : 0;
+
+                $_SESSION['Cdatos_articuloCO'][$indice]['cantidad'] = $cantidadRecibidaPost;
+                $_SESSION['Cdatos_articuloCO'][$indice]['cantidad_facturada'] = $cantidadFacturadaPost;
+                $_SESSION['Cdatos_articuloCO'][$indice]['precio'] = $precioPost;
+                $_SESSION['Cdatos_articuloCO'][$indice]['subtotal'] = $subtotalPost;
+                $_SESSION['Cdatos_articuloCO'][$indice]['iva'] = $ivaPost;
+            }
+        }
+
         $itemsValidos = [];
         foreach ($_SESSION['Cdatos_articuloCO'] as $item) {
-            if ((float)$item['cantidad'] > 0) {
+            $cantidadRecibida = (float)($item['cantidad'] ?? 0);
+            $cantidadFacturada = (float)($item['cantidad_facturada'] ?? $cantidadRecibida);
+            if ($cantidadRecibida < 0 || $cantidadFacturada < 0) {
+                return [
+                    "Alerta" => "simple",
+                    "Titulo" => "Cantidad invalida",
+                    "Texto" => "Las cantidades facturadas y recibidas no pueden ser negativas.",
+                    "Tipo" => "error"
+                ];
+            }
+            if ($cantidadFacturada > 0) {
                 if (
                     isset($_SESSION['id_oc_seleccionado'], $item['cantidad_pendiente']) &&
-                    (float)$item['cantidad'] > (float)$item['cantidad_pendiente']
+                    $cantidadRecibida > (float)$item['cantidad_pendiente']
                 ) {
                     return [
                         "Alerta" => "simple",
                         "Titulo" => "Cantidad excedida",
                         "Texto" => "La cantidad recibida del artículo " . $item['descripcion'] . " no puede superar la cantidad pendiente de la orden de compra.",
+                        "Tipo" => "error"
+                    ];
+                }
+                if (
+                    isset($_SESSION['id_oc_seleccionado'], $item['cantidad_pendiente']) &&
+                    $cantidadFacturada > (float)$item['cantidad_pendiente']
+                ) {
+                    return [
+                        "Alerta" => "simple",
+                        "Titulo" => "Cantidad excedida",
+                        "Texto" => "La cantidad facturada del articulo " . $item['descripcion'] . " no puede superar la cantidad pendiente de la orden de compra.",
                         "Tipo" => "error"
                     ];
                 }
@@ -181,15 +225,21 @@ class compraControlador extends compraModelo
             return [
                 "Alerta" => "simple",
                 "Titulo" => "Error",
-                "Texto" => "Debes ingresar al menos un producto con cantidad mayor a 0.",
+                "Texto" => "Debes ingresar al menos un producto con cantidad facturada mayor a 0.",
                 "Tipo" => "error"
             ];
         }
 
         // 2) Recalcular total real
         $totalReal = 0;
+        $tieneDiferencia = false;
         foreach ($itemsValidos as $item) {
-            $totalReal += round((float)$item['subtotal'], 2);
+            $cantidadRecibida = (float)($item['cantidad'] ?? 0);
+            $cantidadFacturada = (float)($item['cantidad_facturada'] ?? $cantidadRecibida);
+            $totalReal += round($cantidadFacturada * (float)$item['precio'], 2);
+            if (abs($cantidadFacturada - $cantidadRecibida) > 0.0001) {
+                $tieneDiferencia = true;
+            }
         }
         $totalReal = round($totalReal, 2);
 
@@ -262,7 +312,7 @@ class compraControlador extends compraModelo
                 "fecha_factura"        => $_POST['fecha_emision'],
                 "timbrado"             => $_POST['timbrado'],
                 "vencimiento_timbrado" => $vencimiento_timbrado,
-                "estado"               => "1",
+                "estado"               => $tieneDiferencia ? "3" : "1",
                 "total"                => $totalReal,
                 "condicion"            => $condicion,
                 "intervalo"            => $intervalo,
@@ -311,8 +361,11 @@ class compraControlador extends compraModelo
 
             foreach ($itemsValidos as $item) {
 
-                $subtotal = round((float)$item['subtotal'], 2);
-                $ivaItem  = round((float)$item['iva'], 2);
+                $cantidadRecibida = (float)($item['cantidad'] ?? 0);
+                $cantidadFacturada = (float)($item['cantidad_facturada'] ?? $cantidadRecibida);
+                $precioUnitario = round((float)$item['precio'], 2);
+                $subtotal = round($cantidadFacturada * $precioUnitario, 2);
+                $ivaItem  = ((float)$item['divisor'] > 0) ? round($subtotal / (float)$item['divisor'], 2) : 0;
 
                 $totalLibro = round($totalLibro + $subtotal, 2);
 
@@ -338,8 +391,9 @@ class compraControlador extends compraModelo
                 $detalle = [
                     "idcab"       => $idcab,
                     "id_articulo" => $item['ID'],
-                    "precio"      => round((float)$item['precio'], 2),
-                    "cantidad"    => (float)$item['cantidad'],
+                    "precio"      => $precioUnitario,
+                    "cantidad_facturada" => $cantidadFacturada,
+                    "cantidad_recibida" => $cantidadRecibida,
                     "tipo_iva"    => $item['tipo_iva'],
                     "subtotal"    => $subtotal,
                     "iva"         => $ivaItem
@@ -353,24 +407,26 @@ class compraControlador extends compraModelo
                 self::registrar_articulo_proveedor_modelo(
                     $item['ID'],
                     $_SESSION['datos_proveedorCO']['ID'],
-                    round((float)$item['precio'], 2)
+                    $precioUnitario
                 );
 
                 /* ===== Movimiento de stock ===== */
-                $mov = [
-                    "local"        => $_SESSION['nick_sucursal'],
-                    "tipo"         => "RECEPCION COMPRA",
-                    "producto"     => $item['ID'],
-                    "cantidad"     => (float)$item['cantidad'],
-                    "precioVenta"  => 0,
-                    "costo"        => round((float)$item['precio'], 2),
-                    "nroTicket"    => $_POST['factura_numero'],
-                    "pos"          => null,
-                    "usuario"      => $_SESSION['id_str'],
-                    "signo"        => 1,
-                    "referencia"   => $idcab
-                ];
-                compraModelo::agregar_movimiento_stock($mov);
+                if ($cantidadRecibida > 0) {
+                    $mov = [
+                        "local"        => $_SESSION['nick_sucursal'],
+                        "tipo"         => "RECEPCION COMPRA",
+                        "producto"     => $item['ID'],
+                        "cantidad"     => $cantidadRecibida,
+                        "precioVenta"  => 0,
+                        "costo"        => $precioUnitario,
+                        "nroTicket"    => $_POST['factura_numero'],
+                        "pos"          => null,
+                        "usuario"      => $_SESSION['id_str'],
+                        "signo"        => 1,
+                        "referencia"   => $idcab
+                    ];
+                    compraModelo::agregar_movimiento_stock($mov);
+                }
             }
 
             /* ===============================
@@ -729,6 +785,7 @@ class compraControlador extends compraModelo
                         "codigo"      => $row['codigo'],
                         "descripcion" => $row['desc_articulo'],
                         "cantidad"    => $cantidad,
+                        "cantidad_facturada" => $cantidad,
                         "precio"      => $precio,
                         "subtotal"    => $subtotal,
                         "tipo_iva"    => $row['idiva'],
@@ -856,6 +913,12 @@ class compraControlador extends compraModelo
                     case 2:
                         $estadoBadge = '<span class="badge bg-success">Procesado</span>';
                         break;
+                    case 3:
+                        $estadoBadge = '<span class="badge bg-warning text-dark">Con diferencia</span>';
+                        break;
+                    case 4:
+                        $estadoBadge = '<span class="badge bg-info text-dark">Regularizada</span>';
+                        break;
                     case 0:
                         $estadoBadge = '<span class="badge bg-danger">Anulado</span>';
                         break;
@@ -945,7 +1008,7 @@ class compraControlador extends compraModelo
         $cab = $datos['cabecera'];
         $libro = $datos['libro'] ?: [];
         $cuentas = $datos['cuentas'] ?: [];
-        $estadoTexto = ['0' => 'Anulado', '1' => 'Activo', '2' => 'Procesado'];
+        $estadoTexto = ['0' => 'Anulado', '1' => 'Activo', '2' => 'Procesado', '3' => 'Con diferencia', '4' => 'Regularizada'];
         $total = 0;
 
         $html = '
@@ -970,7 +1033,9 @@ class compraControlador extends compraModelo
                         <tr class="text-center">
                             <th>Codigo</th>
                             <th>Articulo</th>
-                            <th>Cantidad</th>
+                            <th>Facturada</th>
+                            <th>Recibida</th>
+                            <th>Diferencia</th>
                             <th>Precio</th>
                             <th>IVA</th>
                             <th>Subtotal</th>
@@ -984,7 +1049,9 @@ class compraControlador extends compraModelo
                 <tr>
                     <td>' . htmlspecialchars($row['codigo'], ENT_QUOTES, 'UTF-8') . '</td>
                     <td>' . htmlspecialchars($row['desc_articulo'], ENT_QUOTES, 'UTF-8') . '</td>
+                    <td class="text-right">' . number_format((float)$row['cantidad_facturada'], 0, ',', '.') . '</td>
                     <td class="text-right">' . number_format((float)$row['cantidad_recibida'], 0, ',', '.') . '</td>
+                    <td class="text-right">' . number_format(((float)$row['cantidad_facturada'] - (float)$row['cantidad_recibida']), 0, ',', '.') . '</td>
                     <td class="text-right">' . number_format((float)$row['precio_unitario'], 0, ',', '.') . '</td>
                     <td class="text-right">' . number_format((float)$row['ivaPro'], 0, ',', '.') . '</td>
                     <td class="text-right">' . number_format((float)$row['subtotal'], 0, ',', '.') . '</td>
@@ -995,7 +1062,7 @@ class compraControlador extends compraModelo
                     </tbody>
                     <tfoot>
                         <tr>
-                            <th colspan="5" class="text-right">Total detalle</th>
+                            <th colspan="7" class="text-right">Total detalle</th>
                             <th class="text-right">Gs. ' . number_format($total, 0, ',', '.') . '</th>
                         </tr>
                     </tfoot>

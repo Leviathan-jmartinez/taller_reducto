@@ -56,6 +56,8 @@
             // Leer valores
             const cantidadInput = fila.querySelector(".cantidad");
             let cantidad = parseFloat(cantidadInput.value) || 0;
+            const cantidadFacturadaInput = fila.querySelector(".cantidad-facturada");
+            let cantidadFacturada = parseFloat(cantidadFacturadaInput.value) || 0;
             const maxCantidad = parseFloat(cantidadInput.max);
             if (!Number.isNaN(maxCantidad) && cantidad > maxCantidad) {
                 cantidad = maxCantidad;
@@ -67,12 +69,23 @@
                     confirmButtonText: 'Aceptar'
                 });
             }
+            if (!Number.isNaN(maxCantidad) && cantidadFacturada > maxCantidad) {
+                cantidadFacturada = maxCantidad;
+                cantidadFacturadaInput.value = maxCantidad;
+                Swal.fire({
+                    title: 'Cantidad excedida',
+                    text: 'La cantidad facturada no puede superar la cantidad pendiente de la OC',
+                    type: 'warning',
+                    confirmButtonText: 'Aceptar'
+                });
+            }
             let precioTexto = fila.querySelector(".precio").value;
             let precio = parseFloat(precioTexto.replace(/\./g, '').replace(',', '.')) || 0;
 
             // Subtotal e IVA
-            let subtotal = cantidad * precio;
+            let subtotal = cantidadFacturada * precio;
             fila.querySelector(".subtotal").innerText = subtotal.toLocaleString('es-ES');
+            fila.querySelector(".diferencia-cantidad").innerText = (cantidadFacturada - cantidad).toLocaleString('es-ES');
             let divisor = parseFloat(fila.dataset.divisor);
             let iva = divisor > 0 ? subtotal / divisor : 0;
             fila.querySelector(".iva-monto").innerText = iva.toLocaleString('es-ES');
@@ -91,6 +104,7 @@
                         body: new URLSearchParams({
                             index: index,
                             cantidad: cantidad,
+                            cantidad_facturada: cantidadFacturada,
                             precio: precio,
                             subtotal: subtotal,
                             iva: iva
@@ -101,6 +115,7 @@
                         console.log("SESSION ACTUALIZADA:", data);
                         if (data.status === "error" && data.cantidad_pendiente !== undefined) {
                             fila.querySelector(".cantidad").value = data.cantidad_pendiente;
+                            fila.querySelector(".cantidad-facturada").value = data.cantidad_pendiente;
                             recalcularYActualizar(fila);
                         }
                     });
@@ -169,7 +184,7 @@
 
         // Detectar cambios en inputs con debounce
         document.addEventListener("input", function(e) {
-            if (e.target.classList.contains("cantidad") || e.target.classList.contains("precio")) {
+            if (e.target.classList.contains("cantidad") || e.target.classList.contains("cantidad-facturada") || e.target.classList.contains("precio")) {
                 let fila = e.target.closest("tr");
                 recalcularYActualizar(fila);
             }

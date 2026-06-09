@@ -629,7 +629,7 @@ class diagnosticoControlador extends diagnosticoModelo
         }
 
         $id = $_POST['id_diagnostico'];
-        $motivo = mainModel::limpiar_string($_POST['motivo_anulacion'] ?? '');
+        $motivo = mainModel::limpiar_string($_POST['observacion_anulacion'] ?? '');
 
         $resp = diagnosticoModelo::anular_diagnostico_modelo($id, $_SESSION['id_str'], $motivo);
 

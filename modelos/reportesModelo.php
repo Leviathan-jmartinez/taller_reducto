@@ -931,7 +931,9 @@ class reportesModelo extends mainModel
             s.suc_descri AS sucursal,
 
             COUNT(cd.id_articulo) AS cantidad_items,
+            COALESCE(SUM(cd.cantidad_facturada), 0) AS cantidad_facturada_total,
             COALESCE(SUM(cd.cantidad_recibida), 0) AS cantidad_total,
+            COALESCE(SUM(cd.cantidad_facturada - cd.cantidad_recibida), 0) AS cantidad_diferencia_total,
             GROUP_CONCAT(DISTINCT cd.id_articulo) AS articulos_ids
 
         FROM compra_cabecera cc
@@ -1605,7 +1607,9 @@ class reportesModelo extends mainModel
             cd.id_articulo,
             a.codigo,
             a.desc_articulo AS articulo,
+            cd.cantidad_facturada,
             cd.cantidad_recibida,
+            (cd.cantidad_facturada - cd.cantidad_recibida) AS cantidad_diferencia,
             cd.precio_unitario,
             cd.subtotal
         FROM compra_cabecera cc

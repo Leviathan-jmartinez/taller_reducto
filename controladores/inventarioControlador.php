@@ -984,7 +984,7 @@ class inventarioControlador extends inventarioModelo
         $id = (int) mainModel::limpiar_string(
             mainModel::decryption($_POST['inv_id_del'])
         );
-        $motivo = mainModel::limpiar_string($_POST['motivo_anulacion'] ?? '');
+        $motivo = mainModel::limpiar_string($_POST['observacion_anulacion'] ?? '');
 
         $db = mainModel::conectar();
         $db->beginTransaction();

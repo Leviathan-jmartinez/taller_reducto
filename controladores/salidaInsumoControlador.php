@@ -186,7 +186,7 @@ class salidaInsumoControlador extends salidaInsumoModelo
             'idsalida_insumo' => $idSalida,
             'usuario'         => $idUsuario,
             'id_sucursal'     => $idSucursal,
-            'motivo'          => mainModel::limpiar_string($_POST['motivo_anulacion'] ?? '')
+            'motivo'          => mainModel::limpiar_string($_POST['observacion_anulacion'] ?? '')
         ];
 
         $res = self::anular_salida_insumo_modelo($datos);

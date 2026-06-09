@@ -374,7 +374,7 @@ class reclamoServicioControlador extends reclamoServicioModelo
 
         $id = mainModel::decryption($_POST['id']);
         $id = mainModel::limpiar_string($id);
-        $motivo = mainModel::limpiar_string($_POST['motivo_anulacion'] ?? '');
+        $motivo = mainModel::limpiar_string($_POST['observacion_anulacion'] ?? '');
 
         $check = mainModel::conectar()->prepare("
             SELECT estado

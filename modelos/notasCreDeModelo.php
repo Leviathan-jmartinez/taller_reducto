@@ -20,10 +20,12 @@ class notasCreDeModelo extends mainModel
             nro_factura,
             fecha_factura,
             total_compra,
-            idproveedores
+            idproveedores,
+            estado
         FROM compra_cabecera
         WHERE 
             id_sucursal = :sucursal
+            AND estado <> 0
             AND REPLACE(nro_factura, ' ', '') LIKE :t
         ORDER BY idcompra_cabecera DESC
         LIMIT 10");
@@ -62,6 +64,7 @@ class notasCreDeModelo extends mainModel
         SELECT 
             d.id_articulo,
             a.desc_articulo,
+            d.cantidad_facturada,
             d.cantidad_recibida,
             d.precio_unitario,
             d.subtotal,
@@ -290,6 +293,79 @@ class notasCreDeModelo extends mainModel
         $sql->bindValue(':sucursal', $_SESSION['nick_sucursal'], PDO::PARAM_INT);
         $sql->execute();
         return (float)$sql->fetchColumn();
+    }
+
+    protected static function diferenciaCompraModelo($idcompra)
+    {
+        self::iniciarSesionSiHaceFalta();
+        $sql = mainModel::conectar()->prepare("
+        SELECT
+            d.id_articulo,
+            a.desc_articulo,
+            GREATEST(COALESCE(d.cantidad_facturada, d.cantidad_recibida) - d.cantidad_recibida, 0) AS cantidad_diferencia,
+            d.precio_unitario,
+            (GREATEST(COALESCE(d.cantidad_facturada, d.cantidad_recibida) - d.cantidad_recibida, 0) * d.precio_unitario) AS monto_diferencia
+        FROM compra_detalle d
+        INNER JOIN compra_cabecera c ON c.idcompra_cabecera = d.idcompra_cabecera
+        INNER JOIN articulos a ON a.id_articulo = d.id_articulo
+        WHERE d.idcompra_cabecera = :id
+          AND c.id_sucursal = :sucursal
+        ");
+
+        $sql->execute([
+            ':id' => $idcompra,
+            ':sucursal' => $_SESSION['nick_sucursal']
+        ]);
+
+        return $sql->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    protected static function regularizarCompraModelo(PDO $pdo, $idcompra, $idSucursal, $usuario)
+    {
+        $sql = $pdo->prepare("
+        UPDATE compra_cabecera
+        SET estado = 4,
+            updated = NOW(),
+            updatedby = :usuario
+        WHERE idcompra_cabecera = :idcompra
+          AND id_sucursal = :sucursal
+          AND estado = 3
+        ");
+
+        $sql->execute([
+            ':usuario' => $usuario,
+            ':idcompra' => $idcompra,
+            ':sucursal' => $idSucursal
+        ]);
+
+        return $sql;
+    }
+
+    protected static function marcarCompraConDiferenciaModelo(PDO $pdo, $idcompra, $idSucursal, $usuario)
+    {
+        $sql = $pdo->prepare("
+        UPDATE compra_cabecera
+        SET estado = 3,
+            updated = NOW(),
+            updatedby = :usuario
+        WHERE idcompra_cabecera = :idcompra
+          AND id_sucursal = :sucursal
+          AND estado = 4
+          AND EXISTS (
+              SELECT 1
+              FROM compra_detalle d
+              WHERE d.idcompra_cabecera = compra_cabecera.idcompra_cabecera
+                AND COALESCE(d.cantidad_facturada, d.cantidad_recibida) > d.cantidad_recibida
+          )
+        ");
+
+        $sql->execute([
+            ':usuario' => $usuario,
+            ':idcompra' => $idcompra,
+            ':sucursal' => $idSucursal
+        ]);
+
+        return $sql;
     }
 
     protected static function obtenerStockDisponibleModelo($idSucursal, $idArticulo)

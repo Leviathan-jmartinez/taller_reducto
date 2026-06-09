@@ -59,7 +59,7 @@ class articuloControlador extends articuloModelo
                 <th>PRECIO VENTA</th>';
 
         if (mainModel::tienePermiso('articulo.editar')) {
-            $tabla .= '<th>ACTUALIZAR</th>';
+            $tabla .= '<th>EDITAR</th>';
         }
         if (mainModel::tienePermiso('articulo.eliminar')) {
             $tabla .= '<th>ELIMINAR</th>';
@@ -88,7 +88,7 @@ class articuloControlador extends articuloModelo
                 <td>
                     <a href="' . SERVERURL . 'articulo-actualizar/' . mainModel::encryption($rows['id_articulo']) . '/"
                     class="btn btn-success">
-                        <i class="fas fa-sync-alt"></i>
+                        <i class="fas fa-edit"></i>
                     </a>
                 </td>';
                 }

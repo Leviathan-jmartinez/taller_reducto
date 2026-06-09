@@ -167,13 +167,15 @@ $ocSeleccionada = !empty($_SESSION['id_oc_seleccionado']);
                 <table class="table table-dark table-sm" id="tabla-detalle">
                     <thead>
                         <tr>
-                            <th style="width:35%;">Articulo</th>
-                            <th class="text-center" style="width:10%;">Cantidad Pendiente</th>
-                            <th class="text-center" style="width:10%;">Cantidad Recibida</th>
-                            <th class="text-center" style="width:15%;">Precio unit.</th>
-                            <th class="text-center" style="width:12%;">Subtotal</th>
-                            <th class="text-center" style="width:10%;">IVA</th>
-                            <th class="text-center" style="width:12%;">IVA monto</th>
+                            <th style="width:28%;">Articulo</th>
+                            <th class="text-center" style="width:10%;">Pendiente OC</th>
+                            <th class="text-center" style="width:11%;">Cant. facturada</th>
+                            <th class="text-center" style="width:11%;">Cant. recibida</th>
+                            <th class="text-center" style="width:10%;">Diferencia</th>
+                            <th class="text-center" style="width:12%;">Precio unit.</th>
+                            <th class="text-center" style="width:10%;">Subtotal</th>
+                            <th class="text-center" style="width:8%;">IVA</th>
+                            <th class="text-center" style="width:10%;">IVA monto</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -183,15 +185,29 @@ $ocSeleccionada = !empty($_SESSION['id_oc_seleccionado']);
                                     data-index="<?= $i; ?>"
                                     data-rate="<?= $item['ratevalueiva']; ?>"
                                     data-divisor="<?= $item['divisor']; ?>">
-                                    <td class="text-left"><?= htmlspecialchars($item['descripcion']); ?></td>
-                                    <td class="text-center"><?= htmlspecialchars($item['cantidad']); ?></td>
+                                    <td class="text-left">
+                                        <?= htmlspecialchars($item['descripcion']); ?>
+                                        <input type="hidden" name="detalle_indices[]" value="<?= htmlspecialchars($i, ENT_QUOTES, 'UTF-8'); ?>">
+                                    </td>
+                                    <td class="text-center"><?= htmlspecialchars($item['cantidad_pendiente'] ?? $item['cantidad']); ?></td>
+                                    <td class="text-center">
+                                        <input type="number" min="0" step="1"
+                                            name="cantidades_facturadas[]"
+                                            class="form-control text-center cantidad-facturada"
+                                            value="<?= $item['cantidad_facturada'] ?? $item['cantidad']; ?>"
+                                            <?= isset($item['cantidad_pendiente']) ? 'max="' . htmlspecialchars($item['cantidad_pendiente']) . '"' : ''; ?>
+                                            required>
+                                    </td>
                                     <td class="text-center">
                                         <input type="number" min="0" step="1"
                                             name="cantidades[]"
                                             class="form-control text-center cantidad"
                                             value="<?= $item['cantidad']; ?>"
                                             <?= isset($item['cantidad_pendiente']) ? 'max="' . htmlspecialchars($item['cantidad_pendiente']) . '"' : ''; ?>
-                                            <?= $tipo === 'sin_oc' ? 'readonly' : 'required'; ?>>
+                                            required>
+                                    </td>
+                                    <td class="text-center diferencia-cantidad">
+                                        <?= number_format(((float)($item['cantidad_facturada'] ?? $item['cantidad']) - (float)$item['cantidad']), 0, ',', '.'); ?>
                                     </td>
                                     <td class="text-center">
                                         <input type="number"

@@ -538,7 +538,7 @@ class remisionControlador extends remisionModelo
 
         $usuario = $_SESSION['id_str'];
         $id_sucursal = $_SESSION['nick_sucursal'];
-        $motivo = mainModel::limpiar_string($_POST['motivo_anulacion'] ?? '');
+        $motivo = mainModel::limpiar_string($_POST['observacion_anulacion'] ?? '');
 
         $anular = remisionModelo::anular_remision_modelo($id, $usuario, $id_sucursal, $motivo);
 

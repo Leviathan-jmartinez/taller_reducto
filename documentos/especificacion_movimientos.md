@@ -369,19 +369,21 @@ El sistema valida sesion, sucursal y permisos.
 * Si el usuario selecciona orden de compra, el sistema consulta `orden_compra`, `orden_compra_detalle`, `proveedores`, `articulos` y `tipo_impuesto` para cargar proveedor, articulos pendientes, precios e IVA.
 * Si el usuario registra compra directa, el sistema consulta `proveedores` para validar el proveedor seleccionado.
 * El usuario ingresa numero de factura, timbrado, fecha, condicion y vencimiento cuando corresponde.
-* El usuario confirma cantidades recibidas, precios, IVA y subtotales.
+* El usuario confirma cantidad facturada, cantidad recibida, precios, IVA y subtotales.
 * El sistema muestra un mensaje de confirmacion de la accion.
 * El usuario confirma la accion.
 * El sistema valida proveedor. Tabla consultada: `proveedores`.
 * El sistema valida que el numero de factura no este registrado previamente para el mismo proveedor y sucursal. Tabla consultada: `compra_cabecera`.
 * El sistema valida articulos, codigo, descripcion e impuesto aplicado. Tablas consultadas: `articulos`, `tipo_impuesto`.
-* El sistema valida comprobante, timbrado, detalle, cantidades, precios, IVA y totales.
-* El sistema registra cabecera en `compra_cabecera`.
-* El sistema registra detalle en `compra_detalle`.
-* El sistema actualiza stock por los articulos recibidos. Tabla afectada: `stock`.
-* El sistema registra movimientos de entrada en `movimientostock`.
-* El sistema registra el comprobante en `libro_compra`.
-* Si la compra es a credito, el sistema registra cuentas a pagar.
+* El sistema valida comprobante, timbrado, detalle, cantidades facturadas, cantidades recibidas, precios, IVA y totales.
+* El sistema calcula importes fiscales con `cantidad_facturada`.
+* El sistema registra cabecera en `compra_cabecera` con estado activo cuando no hay diferencia o estado `Con diferencia` cuando existen cantidades facturadas distintas a las recibidas.
+* El sistema registra detalle en `compra_detalle`, guardando `cantidad_facturada` para lo fiscal/contable y `cantidad_recibida` para lo fisico/stock.
+* El sistema actualiza stock solamente por los articulos recibidos. Tabla afectada: `stock`.
+* El sistema registra movimientos de entrada en `movimientostock` solamente por la cantidad recibida.
+* Si la compra proviene de orden de compra, el sistema descuenta la cantidad recibida de `orden_compra_detalle.cantidad_pendiente`.
+* El sistema registra el comprobante en `libro_compra` segun la cantidad facturada.
+* Si la compra es a credito, el sistema registra cuentas a pagar segun el total facturado.
 * El sistema emite mensaje de confirmacion.
 
 **Ver detalle**
@@ -393,7 +395,7 @@ El sistema valida sesion, sucursal y permisos.
 * El sistema consulta los articulos recibidos de la compra. Tablas consultadas: `compra_detalle`, `articulos`.
 * El sistema consulta el resumen tributario registrado. Tabla consultada: `libro_compra`.
 * El sistema consulta el resumen de obligaciones generadas cuando corresponde. Tabla consultada: `cuentas_a_pagar`.
-* El sistema muestra en modal factura, proveedor, timbrado, condicion, estado, usuario, articulos, cantidades, precios, IVA, subtotales, libro de compras y cuentas a pagar.
+* El sistema muestra en modal factura, proveedor, timbrado, condicion, estado, usuario, articulos, cantidad facturada, cantidad recibida, diferencia, precios, IVA, subtotales, libro de compras y cuentas a pagar.
 
 **Anular**
 
@@ -417,6 +419,7 @@ El sistema valida sesion, sucursal y permisos.
 * **Flujo Alternativo**  
 El sistema no permite registrar sin proveedor.  
 El sistema no permite registrar sin detalle.  
+El sistema no permite facturar ni recibir cantidades mayores a la cantidad pendiente de la orden de compra cuando la compra proviene de una OC.  
 El usuario puede usar Ver detalle para consultar articulos, IVA, libro de compras y cuentas a pagar sin modificar el documento.  
 El sistema no permite anular sin permiso.  
 El sistema no permite anular sin motivo.  
@@ -520,6 +523,7 @@ Para devolucion de mercaderia debe existir stock suficiente.
 El usuario ingresa al modulo de Notas de Compra.  
 El usuario abre el modal de factura, busca y selecciona una factura de compra.  
 El sistema carga los datos del proveedor y el detalle de la factura. Tablas consultadas: `compra_cabecera`, `compra_detalle`, `proveedores`, `articulos`, `tipo_impuesto`.
+Si la compra se encuentra en estado `Con diferencia`, el sistema precarga en el detalle de la nota la diferencia entre cantidad facturada y cantidad recibida.
 El usuario selecciona tipo de nota: credito o debito.  
 El usuario ingresa numero de documento, timbrado, fecha y detalle.  
 El sistema recalcula el total de cada item cuando el usuario modifica cantidad o precio.  
@@ -530,6 +534,7 @@ El sistema valida que el tipo sea credito o debito.
 El sistema valida el movimiento de stock permitido.  
 Para nota de debito, el sistema no permite movimiento de devolucion.  
 Para nota de credito con devolucion, el sistema valida stock disponible por articulo. Tabla consultada: `stock`.
+Para nota de credito sobre una compra con diferencia, el sistema exige movimiento de stock `Sin movimiento`, valida que la nota no supere la diferencia pendiente y exige que cubra exactamente la diferencia para regularizarla.
 El sistema valida que la factura exista, pertenezca a la sucursal y este habilitada para recibir la nota. Tabla consultada: `compra_cabecera`.
 El sistema valida los articulos de la nota contra el detalle de la compra. Tabla consultada: `compra_detalle`.
 El sistema registra cabecera en `nota_compra`.  
@@ -537,6 +542,7 @@ El sistema registra detalle en `nota_compra_detalle`.
 El sistema impacta en `cuentas_a_pagar`.  
 El sistema registra el comprobante en `libro_compra` como NC o ND.  
 Si corresponde devolucion, el sistema descuenta stock y registra movimiento en `movimientostock`.  
+Si la nota de credito regulariza completamente una compra con diferencia, el sistema actualiza `compra_cabecera` a estado `Regularizada`.
 El sistema confirma la transaccion y emite mensaje.
 
 **Anular**
@@ -551,6 +557,7 @@ El sistema confirma la transaccion y emite mensaje.
 * El sistema verifica que la nota exista, pertenezca a la sucursal y no este anulada. Tabla consultada: `nota_compra`.
 * El sistema anula la cabecera de nota.
 * El sistema genera el impacto inverso en cuentas a pagar. Tabla afectada: `cuentas_a_pagar`.
+* Si la nota anulada era una nota de credito sin movimiento de stock que regularizaba una compra con diferencia, el sistema devuelve la compra a estado `Con diferencia`.
 * Si la nota fue de credito con devolucion, el sistema consulta el detalle de nota y repone stock. Tablas consultadas/afectadas: `nota_compra_detalle`, `stock`.
 * Si corresponde stock, el sistema registra movimiento de anulacion. Tabla afectada: `movimientostock`.
 * El sistema anula el registro correspondiente en `libro_compra`. Tabla afectada: `libro_compra`.
@@ -560,6 +567,8 @@ El sistema confirma la transaccion y emite mensaje.
 * **Flujo Alternativo**  
 El sistema no permite tipos de nota invalidos.  
 El sistema no permite movimiento de stock invalido.  
+El sistema no permite regularizar diferencias con nota de debito ni con nota de credito que mueva stock.  
+El sistema no permite que una nota de credito de regularizacion supere la diferencia pendiente ni que quede por debajo de la diferencia requerida.  
 El sistema no permite devolucion sin stock suficiente.  
 El sistema no permite anular notas ya anuladas.  
 El sistema no permite anular sin motivo cuando la tabla de auditoria se encuentra disponible.  
@@ -569,6 +578,7 @@ El sistema revierte la transaccion si ocurre un error.
 La nota queda registrada y asociada a la factura de compra.  
 Las cuentas a pagar y libro de compras quedan actualizados.  
 El stock se ajusta cuando la nota de credito implica devolucion.
+La compra con diferencia queda regularizada cuando la NC sin stock cubre exactamente la diferencia fiscal/fisica.
 
 * **Tablas interactuadas**  
 `nota_compra`, `nota_compra_detalle`, `compra_cabecera`, `compra_detalle`, `proveedores`, `cuentas_a_pagar`, `libro_compra`, `stock`, `movimientostock`, `articulos`, `usuarios`, `sucursales`, `anulacion_auditoria`
@@ -757,36 +767,55 @@ El sistema valida sesion y sucursal.
 **Seleccionar o cargar cliente**
 
 * El usuario busca un cliente por documento, nombre, apellido o telefono.
-* El sistema consulta `clientes` y muestra los datos esenciales para carga rapida.
+* El sistema consulta `clientes` y muestra documento, nombre, apellido y telefono para seleccionar rapidamente.
+* Para alta rapida o autocompletado de ciudad, el sistema consulta `ciudades`.
 * Si el cliente no existe, el usuario puede registrarlo desde la recepcion con datos minimos: tipo de documento, documento, nombre, apellido y telefono.
-* El sistema guarda el cliente y lo deja seleccionado en la recepcion.
+* El sistema valida que el documento del cliente no este duplicado. Tabla consultada: `clientes`.
+* El sistema registra el cliente en `clientes` y lo deja seleccionado en la recepcion.
 
 **Seleccionar o cargar vehiculo**
 
 * El usuario busca los vehiculos asociados al cliente.
-* El sistema consulta `vehiculos`, `modelo_auto` y `marcas`.
+* El sistema consulta `vehiculos`, `modelo_auto` y `marcas` para exponer placa, modelo, marca, color, anho y propietario.
 * Si el vehiculo no existe, el usuario puede registrarlo desde la recepcion con datos esenciales para carga rapida.
-* El sistema vincula el vehiculo al cliente seleccionado.
+* Para registrar vehiculo, el sistema consulta `modelo_auto` para validar el modelo seleccionado.
+* El sistema valida que la placa no este duplicada. Tabla consultada: `vehiculos`.
+* El sistema registra el vehiculo en `vehiculos` y lo vincula al cliente seleccionado.
+
+**Recepcion desde reclamo**
+
+* Si el origen es reclamo, el usuario busca reclamos pendientes por numero, cliente, documento, telefono, placa o tipo de reclamo.
+* El sistema consulta `reclamo_servicio`, `clientes`, `vehiculos` y `modelo_auto` para mostrar reclamo, fecha, cliente, documento, telefono, placa, modelo y tipo.
+* Al seleccionar el reclamo, el sistema consulta `reclamo_servicio`, `clientes`, `vehiculos`, `modelo_auto` y `marcas` para cargar los datos completos del cliente y vehiculo.
+* El sistema valida que el reclamo este activo y disponible para recepcion. Tabla consultada: `reclamo_servicio`.
 
 **Registrar datos de ingreso**
 
 * El usuario completa kilometraje, nivel de combustible, estado exterior, objetos dentro del vehiculo, tipo de servicio, area del problema, prioridad, accesorios y observacion.
 * El sistema registra la cabecera en `recepcion_servicio` con `id_cliente`, `id_vehiculo`, usuario, sucursal, fecha de ingreso y estado activo.
 * Si se adjuntan fotos, el sistema registra las rutas en `recepcion_fotos`.
-* Si la recepcion viene desde un reclamo, el sistema marca el origen como reclamo y guarda el identificador del reclamo.
+* Si la recepcion viene desde un reclamo, el sistema valida garantia y origen consultando `reclamo_servicio` y `registro_servicio`.
+* Si la recepcion viene desde un reclamo, el sistema marca el origen como reclamo, guarda `idreclamo_servicio` y actualiza el estado del reclamo. Tabla afectada: `reclamo_servicio`.
 * El sistema emite mensaje de confirmacion.
+
+**Buscar recepciones**
+
+* El usuario busca recepciones por numero, fecha, cliente, documento, placa, estado, origen, usuario, tipo de servicio o prioridad.
+* El sistema consulta `recepcion_servicio` como tabla principal.
+* El sistema une `clientes`, `vehiculos`, `modelo_auto`, `marcas` y `usuarios` para mostrar cliente, documento, telefono, vehiculo, marca, modelo, placa, usuario receptor, estado, origen, prioridad y fecha.
+* El sistema consulta `recepcion_fotos` para indicar si la recepcion posee fotos asociadas.
 
 **Anular**
 
 * El usuario accede al listado de recepciones.
-* El sistema muestra recepciones de la sucursal del usuario.
+* El sistema muestra recepciones de la sucursal del usuario. Tablas consultadas: `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `usuarios`, `recepcion_fotos`.
 * El usuario selecciona una recepcion y presiona Anular.
 * El sistema muestra un modal solicitando motivo de anulacion.
 * El usuario ingresa el motivo y confirma la anulacion.
 * El sistema valida el permiso de anulacion de recepcion.
-* El sistema verifica existencia, sucursal y estado.
+* El sistema verifica existencia, sucursal, estado y reclamo relacionado cuando exista. Tabla consultada: `recepcion_servicio`.
 * El sistema actualiza la recepcion a estado anulado.
-* Si la recepcion proviene de reclamo, el sistema reabre el reclamo relacionado.
+* Si la recepcion proviene de reclamo, el sistema reabre el reclamo relacionado. Tabla afectada: `reclamo_servicio`.
 * El sistema registra auditoria en `anulacion_auditoria` con modulo `recepcion_servicio`, tabla `recepcion_servicio`, ID de recepcion, sucursal, estado anterior, estado nuevo, motivo, usuario y referencia `RECEPCION #id`.
 
 * **Flujo Alternativo**  
@@ -803,7 +832,7 @@ El cliente y vehiculo quedan identificados directamente en la recepcion.
 La informacion inicial de kilometraje, combustible y estado del vehiculo queda como dato propio del ingreso al taller, no como dato maestro del vehiculo.
 
 * **Tablas interactuadas**  
-`recepcion_servicio`, `recepcion_fotos`, `clientes`, `ciudades`, `vehiculos`, `modelo_auto`, `marcas`, `usuarios`, `reclamo_servicio`, `anulacion_auditoria`
+`recepcion_servicio`, `recepcion_fotos`, `clientes`, `ciudades`, `vehiculos`, `modelo_auto`, `marcas`, `usuarios`, `reclamo_servicio`, `registro_servicio`, `anulacion_auditoria`
 
 ---
 
@@ -833,30 +862,45 @@ El sistema muestra recepciones pendientes de diagnostico.
 
 * El usuario busca una recepcion por cliente, vehiculo, chapa o numero.
 * El sistema consulta `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto` y `marcas`.
+* La busqueda muestra numero de recepcion, cliente, documento, placa, marca, modelo, tipo de servicio, prioridad, observacion y si proviene de reclamo.
 * El usuario selecciona la recepcion.
-* El sistema carga datos de cliente, vehiculo, recepcion y observacion del ingreso.
+* El sistema vuelve a consultar `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto` y `marcas` para cargar datos de cliente, vehiculo, kilometraje, combustible, tipo de servicio, prioridad, observacion del ingreso y `idreclamo_servicio` cuando corresponda.
 
 **Registrar diagnostico**
 
 * El usuario selecciona el equipo de trabajo.
+* El sistema consulta `equipo_trabajo` para cargar los equipos disponibles de la sucursal.
 * El usuario carga observaciones generales y detalles tecnicos.
-* En cada detalle se indica sistema revisado, problema, gravedad, solucion propuesta, si requiere repuesto y si requiere mano de obra.
+* En cada detalle se indica servicio/trabajo, problema, gravedad, repuesto requerido, cantidad y origen del repuesto.
+* Para seleccionar servicio o repuesto, el sistema consulta `articulos`, filtrando por tipo segun corresponda.
 * La fecha y el estado del diagnostico son controlados por el sistema; no son campos seleccionables por el usuario.
+* El sistema valida que la recepcion este disponible para diagnostico. Tabla consultada: `recepcion_servicio`.
+* El sistema valida los articulos seleccionados en el detalle. Tabla consultada: `articulos`.
 * El sistema registra la cabecera en `diagnostico_servicio` con fecha actual, estado activo, usuario, recepcion, equipo y sucursal.
 * El sistema registra los detalles en `diagnostico_detalle`.
 * El sistema actualiza la recepcion para indicar que ya fue diagnosticada.
+* Si el diagnostico corresponde a un reclamo, el sistema puede validar garantia por kilometraje consultando `reclamo_servicio`, `registro_servicio`, `orden_trabajo`, `presupuesto_servicio`, `diagnostico_servicio` y `recepcion_servicio`.
+
+**Buscar diagnosticos y ver detalle**
+
+* El usuario busca diagnosticos por fechas, cliente, placa, numero de diagnostico, numero de recepcion, estado, origen o texto general.
+* El sistema consulta `diagnostico_servicio` como tabla principal.
+* El sistema une `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `usuarios` y `equipo_trabajo` para mostrar recepcion, cliente, vehiculo, equipo, usuario, origen, estado y observaciones.
+* Al ver detalle, el sistema consulta `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `equipo_trabajo` y `articulos`.
+* Si el diagnostico esta asociado a reclamo, el sistema consulta `reclamo_servicio`, `reclamo_servicio_detalle`, `registro_servicio_detalle` y `articulos` para exponer el detalle reclamado.
 
 **Anular**
 
 * El usuario accede al listado de diagnosticos.
-* El sistema muestra diagnosticos de la sucursal.
+* El sistema muestra diagnosticos de la sucursal. Tablas consultadas: `diagnostico_servicio`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `usuarios`, `equipo_trabajo`.
 * El usuario selecciona un diagnostico y presiona Anular.
 * El sistema muestra un modal solicitando motivo de anulacion.
 * El usuario ingresa el motivo y confirma.
 * El sistema valida el permiso `servicio.diagnostico.anular`.
-* El sistema verifica que no exista un presupuesto activo relacionado.
-* Si el diagnostico pertenece a un reclamo, el sistema valida tambien que no exista una orden de trabajo activa por reclamo.
-* El sistema actualiza el diagnostico a estado anulado y libera la recepcion cuando corresponde.
+* El sistema verifica existencia, estado y sucursal. Tabla consultada: `diagnostico_servicio`.
+* El sistema verifica que no exista un presupuesto activo relacionado. Tabla consultada: `presupuesto_servicio`.
+* Si el diagnostico pertenece a un reclamo, el sistema valida tambien que no exista una orden de trabajo activa por reclamo. Tablas consultadas: `recepcion_servicio`, `orden_trabajo`.
+* El sistema actualiza el diagnostico a estado anulado y libera la recepcion cuando corresponde. Tablas afectadas: `diagnostico_servicio`, `recepcion_servicio`.
 * El sistema registra la anulacion en `anulacion_auditoria` con modulo `diagnostico_servicio`, tabla afectada `diagnostico_servicio`, estado anterior, estado nuevo, motivo, usuario, fecha y referencia.
 
 * **Flujo Alternativo**  
@@ -872,7 +916,7 @@ La recepcion queda vinculada al diagnostico.
 El diagnostico queda disponible para generar presupuesto de servicio.
 
 * **Tablas interactuadas**  
-`diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `equipo_trabajo`, `usuarios`, `presupuesto_servicio`, `orden_trabajo`, `anulacion_auditoria`
+`diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `reclamo_servicio`, `reclamo_servicio_detalle`, `registro_servicio`, `registro_servicio_detalle`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `articulos`, `equipo_trabajo`, `usuarios`, `presupuesto_servicio`, `orden_trabajo`, `anulacion_auditoria`
 
 ---
 
@@ -903,13 +947,16 @@ El sistema valida sesion y sucursal.
 
 * El usuario busca un diagnostico disponible.
 * El sistema consulta `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto` y `marcas`.
+* El sistema consulta `orden_trabajo` para excluir diagnosticos que ya tengan una OT activa relacionada.
 * El usuario selecciona el diagnostico.
 * El sistema copia al presupuesto el cliente y vehiculo de la recepcion.
 * El sistema muestra los detalles tecnicos como referencia para cargar trabajos y repuestos.
+* El sistema consulta `diagnostico_detalle`, `articulos` y `stock` para mostrar servicios/repuestos sugeridos y disponibilidad cuando corresponda.
 
 **Presupuesto preliminar**
 
 * El usuario selecciona cliente y vehiculo sin requerir diagnostico previo.
+* El sistema valida que el vehiculo exista y pertenezca al cliente seleccionado. Tablas consultadas: `vehiculos`, `clientes`.
 * El sistema marca el presupuesto con origen `PRELIMINAR`.
 * El presupuesto preliminar permite entregar una estimacion inicial al cliente.
 * Si el presupuesto preliminar avanza a una revision real del taller, debe vincularse a una recepcion y diagnostico formal antes de continuar el proceso.
@@ -917,25 +964,39 @@ El sistema valida sesion y sucursal.
 **Agregar trabajos y repuestos**
 
 * El usuario busca articulos o servicios por codigo o descripcion.
-* El sistema consulta `articulos`, `stock`, precios y datos comerciales disponibles.
+* El sistema consulta `articulos` y `stock`, mostrando descripcion, codigo, tipo, precio y existencia disponible en sucursal.
+* El sistema consulta `promociones` y `promocion_producto` para beneficios vigentes por articulo.
+* El sistema consulta `descuentos` y `descuento_cliente` para beneficios comerciales aplicables al cliente.
 * El usuario ingresa cantidad y precio unitario.
 * El sistema valida duplicidad, cantidad y precio.
+* El sistema valida stock disponible para productos/repuestos. Tabla consultada: `stock`.
 * El sistema calcula subtotal, descuentos, promociones y total final en pantalla.
 * Si existen descuentos o promociones aplicables, el sistema registra la relacion en las tablas correspondientes.
 * El sistema registra la cabecera en `presupuesto_servicio` con `id_cliente`, `id_vehiculo`, origen, sucursal, usuario, fecha, vencimiento, subtotal, descuento y total final.
 * El sistema registra el detalle en `presupuesto_detalleservicio`.
+* Si corresponde, el sistema registra promociones en `presupuesto_promocion` y descuentos en `presupuesto_descuento`.
+
+**Buscar, ver detalle e imprimir**
+
+* El usuario busca presupuestos por fechas, cliente, placa, numero, estado u origen.
+* El sistema consulta `presupuesto_servicio` como tabla principal.
+* El sistema une `clientes`, `vehiculos`, `modelo_auto` y `usuarios` para mostrar cliente, vehiculo, fecha, total, estado, origen y usuario.
+* Al ver detalle o generar PDF, el sistema consulta `presupuesto_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `usuarios`, `presupuesto_detalleservicio` y `articulos`.
+* Si existen beneficios aplicados, el sistema consulta `presupuesto_promocion`, `promociones`, `presupuesto_descuento` y `descuentos`.
 
 **Aprobar y anular**
 
 * El usuario puede aprobar el presupuesto cuando el cliente acepta la propuesta.
-* El sistema actualiza el estado del presupuesto aprobado.
+* El sistema actualiza el estado del presupuesto aprobado. Tabla afectada: `presupuesto_servicio`.
 * El usuario puede anular presupuestos que no tengan una orden de trabajo activa relacionada.
 * Al presionar Anular, el sistema muestra un modal solicitando motivo de anulacion.
 * El usuario ingresa el motivo y confirma la anulacion.
 * El sistema valida el permiso de anulacion de presupuesto de servicio.
-* El sistema verifica existencia, sucursal, estado y que no exista orden de trabajo activa relacionada.
+* El sistema verifica existencia, sucursal y estado. Tabla consultada: `presupuesto_servicio`.
+* El sistema verifica que no exista orden de trabajo activa relacionada. Tabla consultada: `orden_trabajo`.
 * El sistema actualiza `presupuesto_servicio` a estado anulado.
-* Si el presupuesto proviene de otro presupuesto preliminar o conversion relacionada, el sistema actualiza la relacion operativa cuando corresponde.
+* Si el presupuesto proviene de diagnostico, el sistema puede liberar el diagnostico relacionado. Tabla afectada: `diagnostico_servicio`.
+* Si el presupuesto proviene de otro presupuesto preliminar o conversion relacionada, el sistema actualiza la relacion operativa cuando corresponde. Tabla afectada: `presupuesto_servicio`.
 * El sistema registra auditoria en `anulacion_auditoria` con modulo `presupuesto_servicio`, tabla `presupuesto_servicio`, ID del presupuesto, sucursal, estado anterior, estado nuevo, motivo, usuario y referencia `PRESUPUESTO_SERVICIO #id`.
 
 * **Flujo Alternativo**  
@@ -1052,40 +1113,52 @@ El sistema valida sesion y sucursal.
 * El usuario selecciona el presupuesto.
 * El sistema carga cliente, vehiculo, fecha y detalle autorizado desde `presupuesto_detalleservicio` y `articulos`.
 * El usuario selecciona equipo, tecnico responsable y observacion operativa.
+* El sistema consulta `equipo_trabajo` para listar equipos disponibles.
+* Al seleccionar equipo, el sistema consulta `equipo_empleado` y `empleados` para listar tecnicos del equipo.
 * El sistema registra la cabecera en `orden_trabajo` y copia el detalle del presupuesto a `orden_trabajo_detalle`.
 * El sistema actualiza `presupuesto_servicio` a procesado.
 
 **Generar desde diagnostico de reclamo en garantia**
 
 * El usuario selecciona un diagnostico asociado a un reclamo.
-* El sistema consulta `diagnostico_servicio`, `recepcion_servicio`, `reclamo_servicio`, `registro_servicio`, `clientes` y `vehiculos`.
+* El sistema consulta `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `reclamo_servicio`, `registro_servicio`, `orden_trabajo`, `clientes`, `vehiculos` y `articulos`.
 * El sistema valida que el diagnostico pertenezca a un reclamo activo.
 * El sistema valida que el diagnostico tenga reclamo valido, garantia aplicable y que no requiera cobro.
+* El sistema valida garantia por kilometraje consultando `reclamo_servicio`, `registro_servicio`, `orden_trabajo`, `presupuesto_servicio`, `diagnostico_servicio` y `recepcion_servicio`.
 * El sistema valida que no exista una OT activa para el mismo reclamo.
 * El sistema registra la cabecera en `orden_trabajo` con origen `RECLAMO`, `id_cliente`, `id_vehiculo`, usuario, sucursal y estado operativo.
 * El sistema deja `idpresupuesto_servicio` sin valor porque esta OT no nace de presupuesto.
 * El sistema actualiza el reclamo y el diagnostico para reflejar que ya se genero la orden.
 * El usuario puede completar o ajustar trabajos y repuestos autorizados para la ejecucion cuando corresponda.
+* Cuando se agregan repuestos/productos, el sistema valida `articulos` y `stock` antes de guardar el detalle.
 
 **Asignar y cerrar**
 
 * El usuario puede asignar o modificar equipo de trabajo y tecnico responsable.
-* El sistema permite consultar el detalle operativo de la orden.
+* El sistema permite consultar el detalle operativo de la orden. Tablas consultadas: `orden_trabajo`, `orden_trabajo_detalle`, `articulos`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `presupuesto_servicio`, `diagnostico_servicio`, `recepcion_servicio`, `reclamo_servicio`, `equipo_trabajo`, `equipo_empleado`, `empleados`.
 * Al finalizar la ejecucion, la orden queda disponible para registro de servicio.
 * El sistema no permite anular una OT que ya tenga registro de servicio activo.
+
+**Buscar ordenes**
+
+* El usuario busca ordenes por fechas, cliente, placa, numero, estado u origen.
+* El sistema consulta `orden_trabajo` como tabla principal.
+* El sistema une `presupuesto_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `usuarios` y `equipo_trabajo` para mostrar presupuesto/reclamo, cliente, vehiculo, fecha, equipo, tecnico, usuario, total, estado y origen.
+* Para totales operativos, el sistema consulta `orden_trabajo_detalle`.
 
 **Anular**
 
 * El usuario ingresa al buscador de ordenes de trabajo.
-* El sistema muestra ordenes segun sucursal, estado y permisos.
+* El sistema muestra ordenes segun sucursal, estado y permisos. Tablas consultadas: `orden_trabajo`, `presupuesto_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `usuarios`, `equipo_trabajo`.
 * El usuario selecciona una orden y presiona Anular.
 * El sistema muestra un modal solicitando motivo de anulacion.
 * El usuario ingresa el motivo y confirma la anulacion.
 * El sistema valida el permiso de anulacion de orden de trabajo.
-* El sistema verifica existencia, estado y que no exista registro de servicio activo relacionado.
+* El sistema verifica existencia, estado y que no exista registro de servicio activo relacionado. Tablas consultadas: `orden_trabajo`, `registro_servicio`.
 * El sistema actualiza `orden_trabajo` a estado anulado.
-* Si la OT proviene de presupuesto, el sistema libera o actualiza el presupuesto relacionado cuando corresponde.
-* Si la OT proviene de reclamo, el sistema reabre los movimientos relacionados cuando corresponde.
+* Si la OT proviene de presupuesto, el sistema libera o actualiza el presupuesto relacionado cuando corresponde. Tabla afectada: `presupuesto_servicio`.
+* Si la OT proviene de diagnostico, el sistema puede reabrir el diagnostico y la recepcion relacionada. Tablas afectadas: `diagnostico_servicio`, `recepcion_servicio`.
+* Si la OT proviene de reclamo, el sistema reabre los movimientos relacionados cuando corresponde. Tablas afectadas: `reclamo_servicio`, `recepcion_servicio`, `diagnostico_servicio`.
 * El sistema registra auditoria en `anulacion_auditoria` con modulo `orden_trabajo`, tabla `orden_trabajo`, ID de OT, estado anterior, estado nuevo, motivo, usuario y referencia `OT #id`.
 
 * **Flujo Alternativo**  
@@ -1105,7 +1178,7 @@ Los trabajos y repuestos quedan copiados desde presupuesto o cargados manualment
 La orden queda disponible para asignacion, seguimiento y registro de servicio.
 
 * **Tablas interactuadas**  
-`orden_trabajo`, `orden_trabajo_detalle`, `presupuesto_servicio`, `presupuesto_detalleservicio`, `presupuesto_promocion`, `promociones`, `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `reclamo_servicio`, `registro_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `articulos`, `stock`, `equipo_trabajo`, `equipo_empleado`, `empleados`, `usuarios`, `anulacion_auditoria`
+`orden_trabajo`, `orden_trabajo_detalle`, `presupuesto_servicio`, `presupuesto_detalleservicio`, `presupuesto_promocion`, `promociones`, `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `reclamo_servicio`, `registro_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `articulos`, `stock`, `equipo_trabajo`, `equipo_empleado`, `empleados`, `usuarios`, `anulacion_auditoria`
 
 ---
 
@@ -1134,7 +1207,8 @@ El sistema muestra ordenes de trabajo disponibles para registrar.
 **Seleccionar OT**
 
 * El usuario busca una orden por numero, cliente, vehiculo o chapa.
-* El sistema consulta `orden_trabajo`, `orden_trabajo_detalle`, `clientes`, `vehiculos`, `articulos`, equipo y tecnico.
+* El sistema consulta `orden_trabajo`, `clientes`, `vehiculos`, `modelo_auto`, `equipo_trabajo` y `empleados` para mostrar orden, cliente, vehiculo, equipo, tecnico, fecha y estado.
+* El sistema consulta `orden_trabajo_detalle` y `articulos` para mostrar trabajos/repuestos autorizados.
 * El usuario selecciona la orden.
 * El sistema carga el detalle operativo autorizado.
 
@@ -1142,21 +1216,36 @@ El sistema muestra ordenes de trabajo disponibles para registrar.
 
 * El usuario indica fecha de ejecucion y observaciones finales.
 * El sistema copia `id_cliente` e `id_vehiculo` desde la orden de trabajo.
+* El sistema valida que no exista un registro activo duplicado para la OT. Tabla consultada: `registro_servicio`.
+* El sistema consulta `orden_trabajo` para validar estado, sucursal, origen, cliente y vehiculo.
+* El sistema consulta `orden_trabajo_detalle` y `articulos` para copiar el detalle final.
 * El sistema registra la cabecera en `registro_servicio`.
 * El sistema registra el detalle final en `registro_servicio_detalle`, separando el origen cuando corresponde.
+* Para articulos de tipo producto/insumo, el sistema valida y descuenta stock. Tabla afectada/consultada: `stock`.
+* El sistema registra movimientos de salida en `movimientostock`.
 * El sistema actualiza la orden de trabajo como finalizada.
 * Si la orden proviene de reclamo, el sistema actualiza tambien el estado del reclamo y de los movimientos relacionados cuando corresponda.
+
+**Buscar y ver detalle**
+
+* El usuario busca registros por fechas, cliente, vehiculo, placa o numero.
+* El sistema consulta `registro_servicio` como tabla principal.
+* El sistema une `clientes`, `vehiculos`, `modelo_auto` y `usuarios` para mostrar cliente, vehiculo, usuario, fecha, estado, kilometraje y OT relacionada.
+* Al ver detalle, el sistema consulta `registro_servicio`, `registro_servicio_detalle`, `orden_trabajo`, `clientes`, `vehiculos`, `modelo_auto`, `usuarios` y `articulos`.
 
 **Anular**
 
 * El usuario accede al listado de registros de servicio.
+* El sistema muestra registros de la sucursal. Tablas consultadas: `registro_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `usuarios`.
 * El usuario selecciona un registro y presiona Anular.
 * El sistema muestra un modal solicitando motivo de anulacion.
 * El usuario ingresa el motivo y confirma la anulacion.
 * El sistema valida el permiso de anulacion de registro de servicio.
-* El sistema verifica existencia, sucursal y estado.
+* El sistema verifica existencia, sucursal, estado y OT relacionada. Tabla consultada: `registro_servicio`.
+* El sistema consulta `registro_servicio_detalle` y `articulos` para identificar articulos con stock a revertir.
 * El sistema actualiza el registro a anulado.
-* El sistema revierte movimientos de stock, reabre la orden de trabajo y reabre recepcion/reclamo cuando corresponde.
+* El sistema revierte movimientos de stock y registra movimiento inverso. Tablas afectadas: `stock`, `movimientostock`.
+* El sistema reabre la orden de trabajo y reabre recepcion/reclamo cuando corresponde. Tablas afectadas: `orden_trabajo`, `recepcion_servicio`, `reclamo_servicio`.
 * El sistema registra auditoria en `anulacion_auditoria` con modulo `registro_servicio`, tabla `registro_servicio`, ID del registro, sucursal, estado anterior, estado nuevo, motivo, usuario y referencia `REGISTRO_SERVICIO #id`.
 
 * **Flujo Alternativo**  
@@ -1172,7 +1261,7 @@ La orden queda finalizada o reabierta segun el flujo.
 El registro queda disponible para reclamos, garantias e informes.
 
 * **Tablas interactuadas**  
-`registro_servicio`, `registro_servicio_detalle`, `orden_trabajo`, `orden_trabajo_detalle`, `presupuesto_servicio`, `diagnostico_servicio`, `recepcion_servicio`, `reclamo_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `articulos`, `stock`, `movimientostock`, `equipo_trabajo`, `empleados`, `usuarios`, `anulacion_auditoria`
+`registro_servicio`, `registro_servicio_detalle`, `orden_trabajo`, `orden_trabajo_detalle`, `presupuesto_servicio`, `diagnostico_servicio`, `recepcion_servicio`, `reclamo_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `articulos`, `stock`, `movimientostock`, `equipo_trabajo`, `empleados`, `usuarios`, `anulacion_auditoria`
 
 ---
 
@@ -1267,18 +1356,33 @@ El usuario busca un registro de servicio por numero de registro, cliente, vehicu
 
 **Registrar reclamo**
 
-* El sistema consulta `registro_servicio`, `registro_servicio_detalle`, `articulos`, `clientes`, `vehiculos` y `modelo_auto`.
+* El sistema consulta `registro_servicio`, `clientes`, `vehiculos` y `modelo_auto` para buscar servicios ejecutados por numero, cliente, documento, telefono, placa o modelo.
 * El usuario selecciona el servicio ejecutado.
+* El sistema carga el servicio consultando `registro_servicio`, `clientes`, `vehiculos` y `modelo_auto`.
+* El sistema carga el detalle reclamable consultando `registro_servicio_detalle` y `articulos`.
+* El sistema consulta `reclamo_servicio_detalle` y `reclamo_servicio` para no permitir reclamar un detalle que ya tenga reclamo activo.
 * El usuario carga descripcion, tipo de reclamo, origen, prioridad y si requiere garantia.
+* El sistema valida que el registro pertenezca a la sucursal. Tabla consultada: `registro_servicio`.
+* El sistema valida que no exista un reclamo activo del mismo tipo para el registro. Tabla consultada: `reclamo_servicio`.
+* El sistema valida que los detalles correspondan al tipo de reclamo: servicio para reclamo de servicio, producto para reclamo de repuesto. Tablas consultadas: `registro_servicio_detalle`, `articulos`.
 * El sistema registra el reclamo en `reclamo_servicio` con cliente, vehiculo, sucursal, usuario y estado activo.
+* El sistema registra los items reclamados en `reclamo_servicio_detalle` cuando corresponde.
 * El sistema actualiza `registro_servicio` para indicar que tiene reclamo activo.
 
 **Derivar reclamo**
 
 * Si el reclamo requiere revision fisica, el sistema permite generar una recepcion de servicio con origen reclamo.
+* Para buscar reclamos desde recepcion, el sistema consulta `reclamo_servicio`, `clientes`, `vehiculos` y `modelo_auto`.
+* Para seleccionar reclamo desde recepcion, el sistema consulta `reclamo_servicio`, `clientes`, `vehiculos`, `modelo_auto` y `marcas`.
 * El diagnostico del reclamo indica si corresponde garantia, si el reclamo es valido y si requiere cobro.
 * Si corresponde garantia sin cobro, el flujo puede continuar en Orden de Trabajo desde el diagnostico del reclamo.
 * Si requiere cobro, el caso no habilita OT directa por garantia y debe tratarse como proceso comercial mediante presupuesto de servicio.
+
+**Buscar reclamos**
+
+* El usuario busca reclamos por numero, cliente, documento, telefono, placa, fecha o estado.
+* El sistema consulta `reclamo_servicio` como tabla principal.
+* El sistema une `clientes`, `vehiculos` y `modelo_auto` para mostrar reclamo, fecha, cliente, documento, telefono, placa, modelo, tipo, estado y registro de servicio origen.
 
 **Cerrar o anular**
 
@@ -1287,8 +1391,10 @@ El usuario busca un registro de servicio por numero de registro, cliente, vehicu
 * Al presionar Anular, el sistema muestra un modal solicitando motivo de anulacion.
 * El usuario ingresa el motivo y confirma.
 * El sistema valida el permiso `servicio.reclamo.anular`.
-* El sistema verifica que el reclamo exista, pertenezca a la sucursal y se encuentre activo.
-* El sistema actualiza estado, fecha de cierre y relaciones operativas.
+* El sistema verifica que el reclamo exista, pertenezca a la sucursal y se encuentre activo. Tabla consultada: `reclamo_servicio`.
+* El sistema verifica que no tenga recepcion generada. Tabla consultada: `recepcion_servicio`.
+* El sistema actualiza estado, fecha de cierre y relaciones operativas. Tabla afectada: `reclamo_servicio`.
+* Si ya no quedan reclamos activos para el registro, el sistema actualiza el registro origen. Tablas consultadas/afectadas: `reclamo_servicio`, `registro_servicio`.
 * El sistema registra la anulacion en `anulacion_auditoria` con modulo `reclamo_servicio`, tabla afectada `reclamo_servicio`, estado anterior, estado nuevo, motivo, usuario, fecha y referencia.
 
 * **Flujo Alternativo**  
@@ -1304,7 +1410,7 @@ El sistema conserva cliente y vehiculo directos desde el registro de servicio pa
 El reclamo puede quedar pendiente, derivado, cerrado o anulado segun el proceso.
 
 * **Tablas interactuadas**  
-`reclamo_servicio`, `registro_servicio`, `registro_servicio_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `articulos`, `anulacion_auditoria`
+`reclamo_servicio`, `reclamo_servicio_detalle`, `registro_servicio`, `registro_servicio_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `articulos`, `usuarios`, `anulacion_auditoria`
 
 ---
 
@@ -1335,18 +1441,18 @@ Las siguientes tablas son las que exponen datos visibles o seleccionables en las
 
 | Interfaz / Proceso | Tablas principales | Datos visibles en interfaz |
 | --- | --- | --- |
-| Recepcion de servicio | `recepcion_servicio`, `recepcion_fotos`, `clientes`, `ciudades`, `vehiculos`, `modelo_auto`, `marcas`, `usuarios`, `reclamo_servicio`, `anulacion_auditoria` | Cliente, vehiculo, chapa/modelo/marca, kilometraje, combustible, estado exterior, objetos, accesorios, fotos, prioridad, tipo de servicio, usuario, origen reclamo, motivo de anulacion y estado |
+| Recepcion de servicio | `recepcion_servicio`, `recepcion_fotos`, `clientes`, `ciudades`, `vehiculos`, `modelo_auto`, `marcas`, `usuarios`, `reclamo_servicio`, `registro_servicio`, `anulacion_auditoria` | Cliente, vehiculo, chapa/modelo/marca, kilometraje, combustible, estado exterior, objetos, accesorios, fotos, prioridad, tipo de servicio, usuario, origen reclamo, garantia del reclamo, motivo de anulacion y estado |
 | Alta rapida de cliente en recepcion | `clientes`, `ciudades` | Tipo/documento, nombre, apellido, telefono y datos minimos de contacto |
 | Alta rapida de vehiculo en recepcion | `vehiculos`, `modelo_auto`, `marcas`, `clientes` | Cliente asociado, modelo, marca, chapa, color y datos esenciales del vehiculo |
-| Diagnostico de servicio | `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `equipo_trabajo`, `usuarios`, `presupuesto_servicio`, `orden_trabajo`, `anulacion_auditoria` | Recepcion, cliente, vehiculo, equipo, observaciones, sistema revisado, problema, gravedad, solucion propuesta, requiere repuesto, requiere mano de obra, bloqueos por presupuesto/OT, motivo de anulacion y estado |
+| Diagnostico de servicio | `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `reclamo_servicio`, `reclamo_servicio_detalle`, `registro_servicio`, `registro_servicio_detalle`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `articulos`, `equipo_trabajo`, `usuarios`, `presupuesto_servicio`, `orden_trabajo`, `anulacion_auditoria` | Recepcion, cliente, vehiculo, equipo, observaciones, servicio/repuesto revisado, problema, gravedad, origen de repuesto, garantia de reclamo, bloqueos por presupuesto/OT, motivo de anulacion y estado |
 | Presupuesto de servicio | `presupuesto_servicio`, `presupuesto_detalleservicio`, `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `articulos`, `stock`, `descuentos`, `descuento_cliente`, `promociones`, `promocion_producto`, `presupuesto_descuento`, `presupuesto_promocion`, `orden_trabajo`, `usuarios`, `anulacion_auditoria` | Origen, cliente y vehiculo tomados de `presupuesto_servicio`, marca/modelo, diagnostico/recepcion cuando correspondan, articulos/servicios, stock referencial, cantidades, precios, subtotales, descuentos, promociones, total final, vencimiento, bloqueo por OT, motivo de anulacion y estado |
 | Descuentos y promociones de servicio | `descuentos`, `descuento_cliente`, `promociones`, `promocion_producto`, `presupuesto_descuento`, `presupuesto_promocion` | Beneficios aplicables, productos incluidos, montos aplicados y total descontado |
 | Promociones de servicio | `promociones`, `promocion_producto`, `articulos`, `usuarios`, `sucursales` | Promocion, tipo, valor, vigencia, sucursal, articulos asociados, usuario y estado |
 | Descuentos de servicio | `descuentos`, `descuento_cliente`, `clientes`, `usuarios`, `sucursales` | Descuento, tipo, valor, vigencia, sucursal, clientes asociados, usuario y estado |
-| Orden de trabajo | `orden_trabajo`, `orden_trabajo_detalle`, `presupuesto_servicio`, `presupuesto_detalleservicio`, `presupuesto_promocion`, `promociones`, `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `reclamo_servicio`, `registro_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `articulos`, `stock`, `equipo_trabajo`, `equipo_empleado`, `empleados`, `usuarios`, `anulacion_auditoria` | Numero de OT, origen, presupuesto/reclamo, cliente y vehiculo tomados de `orden_trabajo`, equipo, tecnico, diagnostico/recepcion solo para datos tecnicos o garantia, trabajos/repuestos autorizados, stock en reclamo, cantidades, observacion operativa, motivo de anulacion y estado |
-| Registro de servicio | `registro_servicio`, `registro_servicio_detalle`, `orden_trabajo`, `orden_trabajo_detalle`, `presupuesto_servicio`, `diagnostico_servicio`, `recepcion_servicio`, `reclamo_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `articulos`, `stock`, `movimientostock`, `equipo_trabajo`, `empleados`, `usuarios`, `anulacion_auditoria` | OT, cliente y vehiculo tomados de `registro_servicio`, fecha de ejecucion, garantia calculada por fecha/kilometraje cuando corresponde, trabajos/repuestos ejecutados, stock/movimientos generados o revertidos, observacion, tecnico/equipo, motivo de anulacion y estado |
+| Orden de trabajo | `orden_trabajo`, `orden_trabajo_detalle`, `presupuesto_servicio`, `presupuesto_detalleservicio`, `presupuesto_promocion`, `promociones`, `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `reclamo_servicio`, `registro_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `articulos`, `stock`, `equipo_trabajo`, `equipo_empleado`, `empleados`, `usuarios`, `anulacion_auditoria` | Numero de OT, origen, presupuesto/reclamo, cliente y vehiculo tomados de `orden_trabajo`, marca/modelo, equipo, tecnico, diagnostico/recepcion solo para datos tecnicos o garantia, trabajos/repuestos autorizados, stock en reclamo, cantidades, observacion operativa, motivo de anulacion y estado |
+| Registro de servicio | `registro_servicio`, `registro_servicio_detalle`, `orden_trabajo`, `orden_trabajo_detalle`, `presupuesto_servicio`, `diagnostico_servicio`, `recepcion_servicio`, `reclamo_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `articulos`, `stock`, `movimientostock`, `equipo_trabajo`, `empleados`, `usuarios`, `anulacion_auditoria` | OT, cliente y vehiculo tomados de `registro_servicio`, marca/modelo, fecha de ejecucion, garantia calculada por fecha/kilometraje cuando corresponde, trabajos/repuestos ejecutados, stock/movimientos generados o revertidos, observacion, tecnico/equipo, motivo de anulacion y estado |
 | Salida de insumos | `salida_insumo`, `salida_insumo_detalle`, `articulos`, `stock`, `movimientostock`, `empleados`, `usuarios`, `sucursales`, `anulacion_auditoria` | Numero de salida, fecha, empleado responsable, usuario, observacion, insumos, cantidades, stock descontado o repuesto por anulacion, motivo de anulacion y estado |
-| Reclamos de servicio | `reclamo_servicio`, `registro_servicio`, `registro_servicio_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `articulos`, `anulacion_auditoria` | Servicio reclamado, cliente y vehiculo tomados de `reclamo_servicio`, detalle ejecutado, descripcion, tipo, prioridad, garantia solicitada, evaluacion por fecha/kilometraje, recepcion derivada, cierre, motivo de anulacion y estado |
+| Reclamos de servicio | `reclamo_servicio`, `reclamo_servicio_detalle`, `registro_servicio`, `registro_servicio_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `articulos`, `usuarios`, `anulacion_auditoria` | Servicio reclamado, cliente y vehiculo tomados de `reclamo_servicio`, detalle ejecutado/reclamado, descripcion, tipo, prioridad, garantia solicitada, evaluacion por fecha/kilometraje, recepcion derivada, cierre, motivo de anulacion y estado |
 
 ---
 
@@ -1356,15 +1462,15 @@ Esta lista resume las tablas que participan directamente en cada movimiento, inc
 
 | Movimiento | Tablas involucradas |
 | --- | --- |
-| Recepcion de servicio | `recepcion_servicio`, `recepcion_fotos`, `clientes`, `ciudades`, `vehiculos`, `modelo_auto`, `marcas`, `usuarios`, `reclamo_servicio`, `anulacion_auditoria` |
-| Diagnostico de servicio | `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `equipo_trabajo`, `usuarios`, `presupuesto_servicio`, `orden_trabajo`, `anulacion_auditoria` |
+| Recepcion de servicio | `recepcion_servicio`, `recepcion_fotos`, `clientes`, `ciudades`, `vehiculos`, `modelo_auto`, `marcas`, `usuarios`, `reclamo_servicio`, `registro_servicio`, `anulacion_auditoria` |
+| Diagnostico de servicio | `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `reclamo_servicio`, `reclamo_servicio_detalle`, `registro_servicio`, `registro_servicio_detalle`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `articulos`, `equipo_trabajo`, `usuarios`, `presupuesto_servicio`, `orden_trabajo`, `anulacion_auditoria` |
 | Presupuesto de servicio | `presupuesto_servicio`, `presupuesto_detalleservicio`, `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `articulos`, `stock`, `descuentos`, `descuento_cliente`, `promociones`, `promocion_producto`, `presupuesto_descuento`, `presupuesto_promocion`, `orden_trabajo`, `usuarios`, `anulacion_auditoria` |
 | Promocion de servicio | `promociones`, `promocion_producto`, `articulos`, `usuarios`, `sucursales` |
 | Descuento de servicio | `descuentos`, `descuento_cliente`, `clientes`, `usuarios`, `sucursales` |
-| Orden de trabajo | `orden_trabajo`, `orden_trabajo_detalle`, `presupuesto_servicio`, `presupuesto_detalleservicio`, `presupuesto_promocion`, `promociones`, `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `reclamo_servicio`, `registro_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `articulos`, `stock`, `equipo_trabajo`, `equipo_empleado`, `empleados`, `usuarios`, `anulacion_auditoria` |
-| Registro de servicio | `registro_servicio`, `registro_servicio_detalle`, `orden_trabajo`, `orden_trabajo_detalle`, `presupuesto_servicio`, `diagnostico_servicio`, `recepcion_servicio`, `reclamo_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `articulos`, `stock`, `movimientostock`, `equipo_trabajo`, `empleados`, `usuarios`, `anulacion_auditoria` |
+| Orden de trabajo | `orden_trabajo`, `orden_trabajo_detalle`, `presupuesto_servicio`, `presupuesto_detalleservicio`, `presupuesto_promocion`, `promociones`, `diagnostico_servicio`, `diagnostico_detalle`, `recepcion_servicio`, `reclamo_servicio`, `registro_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `articulos`, `stock`, `equipo_trabajo`, `equipo_empleado`, `empleados`, `usuarios`, `anulacion_auditoria` |
+| Registro de servicio | `registro_servicio`, `registro_servicio_detalle`, `orden_trabajo`, `orden_trabajo_detalle`, `presupuesto_servicio`, `diagnostico_servicio`, `recepcion_servicio`, `reclamo_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `articulos`, `stock`, `movimientostock`, `equipo_trabajo`, `empleados`, `usuarios`, `anulacion_auditoria` |
 | Salida de insumos | `salida_insumo`, `salida_insumo_detalle`, `articulos`, `stock`, `movimientostock`, `empleados`, `usuarios`, `sucursales`, `anulacion_auditoria` |
-| Reclamo de servicio | `reclamo_servicio`, `registro_servicio`, `registro_servicio_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `articulos`, `anulacion_auditoria` |
+| Reclamo de servicio | `reclamo_servicio`, `reclamo_servicio_detalle`, `registro_servicio`, `registro_servicio_detalle`, `recepcion_servicio`, `clientes`, `vehiculos`, `modelo_auto`, `marcas`, `articulos`, `usuarios`, `anulacion_auditoria` |
 
 ---
 

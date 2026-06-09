@@ -119,7 +119,16 @@ if (isset($_POST['index'])) {
     if (isset($_SESSION['Cdatos_articuloCO'][$i])) {
 
         $cantidad = floatval($_POST['cantidad']);
+        $cantidadFacturada = floatval($_POST['cantidad_facturada'] ?? $cantidad);
         $precio   = floatval($_POST['precio']);
+
+        if ($cantidad < 0 || $cantidadFacturada < 0 || $precio < 0) {
+            echo json_encode([
+                "status" => "error",
+                "msg" => "Cantidad o precio invalido"
+            ]);
+            exit();
+        }
 
         if (
             isset($_SESSION['id_oc_seleccionado'], $_SESSION['Cdatos_articuloCO'][$i]['cantidad_pendiente']) &&
@@ -133,9 +142,22 @@ if (isset($_POST['index'])) {
             exit();
         }
 
+        if (
+            isset($_SESSION['id_oc_seleccionado'], $_SESSION['Cdatos_articuloCO'][$i]['cantidad_pendiente']) &&
+            $cantidadFacturada > (float) $_SESSION['Cdatos_articuloCO'][$i]['cantidad_pendiente']
+        ) {
+            echo json_encode([
+                "status" => "error",
+                "msg" => "La cantidad facturada no puede superar la cantidad pendiente de la OC",
+                "cantidad_pendiente" => (float) $_SESSION['Cdatos_articuloCO'][$i]['cantidad_pendiente']
+            ]);
+            exit();
+        }
+
 
         // ✔️ ACTUALIZAR SESIÓN SOLO SI LOS DATOS SON VÁLIDOS
         $_SESSION['Cdatos_articuloCO'][$i]['cantidad'] = $cantidad;
+        $_SESSION['Cdatos_articuloCO'][$i]['cantidad_facturada'] = $cantidadFacturada;
         $_SESSION['Cdatos_articuloCO'][$i]['precio']   = $precio;
         $_SESSION['Cdatos_articuloCO'][$i]['subtotal'] = floatval($_POST['subtotal']);
         $_SESSION['Cdatos_articuloCO'][$i]['iva']      = floatval($_POST['iva']);
