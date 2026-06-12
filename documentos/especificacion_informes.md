@@ -68,6 +68,7 @@ Por lo tanto, las tablas consultadas no cambian entre Previsualizar, PDF y CSV. 
 | Clientes | `clientes`, `ciudades` |
 | Vehiculos | `vehiculos`, `clientes`, `modelo_auto`, `marcas` |
 | Sucursales | `sucursales`, `empresa` |
+| Empleados | `empleados`, `cargos`, `sucursales` |
 | Marcas | `marcas` |
 | Categorias | `categorias` |
 | Usuarios | `usuarios`, `sucursales` |
@@ -192,6 +193,32 @@ Tablas consultadas: `sucursales`, `empresa`.
 El sistema carga resumen y datos dentro de la grilla.
 El sistema habilita los botones PDF y CSV si existen registros.
 Para PDF o CSV, el sistema envia los mismos filtros, valida permiso nuevamente y consulta las mismas tablas.
+
+#### Informe Referencial: Empleados
+
+Generar
+
+El sistema valida permiso `reportes.empleados.ver`.
+El sistema muestra la vista Informes Referenciales.
+El sistema muestra el tipo Empleados si el usuario tiene permiso.
+El sistema muestra filtros de tipo referencial, estado, busqueda y cantidad de registros.
+El usuario selecciona Empleados.
+El usuario selecciona o ingresa filtros.
+El usuario presiona Previsualizar.
+El sistema valida nuevamente permiso `reportes.empleados.ver`.
+El sistema consulta empleados segun los filtros.
+Tablas consultadas: `empleados`, `cargos`, `sucursales`.
+El filtro de busqueda aplica sobre nombre, apellido y numero de cedula.
+El sistema calcula resumen de total, activos e inactivos.
+El sistema carga datos dentro de la grilla.
+El sistema habilita los botones PDF y CSV si existen registros.
+El usuario presiona Generar PDF.
+El sistema envia los filtros al generador unificado de informes referenciales.
+El sistema valida nuevamente permiso `reportes.empleados.ver`.
+El sistema consulta nuevamente empleados segun los filtros.
+El sistema genera el PDF del informe referencial de empleados.
+El usuario puede presionar Exportar CSV.
+El sistema consulta nuevamente empleados segun los filtros y genera el CSV.
 
 #### Informe Referencial: Marcas
 
@@ -748,6 +775,62 @@ Caso de uso que describe el proceso de generar informes de sucursales registrada
 
 - `sucursales`
 - `empresa`
+
+---
+
+## Informe de Empleados
+
+### Descripcion Basica
+
+Caso de uso que describe el proceso de generar informes de empleados registrados. Se ejecuta desde la vista Informes Referenciales mediante el tipo Empleados.
+
+### Actores Relacionados
+
+- Encargado de Compras
+- Personal de Recepcion
+- Encargado de Servicios
+- Gerente general
+
+### Pre Condicion
+
+- Conexion a base de datos.
+- El usuario accede al sistema mediante login.
+- El usuario tiene permiso `reportes.empleados.ver`.
+- Existen empleados registrados.
+
+### Flujo de Eventos
+
+#### Flujo Basico
+
+1. El usuario ingresa al menu Informes Referenciales.
+2. El sistema muestra la vista referencial unificada.
+3. El usuario selecciona el tipo Empleados.
+4. El sistema habilita filtros de busqueda, estado y cantidad de registros.
+5. El usuario ingresa filtros opcionales.
+6. El usuario presiona Previsualizar.
+7. El sistema valida permiso `reportes.empleados.ver`.
+8. El sistema consulta empleados segun los filtros.
+9. El sistema muestra resumen de total, activos e inactivos.
+10. El sistema carga la grilla con cedula, nombre, apellido, cargo, sucursal, celular y estado.
+11. El usuario puede generar PDF o exportar CSV.
+
+### Flujo Alternativo
+
+- Si el usuario no tiene permiso, el sistema muestra acceso denegado.
+- Si no se ingresan filtros, el sistema consulta todos los empleados.
+- Si no existen registros para los filtros, el sistema muestra la tabla sin resultados.
+
+### Post Condicion
+
+- El sistema muestra los empleados encontrados.
+- El sistema genera PDF o CSV si corresponde.
+- La informacion consultada no se modifica.
+
+### Tablas Involucradas
+
+- `empleados`
+- `cargos`
+- `sucursales`
 
 ---
 

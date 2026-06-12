@@ -160,6 +160,15 @@ class compraControlador extends compraModelo
             ];
         }
 
+        if (empty($_SESSION['datos_proveedorCO']['ID'])) {
+            return [
+                "Alerta" => "simple",
+                "Titulo" => "Proveedor requerido",
+                "Texto" => "Debe seleccionar un proveedor antes de registrar la factura.",
+                "Tipo" => "warning"
+            ];
+        }
+
         // 1) Sincronizar y filtrar articulos con cantidad facturada > 0
         if (!empty($_POST['detalle_indices']) && is_array($_POST['detalle_indices'])) {
             foreach ($_POST['detalle_indices'] as $pos => $indice) {
@@ -191,6 +200,14 @@ class compraControlador extends compraModelo
                     "Alerta" => "simple",
                     "Titulo" => "Cantidad invalida",
                     "Texto" => "Las cantidades facturadas y recibidas no pueden ser negativas.",
+                    "Tipo" => "error"
+                ];
+            }
+            if ($cantidadRecibida > $cantidadFacturada) {
+                return [
+                    "Alerta" => "simple",
+                    "Titulo" => "Cantidad excedida",
+                    "Texto" => "La cantidad recibida del articulo " . $item['descripcion'] . " no puede superar la cantidad facturada.",
                     "Tipo" => "error"
                 ];
             }
@@ -705,6 +722,15 @@ class compraControlador extends compraModelo
     {
         // AGREGAR ARTÍCULO
         if (isset($_POST['id_agregar_articuloCO'])) {
+
+            if (empty($_SESSION['datos_proveedorCO']['ID'])) {
+                die(json_encode([
+                    "Alerta" => "simple",
+                    "Titulo" => "Proveedor requerido",
+                    "Texto"  => "Debe seleccionar un proveedor antes de agregar articulos",
+                    "Tipo"   => "warning"
+                ]));
+            }
 
             // Limpiar y obtener datos del POST
             $id = mainModel::limpiar_string($_POST['id_agregar_articuloCO']);

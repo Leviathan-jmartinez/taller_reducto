@@ -27,6 +27,15 @@
         }
     }
 
+    function alertarProveedorCompra() {
+        Swal.fire({
+            title: 'Proveedor requerido',
+            text: 'Debe seleccionar un proveedor antes de agregar articulos',
+            type: 'warning',
+            confirmButtonText: 'Aceptar'
+        });
+    }
+
     function agregar_OC(idcoseleccionado) {
         if (!idcoseleccionado) return;
 
@@ -79,6 +88,16 @@
                     confirmButtonText: 'Aceptar'
                 });
             }
+            if (cantidad > cantidadFacturada) {
+                cantidad = cantidadFacturada;
+                cantidadInput.value = cantidadFacturada;
+                Swal.fire({
+                    title: 'Cantidad excedida',
+                    text: 'La cantidad recibida no puede superar la cantidad facturada',
+                    type: 'warning',
+                    confirmButtonText: 'Aceptar'
+                });
+            }
             let precioTexto = fila.querySelector(".precio").value;
             let precio = parseFloat(precioTexto.replace(/\./g, '').replace(',', '.')) || 0;
 
@@ -116,6 +135,9 @@
                         if (data.status === "error" && data.cantidad_pendiente !== undefined) {
                             fila.querySelector(".cantidad").value = data.cantidad_pendiente;
                             fila.querySelector(".cantidad-facturada").value = data.cantidad_pendiente;
+                            recalcularYActualizar(fila);
+                        } else if (data.status === "error" && data.cantidad_facturada !== undefined) {
+                            fila.querySelector(".cantidad").value = data.cantidad_facturada;
                             recalcularYActualizar(fila);
                         }
                     });

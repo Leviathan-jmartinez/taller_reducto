@@ -66,7 +66,7 @@ class reclamoServicioModelo extends mainModel
                     FROM reclamo_servicio
                     WHERE idregistro_servicio = ?
                       AND tipo_reclamo = ?
-                      AND estado IN (1, 2)
+                      AND estado IN (1, 2, 3)
                     LIMIT 1
                 ");
                 $v->execute([$datos['idregistro_servicio'], $tipoReclamo]);
@@ -159,7 +159,7 @@ class reclamoServicioModelo extends mainModel
                             ON rd.id_registro_servicio_detalle = d.id_registro_servicio_detalle
                         LEFT JOIN reclamo_servicio r
                             ON r.idreclamo_servicio = rd.idreclamo_servicio
-                        AND r.estado IN (1, 2)
+                        AND r.estado IN (1, 2, 3)
                         WHERE d.idregistro_servicio = ?
                         AND d.id_registro_servicio_detalle IN ($placeholders)
                         GROUP BY d.id_registro_servicio_detalle, a.tipo

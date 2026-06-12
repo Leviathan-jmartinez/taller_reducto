@@ -130,6 +130,15 @@ if (isset($_POST['index'])) {
             exit();
         }
 
+        if ($cantidad > $cantidadFacturada) {
+            echo json_encode([
+                "status" => "error",
+                "msg" => "La cantidad recibida no puede superar la cantidad facturada",
+                "cantidad_facturada" => $cantidadFacturada
+            ]);
+            exit();
+        }
+
         if (
             isset($_SESSION['id_oc_seleccionado'], $_SESSION['Cdatos_articuloCO'][$i]['cantidad_pendiente']) &&
             $cantidad > (float) $_SESSION['Cdatos_articuloCO'][$i]['cantidad_pendiente']

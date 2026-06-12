@@ -9,7 +9,7 @@ $busqueda = $_SESSION['busqueda_reclamo_servicio'] ?? '';
 $estado   = $_SESSION['estado_reclamo_servicio'] ?? '';
 $ordenReclamoServicio = mainModel::cargar_ordenamiento_sesion('reclamo_servicio', ['fecha', 'estado'], 'fecha', 'DESC');
 
-if (isset($_GET['estado_reclamo_servicio']) && in_array((string)$_GET['estado_reclamo_servicio'], ['0', '1', '2', '3'], true)) {
+if (isset($_GET['estado_reclamo_servicio']) && in_array((string)$_GET['estado_reclamo_servicio'], ['0', '1', '2', '3', '4'], true)) {
     $_SESSION['estado_reclamo_servicio'] = (string)$_GET['estado_reclamo_servicio'];
     $estado = (string)$_GET['estado_reclamo_servicio'];
 }
@@ -78,7 +78,8 @@ $hayFiltro = $busqueda !== '' || $estado !== '';
                     <option value="">Todos</option>
                     <option value="1" <?php if ($estado == "1") echo "selected"; ?>>Activo</option>
                     <option value="2" <?php if ($estado == "2") echo "selected"; ?>>En proceso</option>
-                    <option value="3" <?php if ($estado == "3") echo "selected"; ?>>Resuelto</option>
+                    <option value="3" <?php if ($estado == "3") echo "selected"; ?>>OT generada</option>
+                    <option value="4" <?php if ($estado == "4") echo "selected"; ?>>Resuelto</option>
                     <option value="0" <?php if ($estado === "0") echo "selected"; ?>>Anulado</option>
                 </select>
             </div>
@@ -119,6 +120,9 @@ $hayFiltro = $busqueda !== '' || $estado !== '';
                         echo "En proceso";
                         break;
                     case "3":
+                        echo "OT generada";
+                        break;
+                    case "4":
                         echo "Resuelto";
                         break;
                     case "0":

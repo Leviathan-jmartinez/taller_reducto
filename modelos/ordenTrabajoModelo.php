@@ -567,6 +567,14 @@ class ordenTrabajoModelo extends mainModel
                       AND d.estado != 0
                 ");
                 $updDiagnostico->execute([$ot['idreclamo_servicio']]);
+
+                $updReclamo = $pdo->prepare("
+                    UPDATE reclamo_servicio
+                    SET estado = 2
+                    WHERE idreclamo_servicio = ?
+                      AND estado = 3
+                ");
+                $updReclamo->execute([$ot['idreclamo_servicio']]);
             }
 
             mainModel::registrar_anulacion_auditoria_modelo($pdo, [
@@ -743,7 +751,7 @@ class ordenTrabajoModelo extends mainModel
             /* 🔥 ACTUALIZAR RECLAMO */
             $pdo->prepare("
             UPDATE reclamo_servicio
-            SET estado = 2
+            SET estado = 3
             WHERE idreclamo_servicio = ?
         ")->execute([$idReclamo]);
 

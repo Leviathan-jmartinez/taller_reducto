@@ -5,6 +5,7 @@ $permisosReferenciales = [
     'reportes.vehiculos.ver',
     'reportes.sucursales.ver',
     'reportes.articulos.ver',
+    'reportes.empleados.ver',
     'usuarios.ver'
 ];
 
@@ -31,6 +32,7 @@ $tiposReferenciales = [
     'vehiculos' => ['titulo' => 'Vehiculos', 'icono' => 'fas fa-car', 'permiso' => 'reportes.vehiculos.ver', 'estado' => true, 'categoria' => false],
     'sucursales' => ['titulo' => 'Sucursales', 'icono' => 'fas fa-city', 'permiso' => 'reportes.sucursales.ver', 'estado' => true, 'categoria' => false],
     'articulos' => ['titulo' => 'Articulos', 'icono' => 'fas fa-boxes', 'permiso' => 'reportes.articulos.ver', 'estado' => true, 'categoria' => true],
+    'empleados' => ['titulo' => 'Empleados', 'icono' => 'fas fa-user-tie', 'permiso' => 'reportes.empleados.ver', 'estado' => true, 'categoria' => false],
     'marcas' => ['titulo' => 'Marcas', 'icono' => 'fas fa-tags', 'permiso' => 'reportes.articulos.ver', 'estado' => false, 'categoria' => false],
     'categorias' => ['titulo' => 'Categorias', 'icono' => 'fas fa-layer-group', 'permiso' => 'reportes.articulos.ver', 'estado' => false, 'categoria' => false],
     'usuarios' => ['titulo' => 'Usuarios', 'icono' => 'fas fa-user-shield', 'permiso' => 'usuarios.ver', 'estado' => true, 'categoria' => false]

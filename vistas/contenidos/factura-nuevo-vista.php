@@ -76,9 +76,15 @@ $ocSeleccionada = !empty($_SESSION['id_oc_seleccionado']);
                         <i class="fas fa-user-plus"></i> &nbsp; Agregar Proveedor
                     </button>
                 <?php } ?>
-                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalArticuloCO">
-                    <i class="fas fa-box-open"></i> &nbsp; Agregar artículo
-                </button>
+                <?php if (empty($_SESSION['datos_proveedorCO'])) { ?>
+                    <button type="button" class="btn btn-primary" onclick="alertarProveedorCompra()">
+                        <i class="fas fa-box-open"></i> &nbsp; Agregar artículo
+                    </button>
+                <?php } else { ?>
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ModalArticuloCO">
+                        <i class="fas fa-box-open"></i> &nbsp; Agregar artículo
+                    </button>
+                <?php } ?>
             </div>
         <?php } ?>
 

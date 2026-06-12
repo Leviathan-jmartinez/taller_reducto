@@ -198,6 +198,23 @@ class reporteControlador extends reportesModelo
                     ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
                 ]
             ],
+            "empleados" => [
+                "titulo" => "Empleados",
+                "permiso" => "reportes.empleados.ver",
+                "modelo" => "reporte_empleados_modelo",
+                "resumen" => "resumen_empleados_modelo",
+                "orientacion" => "L",
+                "estado_key" => "estado",
+                "columnas" => [
+                    ["key" => "nro_cedula", "label" => "Cedula"],
+                    ["key" => "nombre", "label" => "Nombre"],
+                    ["key" => "apellido", "label" => "Apellido"],
+                    ["key" => "cargo", "label" => "Cargo"],
+                    ["key" => "sucursal", "label" => "Sucursal"],
+                    ["key" => "celular", "label" => "Celular"],
+                    ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
+                ]
+            ],
             "marcas" => [
                 "titulo" => "Marcas",
                 "permiso" => "reportes.articulos.ver",
@@ -251,6 +268,8 @@ class reporteControlador extends reportesModelo
             "categoria" => mainModel::limpiar_string($_POST['categoria'] ?? 0),
             "proveedor" => 0,
             "modelo" => 0,
+            "sucursal" => 0,
+            "cargo" => 0,
             "pagina" => max(1, (int)($_POST['pagina'] ?? 1)),
             "por_pagina" => min(500, max(25, (int)($_POST['por_pagina'] ?? 50)))
         ];

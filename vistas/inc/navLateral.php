@@ -373,6 +373,7 @@ $menuLateral = [
             'reportes.sucursales.ver',
             'reportes.clientes.ver',
             'reportes.vehiculos.ver',
+            'reportes.empleados.ver',
             'usuarios.ver'
         ],
         'items' => [
@@ -387,6 +388,7 @@ $menuLateral = [
                     'reportes.sucursales.ver',
                     'reportes.clientes.ver',
                     'reportes.vehiculos.ver',
+                    'reportes.empleados.ver',
                     'usuarios.ver'
                 ]
             ]

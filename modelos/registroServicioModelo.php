@@ -162,7 +162,7 @@ class registroServicioModelo extends mainModel
                     UPDATE reclamo_servicio rc
                     INNER JOIN recepcion_servicio r
                         ON r.idreclamo_servicio = rc.idreclamo_servicio
-                    SET rc.estado = 3,
+                    SET rc.estado = 4,
                         rc.fecha_cierre = NOW(),
                         rc.observacion_cierre = 'Servicio registrado'
                     WHERE r.idrecepcion = ?
@@ -581,11 +581,11 @@ class registroServicioModelo extends mainModel
             if (!empty($origen['idreclamo_servicio'])) {
                 $updReclamo = $pdo->prepare("
                     UPDATE reclamo_servicio
-                    SET estado = 2,
+                    SET estado = 3,
                         fecha_cierre = NULL,
                         observacion_cierre = NULL
                     WHERE idreclamo_servicio = ?
-                      AND estado = 3
+                      AND estado = 4
                 ");
                 $updReclamo->execute([$origen['idreclamo_servicio']]);
             }

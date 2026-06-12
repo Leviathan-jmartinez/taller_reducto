@@ -270,6 +270,9 @@ class reclamoServicioControlador extends reclamoServicioModelo
                         $estado = '<span class="badge badge-warning">En proceso</span>';
                         break;
                     case 3:
+                        $estado = '<span class="badge badge-info">OT generada</span>';
+                        break;
+                    case 4:
                         $estado = '<span class="badge badge-success">Resuelto</span>';
                         break;
                     case 0:

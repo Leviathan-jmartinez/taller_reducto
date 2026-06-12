@@ -318,6 +318,15 @@ class transferenciaControlador extends transferenciaModelo
             session_start();
         }
 
+        if (!mainModel::tienePermiso('transferencia.recibir')) {
+            return json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Acceso no autorizado",
+                "Texto"  => "No posee permisos para recibir transferencias",
+                "Tipo"   => "error"
+            ]);
+        }
+
         $id = $_POST['idtransferencia'] ?? null;
         $recibidos = $_POST['recibidos'] ?? [];
 
