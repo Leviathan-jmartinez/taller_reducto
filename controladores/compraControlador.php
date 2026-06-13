@@ -936,14 +936,11 @@ class compraControlador extends compraModelo
                     case 1:
                         $estadoBadge = '<span class="badge bg-primary">Activo</span>';
                         break;
-                    case 2:
-                        $estadoBadge = '<span class="badge bg-success">Procesado</span>';
-                        break;
                     case 3:
                         $estadoBadge = '<span class="badge bg-warning text-dark">Con diferencia</span>';
                         break;
                     case 4:
-                        $estadoBadge = '<span class="badge bg-info text-dark">Regularizada</span>';
+                        $estadoBadge = '<span class="badge bg-info text-dark">Regularizada con NC</span>';
                         break;
                     case 0:
                         $estadoBadge = '<span class="badge bg-danger">Anulado</span>';
@@ -1034,7 +1031,7 @@ class compraControlador extends compraModelo
         $cab = $datos['cabecera'];
         $libro = $datos['libro'] ?: [];
         $cuentas = $datos['cuentas'] ?: [];
-        $estadoTexto = ['0' => 'Anulado', '1' => 'Activo', '2' => 'Procesado', '3' => 'Con diferencia', '4' => 'Regularizada'];
+        $estadoTexto = ['0' => 'Anulado', '1' => 'Activo', '3' => 'Con diferencia', '4' => 'Regularizada con NC'];
         $total = 0;
 
         $html = '

@@ -30,21 +30,23 @@ if (!$tieneAccesoMovimientos) {
 require_once "./controladores/reportesControlador.php";
 $repMov = new reporteControlador();
 $sucursalesMov = $repMov->listar_sucursales_controlador();
+$empleadosMov = $repMov->listar_empleados_controlador();
+$proveedoresMov = $repMov->listar_proveedores_controlador();
 
 $tiposMovimientos = [
-    'pedidos' => ['titulo' => 'Pedidos de Compra', 'permiso' => 'reportes.pedidos.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'sucursal' => true],
-    'presupuestos_compra' => ['titulo' => 'Presupuestos de Compra', 'permiso' => 'reportes.presupuestos_compra.ver', 'proveedor' => true, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'sucursal' => true],
-    'ordenes_compra' => ['titulo' => 'Ordenes de Compra', 'permiso' => 'reportes.ordenes_compra.ver', 'proveedor' => true, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'sucursal' => true],
-    'compras' => ['titulo' => 'Compras', 'permiso' => 'reportes.compras.ver', 'proveedor' => true, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'sucursal' => true],
-    'libro_compras' => ['titulo' => 'Libro de Compras', 'permiso' => 'reportes.libro_compras.ver', 'proveedor' => true, 'cliente' => false, 'articulo' => false, 'empleado' => false, 'vista' => false, 'fecha' => true, 'estado' => true, 'sucursal' => true],
-    'stock' => ['titulo' => 'Stock', 'permiso' => 'reportes.stock.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => false, 'fecha' => false, 'estado' => true, 'sucursal' => true],
-    'transferencias' => ['titulo' => 'Transferencias', 'permiso' => 'reportes.transferencias.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => false, 'fecha' => true, 'estado' => true, 'sucursal' => true],
+    'pedidos' => ['titulo' => 'Pedidos de Compra', 'permiso' => 'reportes.pedidos.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'estado_labels' => [0 => 'Anulado', 1 => 'Pendiente', 2 => 'Procesado'], 'sucursal' => true],
+    'presupuestos_compra' => ['titulo' => 'Presupuestos de Compra', 'permiso' => 'reportes.presupuestos_compra.ver', 'proveedor' => true, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'estado_labels' => [0 => 'Anulado', 1 => 'Pendiente', 2 => 'Procesado'], 'sucursal' => true],
+    'ordenes_compra' => ['titulo' => 'Ordenes de Compra', 'permiso' => 'reportes.ordenes_compra.ver', 'proveedor' => true, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'estado_labels' => [0 => 'Anulado', 1 => 'Pendiente', 2 => 'Procesado'], 'sucursal' => true],
+    'compras' => ['titulo' => 'Compras', 'permiso' => 'reportes.compras.ver', 'proveedor' => true, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'estado_labels' => [0 => 'Anulado', 1 => 'Activo', 3 => 'Con diferencia', 4 => 'Regularizada con NC'], 'sucursal' => true],
+    'libro_compras' => ['titulo' => 'Libro de Compras', 'permiso' => 'reportes.libro_compras.ver', 'proveedor' => true, 'cliente' => false, 'articulo' => false, 'empleado' => false, 'vista' => false, 'fecha' => true, 'estado' => true, 'estado_labels' => [0 => 'Anulado', 1 => 'Activo'], 'sucursal' => true],
+    'stock' => ['titulo' => 'Stock', 'permiso' => 'reportes.stock.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => false, 'fecha' => false, 'estado' => true, 'estado_labels' => [0 => 'Inactivo', 1 => 'Activo'], 'sucursal' => true],
+    'transferencias' => ['titulo' => 'Transferencias', 'permiso' => 'reportes.transferencias.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => false, 'fecha' => true, 'estado' => true, 'estado_labels' => ['en_transito' => 'Pendiente de recibir', 'recibido' => 'Recibido', 'recibido_parcial' => 'Recibido parcial', 'anulado' => 'Anulado'], 'sucursal' => true],
     'movimientos_stock' => ['titulo' => 'Movimientos de Stock', 'permiso' => 'reportes.movimientos_stock.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'stock_filtros' => true, 'vista' => false, 'fecha' => true, 'estado' => false, 'sucursal' => true],
     'kardex_articulo' => ['titulo' => 'Kardex de Articulo', 'permiso' => 'reportes.movimientos_stock.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'stock_filtros' => true, 'requiere_sucursal' => true, 'requiere_articulo' => true, 'vista' => false, 'fecha' => true, 'estado' => false, 'sucursal' => true],
-    'recepcion_servicio' => ['titulo' => 'Recepcion de Servicios', 'permiso' => 'reportes.recepcion_servicio.ver', 'proveedor' => false, 'cliente' => true, 'articulo' => false, 'empleado' => false, 'vista' => false, 'fecha' => true, 'estado' => true, 'sucursal' => true],
-    'presupuesto_servicio' => ['titulo' => 'Presupuestos de Servicios', 'permiso' => 'reportes.presupuesto_servicio.ver', 'proveedor' => false, 'cliente' => true, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'sucursal' => true],
-    'orden_trabajo' => ['titulo' => 'Ordenes de Trabajo', 'permiso' => 'reportes.orden_trabajo.ver', 'proveedor' => false, 'cliente' => true, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'sucursal' => true],
-    'registro_servicio' => ['titulo' => 'Registro de Servicios', 'permiso' => 'reportes.registro_servicio.ver', 'proveedor' => false, 'cliente' => true, 'articulo' => true, 'empleado' => true, 'vista' => true, 'fecha' => true, 'estado' => true, 'sucursal' => true]
+    'recepcion_servicio' => ['titulo' => 'Recepcion de Servicios', 'permiso' => 'reportes.recepcion_servicio.ver', 'proveedor' => false, 'cliente' => true, 'articulo' => false, 'empleado' => false, 'vista' => false, 'fecha' => true, 'estado' => true, 'estado_labels' => [0 => 'Anulado', 1 => 'Recepcionado', 2 => 'En proceso', 3 => 'Finalizado'], 'sucursal' => true],
+    'presupuesto_servicio' => ['titulo' => 'Presupuestos de Servicios', 'permiso' => 'reportes.presupuesto_servicio.ver', 'proveedor' => false, 'cliente' => true, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'estado_labels' => [0 => 'Anulado', 1 => 'Pendiente', 2 => 'Aprobado', 3 => 'Rechazado', 4 => 'Facturado'], 'sucursal' => true],
+    'orden_trabajo' => ['titulo' => 'Ordenes de Trabajo', 'permiso' => 'reportes.orden_trabajo.ver', 'proveedor' => false, 'cliente' => true, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'estado_labels' => [0 => 'Anulado', 1 => 'Pendiente', 2 => 'En proceso', 3 => 'Pendiente completar'], 'sucursal' => true],
+    'registro_servicio' => ['titulo' => 'Registro de Servicios', 'permiso' => 'reportes.registro_servicio.ver', 'proveedor' => false, 'cliente' => true, 'articulo' => true, 'empleado' => true, 'vista' => true, 'fecha' => true, 'estado' => true, 'estado_labels' => [0 => 'Anulado', 1 => 'Registrado', 2 => 'Facturado', 3 => 'Con Reclamo'], 'sucursal' => true]
 ];
 
 $tiposMovVisibles = [];
@@ -100,20 +102,12 @@ foreach ($tiposMovimientos as $clave => $tipo) {
                     <label>Estado</label>
                     <select name="estado" class="form-control">
                         <option value="">Todos</option>
-                        <option value="1">Activo / Pendiente</option>
-                        <option value="2">Procesado</option>
-                        <option value="3">Finalizado / Reclamo / Diferencia</option>
-                        <option value="4">Regularizada</option>
-                        <option value="0">Anulado</option>
-                        <option value="en_transito">En transito</option>
-                        <option value="recibido">Recibido</option>
-                        <option value="recibido_parcial">Recibido parcial</option>
                     </select>
                 </div>
 
                 <div class="col-md-3" id="grupoSucursalMovimiento">
                     <label>Sucursal</label>
-                    <select name="sucursal" class="form-control">
+                    <select name="sucursal" class="form-control select2" data-placeholder="Todas">
                         <option value="">Todas</option>
                         <?php foreach ($sucursalesMov as $sucursal): ?>
                             <option value="<?= (int)$sucursal['id_sucursal'] ?>">
@@ -125,8 +119,13 @@ foreach ($tiposMovimientos as $clave => $tipo) {
 
                 <div class="col-md-3 mt-3 d-none" id="grupoProveedorMovimiento">
                     <label>Proveedor</label>
-                    <select name="proveedor" class="form-control">
+                    <select name="proveedor" class="form-control select2" data-placeholder="Todos">
                         <option value="">Todos</option>
+                        <?php foreach ($proveedoresMov as $proveedor): ?>
+                            <option value="<?= (int)$proveedor['idproveedores'] ?>">
+                                <?= htmlspecialchars($proveedor['razon_social'], ENT_QUOTES, 'UTF-8') ?>
+                            </option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
 
@@ -142,7 +141,14 @@ foreach ($tiposMovimientos as $clave => $tipo) {
 
                 <div class="col-md-3 mt-3 d-none" id="grupoEmpleadoMovimiento">
                     <label>Tecnico</label>
-                    <input type="text" name="empleado" class="form-control" placeholder="ID o cedula exacta">
+                    <select name="empleado" class="form-control select2" data-placeholder="Todos">
+                        <option value="">Todos</option>
+                        <?php foreach ($empleadosMov as $empleado): ?>
+                            <option value="<?= (int)$empleado['idempleados'] ?>">
+                                <?= htmlspecialchars(trim($empleado['apellido'] . ' ' . $empleado['nombre']), ENT_QUOTES, 'UTF-8') ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
 
                 <div class="col-md-3 mt-3 d-none" id="grupoNaturalezaStock">
@@ -445,15 +451,33 @@ foreach ($tiposMovimientos as $clave => $tipo) {
         };
         let estadoLabels = {};
         let graficosInstancias = {};
-        let proveedoresCargados = false;
+        let proveedoresCargados = true;
 
         const texto = valor => (valor === null || valor === undefined || valor === '') ? '-' : String(valor);
         const escapeHtml = valor => texto(valor).replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
         const numero = valor => new Intl.NumberFormat('es-PY').format(Number(valor || 0));
+        const refrescarSelect2 = select => {
+            if (!select || typeof $ === 'undefined') return;
+            if ($(select).hasClass('select2-hidden-accessible')) {
+                $(select).trigger('change.select2');
+            }
+        };
         const fechaPy = valor => {
             const partes = String(valor || '').split('-');
             return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : texto(valor);
         };
+
+        function configurarEstados(cfg) {
+            if (!form.elements.estado) return;
+            const valorActual = form.elements.estado.value;
+            const opciones = ['<option value="">Todos</option>'];
+            Object.entries(cfg.estado_labels || {}).forEach(([value, label]) => {
+                opciones.push(`<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`);
+            });
+            form.elements.estado.innerHTML = opciones.join('');
+            form.elements.estado.value = Object.prototype.hasOwnProperty.call(cfg.estado_labels || {}, valorActual) ? valorActual : '';
+            refrescarSelect2(form.elements.estado);
+        }
 
         function configurarFiltros() {
             const cfg = tipos[tipo.value] || {};
@@ -461,6 +485,7 @@ foreach ($tiposMovimientos as $clave => $tipo) {
             grupoDesde.classList.toggle('d-none', !cfg.fecha);
             grupoHasta.classList.toggle('d-none', !cfg.fecha);
             grupoEstado.classList.toggle('d-none', !cfg.estado);
+            configurarEstados(cfg);
             grupoSucursal.classList.toggle('d-none', !cfg.sucursal);
             grupoProveedor.classList.toggle('d-none', !cfg.proveedor);
             grupoCliente.classList.toggle('d-none', !cfg.cliente);
@@ -474,12 +499,24 @@ foreach ($tiposMovimientos as $clave => $tipo) {
                 form.elements.desde.value = '';
                 form.elements.hasta.value = '';
             }
-            if (!cfg.estado && form.elements.estado) form.elements.estado.value = '';
-            if (!cfg.sucursal && form.elements.sucursal) form.elements.sucursal.value = '';
-            if (!cfg.proveedor && form.elements.proveedor) form.elements.proveedor.value = '';
+            if (!cfg.estado && form.elements.estado) {
+                form.elements.estado.value = '';
+                refrescarSelect2(form.elements.estado);
+            }
+            if (!cfg.sucursal && form.elements.sucursal) {
+                form.elements.sucursal.value = '';
+                refrescarSelect2(form.elements.sucursal);
+            }
+            if (!cfg.proveedor && form.elements.proveedor) {
+                form.elements.proveedor.value = '';
+                refrescarSelect2(form.elements.proveedor);
+            }
             if (!cfg.cliente && form.elements.cliente) form.elements.cliente.value = '';
             if (!cfg.articulo && form.elements.articulo) form.elements.articulo.value = '';
-            if (!cfg.empleado && form.elements.empleado) form.elements.empleado.value = '';
+            if (!cfg.empleado && form.elements.empleado) {
+                form.elements.empleado.value = '';
+                refrescarSelect2(form.elements.empleado);
+            }
             if (!cfg.stock_filtros) {
                 form.elements.naturaleza_stock.value = '';
                 form.elements.tipo_movimiento_stock.value = '';
@@ -515,6 +552,8 @@ foreach ($tiposMovimientos as $clave => $tipo) {
                         selectProveedor.value = actual;
                     }
                     proveedoresCargados = true;
+                    if (typeof activarSelect2 === 'function') activarSelect2(grupoProveedor);
+                    refrescarSelect2(selectProveedor);
                 })
                 .catch(() => {});
         }
@@ -863,6 +902,7 @@ foreach ($tiposMovimientos as $clave => $tipo) {
             ['desde', 'hasta', 'estado', 'sucursal', 'proveedor', 'cliente', 'articulo', 'empleado', 'naturaleza_stock', 'tipo_movimiento_stock'].forEach(name => {
                 if (form.elements[name]) form.elements[name].value = '';
             });
+            ['estado', 'sucursal', 'proveedor', 'empleado'].forEach(name => refrescarSelect2(form.elements[name]));
             form.elements.vista_movimiento.value = 'resumen';
             form.elements.por_pagina.value = '50';
             form.elements.pagina.value = 1;

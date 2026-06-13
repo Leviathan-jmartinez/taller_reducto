@@ -23,6 +23,7 @@ Cada informe se documenta de forma individual para conservar claridad funcional,
 - El CSV se genera con separador punto y coma. En informes referenciales se usa UTF-16LE con BOM para compatibilidad con Excel y acentos; en informes de movimientos se usa UTF-8 con BOM.
 - La informacion consultada no se modifica.
 - Los documentos anulados no se eliminan de los informes. Se muestran mediante su estado. Cuando la anulacion pertenece a movimientos criticos de compras o servicios, el motivo, usuario y fecha quedan registrados en `anulacion_auditoria`.
+- En informes de movimientos, el filtro Estado se adapta al tipo de informe seleccionado para evitar estados que no aplican. En compras no se ofrece `Procesado`; una compra regularizada por nota de credito se muestra como `Regularizada con NC`.
 
 ### Auditoria de Anulaciones e Informes
 
@@ -79,7 +80,7 @@ Por lo tanto, las tablas consultadas no cambian entre Previsualizar, PDF y CSV. 
 |---|---|
 | Pedidos de Compra | `pedido_cabecera`, `pedido_detalle`, `usuarios`, `sucursales` |
 | Presupuestos de Compra | `presupuesto_compra`, `presupuesto_detalle`, `proveedores`, `usuarios`, `sucursales` |
-| Ordenes de Compra | `orden_compra`, `orden_compra_detalle`, `proveedores`, `usuarios`, `sucursales` |
+| Ordenes de Compra | `orden_compra`, `orden_compra_detalle`, `articulos`, `proveedores`, `usuarios`, `sucursales` |
 | Compras | `compra_cabecera`, `compra_detalle`, `proveedores`, `usuarios`, `sucursales` |
 | Libro de Compras | `libro_compra`, `sucursales` |
 | Stock | `articulos`, `stock`, `categorias`, `marcas`, `articulo_proveedor`, `proveedores`, `unidad_medida`, `sucursales` |
@@ -202,8 +203,9 @@ El sistema valida permiso `reportes.empleados.ver`.
 El sistema muestra la vista Informes Referenciales.
 El sistema muestra el tipo Empleados si el usuario tiene permiso.
 El sistema muestra filtros de tipo referencial, estado, busqueda y cantidad de registros.
+El sistema muestra el filtro sucursal cuando el usuario selecciona Empleados.
 El usuario selecciona Empleados.
-El usuario selecciona o ingresa filtros.
+El usuario selecciona o ingresa filtros, incluida sucursal si corresponde.
 El usuario presiona Previsualizar.
 El sistema valida nuevamente permiso `reportes.empleados.ver`.
 El sistema consulta empleados segun los filtros.
@@ -1083,11 +1085,13 @@ Caso de uso que describe el proceso de generar informes de presupuestos de compr
 
 ### Descripcion Basica
 
-Caso de uso que describe el proceso de generar informes de ordenes de compra. Se ejecuta desde la vista Informes de Movimientos mediante el tipo Ordenes de Compra.
+Caso de uso que describe el proceso de previsualizar, generar PDF y exportar CSV de ordenes de compra. Se ejecuta desde la vista unificada Informes de Movimientos mediante el tipo Ordenes de Compra.
 
 ### Actores Relacionados
 
 - Encargado de Compras
+- Personal de Recepcion
+- Encargado de dto. de Servicios
 - Gerente general
 
 ### Pre Condicion
@@ -1101,30 +1105,54 @@ Caso de uso que describe el proceso de generar informes de ordenes de compra. Se
 
 #### Flujo Basico
 
-1. El usuario ingresa al menu Informes de Movimientos.
-2. El usuario selecciona Ordenes de Compra.
-3. El sistema habilita filtros de fecha, sucursal, estado y busqueda.
-4. El usuario presiona Previsualizar.
-5. El sistema valida permiso `reportes.ordenes_compra.ver`.
-6. El sistema consulta ordenes segun los filtros.
-7. El sistema muestra resumen, graficos y grilla de resultados.
-8. El usuario puede generar PDF o exportar CSV.
+1. El usuario ingresa a Informes de Movimientos.
+2. El sistema valida que el usuario tenga al menos un permiso de informes de movimientos para mostrar la vista.
+3. El sistema muestra el tipo Ordenes de Compra si el usuario tiene permiso `reportes.ordenes_compra.ver`.
+4. El sistema consulta sucursales para el filtro. Tabla consultada: `sucursales`.
+5. Cuando el informe requiere proveedor, el sistema consulta proveedores para el filtro. Tabla consultada: `proveedores`.
+6. El usuario selecciona Ordenes de Compra.
+7. El sistema habilita filtros de vista, fecha desde, fecha hasta, estado, sucursal, proveedor, articulo y cantidad de registros.
+8. El filtro Estado muestra los estados que aplican a ordenes de compra: Pendiente, Procesado y Anulado.
+9. El filtro Articulo acepta ID o codigo exacto.
+10. El usuario selecciona Vista Resumen o Vista Detallado.
+11. El usuario selecciona o ingresa filtros.
+12. El usuario presiona Previsualizar.
+13. El sistema valida nuevamente permiso `reportes.ordenes_compra.ver`.
+14. El sistema consulta ordenes de compra segun los filtros seleccionados.
+15. En Vista Resumen, el sistema consulta `orden_compra`, `orden_compra_detalle`, `proveedores`, `usuarios` y `sucursales`.
+16. En Vista Detallado, el sistema consulta `orden_compra`, `orden_compra_detalle`, `articulos`, `proveedores` y `sucursales`.
+17. El sistema carga resumen, graficos y datos dentro de la grilla.
+18. En Vista Resumen, cada fila representa una orden de compra.
+19. En Vista Detallado, cada fila representa un articulo ordenado con cantidad, cantidad pendiente, precio y subtotal.
+20. El sistema habilita los botones PDF y CSV si existen registros.
+21. El usuario puede presionar Generar PDF.
+22. El sistema envia los mismos filtros al generador unificado de informes de movimientos.
+23. El sistema valida nuevamente permiso `reportes.ordenes_compra.ver`.
+24. El sistema consulta nuevamente las ordenes de compra segun los filtros.
+25. El sistema genera el PDF del informe de ordenes de compra.
+26. El usuario puede presionar Exportar CSV.
+27. El sistema valida nuevamente permiso `reportes.ordenes_compra.ver`.
+28. El sistema consulta nuevamente las ordenes de compra segun los filtros.
+29. El sistema genera CSV con separador punto y coma y codificacion UTF-8 con BOM.
 
 ### Flujo Alternativo
 
 - Si el usuario no tiene permiso, el sistema muestra acceso denegado.
-- Si no existen datos, el sistema muestra resumen en cero y tabla sin registros.
+- Si el usuario tiene acceso a Informes de Movimientos pero no tiene permiso `reportes.ordenes_compra.ver`, el tipo Ordenes de Compra no se muestra como opcion.
+- Si no se ingresan filtros, el sistema consulta las ordenes de compra sin restringir por fecha, estado, sucursal, proveedor o articulo.
+- Si no existen datos, el sistema muestra resumen en cero, tabla sin registros y no habilita PDF ni CSV.
 
 ### Post Condicion
 
-- El sistema muestra las ordenes encontradas.
+- El sistema muestra las ordenes de compra encontradas.
+- El sistema genera PDF o CSV de ordenes de compra cuando existen registros y el usuario lo solicita.
 - La informacion consultada no se modifica.
 
 ### Tablas Involucradas
 
 - `orden_compra`
 - `orden_compra_detalle`
-- `presupuesto_compra`
+- `articulos`
 - `proveedores`
 - `sucursales`
 - `usuarios`

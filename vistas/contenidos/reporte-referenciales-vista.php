@@ -25,6 +25,7 @@ if (!$tieneAccesoReferenciales) {
 require_once "./controladores/reportesControlador.php";
 $rep = new reporteControlador();
 $categorias = $rep->listar_categorias_controlador();
+$sucursales = $rep->listar_sucursales_controlador();
 
 $tiposReferenciales = [
     'proveedores' => ['titulo' => 'Proveedores', 'icono' => 'fas fa-truck', 'permiso' => 'reportes.proveedores.ver', 'estado' => true, 'categoria' => false],
@@ -32,7 +33,7 @@ $tiposReferenciales = [
     'vehiculos' => ['titulo' => 'Vehiculos', 'icono' => 'fas fa-car', 'permiso' => 'reportes.vehiculos.ver', 'estado' => true, 'categoria' => false],
     'sucursales' => ['titulo' => 'Sucursales', 'icono' => 'fas fa-city', 'permiso' => 'reportes.sucursales.ver', 'estado' => true, 'categoria' => false],
     'articulos' => ['titulo' => 'Articulos', 'icono' => 'fas fa-boxes', 'permiso' => 'reportes.articulos.ver', 'estado' => true, 'categoria' => true],
-    'empleados' => ['titulo' => 'Empleados', 'icono' => 'fas fa-user-tie', 'permiso' => 'reportes.empleados.ver', 'estado' => true, 'categoria' => false],
+    'empleados' => ['titulo' => 'Empleados', 'icono' => 'fas fa-user-tie', 'permiso' => 'reportes.empleados.ver', 'estado' => true, 'categoria' => false, 'sucursal' => true],
     'marcas' => ['titulo' => 'Marcas', 'icono' => 'fas fa-tags', 'permiso' => 'reportes.articulos.ver', 'estado' => false, 'categoria' => false],
     'categorias' => ['titulo' => 'Categorias', 'icono' => 'fas fa-layer-group', 'permiso' => 'reportes.articulos.ver', 'estado' => false, 'categoria' => false],
     'usuarios' => ['titulo' => 'Usuarios', 'icono' => 'fas fa-user-shield', 'permiso' => 'usuarios.ver', 'estado' => true, 'categoria' => false]
@@ -82,11 +83,23 @@ $primerTipo = array_key_first($tiposVisibles);
 
                 <div class="col-md-3 d-none" id="grupoCategoria">
                     <label>Categoria</label>
-                    <select name="categoria" class="form-control">
+                    <select name="categoria" class="form-control select2" data-placeholder="Todas">
                         <option value="0">Todas</option>
                         <?php foreach ($categorias as $categoria): ?>
                             <option value="<?= (int)$categoria['id_categoria'] ?>">
                                 <?= htmlspecialchars($categoria['cat_descri'], ENT_QUOTES, 'UTF-8') ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="col-md-3 d-none" id="grupoSucursal">
+                    <label>Sucursal</label>
+                    <select name="sucursal" class="form-control select2" data-placeholder="Todas">
+                        <option value="0">Todas</option>
+                        <?php foreach ($sucursales as $sucursal): ?>
+                            <option value="<?= (int)$sucursal['id_sucursal'] ?>">
+                                <?= htmlspecialchars($sucursal['suc_descri'], ENT_QUOTES, 'UTF-8') ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -163,6 +176,7 @@ $primerTipo = array_key_first($tiposVisibles);
     <input type="hidden" name="tipo_referencial">
     <input type="hidden" name="estado">
     <input type="hidden" name="categoria">
+    <input type="hidden" name="sucursal">
     <input type="hidden" name="buscar">
 </form>
 
@@ -171,6 +185,7 @@ $primerTipo = array_key_first($tiposVisibles);
     <input type="hidden" name="tipo_referencial">
     <input type="hidden" name="estado">
     <input type="hidden" name="categoria">
+    <input type="hidden" name="sucursal">
     <input type="hidden" name="buscar">
 </form>
 
@@ -207,6 +222,7 @@ $primerTipo = array_key_first($tiposVisibles);
     const tipo = document.getElementById('tipoReferencial');
     const grupoEstado = document.getElementById('grupoEstado');
     const grupoCategoria = document.getElementById('grupoCategoria');
+    const grupoSucursal = document.getElementById('grupoSucursal');
     const resumen = document.getElementById('resumenReferenciales');
     const panelTabla = document.getElementById('panelTablaReferenciales');
     const tituloTabla = document.getElementById('tituloTablaReferenciales');
@@ -234,11 +250,22 @@ $primerTipo = array_key_first($tiposVisibles);
     const estadoTexto = valor => parseInt(valor, 10) === 1 ? 'Activo' : 'Inactivo';
     const numero = valor => new Intl.NumberFormat('es-PY').format(Number(valor || 0));
     const texto = valor => (valor === null || valor === undefined || valor === '') ? '-' : String(valor);
+    const refrescarSelect2 = select => {
+        if (!select || typeof $ === 'undefined') return;
+        if ($(select).hasClass('select2-hidden-accessible')) {
+            $(select).trigger('change.select2');
+        }
+    };
 
     function configurarFiltros() {
         const cfg = tipos[tipo.value] || {};
         grupoEstado.classList.toggle('d-none', !cfg.estado);
         grupoCategoria.classList.toggle('d-none', !cfg.categoria);
+        grupoSucursal.classList.toggle('d-none', !cfg.sucursal);
+        if (!cfg.sucursal && form.elements.sucursal) {
+            form.elements.sucursal.value = '0';
+            refrescarSelect2(form.elements.sucursal);
+        }
     }
 
     function limpiarResultados() {
@@ -263,9 +290,12 @@ $primerTipo = array_key_first($tiposVisibles);
     function limpiarFiltros() {
         form.elements.estado.value = 'T';
         form.elements.categoria.value = '0';
+        form.elements.sucursal.value = '0';
         form.elements.buscar.value = '';
         form.elements.por_pagina.value = '50';
         form.elements.pagina.value = 1;
+        refrescarSelect2(form.elements.categoria);
+        refrescarSelect2(form.elements.sucursal);
         configurarFiltros();
         limpiarResultados();
     }
@@ -337,7 +367,7 @@ $primerTipo = array_key_first($tiposVisibles);
 
     function sincronizarExportacion(formExportacion) {
         const fd = new FormData(form);
-        ['tipo_referencial', 'estado', 'categoria', 'buscar'].forEach(name => {
+        ['tipo_referencial', 'estado', 'categoria', 'sucursal', 'buscar'].forEach(name => {
             formExportacion.elements[name].value = fd.get(name) || '';
         });
     }
@@ -397,7 +427,7 @@ $primerTipo = array_key_first($tiposVisibles);
         }
     });
 
-    ['estado', 'categoria', 'buscar', 'por_pagina'].forEach(name => {
+    ['estado', 'categoria', 'sucursal', 'buscar', 'por_pagina'].forEach(name => {
         const control = form.elements[name];
         if (!control) return;
         control.addEventListener('change', () => {

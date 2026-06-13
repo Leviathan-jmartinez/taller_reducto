@@ -29,11 +29,11 @@ $ocSeleccionada = !empty($_SESSION['id_oc_seleccionado']);
 
 <div class="container-fluid form-neon">
     <h3 class="text-left">
-        <i class="fas fa-search fa-fw"></i> &nbsp; INGRESO DE FACTURA DE COMPRA
+        <i class="fas fa-search fa-fw"></i> &nbsp; REGISTRO DE FACTURA DE COMPRA
     </h3>
     <ul class="full-box list-unstyled page-nav-tabs">
         <li>
-            <a class="active" href="<?php echo SERVERURL; ?>factura-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; INGRESO DE FACTURA DE COMPRA</a>
+            <a class="active" href="<?php echo SERVERURL; ?>factura-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; REGISTRO DE FACTURA DE COMPRA</a>
         </li>
         <li>
             <a href="<?php echo SERVERURL; ?>factura-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR FACTURAS DE COMPRA</a>

@@ -38,14 +38,14 @@ if (!isset($pagina)) {
 
 <div class="container-fluid form-neon">
     <h3 class="text-left">
-        <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR RECEPCIONES
+        <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR SOLICITUDES DE SERVICIO
     </h3>
     <ul class="full-box list-unstyled page-nav-tabs">
         <li>
-            <a href="<?php echo SERVERURL; ?>recepcionServicio-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVA RECEPCION</a>
+            <a href="<?php echo SERVERURL; ?>recepcionServicio-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVA SOLICITUD DE SERVICIO</a>
         </li>
         <li>
-            <a class="active" href="<?php echo SERVERURL; ?>recepcionServicio-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR RECEPCION</a>
+            <a class="active" href="<?php echo SERVERURL; ?>recepcionServicio-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR SOLICITUDES DE SERVICIO</a>
         </li>
     </ul>
     <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">

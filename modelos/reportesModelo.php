@@ -1374,11 +1374,15 @@ class reportesModelo extends mainModel
             rs.fecha_ingreso,
             rs.fecha_salida,
             rs.kilometraje,
+            rs.tipo_servicio,
+            rs.area_problema,
+            rs.observacion,
             rs.estado,
             rs.id_cliente,
 
             CONCAT(c.nombre_cliente, ' ',c.apellido_cliente) AS cliente,
             CONCAT(m.mar_descri, ' ', mo.mod_descri, ' ', v.anho) AS vehiculo,
+            v.placa,
             CONCAT(u.usu_nombre, ' ', u.usu_apellido) AS usuario,
 
             s.suc_descri AS sucursal

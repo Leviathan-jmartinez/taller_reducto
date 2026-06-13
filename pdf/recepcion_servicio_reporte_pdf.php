@@ -20,7 +20,7 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
     <style>
         body {
             font-family: DejaVu Sans, sans-serif;
-            font-size: 11px;
+            font-size: 9px;
         }
 
         table {
@@ -78,9 +78,13 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
                 <th>Recepción</th>
                 <th>Cliente</th>
                 <th>Vehículo</th>
+                <th>Placa</th>
                 <th>Ingreso</th>
                 <th>Salida</th>
                 <th>Kilometraje</th>
+                <th>Tipo</th>
+                <th>Area</th>
+                <th>Solicitud</th>
                 <th>Usuario</th>
                 <th>Estado</th>
                 <th>Sucursal</th>
@@ -106,9 +110,13 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
                     <td class="text-center"><?= $row['idrecepcion'] ?></td>
                     <td><?= $row['cliente'] ?></td>
                     <td><?= $row['vehiculo'] ?></td>
+                    <td class="text-center"><?= $row['placa'] ?? '-' ?></td>
                     <td class="text-center"><?= date('d-m-Y H:i', strtotime($row['fecha_ingreso'])) ?></td>
                     <td class="text-center"><?= $row['fecha_salida'] ? date('d-m-Y H:i', strtotime($row['fecha_salida'])) : '-' ?></td>
                     <td class="text-center"><?= number_format($row['kilometraje'], 0, ',', '.') ?></td>
+                    <td><?= $row['tipo_servicio'] ?: '-' ?></td>
+                    <td><?= $row['area_problema'] ?: '-' ?></td>
+                    <td><?= $row['observacion'] ?: '-' ?></td>
                     <td><?= $row['usuario'] ?></td>
                     <td class="text-center"><?= estadoRecepcion($row['estado']) ?></td>
                     <td><?= $row['sucursal'] ?></td>

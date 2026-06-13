@@ -377,7 +377,7 @@ El sistema valida sesion, sucursal y permisos.
 * El sistema valida articulos, codigo, descripcion e impuesto aplicado. Tablas consultadas: `articulos`, `tipo_impuesto`.
 * El sistema valida comprobante, timbrado, detalle, cantidades facturadas, cantidades recibidas, precios, IVA y totales.
 * El sistema calcula importes fiscales con `cantidad_facturada`.
-* El sistema registra cabecera en `compra_cabecera` con estado activo cuando no hay diferencia o estado `Con diferencia` cuando existen cantidades facturadas distintas a las recibidas.
+* El sistema registra cabecera en `compra_cabecera` con estado activo cuando no hay diferencia o estado `Con diferencia` cuando existen cantidades facturadas distintas a las recibidas. El estado `Procesado` no se utiliza para compras.
 * El sistema registra detalle en `compra_detalle`, guardando `cantidad_facturada` para lo fiscal/contable y `cantidad_recibida` para lo fisico/stock.
 * El sistema actualiza stock solamente por los articulos recibidos. Tabla afectada: `stock`.
 * El sistema registra movimientos de entrada en `movimientostock` solamente por la cantidad recibida.
@@ -542,7 +542,7 @@ El sistema registra detalle en `nota_compra_detalle`.
 El sistema impacta en `cuentas_a_pagar`.  
 El sistema registra el comprobante en `libro_compra` como NC o ND.  
 Si corresponde devolucion, el sistema descuenta stock y registra movimiento en `movimientostock`.  
-Si la nota de credito regulariza completamente una compra con diferencia, el sistema actualiza `compra_cabecera` a estado `Regularizada`.
+Si la nota de credito regulariza completamente una compra con diferencia, el sistema actualiza `compra_cabecera` a estado `Regularizada con NC`.
 El sistema confirma la transaccion y emite mensaje.
 
 **Anular**

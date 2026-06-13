@@ -314,7 +314,7 @@ $menuLateral = [
                     [
                         'titulo' => 'Clientes',
                         'icono' => 'fas fa-users',
-                        'href' => 'cliente-lista/',
+                        'href' => 'cliente-nuevo/',
                         'vistas' => ['cliente-nuevo', 'cliente-lista', 'cliente-actualizar', 'cliente-buscar'],
                         'permiso' => 'cliente.ver'
                     ],

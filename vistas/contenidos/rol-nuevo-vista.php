@@ -32,33 +32,31 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
     </h3>
 </div>
 
-<div class="container-fluid">
+<div class="container-fluid form-neon">
 
 
     <ul class="full-box list-unstyled page-nav-tabs">
 
         <?php if (mainModel::tienePermiso('roles.ver')) { ?>
             <li>
-                <a class="active"  href="<?php echo SERVERURL; ?>rol-nuevo/">
+                <a class="active" href="<?php echo SERVERURL; ?>rol-nuevo/">
                     <i class="fas fa-key fa-fw"></i> &nbsp; Roles
                 </a>
             </li>
         <?php
-} ?>
+        } ?>
 
         <?php if (mainModel::tienePermiso('permisos.asignar_permisos')) { ?>
             <li>
                 <a href="<?php echo SERVERURL; ?>rol-permisos/">
-                    <i class="fas fa-key fa-fw"></i> &nbsp; PERMISOS
+                    <i class="fas fa-key fa-fw"></i> &nbsp; Asignar permisos
                 </a>
             </li>
         <?php
-} ?>
+        } ?>
 
     </ul>
-</div>
 
-<div class="container-fluid">
 
     <form class="form-neon FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/rolesAjax.php"
@@ -69,7 +67,7 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
         <?php if ($editando) { ?>
             <input type="hidden" name="rol_id_up" value="<?php echo $id; ?>">
         <?php
-} ?>
+        } ?>
 
         <div class="row">
 
@@ -117,7 +115,7 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
                     </div>
                 </div>
             <?php
-} ?>
+            } ?>
 
         </div>
 
@@ -133,19 +131,19 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
                     CANCELAR
                 </a>
             <?php
-} else { ?>
+            } else { ?>
                 <button type="reset" class="btn btn-raised btn-secondary">
                     CANCELAR
                 </button>
             <?php
-} ?>
+            } ?>
         </p>
 
     </form>
 </div>
 
 <!-- ================= BUSCADOR ================= -->
-<div class="container-fluid mb-3">
+<div class="container-fluid form-neon mb-3">
 
     <form class="FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
@@ -170,21 +168,21 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
 
                 <?php if (isset($_SESSION['busqueda_roles'])) { ?>
                     <button type="submit" name="eliminar_busqueda" value="1" class="btn btn-danger">
-                            Limpiar
-                        </button>
+                        Limpiar
+                    </button>
                 <?php
-} ?>
+                } ?>
 
             </div>
         </div>
 
     </form>
-</div>
 
-<!-- ================= LISTA ================= -->
-<div class="container-fluid mt-4">
+
+    <!-- ================= LISTA ================= -->
+
     <?php
-$pag_actual = 1;
+    $pag_actual = 1;
 
     if (isset($pagina[1]) && is_numeric($pagina[1])) {
         $pag_actual = (int)$pagina[1];

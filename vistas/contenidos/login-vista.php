@@ -68,7 +68,7 @@ if (
                         required>
                 </div>
 
-                <button type="submit" class="btn-login text-center">GUARDAR CONTRASENA</button>
+                <button type="submit" class="btn-login text-center">Guardar</button>
             </form>
         <?php } else { ?>
             <form action="" method="POST" autocomplete="off">

@@ -100,14 +100,14 @@ $tipos_vehiculo_recepcion = ['Automovil', 'Camioneta', 'SUV', 'Furgon', 'Camion'
 
     <div class="container-fluid">
         <h3 class="text-left">
-            <i class="fas fa-search fa-fw"></i> &nbsp; NUEVA RECEPCION
+            <i class="fas fa-search fa-fw"></i> &nbsp; NUEVA SOLICITUD DE SERVICIO
         </h3>
         <ul class="full-box list-unstyled page-nav-tabs">
             <li>
-                <a class="active" href="<?php echo SERVERURL; ?>recepcionServicio-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVA RECEPCION</a>
+                <a class="active" href="<?php echo SERVERURL; ?>recepcionServicio-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVA SOLICITUD DE SERVICIO</a>
             </li>
             <li>
-                <a href="<?php echo SERVERURL; ?>recepcionServicio-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR RECEPCION</a>
+                <a href="<?php echo SERVERURL; ?>recepcionServicio-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR SOLICITUDES DE SERVICIO</a>
             </li>
         </ul>
     </div>

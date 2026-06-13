@@ -18,7 +18,7 @@ $roles = $insRoles->listar_rolesSelect_controlador();
     </p>
 </div>
 
-<div class="container-fluid">
+<div class="container-fluid form-neon">
 
 
     <ul class="full-box list-unstyled page-nav-tabs">
@@ -34,15 +34,13 @@ $roles = $insRoles->listar_rolesSelect_controlador();
         <?php if (mainModel::tienePermiso('permisos.asignar_permisos')) { ?>
             <li>
                 <a class="active" href="<?php echo SERVERURL; ?>rol-permisos/">
-                    <i class="fas fa-key fa-fw"></i> &nbsp; PERMISOS
+                    <i class="fas fa-key fa-fw"></i> &nbsp; Asignar permisos
                 </a>
             </li>
         <?php } ?>
 
     </ul>
-</div>
 
-<div class="container-fluid">
     <div class="form-neon">
         <form class="FormularioAjax"
             action="<?= SERVERURL ?>ajax/rolesAjax.php"

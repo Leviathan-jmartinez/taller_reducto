@@ -15,9 +15,10 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
 function estadoCompra($estado)
 {
     return match ((int)$estado) {
-        1 => 'Activo',
-        2 => 'Procesado',
         0 => 'Anulado',
+        1 => 'Activo',
+        3 => 'Con diferencia',
+        4 => 'Regularizada con NC',
         default => 'Desconocido',
     };
 }

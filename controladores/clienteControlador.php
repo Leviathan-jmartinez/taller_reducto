@@ -420,6 +420,11 @@ class clienteControlador extends clienteModelo
     }
     /**fin controlador */
 
+    public function paginador_cliente_controlador($pagina, $registros, $url, $busqueda)
+    {
+        return $this->listar_cliente_controlador($pagina, $registros, $url, $busqueda);
+    }
+
     /**Controlador eliminar cliente */
     public function eliminar_cliente_controlador()
     {
