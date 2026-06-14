@@ -7,7 +7,7 @@ if (!mainModel::tienePermiso('compra.pedido.crear')) {
 <!-- Page header -->
 
 <div class="container-fluid">
-    <div class="container-fluid form-neon">
+    <div class="container-fluid form-neon app-view">
         <h3 class="text-left">
             <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO PEDIDO
         </h3>

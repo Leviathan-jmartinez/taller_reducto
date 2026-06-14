@@ -24,8 +24,8 @@ $filtroId     = $resultado['filtroId'];
 ?>
 
 
-<div class="container-fluid">
-    <div class="card-header">
+<div class="container-fluid app-view">
+    <div class="card-header app-view-header">
         <h3 class="mb-0">
             <i class="fas fa-exchange-alt"></i>
             Transferencias entre Sucursales
@@ -44,7 +44,7 @@ $filtroId     = $resultado['filtroId'];
             </li>
         </ul>
     </div>
-    <div class="card-header">
+    <div class="card-header app-inline-panel">
         <form class="form-inline mb-3" onsubmit="aplicarFiltros(event)">
 
             <!-- Estado -->

@@ -36,7 +36,7 @@ if (!isset($pagina)) {
 }
 ?>
 
-<div class="container-fluid form-neon">
+<div class="container-fluid form-neon app-view">
     <h3 class="text-left">
         <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR SOLICITUDES DE SERVICIO
     </h3>
@@ -48,7 +48,7 @@ if (!isset($pagina)) {
             <a class="active" href="<?php echo SERVERURL; ?>recepcionServicio-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR SOLICITUDES DE SERVICIO</a>
         </li>
     </ul>
-    <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
+    <form class="form-neon FormularioAjax app-form" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
         <input type="hidden" name="modulo" value="recepcion">
 
         <div class="row">

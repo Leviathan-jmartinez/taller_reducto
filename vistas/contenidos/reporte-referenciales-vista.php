@@ -50,7 +50,7 @@ $primerTipo = array_key_first($tiposVisibles);
 ?>
 
 <div class="container-fluid">
-    <div class="form-neon">
+    <div class="form-neon app-view">
         <h4 class="text-center mb-3">
             <i class="fas fa-chart-bar"></i>
             &nbsp; Informes Referenciales

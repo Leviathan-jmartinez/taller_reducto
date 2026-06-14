@@ -10,7 +10,7 @@ if (session_status() == PHP_SESSION_NONE) {
 
 ?>
 
-<div class="container-fluid form-neon">
+<div class="container-fluid form-neon app-view">
 
     <h3 class="text-left">
         <i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO PRESUPUESTO

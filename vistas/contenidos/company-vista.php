@@ -22,7 +22,7 @@ $datos_empresa = $inst_empresa->datos_empresa_controlador();
 if ($datos_empresa->rowCount() == 0) {
 ?>
     <div class="container-fluid">
-        <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/empresaAjax.php" method="POST" data-form="save" autocomplete="off">
+        <form class="form-neon FormularioAjax app-form" action="<?php echo SERVERURL; ?>ajax/empresaAjax.php" method="POST" data-form="save" autocomplete="off">
             <fieldset>
                 <legend><i class="far fa-building"></i> &nbsp; Información de la empresa</legend>
                 <div class="container-fluid">
@@ -74,7 +74,7 @@ if ($datos_empresa->rowCount() == 0) {
     $campos = $datos_empresa->fetch();
 ?>
     <div class="container-fluid">
-        <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/empresaAjax.php" method="POST" data-form="update" autocomplete="off">
+        <form class="form-neon FormularioAjax app-form" action="<?php echo SERVERURL; ?>ajax/empresaAjax.php" method="POST" data-form="update" autocomplete="off">
             <input type="hidden" name="empresa_id_up" value="<?php echo $campos['id_empresa'] ?>">
             <fieldset>
                 <legend><i class="far fa-building"></i> &nbsp;Actualizar Información de la empresa</legend>

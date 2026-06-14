@@ -32,7 +32,7 @@ $busqueda_activa = !empty($fecha_inicio) || !empty($fecha_final) || !empty($prov
 
 <?php if (!$busqueda_activa) { ?>
 
-    <div class="container-fluid form-neon">
+    <div class="container-fluid form-neon app-view">
 
         <h3 class="text-left">
             <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR ORDENES DE COMPRA
@@ -50,7 +50,7 @@ $busqueda_activa = !empty($fecha_inicio) || !empty($fecha_final) || !empty($prov
             </li>
         </ul>
 
-        <form class="form-neon FormularioAjax"
+        <form class="form-neon FormularioAjax app-form"
             action="<?= SERVERURL; ?>ajax/buscadorAjax.php"
             method="POST"
             data-form="search"
@@ -116,7 +116,7 @@ $busqueda_activa = !empty($fecha_inicio) || !empty($fecha_final) || !empty($prov
 
 <?php } else { ?>
 
-    <div class="container-fluid form-neon">
+    <div class="container-fluid form-neon app-view">
         <h3 class="text-left">
             <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR ORDENES DE COMPRA
         </h3>

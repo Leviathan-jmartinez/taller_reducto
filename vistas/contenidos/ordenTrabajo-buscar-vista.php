@@ -22,7 +22,7 @@ $busqueda_activa = isset($_SESSION['filtro_orden_trabajo_activo']);
 ?>
 
 <!-- SIEMPRE MOSTRAR FORMULARIO -->
-<div class="container-fluid form-neon">
+<div class="container-fluid form-neon app-view">
     <h3 class="text-left">
         <i class="fas fa-tools fa-fw"></i> &nbsp; ORDEN DE TRABAJO
     </h3>
@@ -39,7 +39,7 @@ $busqueda_activa = isset($_SESSION['filtro_orden_trabajo_activo']);
             </a>
         </li>
     </ul>
-    <form class="form-neon FormularioAjax"
+    <form class="form-neon FormularioAjax app-form"
         action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
         method="POST"
         data-form="search"

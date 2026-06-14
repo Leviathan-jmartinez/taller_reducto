@@ -12,7 +12,7 @@ $productosStock    = $productosStock ?? [];
 ?>
 
 <div class="container-fluid">
-    <div class="card shadow-sm">
+    <div class="card shadow-sm app-view">
 
         <!-- HEADER -->
         <div class="card-header">
@@ -35,7 +35,7 @@ $productosStock    = $productosStock ?? [];
             </ul>
         </div>
 
-        <form class="FormularioAjax"
+        <form class="FormularioAjax app-form"
             action="<?= SERVERURL ?>ajax/transferenciaAjax.php"
             method="POST"
             data-form="save">
@@ -45,7 +45,7 @@ $productosStock    = $productosStock ?? [];
             <div class="card-body">
 
                 <!-- ================= DATOS DE SALIDA ================= -->
-                <div class="border rounded p-3 mb-4">
+                <div class="border rounded p-3 mb-4 app-inline-panel">
                     <h6 class="text-info mb-3">
                         <i class="fas fa-truck"></i> Datos de la Salida
                     </h6>
@@ -75,7 +75,7 @@ $productosStock    = $productosStock ?? [];
 
 
                 </div>
-                <div class="border rounded p-3 mb-4">
+                <div class="border rounded p-3 mb-4 app-inline-panel">
                     <h6 class="text-info mb-3">
                         <i class="fas fa-truck"></i> Datos del Transporte
                     </h6>
@@ -134,7 +134,7 @@ $productosStock    = $productosStock ?? [];
                         </div>
                     </div>
                 </div>
-                <div class="border rounded p-3 mb-4">
+                <div class="border rounded p-3 mb-4 app-inline-panel">
                     <h6 class="text-info mb-3">
                         <i class="fas fa-calendar-alt"></i> Fechas de Traslado
                     </h6>
@@ -162,11 +162,11 @@ $productosStock    = $productosStock ?? [];
 
 
                 <!-- ================= PRODUCTOS ================= -->
-                <div class="border rounded p-3 mb-4">
+                <div class="border rounded p-3 mb-4 app-inline-panel">
                     <h6 class="text-info mb-3">
                         <i class="fas fa-boxes"></i> Productos a Transferir
                     </h6>
-                    <div class="border rounded p-3 mb-4">
+                    <div class="border rounded p-3 mb-4 app-inline-panel">
                         <h6 class="text-info mb-3">
                             <i class="fas fa-search"></i> Buscar productos
                         </h6>
@@ -214,7 +214,7 @@ $productosStock    = $productosStock ?? [];
                 </div>
 
                 <!-- ================= CONFIRMACIÓN ================= -->
-                <div class="border rounded p-3">
+                <div class="border rounded p-3 app-actions">
                     <h6 class="text-info mb-3">
                         <i class="fas fa-check-circle"></i> Confirmación
                     </h6>

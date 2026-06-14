@@ -30,7 +30,7 @@ if (!mainModel::tienePermiso('servicio.reclamo.crear')) {
     }
 </style>
 
-<div class="container-fluid reclamo-servicio">
+<div class="container-fluid reclamo-servicio app-view">
     <h3>
         <i class="fas fa-exclamation-circle"></i>
         &nbsp; RECLAMOS DE SERVICIO
@@ -49,9 +49,9 @@ if (!mainModel::tienePermiso('servicio.reclamo.crear')) {
     </ul>
 </div>
 
-<div class="container-fluid reclamo-servicio">
+<div class="container-fluid reclamo-servicio app-view">
 
-    <form class="FormularioAjax"
+    <form class="FormularioAjax app-form"
         action="<?= SERVERURL ?>ajax/reclamoServicioAjax.php"
         method="POST"
         data-form="save"
@@ -180,7 +180,7 @@ if (!mainModel::tienePermiso('servicio.reclamo.crear')) {
             </div>
         </fieldset>
 
-        <div class="text-center">
+        <div class="text-center app-actions">
             <button class="btn btn-info btn-raised" id="btnRegistrarReclamo" disabled>
                 <i class="fas fa-save"></i> &nbsp; Registrar reclamo
             </button>

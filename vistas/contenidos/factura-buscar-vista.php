@@ -33,7 +33,7 @@ $ordenCompra = mainModel::cargar_ordenamiento_sesion('compra', ['fecha', 'estado
 ?>
 
 <?php if (!$fecha_inicio && !$fecha_final && !$nro_factura && !$razon_social) { ?>
-    <div class="container-fluid form-neon">
+    <div class="container-fluid form-neon app-view">
         <h3 class="text-left">
             <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR FACTURA DE COMPRA
         </h3>
@@ -45,7 +45,7 @@ $ordenCompra = mainModel::cargar_ordenamiento_sesion('compra', ['fecha', 'estado
                 <a class="active" href="<?php echo SERVERURL; ?>factura-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR FACTURAS DE COMPRA</a>
             </li>
         </ul>
-        <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
+        <form class="form-neon FormularioAjax app-form" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
             <input type="hidden" name="modulo" value="compra">
 
             <!-- Inputs ocultos para enviar datetime completo -->
@@ -90,7 +90,7 @@ $ordenCompra = mainModel::cargar_ordenamiento_sesion('compra', ['fecha', 'estado
     </div>
 
 <?php } else { ?>
-    <div class="container-fluid form-neon">
+    <div class="container-fluid form-neon app-view">
         <h3 class="text-left">
             <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR FACTURA DE COMPRA
         </h3>

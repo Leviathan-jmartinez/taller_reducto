@@ -56,7 +56,7 @@ if (!$permisoNecesario) {
     ?>
 
     <?php if ($editando || $puedeCrearEquipo): ?>
-    <form class="form-neon FormularioAjax"
+    <form class="form-neon FormularioAjax app-form"
         action="<?php echo SERVERURL; ?>ajax/equipoAjax.php"
         method="POST"
         data-form="<?php echo $editando ? 'update' : 'save'; ?>"

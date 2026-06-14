@@ -29,7 +29,7 @@ $hayFiltro = $busqueda !== '' || $estado !== '';
         margin-bottom: 15px;
     }
 </style>
-<div class="container-fluid reclamo-servicio">
+<div class="container-fluid reclamo-servicio app-view">
     <h3>
         <i class="fas fa-exclamation-circle"></i>
         &nbsp; RECLAMOS DE SERVICIO
@@ -49,9 +49,9 @@ $hayFiltro = $busqueda !== '' || $estado !== '';
 </div>
 
 <!-- 🔎 FORMULARIO SIEMPRE VISIBLE -->
-<div class="container-fluid form-neon reclamo-servicio">
+<div class="container-fluid form-neon reclamo-servicio app-view">
 
-    <form class="form-neon FormularioAjax"
+    <form class="form-neon FormularioAjax app-form"
         action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
         method="POST"
         data-form="search"

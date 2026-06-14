@@ -10,7 +10,7 @@ if (session_status() == PHP_SESSION_NONE) {
 $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
 ?>
 
-<div class="container-fluid form-neon">
+<div class="container-fluid form-neon app-view">
 
     <div class="container-fluid">
         <h3 class="text-left">
@@ -26,7 +26,7 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
         </ul>
     </div>
 
-    <form class="form-neon FormularioAjax"
+    <form class="form-neon FormularioAjax app-form"
         action="<?= SERVERURL; ?>ajax/presupuestoServicioAjax.php"
         method="POST"
         data-modulo="presupuesto"

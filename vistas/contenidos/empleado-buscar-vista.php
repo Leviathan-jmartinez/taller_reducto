@@ -38,7 +38,7 @@ if (!mainModel::tienePermiso('empleado.ver')) {
 
     <!-- CONTENT BUSQUEDA -->
     <div class="container-fluid">
-        <form class="form-neon FormularioAjax"
+        <form class="form-neon FormularioAjax app-form"
             action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
             method="POST"
             data-form="default"

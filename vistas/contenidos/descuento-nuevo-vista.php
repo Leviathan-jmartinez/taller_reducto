@@ -46,12 +46,12 @@ $botonTexto = $esEditar ? 'Guardar cambios' : 'Guardar';
 $botonClase = $esEditar ? 'btn-primary' : 'btn-info btn-raised';
 ?>
 
-<div class="container-fluid">
+<div class="container-fluid app-view">
 
 
 
     <?php if (!$esEditar || $puedeEditar): ?>
-        <form class="form-neon FormularioAjax"
+        <form class="form-neon FormularioAjax app-form"
             action="<?php echo SERVERURL; ?>ajax/descuentoAjax.php"
             method="POST"
             data-form="<?= $dataForm ?>"

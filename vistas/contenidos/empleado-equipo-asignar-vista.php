@@ -28,7 +28,7 @@ if (!mainModel::tienePermiso('equipo.editar')) {
 </div>
 
 <div class="container-fluid">
-    <div class="form-neon">
+    <div class="form-neon app-view">
         <?php
         require_once "./controladores/equipoControlador.php";
         $eq = new equipoControlador();

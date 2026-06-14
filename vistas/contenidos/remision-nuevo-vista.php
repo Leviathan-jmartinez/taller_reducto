@@ -12,7 +12,7 @@ if (session_status() == PHP_SESSION_NONE) {
 $id_usuario = $_SESSION['id_usuario'] ?? null;
 ?>
 
-<div class="container-fluid form-neon">
+<div class="container-fluid form-neon app-view">
     <h3 class="text-left">
         <i class="fas fa-plus fa-fw"></i> &nbsp; REMISIONES - NUEVA REMISIÓN
     </h3>
@@ -28,7 +28,7 @@ $id_usuario = $_SESSION['id_usuario'] ?? null;
             </a>
         </li>
     </ul>
-    <form class="form-neon FormularioAjax"
+    <form class="form-neon FormularioAjax app-form"
         action="<?php echo SERVERURL; ?>ajax/remisionAjax.php"
         method="POST"
         autocomplete="off">
@@ -42,7 +42,7 @@ $id_usuario = $_SESSION['id_usuario'] ?? null;
                 <i class="fas fa-search"></i> &nbsp; Cargar factura
             </button>
         </div>
-        <div class="container-fluid form-neon" style="margin-top: 30px;">
+        <div class="container-fluid form-neon app-view" style="margin-top: 30px;">
 
             <!-- SECCIÓN 1: DATOS DE LA REMISIÓN -->
             <h6 class="mb-3"><i class="fas fa-file-alt"></i> Datos de la remisión</h6>

@@ -35,7 +35,7 @@ $busqueda = $_SESSION['busqueda_cliente'] ?? "";
 
 <div class="container-fluid">
 
-    <form class="form-neon FormularioAjax"
+    <form class="form-neon FormularioAjax app-form"
         action="<?php echo SERVERURL; ?>ajax/clienteAjax.php"
         method="POST"
         data-form="<?php echo $editando ? 'update' : 'save'; ?>"
@@ -289,7 +289,7 @@ $estadoCivil = $editando ? trim($campos['estado_civil']) : ""; ?>
 <!-- ================= BUSCADOR ================= -->
 <div class="container-fluid mb-3">
 
-    <form class="form-neon FormularioAjax"
+    <form class="form-neon FormularioAjax app-form"
         action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
         method="POST"
         data-form="search"

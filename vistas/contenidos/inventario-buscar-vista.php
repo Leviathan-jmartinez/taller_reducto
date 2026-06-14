@@ -27,8 +27,8 @@ if (!isset($pagina)) {
 
 </div>
 
-<div class="container-fluid">
-    <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
+<div class="container-fluid app-view">
+    <form class="form-neon FormularioAjax app-form" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
         <input type="hidden" name="modulo" value="inventario">
         <h3 class="text-left">
             <i class="fas fa-boxes fa-fw"></i> &nbsp; MÓDULO DE INVENTARIO

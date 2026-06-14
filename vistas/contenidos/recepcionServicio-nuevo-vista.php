@@ -96,9 +96,9 @@ $tipos_vehiculo_recepcion = ['Automovil', 'Camioneta', 'SUV', 'Furgon', 'Camion'
     }
 </style>
 
-<div class="container-fluid form-neon">
+<div class="container-fluid form-neon service-view">
 
-    <div class="container-fluid">
+    <div class="container-fluid service-view-header">
         <h3 class="text-left">
             <i class="fas fa-search fa-fw"></i> &nbsp; NUEVA SOLICITUD DE SERVICIO
         </h3>
@@ -115,7 +115,7 @@ $tipos_vehiculo_recepcion = ['Automovil', 'Camioneta', 'SUV', 'Furgon', 'Camion'
         <i class="fas fa-exclamation-triangle"></i>
         Recepción generada desde un reclamo
     </div>
-    <form class="form-neon FormularioAjax"
+    <form class="form-neon FormularioAjax service-form"
         action="<?php echo SERVERURL; ?>ajax/recepcionservicioAjax.php"
         method="POST"
         data-form="save"
@@ -357,7 +357,7 @@ $tipos_vehiculo_recepcion = ['Automovil', 'Camioneta', 'SUV', 'Furgon', 'Camion'
         </fieldset>
 
         <!-- BOTONES -->
-        <div class="text-center">
+        <div class="text-center service-actions">
             <button type="submit" class="btn btn-info btn-raised">
                 <i class="fas fa-save"></i> &nbsp; Guardar
             </button>

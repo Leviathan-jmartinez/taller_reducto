@@ -18,7 +18,7 @@ $sucursales = mainModel::conectar()->query("SELECT id_sucursal, suc_descri FROM 
     <div class="container-fluid">
 
     </div>
-    <form method="GET" class="form-neon mb-3">
+    <form method="GET" class="form-neon app-view mb-3">
 
         <h3 class="text-left">
             <i class="fas fa-percent"></i> &nbsp; LISTADO DE DESCUENTOS

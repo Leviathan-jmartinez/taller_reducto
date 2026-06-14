@@ -42,7 +42,7 @@ $botonTexto = $esEditar ? 'Actualizar' : 'Guardar';
 $botonClase = $esEditar ? 'btn-primary' : 'btn-info btn-raised';
 ?>
 
-<div class="container-fluid form-neon">
+<div class="container-fluid form-neon app-view">
 
     <h3 class="text-left">
         <i class="fas fa-tags"></i> &nbsp; <?= $titulo ?>
@@ -63,7 +63,7 @@ $botonClase = $esEditar ? 'btn-primary' : 'btn-info btn-raised';
         </ul>
     </div>
 
-    <form class="form-neon FormularioAjax"
+    <form class="form-neon FormularioAjax app-form"
         action="<?php echo SERVERURL; ?>ajax/promocionAjax.php"
         method="POST"
         data-modulo="promociones"

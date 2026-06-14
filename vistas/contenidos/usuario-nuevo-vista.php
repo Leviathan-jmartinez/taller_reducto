@@ -53,7 +53,7 @@ $busqueda = $_SESSION['busqueda_usuario'] ?? "";
 
 <!-- Content -->
 <div class="container-fluid">
-	<form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/usuarioAjax.php" method="POST" data-form="<?php echo $editando ? 'update' : 'save'; ?>" autocomplete="off">
+	<form class="form-neon FormularioAjax app-form" action="<?php echo SERVERURL; ?>ajax/usuarioAjax.php" method="POST" data-form="<?php echo $editando ? 'update' : 'save'; ?>" autocomplete="off">
 		<?php if ($editando): ?>
 			<input type="hidden" name="usuario_id_up" value="<?php echo $idUsuario; ?>">
 		<?php endif; ?>
@@ -199,7 +199,7 @@ $busqueda = $_SESSION['busqueda_usuario'] ?? "";
 <!-- ================= BUSCADOR ================= -->
 <div class="container-fluid mb-3">
 
-	<form class="form-neon FormularioAjax"
+	<form class="form-neon FormularioAjax app-form"
 		action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
 		method="POST"
 		data-form="search"

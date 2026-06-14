@@ -26,7 +26,7 @@ $estadosPedido = [
 ?>
 
 <?php if (!$busqueda_activa) { ?>
-    <div class="container-fluid form-neon">
+    <div class="container-fluid form-neon app-view">
         <h3 class="text-left">
             <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR PEDIDOS
         </h3>
@@ -39,7 +39,7 @@ $estadosPedido = [
             </li>
         </ul>
 
-        <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
+        <form class="form-neon FormularioAjax app-form" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
             <input type="hidden" name="modulo" value="pedido">
             <div class="container-fluid">
                 <div class="row justify-content-md-center">
@@ -76,7 +76,7 @@ $estadosPedido = [
         </form>
     </div>
 <?php } else { ?>
-    <div class="container-fluid form-neon">
+    <div class="container-fluid form-neon app-view">
         <h3 class="text-left">
             <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR PEDIDOS
         </h3>

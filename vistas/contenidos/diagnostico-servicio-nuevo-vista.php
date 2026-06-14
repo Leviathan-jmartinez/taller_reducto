@@ -254,8 +254,8 @@ if (!mainModel::tienePermiso('servicio.diagnostico.crear')) {
     </div>
 </div>
 
-<div class="container-fluid">
-    <form class="form-neon FormularioAjax"
+<div class="container-fluid app-view">
+    <form class="form-neon FormularioAjax app-form"
         action="<?php echo SERVERURL; ?>ajax/diagnosticoAjax.php"
         method="POST"
         data-form="save"

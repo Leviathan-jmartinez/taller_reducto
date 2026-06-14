@@ -18,7 +18,7 @@ $roles = $insRoles->listar_rolesSelect_controlador();
     </p>
 </div>
 
-<div class="container-fluid form-neon">
+<div class="container-fluid form-neon app-view">
 
 
     <ul class="full-box list-unstyled page-nav-tabs">
@@ -41,7 +41,7 @@ $roles = $insRoles->listar_rolesSelect_controlador();
 
     </ul>
 
-    <div class="form-neon">
+    <div class="form-neon app-view">
         <form class="FormularioAjax"
             action="<?= SERVERURL ?>ajax/rolesAjax.php"
             method="POST"

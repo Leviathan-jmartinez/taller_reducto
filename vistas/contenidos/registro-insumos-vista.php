@@ -27,7 +27,7 @@ if (!mainModel::tienePermiso('servicio.insumo.crear')) {
     }
 </style>
 
-<div class="container-fluid form-neon salida-consumible-bg">
+<div class="container-fluid form-neon salida-consumible-bg app-view">
 
     <h3>
         <i class="fas fa-box-open"></i>
@@ -47,7 +47,7 @@ if (!mainModel::tienePermiso('servicio.insumo.crear')) {
         </li>
     </ul>
 
-    <form class="FormularioAjax"
+    <form class="FormularioAjax app-form"
         action="<?= SERVERURL ?>ajax/salidaInsumoAjax.php"
         method="POST"
         data-form="save"
@@ -131,7 +131,7 @@ if (!mainModel::tienePermiso('servicio.insumo.crear')) {
             Al registrar la salida, se descontará stock de los insumos seleccionados.
         </div>
 
-        <div class="text-center">
+        <div class="text-center app-actions">
             <button type="submit" class="btn btn-info btn-raised">
                 <i class="fas fa-save"></i> &nbsp; Registrar salida
             </button>

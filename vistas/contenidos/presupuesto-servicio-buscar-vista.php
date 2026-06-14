@@ -14,7 +14,7 @@ $busqueda_activa = isset($_SESSION['filtro_presupuesto_servicio_activo']);
 
 
 
-<div class="container-fluid form-neon">
+<div class="container-fluid form-neon app-view">
     <div class="container-fluid">
         <h3 class="text-left">
             <i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; PRESUPUESTO DE SERVICIOS
@@ -28,7 +28,7 @@ $busqueda_activa = isset($_SESSION['filtro_presupuesto_servicio_activo']);
             </li>
         </ul>
     </div>
-    <form class="form-neon FormularioAjax"
+    <form class="form-neon FormularioAjax app-form"
         action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
         method="POST"
         data-form="search"

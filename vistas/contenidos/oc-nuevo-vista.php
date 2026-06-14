@@ -40,7 +40,7 @@ $busqueda_ordencompra = $_SESSION['busqueda_ordencompra'] ?? '';
 ?>
 
 <!-- Menú superior -->
-<div class="container-fluid form-neon">
+<div class="container-fluid form-neon app-view">
     <h3 class="text-left">
         <i class="fas fa-plus fa-fw"></i> &nbsp; ORDENES DE COMPRA
     </h3>
@@ -109,7 +109,7 @@ $busqueda_ordencompra = $_SESSION['busqueda_ordencompra'] ?? '';
         <div class="card shadow-sm mb-4">
             <div class="card-body">
                 <div class="oc-header">
-                    <form id="formBuscarPresupuestoOC" class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off" style="flex: 1; min-width: 250px;">
+                    <form id="formBuscarPresupuestoOC" class="form-neon FormularioAjax app-form" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off" style="flex: 1; min-width: 250px;">
                         <input type="hidden" name="modulo" value="ordencompra">
                         <label for="inputSearch" class="bmd-label-floating">
                             Que proveedor estas buscando?
@@ -138,7 +138,7 @@ $busqueda_ordencompra = $_SESSION['busqueda_ordencompra'] ?? '';
 
 
     <?php } else { ?>
-        <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
+        <form class="form-neon FormularioAjax app-form" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
             <input type="hidden" name="modulo" value="ordencompra">
             <input type="hidden" name="eliminar_busqueda" value="eliminar">
             <div class="card shadow-sm mb-4">
@@ -233,7 +233,7 @@ $busqueda_ordencompra = $_SESSION['busqueda_ordencompra'] ?? '';
             </tbody>
         </table>
     </div>
-    <div class="container-fluid form-neon">
+    <div class="container-fluid form-neon app-view">
 
         <!-- FECHA (dentro del form GUARDAR) -->
         <form id="formGuardarOCSinPresupuesto" class="FormularioAjax" action="<?php echo SERVERURL ?>ajax/ordencompraAjax.php"

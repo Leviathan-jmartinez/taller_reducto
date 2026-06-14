@@ -12,23 +12,24 @@ $facturaNC = $_SESSION['NC_FACTURA'] ?? null;
 $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
 ?>
 
-<div class="container-fluid">
-    <form class="form-neon FormularioAjax"
+<div class="container-fluid form-neon app-view">
+    <h3 class="text-left">
+        <i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; INGRESO DE NOTA (CREDITO/DEBITO)
+    </h3>
+    <ul class="full-box list-unstyled page-nav-tabs">
+        <li>
+            <a class="active" href="<?php echo SERVERURL; ?>notasCreDe-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO</a>
+        </li>
+        <li>
+            <a href="<?php echo SERVERURL; ?>notasCreDe-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR</a>
+        </li>
+    </ul>
+
+    <form class="form-neon FormularioAjax app-form"
         action="<?php echo SERVERURL; ?>ajax/notasCreDeAjax.php"
         method="POST"
         data-form="save"
         autocomplete="off">
-        <h3 class="text-left">
-            <i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; INGRESO DE NOTA (CREDITO/DEBITO)
-        </h3>
-        <ul class="full-box list-unstyled page-nav-tabs">
-            <li>
-                <a class="active" href="<?php echo SERVERURL; ?>notasCreDe-nuevo-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp;  NUEVO</a>
-            </li>
-            <li>
-                <a href="<?php echo SERVERURL; ?>notasCreDe-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR</a>
-            </li>
-        </ul>
         <?php if (empty($facturaNC)): ?>
             <div class="col-md-6 mt-3">
                 <label>Factura asociada</label>
@@ -219,6 +220,7 @@ $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
 
     </form>
 </div>
+
 
 
 <div class="modal fade" id="modalFactura" tabindex="-1">

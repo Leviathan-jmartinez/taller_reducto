@@ -12,7 +12,7 @@ if (!mainModel::tienePermiso('empleado.ver')) {
     </h3>
 </div>
 
-<div class="container-fluid">
+<div class="container-fluid app-view">
     <ul class="full-box list-unstyled page-nav-tabs">
         <li>
             <a href="<?php echo SERVERURL; ?>empleado-nuevo/">
@@ -38,7 +38,7 @@ if (!mainModel::tienePermiso('empleado.ver')) {
         <?php endif; ?>
     </ul>
 </div>
-<div class="container-fluid">
+<div class="container-fluid app-view">
     <?php
 require_once "./controladores/empleadoControlador.php";
     $ins = new empleadoControlador();

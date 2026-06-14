@@ -32,7 +32,7 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
     </h3>
 </div>
 
-<div class="container-fluid form-neon">
+<div class="container-fluid form-neon app-view">
 
 
     <ul class="full-box list-unstyled page-nav-tabs">
@@ -58,7 +58,7 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
     </ul>
 
 
-    <form class="form-neon FormularioAjax"
+    <form class="form-neon FormularioAjax app-form"
         action="<?php echo SERVERURL; ?>ajax/rolesAjax.php"
         method="POST"
         data-form="<?php echo $editando ? 'update' : 'save'; ?>"
@@ -143,7 +143,7 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
 </div>
 
 <!-- ================= BUSCADOR ================= -->
-<div class="container-fluid form-neon mb-3">
+<div class="container-fluid form-neon app-view mb-3">
 
     <form class="FormularioAjax"
         action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"

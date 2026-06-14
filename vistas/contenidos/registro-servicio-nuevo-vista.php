@@ -30,7 +30,7 @@ if (!mainModel::tienePermiso('servicio.registro.crear')) {
     }
 </style>
 
-<div class="container-fluid form-neon registro-servicio-bg">
+<div class="container-fluid form-neon registro-servicio-bg app-view app-form">
 
     <!-- ================= TÍTULO ================= -->
 
@@ -115,7 +115,7 @@ if (!mainModel::tienePermiso('servicio.registro.crear')) {
     </fieldset>
 
     <!-- ================= CONFIRMACIÓN ================= -->
-    <form class="FormularioAjax"
+    <form class="FormularioAjax app-form"
         action="<?= SERVERURL ?>ajax/registroServicioAjax.php"
         method="POST"
         data-modulo="registro_servicio"
@@ -158,7 +158,7 @@ if (!mainModel::tienePermiso('servicio.registro.crear')) {
             </div>
         </fieldset>
 
-        <div class="text-center">
+        <div class="text-center app-actions">
             <button class="btn btn-info btn-raised " id="btnRegistrar" disabled>
                 <i class="fas fa-save"></i> &nbsp; Registrar Servicio
             </button>

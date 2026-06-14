@@ -27,7 +27,7 @@ if ($id != null) {
     <p class="text-justify"></p>
 </div>
 <div class="container-fluid">
-    <form class="form-neon FormularioAjax"
+    <form class="form-neon FormularioAjax app-form"
         action="<?php echo SERVERURL; ?>ajax/cargoAjax.php"
         method="POST"
         data-form="<?php echo $editando ? 'update' : 'save'; ?>"
@@ -136,7 +136,7 @@ if ($id != null) {
 </div>
 <div class="container-fluid mb-3">
 
-    <form class="form-neon FormularioAjax"
+    <form class="form-neon FormularioAjax app-form"
         action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
         method="POST"
         data-form="search"

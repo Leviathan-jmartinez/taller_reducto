@@ -23,6 +23,7 @@
         $pagina = require "./vistas/inc/pagina.php";
 
         require_once "./controladores/loginControlador.php";
+        $claseContenido = (basename($vistas) === 'home-vista.php') ? ' page-content-home' : '';
         $lc = new loginControlador();
         /** verificamos si no vinene definidos ninguna de estas variables, en ese caso se cierra la sesion */
         if (
@@ -46,7 +47,7 @@
             <!-- Nav Lateral-->
             <?php include "./vistas/inc/navLateral.php"; ?>
             <!-- Page content -->
-            <section class="full-box page-content">
+            <section class="full-box page-content<?php echo $claseContenido; ?>">
                 <?php
                 include "./vistas/inc/navBar.php";
                 include $vistas;

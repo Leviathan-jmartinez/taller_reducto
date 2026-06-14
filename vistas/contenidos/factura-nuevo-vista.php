@@ -27,7 +27,7 @@ $ocSeleccionada = !empty($_SESSION['id_oc_seleccionado']);
 
 </div>
 
-<div class="container-fluid form-neon">
+<div class="container-fluid form-neon app-view">
     <h3 class="text-left">
         <i class="fas fa-search fa-fw"></i> &nbsp; REGISTRO DE FACTURA DE COMPRA
     </h3>
@@ -39,7 +39,7 @@ $ocSeleccionada = !empty($_SESSION['id_oc_seleccionado']);
             <a href="<?php echo SERVERURL; ?>factura-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR FACTURAS DE COMPRA</a>
         </li>
     </ul>
-    <form class="form-neon FormularioAjax"
+    <form class="form-neon FormularioAjax app-form"
         action="<?php echo SERVERURL; ?>ajax/compraAjax.php"
         method="POST"
         autocomplete="off"

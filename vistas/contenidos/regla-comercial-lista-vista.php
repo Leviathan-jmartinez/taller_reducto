@@ -31,7 +31,7 @@ $sucursales = mainModel::conectar()->query("SELECT id_sucursal, suc_descri FROM 
         </ul>
     </div>
 
-    <form method="GET" class="form-neon mb-3">
+    <form method="GET" class="form-neon app-view mb-3">
         <div class="row">
             <div class="col-md-3">
                 <label>Buscar</label>

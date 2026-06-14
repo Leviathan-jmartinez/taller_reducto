@@ -63,7 +63,7 @@ $botonTexto = $esEditar ? 'Actualizar' : 'Guardar';
         </ul>
     </div>
 
-    <form class="form-neon FormularioAjax"
+    <form class="form-neon FormularioAjax app-form"
         action="<?= SERVERURL; ?>ajax/reglaComercialAjax.php"
         method="POST"
         data-modulo="reglas_comerciales"

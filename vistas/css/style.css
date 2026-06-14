@@ -191,6 +191,182 @@ table form {
 	margin-bottom: 0;
 }
 
+/*----------  Shared view polish  ----------*/
+.app-view,
+.service-view {
+	background-color: rgba(255, 255, 255, .96);
+	border: 1px solid rgba(37, 53, 86, .12);
+	border-radius: 8px;
+	box-shadow: 0 12px 30px rgba(15, 23, 42, .08);
+	margin-bottom: 28px;
+	padding: 22px;
+}
+
+.app-view-header,
+.service-view-header {
+	border-bottom: 1px solid rgba(37, 53, 86, .10);
+	margin-bottom: 20px;
+	padding: 0 0 12px;
+}
+
+.app-view-header h3,
+.service-view-header h3 {
+	color: var(--accent-color);
+	font-family: 'roboto_medium_regular';
+	font-size: 1.35rem;
+	margin-bottom: 16px;
+}
+
+.app-view>h3,
+.app-form>h3,
+.service-view>h3 {
+	color: var(--accent-color);
+	font-family: 'roboto_medium_regular';
+	font-size: 1.35rem;
+	margin-bottom: 16px;
+}
+
+.app-view .card-header {
+	background-color: transparent;
+	border-bottom-color: rgba(37, 53, 86, .10);
+}
+
+.app-view .card-header.app-inline-panel,
+.app-view .app-inline-panel {
+	background-color: #fff;
+}
+
+.app-view .card-body {
+	padding: 18px 0 0;
+}
+
+.app-view .page-nav-tabs,
+.app-form .page-nav-tabs,
+.service-view .page-nav-tabs {
+	justify-content: flex-start;
+	margin-bottom: 0;
+}
+
+.app-view .page-nav-tabs li,
+.app-form .page-nav-tabs li,
+.service-view .page-nav-tabs li {
+	margin: 4px 16px 4px 0;
+}
+
+.app-view .page-nav-tabs li a,
+.app-form .page-nav-tabs li a,
+.service-view .page-nav-tabs li a {
+	border: 1px solid transparent;
+	border-radius: 6px;
+	font-size: 15px;
+	line-height: 38px;
+	min-width: 190px;
+	padding: 0 14px;
+}
+
+.app-view .page-nav-tabs li a.active,
+.app-form .page-nav-tabs li a.active,
+.service-view .page-nav-tabs li a.active {
+	background-color: rgba(236, 82, 82, .10);
+	border-color: rgba(236, 82, 82, .25);
+}
+
+.app-view .page-nav-tabs li a:hover,
+.app-form .page-nav-tabs li a:hover,
+.service-view .page-nav-tabs li a:hover {
+	background-color: rgba(37, 53, 86, .06);
+	border-color: rgba(37, 53, 86, .16);
+}
+
+.app-form,
+.service-form {
+	background-color: #fbfcfd;
+	border-color: rgba(37, 53, 86, .10);
+	border-radius: 8px;
+	padding: 18px;
+}
+
+.app-form fieldset,
+.service-form fieldset {
+	background-color: #fff;
+	border: 1px solid rgba(37, 53, 86, .12) !important;
+	border-radius: 7px;
+	box-shadow: 0 4px 14px rgba(15, 23, 42, .04);
+}
+
+.app-form legend,
+.service-form legend {
+	color: var(--accent-color);
+	font-family: 'roboto_medium_regular';
+	font-size: 1rem;
+	margin-bottom: 12px;
+}
+
+.app-form label,
+.service-form label {
+	color: #4b5563;
+	font-family: 'roboto_medium_regular';
+	font-size: 14px;
+	margin-bottom: 4px;
+}
+
+.app-form .row>[class*="col-"],
+.service-form .row>[class*="col-"] {
+	margin-bottom: 12px;
+}
+
+.app-table-wrap,
+.app-form .table-responsive,
+.service-form .table-responsive {
+	background-color: #fff;
+	border: 1px solid rgba(37, 53, 86, .10);
+	border-radius: 7px;
+	padding: 8px;
+}
+
+.app-inline-panel {
+	background-color: #fff;
+	border: 1px solid rgba(37, 53, 86, .10);
+	border-radius: 7px;
+	box-shadow: 0 4px 14px rgba(15, 23, 42, .04);
+	padding: 14px;
+}
+
+.app-actions,
+.service-actions {
+	background-color: #fff;
+	border: 1px solid rgba(37, 53, 86, .10);
+	border-radius: 7px;
+	margin-top: 4px;
+	padding: 14px;
+}
+
+@media (max-width: 767px) {
+	.app-view,
+	.service-view {
+		padding: 14px;
+	}
+
+	.app-form,
+	.service-form {
+		padding: 14px;
+	}
+
+	.app-view .page-nav-tabs li,
+	.app-form .page-nav-tabs li,
+	.service-view .page-nav-tabs li {
+		margin-right: 0;
+		width: 100%;
+	}
+
+	.app-view .page-nav-tabs li a,
+	.app-form .page-nav-tabs li a,
+	.service-view .page-nav-tabs li a {
+		min-width: 0;
+		width: 100%;
+	}
+}
+
 /*----------  Text Styles  ----------*/
 .roboto-medium {
 	font-family: 'roboto_medium_regular';
@@ -296,6 +472,7 @@ table form {
 	padding-left: 300px;
 	transition: all .2s ease-in-out;
 	padding-bottom: 20px;
+	background-color: #EEF2F6;
 }
 
 /*  Nav Lateral */
@@ -538,7 +715,7 @@ table form {
 
 /*----------  Home Styles  ----------*/
 
-.page-content {
+.page-content-home {
 	background-image: url('../assets/img/home-dashboard-bg.png');
 	background-size: cover;
 	background-position: center;

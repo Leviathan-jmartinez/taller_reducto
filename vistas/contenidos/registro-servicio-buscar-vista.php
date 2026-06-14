@@ -15,7 +15,7 @@ $busqueda_activa = isset($_SESSION['filtro_registro_servicio_activo']);
 ?>
 
 <!-- 🔎 FORMULARIO SIEMPRE VISIBLE -->
-<div class="container-fluid form-neon">
+<div class="container-fluid form-neon app-view">
     <h3>
         <i class="fas fa-clipboard-check"></i>
         &nbsp; REGISTRO DE SERVICIO
@@ -33,7 +33,7 @@ $busqueda_activa = isset($_SESSION['filtro_registro_servicio_activo']);
             </a>
         </li>
     </ul>
-    <form class="form-neon FormularioAjax"
+    <form class="form-neon FormularioAjax app-form"
         action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
         method="POST"
         data-form="search"

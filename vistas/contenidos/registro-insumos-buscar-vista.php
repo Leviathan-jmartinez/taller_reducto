@@ -20,8 +20,8 @@ $ordenSalida = mainModel::cargar_ordenamiento_sesion(
 );
 ?>
 
-<div class="container-fluid form-neon">
-    <form class="form-neon FormularioAjax"
+<div class="container-fluid form-neon app-view">
+    <form class="form-neon FormularioAjax app-form"
         action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
         method="POST"
         data-form="search">

@@ -21,7 +21,7 @@ $inventarioCargado = !empty($_SESSION['id_inv_seleccionado']) || !empty($_SESSIO
 </div>
 
 <div class="container-fluid">
-    <div class="form-neon">
+    <div class="form-neon app-view">
         <h3 class="text-left">
             <i class="fas fa-boxes fa-fw"></i> &nbsp; MÓDULO DE INVENTARIO
         </h3>

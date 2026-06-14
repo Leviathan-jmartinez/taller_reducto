@@ -14,7 +14,7 @@ $sucursales = mainModel::conectar()
     ->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
-<div class="container-fluid form-neon">
+<div class="container-fluid form-neon app-view">
 
     <h3 class="text-left">
         <i class="fas fa-tags"></i> &nbsp; LISTADO DE PROMOCIONES
@@ -35,7 +35,7 @@ $sucursales = mainModel::conectar()
         </ul>
     </div>
 
-    <form method="GET" class="form-neon mb-3">
+    <form method="GET" class="form-neon app-view mb-3">
         <div class="row">
             <div class="col-md-3">
                 <label>Buscar</label>

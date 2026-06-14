@@ -26,8 +26,8 @@ if (isset($_GET['estado_diag']) && in_array((string)$_GET['estado_diag'], ['0', 
 
 </div>
 
-<div class="container-fluid">
-    <form class="form-neon FormularioAjax"
+<div class="container-fluid app-view">
+    <form class="form-neon FormularioAjax app-form"
         action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php"
         method="POST"
         data-form="search">

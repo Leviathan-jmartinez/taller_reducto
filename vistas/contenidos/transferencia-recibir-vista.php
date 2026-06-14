@@ -37,7 +37,7 @@ $detalle = $data['detalle'];
     </small>
 </h4>
 
-<div class="form-neon">
+<div class="form-neon app-view">
     <form class="FormularioAjax"
         data-form="save"
         data-modulo="recibir"

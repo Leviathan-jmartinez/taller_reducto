@@ -25,20 +25,21 @@ if (!isset($pagina)) {
 
 <?php if (!$fecha_inicio && !$fecha_final && !$nro_documento && !$tipo_nota) {
 ?>
-    <div class="container-fluid">
-        <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
+    <div class="container-fluid app-view">
+        <h3 class="text-left">
+            <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR NOTA DE CREDITO/DEBITO
+        </h3>
+        <ul class="full-box list-unstyled page-nav-tabs">
+            <li>
+                <a href="<?php echo SERVERURL; ?>notasCreDe-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO</a>
+            </li>
+            <li>
+                <a class="active" href="<?php echo SERVERURL; ?>notasCreDe-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR</a>
+            </li>
+        </ul>
+        <form class="form-neon FormularioAjax app-form" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
             <input type="hidden" name="modulo" value="notasCreDe">
-            <h3 class="text-left">
-                <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR NOTA DE CREDITO/DEBITO
-            </h3>
-            <ul class="full-box list-unstyled page-nav-tabs">
-                <li>
-                    <a href="<?php echo SERVERURL; ?>notasCreDe-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; NUEVO</a>
-                </li>
-                <li>
-                    <a class="active" href="<?php echo SERVERURL; ?>notasCreDe-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR</a>
-                </li>
-            </ul>
+
             <!-- Inputs ocultos para enviar datetime completo -->
             <input type="hidden" name="fecha_inicio_dt" value="">
             <input type="hidden" name="fecha_final_dt" value="">
@@ -80,7 +81,18 @@ if (!isset($pagina)) {
     </div>
 
 <?php } else { ?>
-    <div class="container-fluid form-neon">
+    <div class="container-fluid form-neon app-view">
+        <h3 class="text-left">
+            <i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; INGRESO DE NOTA (CREDITO/DEBITO)
+        </h3>
+        <ul class="full-box list-unstyled page-nav-tabs">
+            <li>
+                <a href="<?php echo SERVERURL; ?>notasCreDe-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; INGRESO DE NOTA (CREDITO/DEBITO)</a>
+            </li>
+            <li>
+                <a class="active" href="<?php echo SERVERURL; ?>notasCreDe-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR</a>
+            </li>
+        </ul>
         <form class="FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
             <input type="hidden" name="modulo" value="notasCreDe">
             <input type="hidden" name="eliminar_busqueda" value="eliminar">
@@ -88,17 +100,6 @@ if (!isset($pagina)) {
             <!-- Inputs ocultos con datetime completo -->
             <input type="hidden" name="fecha_inicio_dt" value="<?php echo $fecha_inicio_dt; ?>">
             <input type="hidden" name="fecha_final_dt" value="<?php echo $fecha_final_dt; ?>">
-            <h3 class="text-left">
-                <i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; INGRESO DE NOTA (CREDITO/DEBITO)
-            </h3>
-            <ul class="full-box list-unstyled page-nav-tabs">
-                <li>
-                    <a class="active" href="<?php echo SERVERURL; ?>notasCreDe-nuevo-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; INGRESO DE NOTA (CREDITO/DEBITO)</a>
-                </li>
-                <li>
-                    <a href="<?php echo SERVERURL; ?>notasCreDe-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR</a>
-                </li>
-            </ul>
             <div class="container-fluid">
                 <div class="row justify-content-md-center">
                     <div class="col-12 col-md-6">
@@ -128,7 +129,7 @@ if (!isset($pagina)) {
 
 
 
-    <div class="container-fluid form-neon">
+    <div class="container-fluid form-neon app-view">
         <?php
         require_once "./controladores/notasCreDeControlador.php";
         $notas = new notasCreDeControlador();

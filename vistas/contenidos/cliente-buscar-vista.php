@@ -26,7 +26,7 @@ if (!mainModel::tienePermiso('cliente.ver')) {
 <?php if (!isset($_SESSION['busqueda_cliente']) && empty($_SESSION['busqueda_cliente'])) { ?>
 	<!-- Content here-->
 	<div class="container-fluid">
-		<form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="default" autocomplete="off">
+		<form class="form-neon FormularioAjax app-form" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="default" autocomplete="off">
 			<input type="hidden" name="modulo" value="cliente">
 			<div class="container-fluid">
 				<div class="row justify-content-md-center">

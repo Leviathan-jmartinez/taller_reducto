@@ -58,7 +58,7 @@ foreach ($tiposMovimientos as $clave => $tipo) {
 ?>
 
 <div class="container-fluid">
-    <div class="form-neon">
+    <div class="form-neon app-view">
         <h4 class="text-center mb-3">
             <i class="fas fa-chart-line"></i>
             &nbsp; Informes de Movimientos

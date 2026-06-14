@@ -37,7 +37,7 @@ if (!isset($pagina) || !is_array($pagina)) {
 ?>
 
 <?php if (!$fecha_inicio && !$fecha_final && !$nro_presupuesto && !$proveedor_presupuesto && !isset($_SESSION['estado_presupuesto_compra'])) { ?>
-    <div class="container-fluid form-neon">
+    <div class="container-fluid form-neon app-view">
         <h3 class="text-left">
             <i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR PRESUPUESTOS
         </h3>
@@ -49,7 +49,7 @@ if (!isset($pagina) || !is_array($pagina)) {
                 <a class="active" href="<?php echo SERVERURL; ?>presupuesto-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR PRESUPUESTOS</a>
             </li>
         </ul>
-        <form class="form-neon FormularioAjax" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
+        <form class="form-neon FormularioAjax app-form" action="<?php echo SERVERURL; ?>ajax/buscadorAjax.php" method="POST" data-form="search" autocomplete="off">
             <input type="hidden" name="modulo" value="presupuesto">
             <input type="hidden" name="fecha_inicio_dt" value="">
             <input type="hidden" name="fecha_final_dt" value="">
@@ -99,7 +99,7 @@ if (!isset($pagina) || !is_array($pagina)) {
         </form>
     </div>
 <?php } else { ?>
-    <div class="container-fluid form-neon">
+    <div class="container-fluid form-neon app-view">
         <h3 class="text-left">
             <i class="fas fa-file-invoice-dollar fa-fw"></i> &nbsp; PRESUPUESTO DE SERVICIOS
         </h3>

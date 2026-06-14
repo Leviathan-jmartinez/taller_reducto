@@ -11,7 +11,7 @@ if (session_status() == PHP_SESSION_NONE) {
 $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
 ?>
 
-<div class="container-fluid form-neon">
+<div class="container-fluid form-neon app-view">
 
     <h3>
         <i class="fas fa-tools"></i> &nbsp; ORDEN DE TRABAJO
@@ -30,7 +30,7 @@ $usuario_nombre = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
         </li>
     </ul>
 
-    <form class="form-neon FormularioAjax"
+    <form class="form-neon FormularioAjax app-form"
         action="<?= SERVERURL; ?>ajax/ordenTrabajoAjax.php"
         method="POST"
         data-form="save"
