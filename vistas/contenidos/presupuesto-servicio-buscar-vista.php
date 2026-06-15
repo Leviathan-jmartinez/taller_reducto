@@ -7,6 +7,8 @@ if (!mainModel::tienePermiso('servicio.presupuesto.ver')) {
 
 $fecha_inicio = $_SESSION['fecha_inicio_presupuesto_servicio'] ?? '';
 $fecha_final  = $_SESSION['fecha_final_presupuesto_servicio'] ?? '';
+$cliente = $_SESSION['cliente_presupuesto_servicio'] ?? '';
+$placa = $_SESSION['placa_presupuesto_servicio'] ?? '';
 $estado = $_SESSION['estado_presupuesto'] ?? '';
 $ordenPresupuestoServicio = mainModel::cargar_ordenamiento_sesion('presupuesto_servicio', ['fecha', 'estado'], 'fecha', 'DESC');
 $busqueda_activa = isset($_SESSION['filtro_presupuesto_servicio_activo']);
@@ -38,7 +40,7 @@ $busqueda_activa = isset($_SESSION['filtro_presupuesto_servicio_activo']);
 
         <div class="row justify-content-md-center align-items-end">
 
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-3">
                 <div class="form-group">
                     <label>Fecha inicial</label>
                     <input type="date"
@@ -48,13 +50,33 @@ $busqueda_activa = isset($_SESSION['filtro_presupuesto_servicio_activo']);
                 </div>
             </div>
 
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-3">
                 <div class="form-group">
                     <label>Fecha final</label>
                     <input type="date"
                         class="form-control"
                         name="fecha_final"
                         value="<?php echo $fecha_final; ?>">
+                </div>
+            </div>
+
+            <div class="col-12 col-md-3">
+                <div class="form-group">
+                    <label>Cliente</label>
+                    <input type="text"
+                        class="form-control"
+                        name="cliente"
+                        value="<?php echo htmlspecialchars($cliente, ENT_QUOTES, 'UTF-8'); ?>">
+                </div>
+            </div>
+
+            <div class="col-12 col-md-3">
+                <div class="form-group">
+                    <label>Chapa</label>
+                    <input type="text"
+                        class="form-control"
+                        name="placa"
+                        value="<?php echo htmlspecialchars($placa, ENT_QUOTES, 'UTF-8'); ?>">
                 </div>
             </div>
 
@@ -81,7 +103,7 @@ $busqueda_activa = isset($_SESSION['filtro_presupuesto_servicio_activo']);
 
                 <button type="button"
                     class="btn btn-raised btn-danger btn-limpiar-busqueda">
-                    <i class="fas fa-times"></i> &nbsp; Cancelar
+                    <i class="fas fa-times"></i> &nbsp; Limpiar
                 </button>
 
             </div>
@@ -103,6 +125,14 @@ $busqueda_activa = isset($_SESSION['filtro_presupuesto_servicio_activo']);
             } ?>
             <?php if ($fecha_final) { ?>
                 hasta <strong><?php echo $fecha_final; ?></strong>
+            <?php
+            } ?>
+            <?php if ($cliente) { ?>
+                cliente <strong><?php echo htmlspecialchars($cliente, ENT_QUOTES, 'UTF-8'); ?></strong>
+            <?php
+            } ?>
+            <?php if ($placa) { ?>
+                chapa <strong><?php echo htmlspecialchars($placa, ENT_QUOTES, 'UTF-8'); ?></strong>
             <?php
             } ?>
             <?php if ($estado !== '') {
@@ -137,6 +167,8 @@ $busqueda_activa = isset($_SESSION['filtro_presupuesto_servicio_activo']);
             $pagina[0],
             $fecha_inicio,
             $fecha_final,
+            $cliente,
+            $placa,
             $ordenPresupuestoServicio['orden'],
             $ordenPresupuestoServicio['direccion']
         );

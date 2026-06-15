@@ -173,6 +173,7 @@ class reportesModelo extends mainModel
 
             suc.suc_descri AS sucursal,
             IFNULL(st.stockDisponible, 0) AS stock,
+            (IFNULL(st.stockDisponible, 0) * COALESCE(a.precio_venta, 0)) AS valor_stock,
             st.stockcant_min,
             st.stockcant_max
         FROM articulos a
@@ -1500,6 +1501,7 @@ class reportesModelo extends mainModel
             pc.idpresupuesto_compra,
             pc.fecha,
             pc.estado,
+            pc.total,
             pc.idproveedores,
             pr.razon_social AS proveedor,
             s.suc_descri AS sucursal,
@@ -1605,6 +1607,7 @@ class reportesModelo extends mainModel
             cc.fecha_factura,
             cc.nro_factura,
             cc.estado,
+            cc.total_compra,
             cc.idproveedores,
             pr.razon_social AS proveedor,
             s.suc_descri AS sucursal,
@@ -1658,13 +1661,16 @@ class reportesModelo extends mainModel
             ps.idpresupuesto_servicio,
             ps.fecha,
             ps.estado,
+            ps.subtotal,
+            COALESCE(pp.total_promocion, 0) AS total_promocion,
+            COALESCE(pda.total_descuento_aplicado, ps.total_descuento, 0) AS total_descuento,
+            COALESCE(pda.descuentos_aplicados, '-') AS descuentos_aplicados,
+            ps.total_final,
             ps.id_cliente,
             CONCAT(c.nombre_cliente, ' ', c.apellido_cliente) AS cliente,
             COALESCE(
                 NULLIF(CONCAT_WS(' ', mp.mar_descri, mop.mod_descri, vp.anho), ''),
-                NULLIF(CONCAT_WS(' ', mr.mar_descri, mor.mod_descri, vr.anho), ''),
                 vp.placa,
-                vr.placa,
                 '-'
             ) AS vehiculo,
             s.suc_descri AS sucursal,
@@ -1673,20 +1679,47 @@ class reportesModelo extends mainModel
             a.desc_articulo AS articulo,
             pds.cantidad,
             pds.preciouni,
-            pds.subtotal
+            pds.subtotal,
+            COALESCE(ppd.promocion, '-') AS promocion,
+            COALESCE(ppd.monto_promocion, 0) AS monto_promocion,
+            GREATEST(pds.subtotal - COALESCE(ppd.monto_promocion, 0), 0) AS neto_linea
         FROM presupuesto_servicio ps
         INNER JOIN presupuesto_detalleservicio pds ON pds.idpresupuesto_servicio = ps.idpresupuesto_servicio
         LEFT JOIN articulos a ON a.id_articulo = pds.id_articulo
         LEFT JOIN clientes c ON c.id_cliente = ps.id_cliente
-        LEFT JOIN diagnostico_servicio ds ON ds.id_diagnostico = ps.id_diagnostico
-        LEFT JOIN recepcion_servicio rs ON rs.idrecepcion = ds.idrecepcion
         LEFT JOIN vehiculos vp ON vp.id_vehiculo = ps.id_vehiculo
         LEFT JOIN modelo_auto mop ON mop.id_modeloauto = vp.id_modeloauto
         LEFT JOIN marcas mp ON mp.id_marcas = mop.id_marcas
-        LEFT JOIN vehiculos vr ON vr.id_vehiculo = rs.id_vehiculo
-        LEFT JOIN modelo_auto mor ON mor.id_modeloauto = vr.id_modeloauto
-        LEFT JOIN marcas mr ON mr.id_marcas = mor.id_marcas
         INNER JOIN sucursales s ON s.id_sucursal = ps.id_sucursal
+        LEFT JOIN (
+            SELECT
+                pp.idpresupuesto_servicio,
+                SUM(pp.monto_aplicado) AS total_promocion
+            FROM presupuesto_promocion pp
+            GROUP BY pp.idpresupuesto_servicio
+        ) pp ON pp.idpresupuesto_servicio = ps.idpresupuesto_servicio
+        LEFT JOIN (
+            SELECT
+                pp.id_detalle_presupuesto,
+                GROUP_CONCAT(DISTINCT p.nombre ORDER BY p.nombre SEPARATOR ', ') AS promocion,
+                SUM(pp.monto_aplicado) AS monto_promocion
+            FROM presupuesto_promocion pp
+            INNER JOIN promociones p ON p.id_promocion = pp.id_promocion
+            GROUP BY pp.id_detalle_presupuesto
+        ) ppd ON ppd.id_detalle_presupuesto = pds.id_detalle_presupuesto
+        LEFT JOIN (
+            SELECT
+                pd.id_presupuesto,
+                SUM(pd.monto_aplicado) AS total_descuento_aplicado,
+                GROUP_CONCAT(
+                    DISTINCT COALESCE(NULLIF(pd.motivo, ''), d.nombre, 'Descuento')
+                    ORDER BY COALESCE(NULLIF(pd.motivo, ''), d.nombre, 'Descuento')
+                    SEPARATOR ', '
+                ) AS descuentos_aplicados
+            FROM presupuesto_descuento pd
+            LEFT JOIN descuentos d ON d.id_descuento = pd.id_descuento
+            GROUP BY pd.id_presupuesto
+        ) pda ON pda.id_presupuesto = ps.idpresupuesto_servicio
         WHERE 1 = 1
         ";
         $params = [];
@@ -1847,7 +1880,9 @@ class reportesModelo extends mainModel
             ps.fecha_venc,
             ps.estado,
             ps.subtotal,
-            ps.total_descuento,
+            COALESCE(pp.total_promocion, 0) AS total_promocion,
+            COALESCE(pda.total_descuento_aplicado, ps.total_descuento, 0) AS total_descuento,
+            COALESCE(pda.descuentos_aplicados, '-') AS descuentos_aplicados,
             ps.total_final,
             ps.id_cliente,
 
@@ -1856,15 +1891,12 @@ class reportesModelo extends mainModel
 
             CONCAT(u.usu_nombre, ' ', u.usu_apellido) AS usuario,
 
-            rs.idrecepcion,
             s.suc_descri AS sucursal,
 
             CONCAT(c.nombre_cliente, ' ',c.apellido_cliente) AS cliente,
             COALESCE(
                 NULLIF(CONCAT_WS(' ', mp.mar_descri, mop.mod_descri, vp.anho), ''),
-                NULLIF(CONCAT_WS(' ', mr.mar_descri, mor.mod_descri, vr.anho), ''),
                 vp.placa,
-                vr.placa,
                 '-'
             ) AS vehiculo
 
@@ -1872,12 +1904,6 @@ class reportesModelo extends mainModel
 
         INNER JOIN usuarios u
             ON u.id_usuario = ps.id_usuario
-
-        LEFT JOIN diagnostico_servicio ds
-            ON ds.id_diagnostico = ps.id_diagnostico
-
-        LEFT JOIN recepcion_servicio rs
-            ON rs.idrecepcion = ds.idrecepcion
 
         LEFT JOIN sucursales s
             ON s.id_sucursal = ps.id_sucursal
@@ -1894,17 +1920,30 @@ class reportesModelo extends mainModel
         LEFT JOIN marcas mp
             ON mp.id_marcas = mop.id_marcas
 
-        LEFT JOIN vehiculos vr
-            ON vr.id_vehiculo = rs.id_vehiculo
-
-        LEFT JOIN modelo_auto mor
-            ON mor.id_modeloauto = vr.id_modeloauto
-
-        LEFT JOIN marcas mr
-            ON mr.id_marcas = mor.id_marcas
-
         LEFT JOIN presupuesto_detalleservicio pds
             ON pds.idpresupuesto_servicio = ps.idpresupuesto_servicio
+
+        LEFT JOIN (
+            SELECT
+                pp.idpresupuesto_servicio,
+                SUM(pp.monto_aplicado) AS total_promocion
+            FROM presupuesto_promocion pp
+            GROUP BY pp.idpresupuesto_servicio
+        ) pp ON pp.idpresupuesto_servicio = ps.idpresupuesto_servicio
+
+        LEFT JOIN (
+            SELECT
+                pd.id_presupuesto,
+                SUM(pd.monto_aplicado) AS total_descuento_aplicado,
+                GROUP_CONCAT(
+                    DISTINCT COALESCE(NULLIF(pd.motivo, ''), d.nombre, 'Descuento')
+                    ORDER BY COALESCE(NULLIF(pd.motivo, ''), d.nombre, 'Descuento')
+                    SEPARATOR ', '
+                ) AS descuentos_aplicados
+            FROM presupuesto_descuento pd
+            LEFT JOIN descuentos d ON d.id_descuento = pd.id_descuento
+            GROUP BY pd.id_presupuesto
+        ) pda ON pda.id_presupuesto = ps.idpresupuesto_servicio
 
         WHERE 1 = 1
         ";

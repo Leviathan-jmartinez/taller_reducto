@@ -309,6 +309,20 @@ class diagnosticoModelo extends mainModel
                 ];
             }
 
+            $updReclamo = $pdo->prepare("
+                UPDATE reclamo_servicio rc
+                INNER JOIN recepcion_servicio r
+                    ON r.idreclamo_servicio = rc.idreclamo_servicio
+                SET rc.estado = 3
+                WHERE r.idrecepcion = :recepcion
+                  AND rc.id_sucursal = :sucursal
+                  AND rc.estado = 2
+            ");
+            $updReclamo->execute([
+                ':recepcion' => $d['idrecepcion'],
+                ':sucursal' => $d['id_sucursal']
+            ]);
+
             $pdo->commit();
 
             return [
@@ -541,6 +555,18 @@ class diagnosticoModelo extends mainModel
             $sql->execute([
                 ':idrecepcion' => $diag['idrecepcion']
             ]);
+
+            if (!empty($diag['idreclamo_servicio'])) {
+                $sql = $pdo->prepare("
+                    UPDATE reclamo_servicio
+                    SET estado = 2
+                    WHERE idreclamo_servicio = :reclamo
+                      AND estado = 3
+                ");
+                $sql->execute([
+                    ':reclamo' => $diag['idreclamo_servicio']
+                ]);
+            }
 
             mainModel::registrar_anulacion_auditoria_modelo($pdo, [
                 'modulo' => 'diagnostico_servicio',

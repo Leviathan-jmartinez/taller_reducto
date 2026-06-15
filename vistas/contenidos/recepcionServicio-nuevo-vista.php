@@ -142,7 +142,7 @@ $tipos_vehiculo_recepcion = ['Automovil', 'Camioneta', 'SUV', 'Furgon', 'Camion'
                     <input type="text"
                         id="buscar_reclamo_recepcion"
                         class="form-control"
-                        placeholder="Buscar por cliente, apellido, placa o nro. de reclamo">
+                        placeholder="Buscar por cliente, apellido, placa, tipo o nro. de reclamo">
                 </div>
                 <div class="col-md-4 d-flex align-items-end">
                     <button type="button" class="btn btn-secondary btn-block" onclick="limpiarReclamoRecepcion()">

@@ -201,6 +201,7 @@ class reclamoServicioControlador extends reclamoServicioModelo
                      OR c.apellido_cliente LIKE '%$busqueda%' 
                      OR c.doc_number LIKE '%$busqueda%'
                      OR v.placa LIKE '%$busqueda%'
+                     OR rs.tipo_reclamo LIKE '%$busqueda%'
                      OR rs.idreclamo_servicio LIKE '%$busqueda%'
                      OR rs.idregistro_servicio LIKE '%$busqueda%')",
                 "tipo"  => "RAW"
@@ -214,6 +215,18 @@ class reclamoServicioControlador extends reclamoServicioModelo
                 "campo" => "rs.estado",
                 "tipo"  => "=",
                 "valor" => $estadoFiltro
+            ];
+        }
+
+        $fechaInicio = $_SESSION['fecha_inicio_reclamo_servicio'] ?? '';
+        $fechaFinal = $_SESSION['fecha_final_reclamo_servicio'] ?? '';
+
+        if ($fechaInicio !== '' || $fechaFinal !== '') {
+            $filtros[] = [
+                "campo" => "rs.fecha_reclamo",
+                "tipo"  => "DATE_RANGE",
+                "desde" => $fechaInicio,
+                "hasta" => $fechaFinal
             ];
         }
 
@@ -244,6 +257,7 @@ class reclamoServicioControlador extends reclamoServicioModelo
         <thead class="text-center">
             <tr>
                 <th>Reclamo</th>
+                <th>Tipo</th>
                 <th>Cliente</th>
                 <th>Vehículo</th>
                 <th>' . mainModel::link_orden_tabla($url, 'fecha', 'Fecha', $orden, $direccion, 'reclamo_servicio_orden', 'reclamo_servicio_direccion') . '</th>
@@ -264,16 +278,19 @@ class reclamoServicioControlador extends reclamoServicioModelo
 
                 switch ($r['estado']) {
                     case 1:
-                        $estado = '<span class="badge badge-primary">Activo</span>';
+                        $estado = '<span class="badge badge-primary">Reclamo generado</span>';
                         break;
                     case 2:
-                        $estado = '<span class="badge badge-warning">En proceso</span>';
+                        $estado = '<span class="badge badge-warning">Recepcion generada</span>';
                         break;
                     case 3:
-                        $estado = '<span class="badge badge-info">OT generada</span>';
+                        $estado = '<span class="badge badge-info">Diagnostico generado</span>';
                         break;
                     case 4:
-                        $estado = '<span class="badge badge-success">Resuelto</span>';
+                        $estado = '<span class="badge badge-success">OT generada</span>';
+                        break;
+                    case 5:
+                        $estado = '<span class="badge badge-success">Servicio registrado</span>';
                         break;
                     case 0:
                         $estado = '<span class="badge badge-secondary">Anulado</span>';
@@ -285,10 +302,26 @@ class reclamoServicioControlador extends reclamoServicioModelo
                 $cliente = htmlspecialchars(trim(($r['nombre_cliente'] ?? '') . ' ' . ($r['apellido_cliente'] ?? '')), ENT_QUOTES, 'UTF-8');
                 $vehiculo = htmlspecialchars(trim(($r['modelo'] ?? '') . ' ' . ($r['placa'] ?? '')), ENT_QUOTES, 'UTF-8');
                 $descripcion = htmlspecialchars($r['descripcion'] ?? '-', ENT_QUOTES, 'UTF-8');
+                $tipoReclamo = strtoupper(trim($r['tipo_reclamo'] ?? 'GENERAL'));
+                switch ($tipoReclamo) {
+                    case 'SERVICIO':
+                        $tipoBadge = '<span class="badge badge-info">Servicio</span>';
+                        break;
+                    case 'REPUESTO':
+                        $tipoBadge = '<span class="badge badge-warning">Repuesto</span>';
+                        break;
+                    case 'ATENCION':
+                        $tipoBadge = '<span class="badge badge-primary">Atencion</span>';
+                        break;
+                    default:
+                        $tipoBadge = '<span class="badge badge-secondary">General</span>';
+                        break;
+                }
 
                 $tabla .= '
             <tr class="text-center">
                 <td><strong>#' . (int)$r['idreclamo_servicio'] . '</strong><br><small class="text-muted">Fila ' . $contador . '</small></td>
+                <td>' . $tipoBadge . '</td>
                 <td>' . $cliente . '</td>
                 <td>' . ($vehiculo !== '' ? $vehiculo : '-') . '</td>
                 <td>' . date("d-m-Y H:i", strtotime($r['fecha_reclamo'])) . '</td>
@@ -337,7 +370,7 @@ class reclamoServicioControlador extends reclamoServicioModelo
             }
         } else {
 
-            $colspan = mainModel::tienePermiso('servicio.reclamo.anular') ? 7 : 6;
+            $colspan = mainModel::tienePermiso('servicio.reclamo.anular') ? 8 : 7;
             $tabla .= '
         <tr>
             <td colspan="' . $colspan . '" class="text-center">Sin registros</td>
@@ -504,6 +537,7 @@ class reclamoServicioControlador extends reclamoServicioModelo
                 OR
                 c.nombre_cliente LIKE :b
                 OR c.apellido_cliente LIKE :b
+                OR rs.tipo_reclamo LIKE :b
                 OR v.placa LIKE :b
                 OR rs.idreclamo_servicio LIKE :b
             )
@@ -536,6 +570,21 @@ class reclamoServicioControlador extends reclamoServicioModelo
         </thead><tbody>';
 
         foreach ($datos as $r) {
+            $tipoReclamo = strtoupper(trim($r['tipo_reclamo'] ?? 'GENERAL'));
+            switch ($tipoReclamo) {
+                case 'SERVICIO':
+                    $tipoBadge = '<span class="badge badge-info">Servicio</span>';
+                    break;
+                case 'REPUESTO':
+                    $tipoBadge = '<span class="badge badge-warning">Repuesto</span>';
+                    break;
+                case 'ATENCION':
+                    $tipoBadge = '<span class="badge badge-primary">Atencion</span>';
+                    break;
+                default:
+                    $tipoBadge = '<span class="badge badge-secondary">General</span>';
+                    break;
+            }
 
             $html .= '
         <tr>
@@ -543,7 +592,7 @@ class reclamoServicioControlador extends reclamoServicioModelo
             <td>' . htmlspecialchars($r['fecha_reclamo'], ENT_QUOTES, 'UTF-8') . '</td>
             <td>' . htmlspecialchars($r['nombre_cliente'] . ' ' . $r['apellido_cliente'], ENT_QUOTES, 'UTF-8') . '</td>
             <td>' . htmlspecialchars($r['mod_descri'] . ' ' . $r['placa'], ENT_QUOTES, 'UTF-8') . '</td>
-            <td>' . htmlspecialchars($r['tipo_reclamo'] ?: '-', ENT_QUOTES, 'UTF-8') . '</td>
+            <td>' . $tipoBadge . '</td>
             <td>' . htmlspecialchars($r['prioridad'] ?: '-', ENT_QUOTES, 'UTF-8') . '</td>
             <td>
                 <button type="button" class="btn btn-success btn-sm"

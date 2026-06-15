@@ -9,6 +9,9 @@ if (!mainModel::tienePermiso('servicio.ot.ver')) {
 <?php
 $fecha_inicio = $_SESSION['fecha_inicio_orden_trabajo'] ?? '';
 $fecha_final  = $_SESSION['fecha_final_orden_trabajo'] ?? '';
+$nro_ot = $_SESSION['nro_ot'] ?? '';
+$cliente = $_SESSION['cliente_ot'] ?? '';
+$vehiculo = $_SESSION['vehiculo_ot'] ?? '';
 $estado = $_SESSION['estado_ot'] ?? '';
 $ordenOT = mainModel::cargar_ordenamiento_sesion('ot', ['fecha', 'estado'], 'fecha', 'DESC');
 
@@ -48,17 +51,32 @@ $busqueda_activa = isset($_SESSION['filtro_orden_trabajo_activo']);
         <input type="hidden" name="modulo" value="orden_trabajo">
 
         <div class="row justify-content-md-center">
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-2">
+                <label>Nro. OT</label>
+                <input type="number" min="1" class="form-control" name="nro_ot" value="<?php echo htmlspecialchars($nro_ot, ENT_QUOTES, 'UTF-8'); ?>">
+            </div>
+
+            <div class="col-12 col-md-3">
+                <label>Cliente</label>
+                <input type="text" class="form-control" name="cliente" value="<?php echo htmlspecialchars($cliente, ENT_QUOTES, 'UTF-8'); ?>">
+            </div>
+
+            <div class="col-12 col-md-3">
+                <label>Vehiculo / chapa</label>
+                <input type="text" class="form-control" name="vehiculo" value="<?php echo htmlspecialchars($vehiculo, ENT_QUOTES, 'UTF-8'); ?>">
+            </div>
+
+            <div class="col-12 col-md-3">
                 <label>Fecha inicial</label>
                 <input type="date" class="form-control" name="fecha_inicio" value="<?php echo $fecha_inicio; ?>">
             </div>
 
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-3">
                 <label>Fecha final</label>
                 <input type="date" class="form-control" name="fecha_final" value="<?php echo $fecha_final; ?>">
             </div>
 
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-3">
                 <div class="form-group">
                     <label>Estado</label>
                     <select name="estado_ot" class="form-control">
@@ -79,7 +97,7 @@ $busqueda_activa = isset($_SESSION['filtro_orden_trabajo_activo']);
 
                 <button type="button"
                     class="btn btn-raised btn-danger btn-limpiar-busqueda">
-                    <i class="fas fa-times"></i> &nbsp; Cancelar
+                    <i class="fas fa-times"></i> &nbsp; Limpiar
                 </button>
 
             </div>
@@ -91,6 +109,18 @@ $busqueda_activa = isset($_SESSION['filtro_orden_trabajo_activo']);
     <div class="container-fluid mt-3">
         <p class="text-center" style="font-size: 18px;">
             Mostrando resultados
+            <?php if ($nro_ot) { ?>
+                OT <strong>#<?php echo htmlspecialchars($nro_ot, ENT_QUOTES, 'UTF-8'); ?></strong>
+            <?php
+            } ?>
+            <?php if ($cliente) { ?>
+                cliente <strong><?php echo htmlspecialchars($cliente, ENT_QUOTES, 'UTF-8'); ?></strong>
+            <?php
+            } ?>
+            <?php if ($vehiculo) { ?>
+                vehiculo <strong><?php echo htmlspecialchars($vehiculo, ENT_QUOTES, 'UTF-8'); ?></strong>
+            <?php
+            } ?>
             <?php if ($fecha_inicio) { ?>
                 desde <strong><?php echo $fecha_inicio; ?></strong>
             <?php
@@ -132,6 +162,9 @@ $busqueda_activa = isset($_SESSION['filtro_orden_trabajo_activo']);
             $pagina[0],
             $fecha_inicio,
             $fecha_final,
+            $nro_ot,
+            $cliente,
+            $vehiculo,
             $ordenOT['orden'],
             $ordenOT['direccion']
         );

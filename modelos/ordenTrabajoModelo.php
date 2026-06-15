@@ -468,6 +468,9 @@ class ordenTrabajoModelo extends mainModel
         LEFT JOIN modelo_auto ma 
             ON ma.id_modeloauto = v.id_modeloauto
 
+        LEFT JOIN marcas m
+            ON m.id_marcas = ma.id_marcas
+
         INNER JOIN usuarios u 
             ON u.id_usuario = ot.id_usuario
         WHERE 1=1
@@ -570,9 +573,9 @@ class ordenTrabajoModelo extends mainModel
 
                 $updReclamo = $pdo->prepare("
                     UPDATE reclamo_servicio
-                    SET estado = 2
+                    SET estado = 3
                     WHERE idreclamo_servicio = ?
-                      AND estado = 3
+                      AND estado = 4
                 ");
                 $updReclamo->execute([$ot['idreclamo_servicio']]);
             }
@@ -631,9 +634,9 @@ class ordenTrabajoModelo extends mainModel
                 return 'No puede generar OT de un reclamo de otra sucursal';
             }
 
-            if ((int)$reclamo['estado'] !== 2) {
+            if ((int)$reclamo['estado'] !== 3) {
                 $pdo->rollBack();
-                return 'El reclamo no esta en proceso';
+                return 'El reclamo no tiene diagnostico generado';
             }
 
             if ((int)($reclamo['requiere_garantia'] ?? 0) !== 1) {
@@ -751,7 +754,7 @@ class ordenTrabajoModelo extends mainModel
             /* 🔥 ACTUALIZAR RECLAMO */
             $pdo->prepare("
             UPDATE reclamo_servicio
-            SET estado = 3
+            SET estado = 4
             WHERE idreclamo_servicio = ?
         ")->execute([$idReclamo]);
 

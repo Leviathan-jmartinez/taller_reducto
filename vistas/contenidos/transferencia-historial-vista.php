@@ -49,23 +49,25 @@ $filtroId     = $resultado['filtroId'];
 
             <!-- Estado -->
             <select id="filtroEstado" class="form-control mr-2">
-                <option value="-">Todos</option>
-                <option value="en_transito">Pendientes</option>
-                <option value="recibido">Recibidas</option>
-                <option value="recibido_parcial">Recibidas parciales</option>
-                <option value="devolucion">Envios por faltante</option>
+                <option value="-" <?php echo $filtroEstado === '-' ? 'selected' : ''; ?>>Todos</option>
+                <option value="en_transito" <?php echo $filtroEstado === 'en_transito' ? 'selected' : ''; ?>>Pendientes</option>
+                <option value="recibido" <?php echo $filtroEstado === 'recibido' ? 'selected' : ''; ?>>Recibidas</option>
+                <option value="recibido_parcial" <?php echo $filtroEstado === 'recibido_parcial' ? 'selected' : ''; ?>>Recibidas parciales</option>
+                <option value="devolucion" <?php echo $filtroEstado === 'devolucion' ? 'selected' : ''; ?>>Envios por faltante</option>
             </select>
 
             <!-- Fecha -->
             <input type="date"
                 id="filtroFecha"
-                class="form-control mr-2">
+                class="form-control mr-2"
+                value="<?php echo $filtroFecha !== '-' ? htmlspecialchars($filtroFecha, ENT_QUOTES, 'UTF-8') : ''; ?>">
 
             <!-- ID transferencia -->
             <input type="number"
                 id="filtroId"
                 class="form-control mr-2"
-                placeholder="ID">
+                placeholder="ID"
+                value="<?php echo $filtroId !== '-' ? htmlspecialchars($filtroId, ENT_QUOTES, 'UTF-8') : ''; ?>">
 
             <!-- Botones -->
             <button type="submit" class="btn btn-primary mr-2">
@@ -192,7 +194,8 @@ $filtroId     = $resultado['filtroId'];
 
                                 <?php if (
                                     $t['estado'] === 'en_transito' &&
-                                    $_SESSION['nick_sucursal'] == $t['sucursal_destino']
+                                    $_SESSION['nick_sucursal'] == $t['sucursal_destino'] &&
+                                    mainModel::tienePermiso('compra.transferencia.recibir')
                                 ): ?>
                                     <a href="<?= SERVERURL ?>transferencia-recibir/<?= $mainModel->encryption($t['idtransferencia']) ?>/"
                                         class="btn btn-sm btn-success">

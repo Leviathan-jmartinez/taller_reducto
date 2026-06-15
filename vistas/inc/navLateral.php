@@ -374,7 +374,9 @@ $menuLateral = [
             'reportes.clientes.ver',
             'reportes.vehiculos.ver',
             'reportes.empleados.ver',
-            'usuarios.ver'
+            'reportes.marcas.ver',
+            'reportes.categorias.ver',
+            'reportes.usuarios.ver'
         ],
         'items' => [
             [
@@ -389,7 +391,9 @@ $menuLateral = [
                     'reportes.clientes.ver',
                     'reportes.vehiculos.ver',
                     'reportes.empleados.ver',
-                    'usuarios.ver'
+                    'reportes.marcas.ver',
+                    'reportes.categorias.ver',
+                    'reportes.usuarios.ver'
                 ]
             ]
         ]
@@ -435,7 +439,7 @@ $menuLateral = [
     [
         'titulo' => 'Ayuda',
         'icono' => 'fas fa-question-circle',
-        'href' => 'public/docs/userManual.pdf',
+        'href' => 'public/docs/Manual de usuario.pdf',
         'download' => true
     ]
 ];

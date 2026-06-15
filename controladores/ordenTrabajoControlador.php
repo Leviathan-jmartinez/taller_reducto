@@ -5,11 +5,14 @@ require_once __DIR__ . "/../modelos/ordenTrabajoModelo.php";
 class ordenTrabajoControlador extends ordenTrabajoModelo
 {
 
-    public function listar_ot_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $orden = 'fecha', $direccion = 'DESC')
+    public function listar_ot_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $nro_ot = '', $cliente = '', $vehiculo = '', $orden = 'fecha', $direccion = 'DESC')
     {
         $pagina    = (int) mainModel::limpiar_string($pagina);
         $registros = (int) mainModel::limpiar_string($registros);
         $url       = SERVERURL . mainModel::limpiar_string($url) . "/";
+        $nro_ot = mainModel::limpiar_string($nro_ot);
+        $cliente = mainModel::limpiar_string($cliente);
+        $vehiculo = mainModel::limpiar_string($vehiculo);
         $orden = mainModel::limpiar_string($orden);
         $direccion = strtoupper(mainModel::limpiar_string($direccion));
 
@@ -24,12 +27,34 @@ class ordenTrabajoControlador extends ordenTrabajoModelo
 
         $filtros = [];
 
-        if (!empty($busqueda1) && !empty($busqueda2)) {
+        $filtros[] = [
+            "campo" => "ot.fecha_inicio",
+            "tipo"  => "DATE_RANGE",
+            "desde" => $busqueda1,
+            "hasta" => $busqueda2
+        ];
+
+        if ($nro_ot !== '') {
             $filtros[] = [
-                "campo" => "ot.fecha_inicio",
-                "tipo"  => "DATE_RANGE",
-                "desde" => $busqueda1,
-                "hasta" => $busqueda2
+                "campo" => "ot.idorden_trabajo",
+                "tipo"  => "=",
+                "valor" => $nro_ot
+            ];
+        }
+
+        if ($cliente !== '') {
+            $filtros[] = [
+                "campo" => "CONCAT(c.nombre_cliente, ' ', c.apellido_cliente, ' ', IFNULL(c.doc_number, ''))",
+                "tipo"  => "LIKE",
+                "valor" => $cliente
+            ];
+        }
+
+        if ($vehiculo !== '') {
+            $filtros[] = [
+                "campo" => "CONCAT(IFNULL(v.placa, ''), ' ', IFNULL(ma.mod_descri, ''), ' ', IFNULL(m.mar_descri, ''))",
+                "tipo"  => "LIKE",
+                "valor" => $vehiculo
             ];
         }
 

@@ -146,7 +146,9 @@ $informes = [
             'reportes.sucursales.ver',
             'reportes.clientes.ver',
             'reportes.vehiculos.ver',
-            'usuarios.ver'
+            'reportes.marcas.ver',
+            'reportes.categorias.ver',
+            'reportes.usuarios.ver'
         ],
         'titulo' => 'Referenciales',
         'url' => SERVERURL . 'reporte-referenciales/'

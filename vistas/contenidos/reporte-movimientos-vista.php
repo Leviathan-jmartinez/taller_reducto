@@ -37,7 +37,7 @@ $tiposMovimientos = [
     'pedidos' => ['titulo' => 'Pedidos de Compra', 'permiso' => 'reportes.pedidos.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'estado_labels' => [0 => 'Anulado', 1 => 'Pendiente', 2 => 'Procesado'], 'sucursal' => true],
     'presupuestos_compra' => ['titulo' => 'Presupuestos de Compra', 'permiso' => 'reportes.presupuestos_compra.ver', 'proveedor' => true, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'estado_labels' => [0 => 'Anulado', 1 => 'Pendiente', 2 => 'Procesado'], 'sucursal' => true],
     'ordenes_compra' => ['titulo' => 'Ordenes de Compra', 'permiso' => 'reportes.ordenes_compra.ver', 'proveedor' => true, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'estado_labels' => [0 => 'Anulado', 1 => 'Pendiente', 2 => 'Procesado'], 'sucursal' => true],
-    'compras' => ['titulo' => 'Compras', 'permiso' => 'reportes.compras.ver', 'proveedor' => true, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'estado_labels' => [0 => 'Anulado', 1 => 'Activo', 3 => 'Con diferencia', 4 => 'Regularizada con NC'], 'sucursal' => true],
+    'compras' => ['titulo' => 'Compras', 'permiso' => 'reportes.compras.ver', 'proveedor' => true, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'estado_labels' => [0 => 'Anulado', 1 => 'Activo', 2 => 'Procesado', 3 => 'Con diferencia', 4 => 'Regularizada con NC'], 'sucursal' => true],
     'libro_compras' => ['titulo' => 'Libro de Compras', 'permiso' => 'reportes.libro_compras.ver', 'proveedor' => true, 'cliente' => false, 'articulo' => false, 'empleado' => false, 'vista' => false, 'fecha' => true, 'estado' => true, 'estado_labels' => [0 => 'Anulado', 1 => 'Activo'], 'sucursal' => true],
     'stock' => ['titulo' => 'Stock', 'permiso' => 'reportes.stock.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => false, 'fecha' => false, 'estado' => true, 'estado_labels' => [0 => 'Inactivo', 1 => 'Activo'], 'sucursal' => true],
     'transferencias' => ['titulo' => 'Transferencias', 'permiso' => 'reportes.transferencias.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => false, 'fecha' => true, 'estado' => true, 'estado_labels' => ['en_transito' => 'Pendiente de recibir', 'recibido' => 'Recibido', 'recibido_parcial' => 'Recibido parcial', 'anulado' => 'Anulado'], 'sucursal' => true],
@@ -566,11 +566,15 @@ foreach ($tiposMovimientos as $clave => $tipo) {
             return texto(valor);
         }
 
-        function renderResumen(data) {
+        function renderResumen(data, metricas = {}) {
             const tarjetas = data.tarjetas || {};
             const esLibroCompras = form.elements.tipo_movimiento.value === 'libro_compras';
-            const items = esLibroCompras
-                ? [
+            const usaImporte = metricas.usa_importe === true;
+            const usaItems = metricas.usa_items === true || Number(tarjetas.items || 0) > 0;
+            const items = [];
+
+            if (esLibroCompras) {
+                items.push(
                     ['COMPROBANTES', tarjetas.total || 0],
                     ['EXENTA', numero(tarjetas.exenta_total || 0)],
                     ['GRAVADA 5%', numero(tarjetas.gravada_5_total || 0)],
@@ -578,16 +582,24 @@ foreach ($tiposMovimientos as $clave => $tipo) {
                     ['GRAVADA 10%', numero(tarjetas.gravada_10_total || 0)],
                     ['IVA 10%', numero(tarjetas.iva_10_total || 0)],
                     ['TOTAL GENERAL', numero(tarjetas.importe_total || 0)]
-                ]
-                : [
-                    ['TOTAL', tarjetas.total || 0],
-                    ['IMPORTE TOTAL', numero(tarjetas.importe_total || 0)],
-                    ['PROMEDIO', numero(tarjetas.promedio || 0)],
-                    ['ITEMS', numero(tarjetas.items || 0)]
-                ];
+                );
+            } else {
+                items.push(['TOTAL', tarjetas.total || 0]);
+                if (usaImporte) {
+                    items.push(
+                        ['IMPORTE TOTAL', numero(tarjetas.importe_total || 0)],
+                        ['PROMEDIO', numero(tarjetas.promedio || 0)]
+                    );
+                }
+                if (usaItems) {
+                    items.push(['ITEMS', numero(tarjetas.items || 0)]);
+                }
+            }
+
+            const claseColumna = esLibroCompras ? '4 col-lg-3' : (items.length <= 2 ? '6 col-lg-3' : '3');
 
             resumen.innerHTML = items.map(item => `
-            <div class="col-md-${esLibroCompras ? '4 col-lg-3' : '3'} mb-2">
+            <div class="col-md-${claseColumna} mb-2">
                 <div class="card">
                     <div class="card-body py-3">
                         <small class="text-muted">${item[0]}</small>
@@ -936,7 +948,7 @@ foreach ($tiposMovimientos as $clave => $tipo) {
                         Swal.fire('Atencion', resp.error, 'warning');
                         return;
                     }
-                    renderResumen(resp.resumen || {});
+                    renderResumen(resp.resumen || {}, resp.metricas || {});
                     renderKardexMeta(resp.kardex || null);
                     renderGraficos(resp.graficos || {});
                     renderTabla(resp);

@@ -9,6 +9,9 @@ if (!mainModel::tienePermiso('servicio.registro.ver')) {
 <?php
 $fecha_inicio = $_SESSION['fecha_inicio_registro_servicio'] ?? '';
 $fecha_final  = $_SESSION['fecha_final_registro_servicio'] ?? '';
+$nro_registro = $_SESSION['nro_registro_servicio'] ?? '';
+$cliente = $_SESSION['cliente_registro_servicio'] ?? '';
+$vehiculo = $_SESSION['vehiculo_registro_servicio'] ?? '';
 $estado = $_SESSION['estado_regSer'] ?? '';
 $ordenRegistroServicio = mainModel::cargar_ordenamiento_sesion('registro_servicio', ['fecha', 'estado'], 'fecha', 'DESC');
 $busqueda_activa = isset($_SESSION['filtro_registro_servicio_activo']);
@@ -42,7 +45,32 @@ $busqueda_activa = isset($_SESSION['filtro_registro_servicio_activo']);
         <input type="hidden" name="modulo" value="registro_servicio">
         <div class="row justify-content-md-center">
 
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-2">
+                <label>Nro. registro</label>
+                <input type="number"
+                    min="1"
+                    class="form-control"
+                    name="nro_registro"
+                    value="<?php echo htmlspecialchars($nro_registro, ENT_QUOTES, 'UTF-8'); ?>">
+            </div>
+
+            <div class="col-12 col-md-3">
+                <label>Cliente</label>
+                <input type="text"
+                    class="form-control"
+                    name="cliente"
+                    value="<?php echo htmlspecialchars($cliente, ENT_QUOTES, 'UTF-8'); ?>">
+            </div>
+
+            <div class="col-12 col-md-3">
+                <label>Vehiculo / chapa</label>
+                <input type="text"
+                    class="form-control"
+                    name="vehiculo"
+                    value="<?php echo htmlspecialchars($vehiculo, ENT_QUOTES, 'UTF-8'); ?>">
+            </div>
+
+            <div class="col-12 col-md-3">
                 <label>Fecha inicial</label>
                 <input type="date"
                     class="form-control"
@@ -50,14 +78,14 @@ $busqueda_activa = isset($_SESSION['filtro_registro_servicio_activo']);
                     value="<?php echo $fecha_inicio; ?>">
             </div>
 
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-3">
                 <label>Fecha final</label>
                 <input type="date"
                     class="form-control"
                     name="fecha_final"
                     value="<?php echo $fecha_final; ?>">
             </div>
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-3">
                 <div class="form-group">
                     <label>Estado</label>
                     <select name="estado_regSer" class="form-control">
@@ -77,7 +105,7 @@ $busqueda_activa = isset($_SESSION['filtro_registro_servicio_activo']);
 
                 <button type="button"
                     class="btn btn-raised btn-danger btn-limpiar-busqueda">
-                    <i class="fas fa-times"></i> &nbsp; Cancelar
+                    <i class="fas fa-times"></i> &nbsp; Limpiar
                 </button>
 
             </div>
@@ -99,6 +127,9 @@ $busqueda_activa = isset($_SESSION['filtro_registro_servicio_activo']);
             $pagina[0],
             $fecha_inicio,
             $fecha_final,
+            $nro_registro,
+            $cliente,
+            $vehiculo,
             $ordenRegistroServicio['orden'],
             $ordenRegistroServicio['direccion']
         );

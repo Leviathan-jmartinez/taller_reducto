@@ -316,7 +316,7 @@ class remisionControlador extends remisionModelo
     /**fin controlador */
 
     /**controlador paginador remision */
-    public function paginador_remision_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $nro_factura = '', $estado = '', $orden = 'fecha', $direccion = 'DESC')
+    public function paginador_remision_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $nro_remision = '', $estado = '', $orden = 'fecha', $direccion = 'DESC')
     {
         if (!mainModel::tienePermiso('compra.remision.ver')) {
             echo '<div class="alert alert-danger">Acceso no autorizado</div>';
@@ -327,7 +327,7 @@ class remisionControlador extends remisionModelo
         $registros  = mainModel::limpiar_string($registros);
         $busqueda1  = mainModel::limpiar_string($busqueda1);
         $busqueda2  = mainModel::limpiar_string($busqueda2);
-        $nro_factura = mainModel::limpiar_string($nro_factura);
+        $nro_remision = mainModel::limpiar_string($nro_remision);
         $estado      = mainModel::limpiar_string($estado);
         $orden = mainModel::limpiar_string($orden);
         $direccion = strtoupper(mainModel::limpiar_string($direccion));
@@ -354,11 +354,11 @@ class remisionControlador extends remisionModelo
             ];
         }
 
-        if ($nro_factura !== '') {
+        if ($nro_remision !== '') {
             $filtros[] = [
-                "campo" => "cc.nro_factura",
+                "campo" => "r.nro_remision",
                 "tipo"  => "LIKE",
-                "valor" => $nro_factura
+                "valor" => $nro_remision
             ];
         }
 

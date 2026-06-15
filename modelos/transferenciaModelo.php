@@ -244,14 +244,21 @@ class transferenciaModelo extends mainModel
         $sql = "
         SELECT 
             a.id_articulo,
+            a.codigo,
             a.desc_articulo,
-            s.stockDisponible
-        FROM stock s
-        INNER JOIN articulos a 
-            ON a.id_articulo = s.id_articulo
-        WHERE s.id_sucursal = :suc
-          AND s.stockDisponible > 0
-          AND a.desc_articulo LIKE :q
+            a.tipo,
+            COALESCE(s.stockDisponible, 0) AS stockDisponible
+        FROM articulos a
+        LEFT JOIN stock s
+            ON s.id_articulo = a.id_articulo
+           AND s.id_sucursal = :suc
+        WHERE LOWER(a.tipo) IN ('producto', 'insumo')
+          AND (
+              a.desc_articulo LIKE :q
+              OR a.codigo LIKE :q
+              OR CAST(a.id_articulo AS CHAR) LIKE :q
+          )
+        ORDER BY COALESCE(s.stockDisponible, 0) DESC, a.desc_articulo ASC
         LIMIT 10";
 
         $stmt = mainModel::conectar()->prepare($sql);

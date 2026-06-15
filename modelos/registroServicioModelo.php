@@ -162,7 +162,7 @@ class registroServicioModelo extends mainModel
                     UPDATE reclamo_servicio rc
                     INNER JOIN recepcion_servicio r
                         ON r.idreclamo_servicio = rc.idreclamo_servicio
-                    SET rc.estado = 4,
+                    SET rc.estado = 5,
                         rc.fecha_cierre = NOW(),
                         rc.observacion_cierre = 'Servicio registrado'
                     WHERE r.idrecepcion = ?
@@ -457,6 +457,9 @@ class registroServicioModelo extends mainModel
         LEFT JOIN modelo_auto m 
             ON m.id_modeloauto = v.id_modeloauto
 
+        LEFT JOIN marcas ma
+            ON ma.id_marcas = m.id_marcas
+
         LEFT JOIN usuarios u 
             ON u.id_usuario = rs.usuario_registra
 
@@ -471,6 +474,14 @@ class registroServicioModelo extends mainModel
         $total = $pdo->query("
         SELECT COUNT(*)
         FROM registro_servicio rs
+        LEFT JOIN clientes c 
+            ON c.id_cliente = rs.id_cliente
+        LEFT JOIN vehiculos v 
+            ON v.id_vehiculo = rs.id_vehiculo
+        LEFT JOIN modelo_auto m 
+            ON m.id_modeloauto = v.id_modeloauto
+        LEFT JOIN marcas ma
+            ON ma.id_marcas = m.id_marcas
         WHERE 1=1 $filtrosSQL
         ")->fetchColumn();
 
@@ -581,11 +592,11 @@ class registroServicioModelo extends mainModel
             if (!empty($origen['idreclamo_servicio'])) {
                 $updReclamo = $pdo->prepare("
                     UPDATE reclamo_servicio
-                    SET estado = 3,
+                    SET estado = 4,
                         fecha_cierre = NULL,
                         observacion_cierre = NULL
                     WHERE idreclamo_servicio = ?
-                      AND estado = 4
+                      AND estado = 5
                 ");
                 $updReclamo->execute([$origen['idreclamo_servicio']]);
             }

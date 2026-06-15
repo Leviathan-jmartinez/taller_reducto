@@ -7,14 +7,16 @@ if (!mainModel::tienePermiso('servicio.reclamo.ver')) {
 
 $busqueda = $_SESSION['busqueda_reclamo_servicio'] ?? '';
 $estado   = $_SESSION['estado_reclamo_servicio'] ?? '';
+$fechaInicio = $_SESSION['fecha_inicio_reclamo_servicio'] ?? '';
+$fechaFinal = $_SESSION['fecha_final_reclamo_servicio'] ?? '';
 $ordenReclamoServicio = mainModel::cargar_ordenamiento_sesion('reclamo_servicio', ['fecha', 'estado'], 'fecha', 'DESC');
 
-if (isset($_GET['estado_reclamo_servicio']) && in_array((string)$_GET['estado_reclamo_servicio'], ['0', '1', '2', '3', '4'], true)) {
+if (isset($_GET['estado_reclamo_servicio']) && in_array((string)$_GET['estado_reclamo_servicio'], ['0', '1', '2', '3', '4', '5'], true)) {
     $_SESSION['estado_reclamo_servicio'] = (string)$_GET['estado_reclamo_servicio'];
     $estado = (string)$_GET['estado_reclamo_servicio'];
 }
 
-$hayFiltro = $busqueda !== '' || $estado !== '';
+$hayFiltro = $busqueda !== '' || $estado !== '' || $fechaInicio !== '' || $fechaFinal !== '';
 ?>
 <style>
     /* Contenedor principal SOLO registro de servicio */
@@ -62,29 +64,46 @@ $hayFiltro = $busqueda !== '' || $estado !== '';
         <div class="row justify-content-md-center">
 
             <!-- 🔍 BUSQUEDA -->
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-3">
                 <label>Buscar</label>
                 <input type="text"
                     class="form-control"
                     name="busqueda_inicial"
                     value="<?php echo $busqueda; ?>"
-                    placeholder="Cliente, placa, OT...">
+                    placeholder="Cliente, placa, tipo o OT...">
             </div>
 
             <!-- 📊 ESTADO -->
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-3">
                 <label>Estado</label>
                 <select name="estado_reclamo_servicio" class="form-control">
                     <option value="">Todos</option>
-                    <option value="1" <?php if ($estado == "1") echo "selected"; ?>>Activo</option>
-                    <option value="2" <?php if ($estado == "2") echo "selected"; ?>>En proceso</option>
-                    <option value="3" <?php if ($estado == "3") echo "selected"; ?>>OT generada</option>
-                    <option value="4" <?php if ($estado == "4") echo "selected"; ?>>Resuelto</option>
+                    <option value="1" <?php if ($estado == "1") echo "selected"; ?>>Reclamo generado</option>
+                    <option value="2" <?php if ($estado == "2") echo "selected"; ?>>Recepcion generada</option>
+                    <option value="3" <?php if ($estado == "3") echo "selected"; ?>>Diagnostico generado</option>
+                    <option value="4" <?php if ($estado == "4") echo "selected"; ?>>OT generada</option>
+                    <option value="5" <?php if ($estado == "5") echo "selected"; ?>>Servicio registrado</option>
                     <option value="0" <?php if ($estado === "0") echo "selected"; ?>>Anulado</option>
                 </select>
             </div>
 
             <!-- 🔘 BOTONES -->
+            <div class="col-12 col-md-3">
+                <label>Fecha inicial</label>
+                <input type="date"
+                    class="form-control"
+                    name="fecha_inicio"
+                    value="<?php echo $fechaInicio; ?>">
+            </div>
+
+            <div class="col-12 col-md-3">
+                <label>Fecha final</label>
+                <input type="date"
+                    class="form-control"
+                    name="fecha_final"
+                    value="<?php echo $fechaFinal; ?>">
+            </div>
+
             <div class="col-12 text-center mt-4">
 
                 <button type="submit" class="btn btn-raised btn-info">
@@ -93,7 +112,7 @@ $hayFiltro = $busqueda !== '' || $estado !== '';
 
                 <button type="button"
                     class="btn btn-raised btn-danger btn-limpiar-busqueda">
-                    <i class="fas fa-times"></i> &nbsp; Cancelar
+                    <i class="fas fa-times"></i> &nbsp; Limpiar
                 </button>
 
             </div>
@@ -114,22 +133,40 @@ $hayFiltro = $busqueda !== '' || $estado !== '';
                 <?php
                 switch ($estado) {
                     case "1":
-                        echo "Activo";
+                        echo "Reclamo generado";
                         break;
                     case "2":
-                        echo "En proceso";
+                        echo "Recepcion generada";
                         break;
                     case "3":
-                        echo "OT generada";
+                        echo "Diagnostico generado";
                         break;
                     case "4":
-                        echo "Resuelto";
+                        echo "OT generada";
+                        break;
+                    case "5":
+                        echo "Servicio registrado";
                         break;
                     case "0":
                         echo "Anulado";
                         break;
                     default:
                         echo "Todos";
+                }
+                ?>
+            </strong>
+            |
+            Fecha:
+            <strong>
+                <?php
+                if ($fechaInicio !== '' && $fechaFinal !== '') {
+                    echo date('d-m-Y', strtotime($fechaInicio)) . ' al ' . date('d-m-Y', strtotime($fechaFinal));
+                } elseif ($fechaInicio !== '') {
+                    echo 'Desde ' . date('d-m-Y', strtotime($fechaInicio));
+                } elseif ($fechaFinal !== '') {
+                    echo 'Hasta ' . date('d-m-Y', strtotime($fechaFinal));
+                } else {
+                    echo 'Todas';
                 }
                 ?>
             </strong>

@@ -15,10 +15,13 @@ $estado = $_SESSION['estado_diag'] ?? '';
 $origen = $_SESSION['origen_diag'] ?? '';
 $busqueda_general = $_SESSION['busqueda_general_diag'] ?? '';
 $ordenDiagnostico = mainModel::cargar_ordenamiento_sesion('diagnostico', ['fecha', 'estado'], 'fecha', 'DESC');
+$busqueda_activa = isset($_SESSION['filtro_diagnostico_activo']);
 
 if (isset($_GET['estado_diag']) && in_array((string)$_GET['estado_diag'], ['0', '1', '2', '3'], true)) {
     $_SESSION['estado_diag'] = (string)$_GET['estado_diag'];
+    $_SESSION['filtro_diagnostico_activo'] = '1';
     $estado = (string)$_GET['estado_diag'];
+    $busqueda_activa = true;
 }
 ?>
 
@@ -121,7 +124,7 @@ if (isset($_GET['estado_diag']) && in_array((string)$_GET['estado_diag'], ['0', 
 
                 <button type="button"
                     class="btn btn-secondary btn-limpiar-busqueda">
-                    <i class="fas fa-times"></i> Cancelar
+                    <i class="fas fa-times"></i> Limpiar
                 </button>
             </div>
         </div>
@@ -130,25 +133,29 @@ if (isset($_GET['estado_diag']) && in_array((string)$_GET['estado_diag'], ['0', 
 
 <div class="container-fluid mt-4">
     <?php
-    require_once "./controladores/diagnosticoControlador.php";
-    $diag = new diagnosticoControlador();
+    if ($busqueda_activa) {
+        require_once "./controladores/diagnosticoControlador.php";
+        $diag = new diagnosticoControlador();
 
-    echo $diag->paginador_diagnostico_controlador(
-        $pagina[1],
-        10,
-        $pagina[0],
-        $_SESSION['fecha_inicio_diag'] ?? '',
-        $_SESSION['fecha_final_diag'] ?? '',
-        $_SESSION['cliente_diag'] ?? '',
-        $_SESSION['placa_diag'] ?? '',
-        $_SESSION['nro_diagnostico_diag'] ?? '',
-        $_SESSION['nro_recepcion_diag'] ?? '',
-        $_SESSION['estado_diag'] ?? '',
-        $_SESSION['origen_diag'] ?? '',
-        $_SESSION['busqueda_general_diag'] ?? '',
-        $ordenDiagnostico['orden'],
-        $ordenDiagnostico['direccion']
-    );
+        echo $diag->paginador_diagnostico_controlador(
+            $pagina[1],
+            10,
+            $pagina[0],
+            $_SESSION['fecha_inicio_diag'] ?? '',
+            $_SESSION['fecha_final_diag'] ?? '',
+            $_SESSION['cliente_diag'] ?? '',
+            $_SESSION['placa_diag'] ?? '',
+            $_SESSION['nro_diagnostico_diag'] ?? '',
+            $_SESSION['nro_recepcion_diag'] ?? '',
+            $_SESSION['estado_diag'] ?? '',
+            $_SESSION['origen_diag'] ?? '',
+            $_SESSION['busqueda_general_diag'] ?? '',
+            $ordenDiagnostico['orden'],
+            $ordenDiagnostico['direccion']
+        );
+    } else {
+        echo '<div class="alert alert-info text-center mb-0">Ingrese uno o mas filtros y presione Buscar para ver diagnosticos.</div>';
+    }
     ?>
 </div>
 

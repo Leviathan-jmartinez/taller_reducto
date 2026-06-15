@@ -318,7 +318,7 @@ class transferenciaControlador extends transferenciaModelo
             session_start();
         }
 
-        if (!mainModel::tienePermiso('transferencia.recibir')) {
+        if (!mainModel::tienePermiso('compra.transferencia.recibir')) {
             return json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Acceso no autorizado",

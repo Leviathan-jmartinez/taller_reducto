@@ -197,11 +197,14 @@ class registroServicioControlador extends registroServicioModelo
         return json_encode($datos, JSON_UNESCAPED_UNICODE);
     }
 
-    public function listar_registro_servicio_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $orden = 'fecha', $direccion = 'DESC')
+    public function listar_registro_servicio_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $nro_registro = '', $cliente = '', $vehiculo = '', $orden = 'fecha', $direccion = 'DESC')
     {
         $pagina    = (int) mainModel::limpiar_string($pagina);
         $registros = (int) mainModel::limpiar_string($registros);
         $url       = SERVERURL . mainModel::limpiar_string($url) . "/";
+        $nro_registro = mainModel::limpiar_string($nro_registro);
+        $cliente = mainModel::limpiar_string($cliente);
+        $vehiculo = mainModel::limpiar_string($vehiculo);
         $orden = mainModel::limpiar_string($orden);
         $direccion = strtoupper(mainModel::limpiar_string($direccion));
         $estadoFiltro = $_SESSION['estado_regSer'] ?? '';
@@ -210,12 +213,34 @@ class registroServicioControlador extends registroServicioModelo
 
         $filtros = [];
 
-        if (!empty($busqueda1) && !empty($busqueda2)) {
+        $filtros[] = [
+            "campo" => "rs.fecha_servicio",
+            "tipo"  => "DATE_RANGE",
+            "desde" => $busqueda1,
+            "hasta" => $busqueda2
+        ];
+
+        if ($nro_registro !== '') {
             $filtros[] = [
-                "campo" => "rs.fecha_servicio",
-                "tipo"  => "DATE_RANGE",
-                "desde" => $busqueda1,
-                "hasta" => $busqueda2
+                "campo" => "rs.idregistro_servicio",
+                "tipo"  => "=",
+                "valor" => $nro_registro
+            ];
+        }
+
+        if ($cliente !== '') {
+            $filtros[] = [
+                "campo" => "CONCAT(c.nombre_cliente, ' ', c.apellido_cliente, ' ', IFNULL(c.doc_number, ''))",
+                "tipo"  => "LIKE",
+                "valor" => $cliente
+            ];
+        }
+
+        if ($vehiculo !== '') {
+            $filtros[] = [
+                "campo" => "CONCAT(IFNULL(v.placa, ''), ' ', IFNULL(m.mod_descri, ''), ' ', IFNULL(ma.mar_descri, ''))",
+                "tipo"  => "LIKE",
+                "valor" => $vehiculo
             ];
         }
 

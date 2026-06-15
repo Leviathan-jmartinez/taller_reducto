@@ -17,6 +17,7 @@ function estadoCompra($estado)
     return match ((int)$estado) {
         0 => 'Anulado',
         1 => 'Activo',
+        2 => 'Procesado',
         3 => 'Con diferencia',
         4 => 'Regularizada con NC',
         default => 'Desconocido',

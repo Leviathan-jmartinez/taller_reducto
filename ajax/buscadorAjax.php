@@ -99,6 +99,8 @@ if (in_array($modulo, $modulos_con_fecha)) {
                 "fecha_inicio" => "fecha_inicio_presupuesto_servicio",
                 "fecha_final"  => "fecha_final_presupuesto_servicio",
                 "extra" => [
+                    "cliente" => "cliente_presupuesto_servicio",
+                    "placa" => "placa_presupuesto_servicio",
                     "estado_presupuesto" => "estado_presupuesto"
                 ]
             ],
@@ -115,6 +117,9 @@ if (in_array($modulo, $modulos_con_fecha)) {
                 "fecha_inicio" => "fecha_inicio_orden_trabajo",
                 "fecha_final"  => "fecha_final_orden_trabajo",
                 "extra" => [
+                    "nro_ot" => "nro_ot",
+                    "cliente" => "cliente_ot",
+                    "vehiculo" => "vehiculo_ot",
                     "estado_ot" => "estado_ot"
                 ]
             ],
@@ -122,6 +127,9 @@ if (in_array($modulo, $modulos_con_fecha)) {
                 "fecha_inicio" => "fecha_inicio_registro_servicio",
                 "fecha_final"  => "fecha_final_registro_servicio",
                 "extra" => [
+                    "nro_registro" => "nro_registro_servicio",
+                    "cliente" => "cliente_registro_servicio",
+                    "vehiculo" => "vehiculo_registro_servicio",
                     "estado_regSer" => "estado_regSer"
                 ]
             ],
@@ -165,6 +173,7 @@ if (in_array($modulo, $modulos_con_fecha)) {
             unset($_SESSION['estado_reclamo_servicio']);
             unset($_SESSION[$cfg['fecha_inicio']]);
             unset($_SESSION[$cfg['fecha_final']]);
+            unset($_SESSION['filtro_diagnostico_activo']);
             unset($_SESSION['filtro_salida_insumo_activo']);
             foreach ($cfg['extra'] as $key => $sessionKey) {
                 unset($_SESSION[$sessionKey]);
@@ -195,7 +204,7 @@ if (in_array($modulo, $modulos_con_fecha)) {
 
             $_SESSION[$cfg['fecha_inicio']] = $fecha_ini;
             $_SESSION[$cfg['fecha_final']]  = $fecha_fin;
-        } elseif (($modulo == "diagnostico" || $modulo == "salida_insumo") && ($fecha_ini != '' || $fecha_fin != '')) {
+        } elseif (($modulo == "diagnostico" || $modulo == "orden_trabajo" || $modulo == "registro_servicio" || $modulo == "reclamo_servicio" || $modulo == "salida_insumo") && ($fecha_ini != '' || $fecha_fin != '')) {
             if ($fecha_ini != '') {
                 $_SESSION[$cfg['fecha_inicio']] = $fecha_ini;
             } else {
@@ -223,6 +232,10 @@ if (in_array($modulo, $modulos_con_fecha)) {
         /* ===== CAMPOS EXTRA  ===== */
         foreach ($cfg['extra'] as $postKey => $sessionKey) {
             $_SESSION[$sessionKey] = $_POST[$postKey] ?? '';
+        }
+
+        if ($modulo == "diagnostico") {
+            $_SESSION['filtro_diagnostico_activo'] = '1';
         }
 
         if ($modulo == "presupuesto_servicio") {
@@ -279,6 +292,7 @@ if (in_array($modulo, $modulos_con_fecha)) {
         }
 
         if ($modulo == "remision") {
+            unset($_SESSION['nro_remision_remision']);
             unset($_SESSION['nro_factura_remision']);
             unset($_SESSION['estado_remision']);
             unset($_SESSION['filtro_remision_activo']);
@@ -504,14 +518,15 @@ if (in_array($modulo, $modulos_con_fecha)) {
                 exit();
             }
 
-            $_SESSION['nro_factura_remision'] = $_POST['nro_factura'] ?? '';
+            $_SESSION['nro_remision_remision'] = $_POST['nro_remision'] ?? '';
+            unset($_SESSION['nro_factura_remision']);
             $_SESSION['estado_remision']      = $_POST['estado_remision'] ?? '';
             $_SESSION['filtro_remision_activo'] = true;
 
             if (
                 $fecha_ini == '' &&
                 $fecha_fin == '' &&
-                $_SESSION['nro_factura_remision'] == '' &&
+                $_SESSION['nro_remision_remision'] == '' &&
                 $_SESSION['estado_remision'] == '' &&
                 !isset($_POST['estado_remision'])
             ) {

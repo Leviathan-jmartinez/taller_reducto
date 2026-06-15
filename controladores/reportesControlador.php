@@ -22,6 +22,7 @@ class reporteControlador extends reportesModelo
             'orientacion' => strtoupper(substr($orientacion, 0, 1)) === 'L' ? 'L' : 'P',
             'salida' => 'D',
             'estilo_reporte' => true,
+            'margin_bottom' => 16,
             'empresa' => $_SESSION['empresa_nombre'] ?? 'Empresa',
             'usuario' => trim(($_SESSION['nombre_str'] ?? '') . ' ' . ($_SESSION['apellido_str'] ?? ''))
         ]);
@@ -217,7 +218,7 @@ class reporteControlador extends reportesModelo
             ],
             "marcas" => [
                 "titulo" => "Marcas",
-                "permiso" => "reportes.articulos.ver",
+                "permiso" => "reportes.marcas.ver",
                 "modelo" => "reporte_marcas_modelo",
                 "resumen" => "resumen_marcas_modelo",
                 "orientacion" => "P",
@@ -228,7 +229,7 @@ class reporteControlador extends reportesModelo
             ],
             "categorias" => [
                 "titulo" => "Categorias",
-                "permiso" => "reportes.articulos.ver",
+                "permiso" => "reportes.categorias.ver",
                 "modelo" => "reporte_categorias_modelo",
                 "resumen" => "resumen_categorias_modelo",
                 "orientacion" => "P",
@@ -239,7 +240,7 @@ class reporteControlador extends reportesModelo
             ],
             "usuarios" => [
                 "titulo" => "Usuarios",
-                "permiso" => "usuarios.ver",
+                "permiso" => "reportes.usuarios.ver",
                 "modelo" => "reporte_usuarios_modelo",
                 "resumen" => "resumen_usuarios_modelo",
                 "orientacion" => "L",
@@ -377,22 +378,71 @@ class reporteControlador extends reportesModelo
 
         $filtros = $this->filtros_referenciales();
         $preparado = $this->preparar_datos_referenciales($tipo, $config, $filtros);
-        $totalFiltrado = count($preparado['datos']);
         $datos = array_slice($preparado['datos'], 0, 500);
         $resumen = $this->resumen_referencial_desde_datos($preparado['datos'], $config[$tipo]);
         $columnas = $config[$tipo]['columnas'];
         $titulo = "Informe Referencial - " . $config[$tipo]['titulo'];
+        $anchosColumnas = [
+            "articulos" => ["4%", "9%", "30%", "12%", "10%", "20%", "10%", "5%"]
+        ];
+        $anchos = $anchosColumnas[$tipo] ?? [];
+        $claseTabla = "referencial-table" . ($tipo === "articulos" ? " referencial-table-compact" : "");
 
         ob_start();
-?>
+        ?>
+        <style>
+            .referencial-table {
+                border-collapse: collapse;
+                font-size: 8.4px;
+                line-height: 1.25;
+                width: 100%;
+            }
+
+            .referencial-table-compact {
+                font-size: 7.8px;
+            }
+
+            .referencial-table thead {
+                display: table-header-group;
+            }
+
+            .referencial-table tr {
+                page-break-inside: avoid;
+            }
+
+            .referencial-table th {
+                background: #eaf0f6;
+                border: 1px solid #cfd8e3;
+                color: #001d4a;
+                font-weight: bold;
+                padding: 4px 5px;
+                text-align: center;
+            }
+
+            .referencial-table td {
+                border: 1px solid #d9dee5;
+                color: #172033;
+                padding: 3.5px 5px;
+                vertical-align: top;
+            }
+
+            .referencial-table tbody tr:nth-child(even) td {
+                background: #f8fafc;
+            }
+
+            .report-bottom-space {
+                height: 7mm;
+            }
+        </style>
         <h3><?= htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8') ?></h3>
-        <div class="report-intro">
-            Total filtrado: <?= (int)$totalFiltrado ?>
-            <?php if ($totalFiltrado > 500): ?>
-                | Detalle limitado a los primeros 500 registros. Use CSV para exportar el detalle completo.
+        <table class="<?= $claseTabla ?>" cellspacing="0">
+            <?php if (!empty($anchos)): ?>
+                <colgroup>
+                    <?php foreach ($anchos as $ancho): ?>
+                        <col style="width: <?= $ancho ?>;">
+                    <?php endforeach; ?>
+                </colgroup>
             <?php endif; ?>
-        </div>
-        <table width="100%" cellspacing="0" cellpadding="5" border="1">
             <thead>
                 <tr>
                     <th>#</th>
@@ -412,14 +462,15 @@ class reporteControlador extends reportesModelo
                         <tr>
                             <td style="text-align:center;"><?= $i++ ?></td>
                             <?php foreach ($columnas as $columna): ?>
-                                <td><?= htmlspecialchars($this->valor_reporte_referencial($row, $columna), ENT_QUOTES, 'UTF-8') ?></td>
+                                <td<?= (($columna['tipo'] ?? '') === 'numero') ? ' style="text-align:right;"' : '' ?>><?= htmlspecialchars($this->valor_reporte_referencial($row, $columna), ENT_QUOTES, 'UTF-8') ?></td>
                             <?php endforeach; ?>
                         </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>
             </tbody>
         </table>
-    <?php
+        <div class="report-bottom-space"></div>
+        <?php
         $html = ob_get_clean();
 
         $this->imprimir_mpdf_html($html, "reporte_referenciales_" . $tipo . ".pdf", $config[$tipo]['orientacion']);
@@ -486,6 +537,7 @@ class reporteControlador extends reportesModelo
                 "estado" => "estado",
                 "estado_labels" => [0 => "Anulado", 1 => "Pendiente", 2 => "Procesado"],
                 "importe" => null,
+                "detalle_importe" => null,
                 "entidad" => "usuario",
                 "articulo" => true,
                 "columnas" => [
@@ -518,6 +570,8 @@ class reporteControlador extends reportesModelo
                 "estado" => "estado",
                 "estado_labels" => [0 => "Anulado", 1 => "Pendiente", 2 => "Procesado"],
                 "importe" => "total",
+                "detalle_importe_unico" => "total",
+                "detalle_importe_unico_id" => "idpresupuesto_compra",
                 "entidad" => "proveedor",
                 "proveedor" => true,
                 "articulo" => true,
@@ -588,8 +642,10 @@ class reporteControlador extends reportesModelo
                 "detalle_args" => ["desde", "hasta", "estado_int", "sucursal_int"],
                 "fecha" => "fecha_creacion",
                 "estado" => "estado",
-                "estado_labels" => [0 => "Anulado", 1 => "Activo", 3 => "Con diferencia", 4 => "Regularizada con NC"],
+                "estado_labels" => [0 => "Anulado", 1 => "Activo", 2 => "Procesado", 3 => "Con diferencia", 4 => "Regularizada con NC"],
                 "importe" => "total_compra",
+                "detalle_importe_unico" => "total_compra",
+                "detalle_importe_unico_id" => "idcompra_cabecera",
                 "entidad" => "proveedor",
                 "proveedor" => true,
                 "articulo" => true,
@@ -704,7 +760,7 @@ class reporteControlador extends reportesModelo
                 "args" => ["filtros_array"],
                 "fecha" => "MovStockFechaHora",
                 "estado" => "grupo",
-                "importe" => "MovStockCosto",
+                "importe" => null,
                 "entidad" => "TipoMovStockId",
                 "articulo" => true,
                 "requiere_sucursal" => true,
@@ -729,7 +785,7 @@ class reporteControlador extends reportesModelo
                 "fecha" => null,
                 "estado" => "estado",
                 "estado_labels" => [0 => "Inactivo", 1 => "Activo"],
-                "importe" => "precio_venta",
+                "importe" => "valor_stock",
                 "entidad" => "desc_articulo",
                 "articulo" => true,
                 "columnas" => [
@@ -741,6 +797,7 @@ class reporteControlador extends reportesModelo
                     ["key" => "stock", "label" => "Stock", "tipo" => "numero"],
                     ["key" => "stockcant_min", "label" => "Min.", "tipo" => "numero"],
                     ["key" => "precio_venta", "label" => "Precio", "tipo" => "moneda"],
+                    ["key" => "valor_stock", "label" => "Valor Stock", "tipo" => "moneda"],
                     ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
                 ]
             ],
@@ -780,6 +837,8 @@ class reporteControlador extends reportesModelo
                 "estado" => "estado",
                 "estado_labels" => [0 => "Anulado", 1 => "Pendiente", 2 => "Aprobado", 3 => "Rechazado", 4 => "Facturado"],
                 "importe" => "total_final",
+                "detalle_importe_unico" => "total_final",
+                "detalle_importe_unico_id" => "idpresupuesto_servicio",
                 "entidad" => "cliente",
                 "cliente" => true,
                 "articulo" => true,
@@ -789,7 +848,10 @@ class reporteControlador extends reportesModelo
                     ["key" => "cliente", "label" => "Cliente"],
                     ["key" => "vehiculo", "label" => "Vehiculo"],
                     ["key" => "cantidad_items", "label" => "Items", "tipo" => "numero"],
-                    ["key" => "total_final", "label" => "Total", "tipo" => "moneda"],
+                    ["key" => "subtotal", "label" => "Subtotal", "tipo" => "moneda"],
+                    ["key" => "total_promocion", "label" => "Promociones", "tipo" => "moneda"],
+                    ["key" => "total_descuento", "label" => "Descuentos", "tipo" => "moneda"],
+                    ["key" => "total_final", "label" => "Total Final", "tipo" => "moneda"],
                     ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
                 ],
                 "detalle_columnas" => [
@@ -802,6 +864,12 @@ class reporteControlador extends reportesModelo
                     ["key" => "cantidad", "label" => "Cantidad", "tipo" => "numero"],
                     ["key" => "preciouni", "label" => "Precio", "tipo" => "moneda"],
                     ["key" => "subtotal", "label" => "Subtotal", "tipo" => "moneda"],
+                    ["key" => "promocion", "label" => "Promocion"],
+                    ["key" => "monto_promocion", "label" => "Monto Promo", "tipo" => "moneda"],
+                    ["key" => "neto_linea", "label" => "Neto Linea", "tipo" => "moneda"],
+                    ["key" => "descuentos_aplicados", "label" => "Descuento"],
+                    ["key" => "total_descuento", "label" => "Desc. Presup.", "tipo" => "moneda"],
+                    ["key" => "total_final", "label" => "Total Final", "tipo" => "moneda"],
                     ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
                 ]
             ],
@@ -910,7 +978,9 @@ class reporteControlador extends reportesModelo
             $cfg['modelo'] = $cfg['detalle_modelo'];
             $cfg['args'] = $cfg['detalle_args'] ?? $cfg['args'];
             $cfg['columnas'] = $cfg['detalle_columnas'];
-            $cfg['importe'] = $cfg['detalle_importe'] ?? 'subtotal';
+            $cfg['importe'] = array_key_exists('detalle_importe', $cfg) ? $cfg['detalle_importe'] : 'subtotal';
+            $cfg['importe_unico'] = $cfg['detalle_importe_unico'] ?? null;
+            $cfg['importe_unico_id'] = $cfg['detalle_importe_unico_id'] ?? null;
             $cfg['entidad'] = $cfg['detalle_entidad'] ?? $cfg['entidad'];
         }
 
@@ -1117,13 +1187,29 @@ class reporteControlador extends reportesModelo
         ];
         $estados = [];
         $importeKey = $cfg['importe'] ?? null;
+        $importeUnicoKey = $cfg['importe_unico'] ?? null;
+        $importeUnicoId = $cfg['importe_unico_id'] ?? null;
+        $importesUnicos = [];
 
         foreach ($datos as $row) {
-            if ($importeKey && isset($row[$importeKey])) {
+            if (
+                $importeUnicoKey &&
+                $importeUnicoId &&
+                array_key_exists($importeUnicoKey, $row) &&
+                array_key_exists($importeUnicoId, $row)
+            ) {
+                $idUnico = (string)$row[$importeUnicoId];
+                if (!isset($importesUnicos[$idUnico])) {
+                    $importesUnicos[$idUnico] = true;
+                    $resumen['importe_total'] += (float)$row[$importeUnicoKey];
+                }
+            } elseif ($importeKey && isset($row[$importeKey])) {
                 $resumen['importe_total'] += (float)$row[$importeKey];
             }
             if (isset($row['cantidad_items'])) {
                 $resumen['items'] += (float)$row['cantidad_items'];
+            } elseif (isset($row['cantidad'])) {
+                $resumen['items'] += (float)$row['cantidad'];
             }
             $estadoKey = $cfg['estado'] ?? null;
             if ($estadoKey && isset($row[$estadoKey])) {
@@ -1132,7 +1218,8 @@ class reporteControlador extends reportesModelo
             }
         }
 
-        $resumen['promedio'] = $resumen['total'] > 0 ? ($resumen['importe_total'] / $resumen['total']) : 0;
+        $cantidadPromedio = !empty($importesUnicos) ? count($importesUnicos) : $resumen['total'];
+        $resumen['promedio'] = $cantidadPromedio > 0 ? ($resumen['importe_total'] / $cantidadPromedio) : 0;
 
         if (($cfg['titulo'] ?? '') === 'Libro de Compras') {
             $totalesLibro = [
@@ -1169,6 +1256,9 @@ class reporteControlador extends reportesModelo
         $estadoKey = $cfg['estado'] ?? null;
         $entidadKey = $cfg['entidad'] ?? null;
         $importeKey = $cfg['importe'] ?? null;
+        $importeUnicoKey = $cfg['importe_unico'] ?? null;
+        $importeUnicoId = $cfg['importe_unico_id'] ?? null;
+        $topImportesUnicos = [];
 
         foreach ($datos as $row) {
             if ($fechaKey && !empty($row[$fechaKey])) {
@@ -1181,7 +1271,24 @@ class reporteControlador extends reportesModelo
             }
             if ($entidadKey && !empty($row[$entidadKey])) {
                 $entidad = (string)$row[$entidadKey];
-                $valor = $importeKey && isset($row[$importeKey]) ? (float)$row[$importeKey] : 1;
+                $valor = 1;
+
+                if (
+                    $importeUnicoKey &&
+                    $importeUnicoId &&
+                    array_key_exists($importeUnicoKey, $row) &&
+                    array_key_exists($importeUnicoId, $row)
+                ) {
+                    $idUnico = (string)$row[$importeUnicoId];
+                    if (isset($topImportesUnicos[$idUnico])) {
+                        continue;
+                    }
+                    $topImportesUnicos[$idUnico] = true;
+                    $valor = (float)$row[$importeUnicoKey];
+                } elseif ($importeKey && isset($row[$importeKey])) {
+                    $valor = (float)$row[$importeKey];
+                }
+
                 $topEntidad[$entidad] = ($topEntidad[$entidad] ?? 0) + $valor;
             }
         }
@@ -1225,6 +1332,17 @@ class reporteControlador extends reportesModelo
         ];
     }
 
+    private function columnas_tienen_claves($columnas, $claves)
+    {
+        foreach ($columnas as $columna) {
+            if (in_array($columna['key'] ?? '', $claves, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function reporte_movimientos_unificado_controlador()
     {
         $tipo = mainModel::limpiar_string($_POST['tipo_movimiento'] ?? '');
@@ -1254,6 +1372,10 @@ class reporteControlador extends reportesModelo
             "titulo" => $cfg['titulo'],
             "resumen" => $this->resumen_movimientos_desde_datos($datos, $cfg),
             "graficos" => $this->grafico_movimientos_desde_datos($datos, $cfg),
+            "metricas" => [
+                "usa_importe" => !empty($cfg['importe']) || !empty($cfg['importe_unico']),
+                "usa_items" => $this->columnas_tienen_claves($cfg['columnas'], ['cantidad_items', 'cantidad'])
+            ],
             "kardex" => $tipo === 'kardex_articulo' ? $this->meta_kardex_desde_datos($datos, $filtros) : null,
             "paginacion" => [
                 "pagina" => $pagina,
@@ -1285,20 +1407,11 @@ class reporteControlador extends reportesModelo
         $datosCompletos = $this->obtener_datos_movimientos($tipo, $config, $filtros, $cfg);
         $datos = array_slice($datosCompletos, 0, 500);
         $columnas = $cfg['columnas'];
-        $resumen = $this->resumen_movimientos_desde_datos($datosCompletos, $cfg);
         $titulo = "Informe de Movimientos - " . $cfg['titulo'];
 
         ob_start();
-    ?>
+        ?>
         <h3><?= htmlspecialchars($titulo, ENT_QUOTES, 'UTF-8') ?></h3>
-        <div class="report-intro">
-            Total filtrado: <?= count($datosCompletos) ?> |
-            Importe total: <?= number_format((float)$resumen['tarjetas']['importe_total'], 0, ',', '.') ?> |
-            Promedio: <?= number_format((float)$resumen['tarjetas']['promedio'], 0, ',', '.') ?>
-            <?php if (count($datosCompletos) > 500): ?>
-                | Detalle limitado a 500 registros. Use CSV para exportar el detalle completo.
-            <?php endif; ?>
-        </div>
         <table width="100%" cellspacing="0" cellpadding="5" border="1">
             <thead>
                 <tr>
@@ -1326,7 +1439,7 @@ class reporteControlador extends reportesModelo
                 <?php endif; ?>
             </tbody>
         </table>
-<?php
+        <?php
         $html = ob_get_clean();
         $this->imprimir_mpdf_html($html, "reporte_movimientos_" . $tipo . ".pdf", 'L');
         exit();
@@ -1351,16 +1464,16 @@ class reporteControlador extends reportesModelo
         $datos = $this->obtener_datos_movimientos($tipo, $config, $filtros, $cfg);
         $columnas = $cfg['columnas'];
 
-        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Type: text/csv; charset=UTF-16LE');
         header('Content-Disposition: attachment; filename="reporte_movimientos_' . $tipo . '.csv"');
         header('Pragma: no-cache');
         header('Expires: 0');
 
-        echo "\xEF\xBB\xBF";
-        echo "sep=;\r\n";
+        echo "\xFF\xFE";
+        echo $this->convertir_utf16le_excel("sep=;\r\n");
 
         $salida = fopen('php://output', 'w');
-        fputcsv($salida, array_merge(['#'], array_column($columnas, 'label')), ';', '"', "\\");
+        $this->escribir_csv_excel($salida, array_merge(['#'], array_column($columnas, 'label')));
 
         $i = 1;
         foreach ($datos as $row) {
@@ -1368,7 +1481,7 @@ class reporteControlador extends reportesModelo
             foreach ($columnas as $columna) {
                 $fila[] = $this->valor_movimiento($row, $columna, $cfg);
             }
-            fputcsv($salida, $fila, ';', '"', "\\");
+            $this->escribir_csv_excel($salida, $fila);
         }
 
         fclose($salida);

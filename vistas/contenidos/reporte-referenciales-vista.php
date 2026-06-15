@@ -6,7 +6,9 @@ $permisosReferenciales = [
     'reportes.sucursales.ver',
     'reportes.articulos.ver',
     'reportes.empleados.ver',
-    'usuarios.ver'
+    'reportes.marcas.ver',
+    'reportes.categorias.ver',
+    'reportes.usuarios.ver'
 ];
 
 $tieneAccesoReferenciales = false;
@@ -24,7 +26,7 @@ if (!$tieneAccesoReferenciales) {
 
 require_once "./controladores/reportesControlador.php";
 $rep = new reporteControlador();
-$categorias = $rep->listar_categorias_controlador();
+$categorias = mainModel::tienePermiso('reportes.articulos.ver') ? $rep->listar_categorias_controlador() : [];
 $sucursales = $rep->listar_sucursales_controlador();
 
 $tiposReferenciales = [
@@ -34,9 +36,9 @@ $tiposReferenciales = [
     'sucursales' => ['titulo' => 'Sucursales', 'icono' => 'fas fa-city', 'permiso' => 'reportes.sucursales.ver', 'estado' => true, 'categoria' => false],
     'articulos' => ['titulo' => 'Articulos', 'icono' => 'fas fa-boxes', 'permiso' => 'reportes.articulos.ver', 'estado' => true, 'categoria' => true],
     'empleados' => ['titulo' => 'Empleados', 'icono' => 'fas fa-user-tie', 'permiso' => 'reportes.empleados.ver', 'estado' => true, 'categoria' => false, 'sucursal' => true],
-    'marcas' => ['titulo' => 'Marcas', 'icono' => 'fas fa-tags', 'permiso' => 'reportes.articulos.ver', 'estado' => false, 'categoria' => false],
-    'categorias' => ['titulo' => 'Categorias', 'icono' => 'fas fa-layer-group', 'permiso' => 'reportes.articulos.ver', 'estado' => false, 'categoria' => false],
-    'usuarios' => ['titulo' => 'Usuarios', 'icono' => 'fas fa-user-shield', 'permiso' => 'usuarios.ver', 'estado' => true, 'categoria' => false]
+    'marcas' => ['titulo' => 'Marcas', 'icono' => 'fas fa-tags', 'permiso' => 'reportes.marcas.ver', 'estado' => false, 'categoria' => false],
+    'categorias' => ['titulo' => 'Categorias', 'icono' => 'fas fa-layer-group', 'permiso' => 'reportes.categorias.ver', 'estado' => false, 'categoria' => false],
+    'usuarios' => ['titulo' => 'Usuarios', 'icono' => 'fas fa-user-shield', 'permiso' => 'reportes.usuarios.ver', 'estado' => true, 'categoria' => false]
 ];
 
 $tiposVisibles = [];

@@ -19,10 +19,10 @@ if (
 
 <div class="login-container">
     <div class="login-content">
-        <p class="text-center">
+        <p class="text-center login-icon">
             <i class="fas <?php echo $mostrarCambioClave ? 'fa-user-lock' : 'fa-user-circle'; ?> fa-5x"></i>
         </p>
-        <p class="text-center">
+        <p class="text-center login-subtitle">
             <?php echo $mostrarCambioClave ? 'Debe cambiar su contrasena antes de continuar' : 'Inicia sesion con tu cuenta'; ?>
         </p>
 
@@ -80,7 +80,7 @@ if (
                     <label for="UserPassword" class="bmd-label-floating"><i class="fas fa-key"></i> &nbsp; Contrasena</label>
                     <input type="password" class="form-control" id="UserPassword" name="clave_login" pattern="[a-zA-Z0-9$@.-]{7,100}" maxlength="100" required>
                 </div>
-                <button type="submit" class="btn-login text-center">LOG IN</button>
+                <button type="submit" class="btn-login text-center">INGRESAR</button>
             </form>
         <?php } ?>
     </div>

@@ -19,7 +19,7 @@
 
                 let html = `
         <table class="table table-sm table-hover">
-            <thead>
+            <thead class="thead-light">
                 <tr>
                     <th>Producto</th>
                     <th width="100">Stock</th>
@@ -38,20 +38,39 @@
                 </tr>`;
                 } else {
                     data.forEach(p => {
+                        const desc = String(p.desc_articulo || '');
+                        const codigo = String(p.codigo || '');
+                        const tipo = String(p.tipo || '');
+                        const stock = parseFloat(p.stockDisponible || 0);
+                        const label = codigo ? `${codigo} - ${desc}` : desc;
+                        const descParam = desc
+                            .replace(/\\/g, '\\\\')
+                            .replace(/'/g, "\\'")
+                            .replace(/"/g, '&quot;');
+                        const stockHtml = stock > 0 ?
+                            stock :
+                            '<span class="badge badge-secondary">Sin stock</span>';
+                        const cantidadDisabled = stock > 0 ? '' : 'disabled';
+                        const botonDisabled = stock > 0 ? '' : 'disabled title="Sin stock disponible"';
+
                         html += `
                 <tr>
-                    <td>${p.desc_articulo}</td>
-                    <td class="text-center">${p.stockDisponible}</td>
+                    <td>
+                        ${label}
+                        ${tipo ? `<br><small class="text-muted">${tipo}</small>` : ''}
+                    </td>
+                    <td class="text-center">${stockHtml}</td>
                     <td>
                         <input type="number"
                                id="cant_${p.id_articulo}"
                                class="form-control form-control-sm"
-                               min="0.01" step="0.01">
+                               min="0.01" step="0.01" ${cantidadDisabled}>
                     </td>
                     <td class="text-center">
                         <button type="button"
                                 class="btn btn-sm btn-success"
-                                onclick="agregarProducto(${p.id_articulo}, '${p.desc_articulo}', ${p.stockDisponible})">
+                                ${botonDisabled}
+                                onclick="agregarProducto(${p.id_articulo}, '${descParam}', ${stock})">
                             +
                         </button>
                     </td>

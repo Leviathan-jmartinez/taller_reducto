@@ -535,11 +535,13 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
         ]);
     }
 
-    public function paginador_presupuestoservi_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $orden = 'fecha', $direccion = 'DESC')
+    public function paginador_presupuestoservi_controlador($pagina, $registros, $url, $busqueda1, $busqueda2, $cliente = '', $placa = '', $orden = 'fecha', $direccion = 'DESC')
     {
 
         $pagina    = (int) mainModel::limpiar_string($pagina);
         $registros = (int) mainModel::limpiar_string($registros);
+        $cliente = mainModel::limpiar_string($cliente);
+        $placa = mainModel::limpiar_string($placa);
         $orden = mainModel::limpiar_string($orden);
         $direccion = strtoupper(mainModel::limpiar_string($direccion));
         $estado = $_SESSION['estado_presupuesto'] ?? '';
@@ -559,6 +561,16 @@ class presupuestoServicioControlador  extends presupuestoServicioModelo
                 "tipo"  => "DATE_RANGE",
                 "desde" => $busqueda1,
                 "hasta" => $busqueda2
+            ],
+            [
+                "campo" => "CONCAT(c.nombre_cliente, ' ', c.apellido_cliente, ' ', IFNULL(c.doc_number, ''))",
+                "tipo"  => "LIKE",
+                "valor" => $cliente
+            ],
+            [
+                "campo" => "v.placa",
+                "tipo"  => "LIKE",
+                "valor" => $placa
             ]
         ];
 
