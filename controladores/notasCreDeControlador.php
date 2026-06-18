@@ -151,7 +151,7 @@ class notasCreDeControlador extends notasCreDeModelo
         if (isset($item['cantidad_original']) && $cantidad > (float)$item['cantidad_original']) {
             return [
                 'status' => 'error',
-                'msg' => 'La cantidad no puede superar la cantidad comprada: ' . number_format((float)$item['cantidad_original'], 0, ',', '.')
+                'msg' => 'La cantidad no puede superar la cantidad comprada: ' . number_format((float)$item['cantidad_original'], 2, ',', '.')
             ];
         }
 
@@ -400,7 +400,7 @@ class notasCreDeControlador extends notasCreDeModelo
                 if ($stockDisponible < (float)$d['cantidad']) {
                     return [
                         'status' => 'error',
-                        'msg' => 'Stock insuficiente para devolver ' . $d['descripcion'] . '. Disponible: ' . number_format($stockDisponible, 0, ',', '.')
+                        'msg' => 'Stock insuficiente para devolver ' . $d['descripcion'] . '. Disponible: ' . number_format($stockDisponible, 2, ',', '.')
                     ];
                 }
             }

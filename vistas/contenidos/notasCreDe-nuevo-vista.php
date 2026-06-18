@@ -150,6 +150,8 @@ $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
 
                                 <td>
                                     <input type="number"
+                                        min="0"
+                                        step="0.01"
                                         class="form-control form-control-sm text-center"
                                         value="<?= $d['cantidad'] ?>"
                                         onchange="actualizarItem(<?= $i ?>)">
@@ -157,6 +159,8 @@ $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
 
                                 <td>
                                     <input type="number"
+                                        min="0"
+                                        step="0.01"
                                         class="form-control form-control-sm text-center"
                                         value="<?= $d['precio'] ?>"
                                         onchange="actualizarItem(<?= $i ?>)">

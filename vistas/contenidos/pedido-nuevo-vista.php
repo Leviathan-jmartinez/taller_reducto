@@ -47,7 +47,7 @@ if (!mainModel::tienePermiso('compra.pedido.crear')) {
                                     <td><?php echo $contador ?></td>
                                     <td><?php echo $article['codigo'] ?></td>
                                     <td><?php echo $article['descripcion'] ?></td>
-                                    <td><?php echo number_format((float)($article['stock_actual'] ?? 0), 0, ',', '.') ?></td>
+                                    <td><?php echo number_format((float)($article['stock_actual'] ?? 0), 2, ',', '.') ?></td>
                                     <td><?php echo $article['cantidad'] ?></td>
                                     <td>
                                         <form class="FormularioAjax" action="<?php echo SERVERURL; ?>ajax/pedidoAjax.php" method="POST" data-form="loans" autocomplete="off">

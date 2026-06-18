@@ -110,7 +110,7 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
                 <tr>
                     <td><?= htmlspecialchars($d['codigo'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
                     <td><?= htmlspecialchars($d['desc_articulo'] ?? '', ENT_QUOTES, 'UTF-8') ?></td>
-                    <td class="center"><?= number_format($d['cantidad'], 0, ',', '.') ?></td>
+                    <td class="center"><?= number_format((float)$d['cantidad'], 2, ',', '.') ?></td>
                     <td class="right"><?= number_format($d['precio_unitario'], 0, ',', '.') ?></td>
                     <td class="right"><?= number_format($d['subtotal'], 0, ',', '.') ?></td>
                 </tr>

@@ -125,8 +125,8 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
             <td><span class="label">Servicios</span><span class="value"><?= number_format($resumen['total'] ?? count($datos), 0, ',', '.') ?></span></td>
             <td><span class="label">Facturados</span><span class="value"><?= number_format($resumen['facturados'] ?? 0, 0, ',', '.') ?></span></td>
             <td><span class="label">Con reclamo</span><span class="value"><?= number_format($resumen['con_reclamo'] ?? 0, 0, ',', '.') ?></span></td>
-            <td><span class="label">Repuestos</span><span class="value"><?= number_format($resumen['cantidad_repuestos'] ?? 0, 0, ',', '.') ?></span></td>
-            <td><span class="label">Insumos</span><span class="value"><?= number_format($resumen['cantidad_insumos'] ?? 0, 0, ',', '.') ?></span></td>
+            <td><span class="label">Repuestos</span><span class="value"><?= number_format((float)($resumen['cantidad_repuestos'] ?? 0), 2, ',', '.') ?></span></td>
+            <td><span class="label">Insumos</span><span class="value"><?= number_format((float)($resumen['cantidad_insumos'] ?? 0), 2, ',', '.') ?></span></td>
             <td><span class="label">Importe total</span><span class="value"><?= number_format($resumen['total_importe'] ?? 0, 0, ',', '.') ?></span></td>
         </tr>
     </table>
@@ -158,8 +158,8 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
                     <td><?= h($row['cliente']) ?></td>
                     <td><?= h($row['vehiculo']) ?></td>
                     <td class="text-center"><?= h($row['tecnico']) ?></td>
-                    <td class="text-center"><?= number_format($row['cantidad_repuestos'] ?? 0, 0, ',', '.') ?></td>
-                    <td class="text-center"><?= number_format($row['cantidad_insumos'] ?? 0, 0, ',', '.') ?></td>
+                    <td class="text-center"><?= number_format((float)($row['cantidad_repuestos'] ?? 0), 2, ',', '.') ?></td>
+                    <td class="text-center"><?= number_format((float)($row['cantidad_insumos'] ?? 0), 2, ',', '.') ?></td>
                     <td class="right"><?= number_format($row['total'] ?? 0, 0, ',', '.') ?></td>
                 </tr>
             <?php endforeach; ?>

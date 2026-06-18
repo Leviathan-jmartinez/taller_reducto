@@ -29,7 +29,7 @@ $ordenSalida = mainModel::cargar_ordenamiento_sesion(
         <input type="hidden" name="modulo" value="salida_insumo">
 
         <h3>
-            <i class="fas fa-box-open"></i> &nbsp; SALIDA DE INSUMOS
+            <i class="fas fa-box-open"></i> &nbsp; REGISTRO DE INSUMOS UTILIZADOS
         </h3>
 
         <ul class="full-box list-unstyled page-nav-tabs">

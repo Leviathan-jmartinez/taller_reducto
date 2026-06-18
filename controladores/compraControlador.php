@@ -694,7 +694,7 @@ class compraControlador extends compraModelo
                     
                     <!-- Cantidad -->
                     <td style="width:100px;">
-                        <input type="number" id="cantidad_' . $rows['id_articulo'] . '" class="form-control form-control-sm" value="1" min="1">
+                        <input type="number" id="cantidad_' . $rows['id_articulo'] . '" class="form-control form-control-sm" value="1" min="0.01" step="0.01">
                     </td>
 
                     <!-- Precio -->
@@ -1072,9 +1072,9 @@ class compraControlador extends compraModelo
                 <tr>
                     <td>' . htmlspecialchars($row['codigo'], ENT_QUOTES, 'UTF-8') . '</td>
                     <td>' . htmlspecialchars($row['desc_articulo'], ENT_QUOTES, 'UTF-8') . '</td>
-                    <td class="text-right">' . number_format((float)$row['cantidad_facturada'], 0, ',', '.') . '</td>
-                    <td class="text-right">' . number_format((float)$row['cantidad_recibida'], 0, ',', '.') . '</td>
-                    <td class="text-right">' . number_format(((float)$row['cantidad_facturada'] - (float)$row['cantidad_recibida']), 0, ',', '.') . '</td>
+                    <td class="text-right">' . number_format((float)$row['cantidad_facturada'], 2, ',', '.') . '</td>
+                    <td class="text-right">' . number_format((float)$row['cantidad_recibida'], 2, ',', '.') . '</td>
+                    <td class="text-right">' . number_format(((float)$row['cantidad_facturada'] - (float)$row['cantidad_recibida']), 2, ',', '.') . '</td>
                     <td class="text-right">' . number_format((float)$row['precio_unitario'], 0, ',', '.') . '</td>
                     <td class="text-right">' . number_format((float)$row['ivaPro'], 0, ',', '.') . '</td>
                     <td class="text-right">' . number_format((float)$row['subtotal'], 0, ',', '.') . '</td>

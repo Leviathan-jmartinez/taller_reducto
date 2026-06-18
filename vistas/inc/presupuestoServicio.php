@@ -935,7 +935,7 @@
             <td>${item.descripcion}</td>
 
             <td> 
-                <input type="number" min="1"
+                <input type="number" min="0.01" step="0.01"
                        class="form-control form-control-sm text-center"
                        value="${item.cantidad}"
                        oninput="cambiarCantidad(this, ${index})">
@@ -973,7 +973,7 @@
 
         let item = detalleServicios[index];
 
-        let cantidad = parseInt(input.value);
+        let cantidad = parseFloat(input.value);
         if (isNaN(cantidad) || cantidad <= 0) {
             alert('La cantidad debe ser mayor a cero');
             cantidad = 1;

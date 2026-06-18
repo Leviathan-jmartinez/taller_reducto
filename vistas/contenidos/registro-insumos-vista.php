@@ -31,7 +31,7 @@ if (!mainModel::tienePermiso('servicio.insumo.crear')) {
 
     <h3>
         <i class="fas fa-box-open"></i>
-        &nbsp; SALIDA DE CONSUMIBLES OPERATIVOS
+        &nbsp; REGISTRO DE INSUMOS UTILIZADOS
     </h3>
 
     <ul class="full-box list-unstyled page-nav-tabs">
@@ -275,8 +275,8 @@ if (!mainModel::tienePermiso('servicio.insumo.crear')) {
 
                 <td>
                     <input type="number"
-                           min="1"
-                           step="1"
+                           min="0.01"
+                           step="0.01"
                            class="form-control form-control-sm text-center"
                            value="${item.cantidad}"
                            oninput="cambiarCantidadConsumible(this, ${index})">

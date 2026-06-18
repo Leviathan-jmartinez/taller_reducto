@@ -173,7 +173,7 @@ $id_usuario = $_SESSION['id_usuario'] ?? null;
                                     <tr data-index="<?= $i; ?>">
                                         <td class="text-left"><?= htmlspecialchars($item['descripcion']); ?></td>
                                         <td class="text-center">
-                                            <input type="number" min="0" step="1"
+                                            <input type="number" min="0" step="0.01"
                                                 class="form-control text-center cantidad"
                                                 value="<?= $item['cantidad']; ?>"
                                                 readonly

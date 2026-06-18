@@ -30,8 +30,8 @@ class pedidoControlador extends pedidoModelo
                 foreach ($datos_articulo->fetchAll() as $rows) {
                     $tabla .= '<tr class="text-center">
                     <td>' . $rows['codigo'] . ' - ' . $rows['desc_articulo'] . '</td>
-                    <td>Stock: ' . number_format((float)$rows['stock_actual'], 0, ',', '.') . '</td>
-                    <td style="width:100px;"><input type="number" id="cantidad_' . $rows['id_articulo'] . '" class="form-control form-control-sm" value="1" min="1"></td>
+                    <td>Stock: ' . number_format((float)$rows['stock_actual'], 2, ',', '.') . '</td>
+                    <td style="width:100px;"><input type="number" id="cantidad_' . $rows['id_articulo'] . '" class="form-control form-control-sm" value="1" min="0.01" step="0.01"></td>
                     <td><button type="button" class="btn btn-primary btn-sm" onclick="agregar_articulo(' . $rows['id_articulo'] . ')"><i class="fas fa-plus-circle"></i></button></td>
                 </tr>';
                 }
@@ -64,7 +64,7 @@ class pedidoControlador extends pedidoModelo
                 die(json_encode(["Alerta" => "simple", "Titulo" => "Error!", "Texto" => "No se encontró el artículo", "Tipo" => "error"]));
 
             $campos = $check_articulo->fetch();
-            if ($cantidad == "" || !is_numeric($cantidad) || intval($cantidad) <= 0)
+            if ($cantidad == "" || !is_numeric($cantidad) || (float)$cantidad <= 0)
                 die(json_encode(["Alerta" => "simple", "Titulo" => "Error!", "Texto" => "Cantidad inválida", "Tipo" => "error"]));
 
             if (isset($_SESSION['datos_articulo'][$id])) {
@@ -80,7 +80,7 @@ class pedidoControlador extends pedidoModelo
                     "codigo" => $campos['codigo'],
                     "descripcion" => $campos['desc_articulo'],
                     "cantidad" => $cantidad,
-                    "stock_actual" => (int)$campos['stock_actual']
+                    "stock_actual" => (float)$campos['stock_actual']
                 ];
                 $alerta = [
                     "Alerta" => "recargar",

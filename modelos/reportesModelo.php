@@ -1121,7 +1121,17 @@ class reportesModelo extends mainModel
         LEFT JOIN nota_remision nr ON nr.idtransferencia = t.idtransferencia
         LEFT JOIN transferencia_stock_detalle td ON td.idtransferencia = t.idtransferencia
         $where
-        GROUP BY t.idtransferencia
+        GROUP BY
+            t.idtransferencia,
+            t.fecha,
+            t.estado,
+            so.suc_descri,
+            sd.suc_descri,
+            nr.idnota_remision,
+            nr.nro_remision,
+            nr.fechaenvio,
+            nr.fechallegada,
+            nr.motivo_remision
         ORDER BY t.fecha DESC
         ");
 

@@ -99,7 +99,7 @@
         let cantidad = document.querySelector('#cantidad_' + id).value.trim();
         let precio = document.querySelector('#precio_' + id).value.trim();
 
-        if (cantidad === "" || isNaN(cantidad) || parseInt(cantidad, 10) <= 0) {
+        if (cantidad === "" || isNaN(cantidad) || parseFloat(cantidad) <= 0) {
             Swal.fire("Error", "La cantidad debe ser mayor a 0", "error");
             $('#ModalArticuloOC').modal('show');
             return;

@@ -415,7 +415,7 @@ class ordencompraControlador extends ordencompraModelo
                 $cantidad = $article['cantidad'] ?? 0;
                 $precio = $article['precio'] ?? 0;
 
-                if (!is_numeric($cantidad) || (int) $cantidad <= 0) {
+                if (!is_numeric($cantidad) || (float) $cantidad <= 0) {
                     $alerta = [
                         "Alerta" => "simple",
                         "Titulo" => "Error!",
@@ -883,7 +883,7 @@ class ordencompraControlador extends ordencompraModelo
                     
                     <!-- Cantidad -->
                     <td style="width:100px;">
-                        <input type="number" id="cantidad_' . $rows['id_articulo'] . '" class="form-control form-control-sm" value="1" min="1">
+                        <input type="number" id="cantidad_' . $rows['id_articulo'] . '" class="form-control form-control-sm" value="1" min="0.01" step="0.01">
                     </td>
 
                     <!-- Precio -->
@@ -924,13 +924,13 @@ class ordencompraControlador extends ordencompraModelo
 
             $campos = $check_articulo->fetch();
 
-            if ($cantidad == "" || !is_numeric($cantidad) || intval($cantidad) <= 0)
+            if ($cantidad == "" || !is_numeric($cantidad) || (float)$cantidad <= 0)
                 return json_encode(["Alerta" => "simple", "Titulo" => "Error!", "Texto" => "Cantidad inválida", "Tipo" => "error"]);
 
             if ($precio == "" || !is_numeric($precio) || floatval($precio) <= 0)
                 return json_encode(["Alerta" => "simple", "Titulo" => "Error!", "Texto" => "El precio debe ser mayor a 0", "Tipo" => "error"]);
 
-            $cantidad = intval($cantidad);
+            $cantidad = (float)$cantidad;
             $precio = floatval($precio);
             $subtotal = $cantidad * $precio; // <-- opcional, para mostrar o guardar
 

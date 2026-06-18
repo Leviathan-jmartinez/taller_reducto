@@ -197,7 +197,7 @@ $ocSeleccionada = !empty($_SESSION['id_oc_seleccionado']);
                                     </td>
                                     <td class="text-center"><?= htmlspecialchars($item['cantidad_pendiente'] ?? $item['cantidad']); ?></td>
                                     <td class="text-center">
-                                        <input type="number" min="0" step="1"
+                                        <input type="number" min="0" step="0.01"
                                             name="cantidades_facturadas[]"
                                             class="form-control text-center cantidad-facturada"
                                             value="<?= $item['cantidad_facturada'] ?? $item['cantidad']; ?>"
@@ -205,7 +205,7 @@ $ocSeleccionada = !empty($_SESSION['id_oc_seleccionado']);
                                             required>
                                     </td>
                                     <td class="text-center">
-                                        <input type="number" min="0" step="1"
+                                        <input type="number" min="0" step="0.01"
                                             name="cantidades[]"
                                             class="form-control text-center cantidad"
                                             value="<?= $item['cantidad']; ?>"
@@ -213,7 +213,7 @@ $ocSeleccionada = !empty($_SESSION['id_oc_seleccionado']);
                                             required>
                                     </td>
                                     <td class="text-center diferencia-cantidad">
-                                        <?= number_format(((float)($item['cantidad_facturada'] ?? $item['cantidad']) - (float)$item['cantidad']), 0, ',', '.'); ?>
+                                        <?= number_format(((float)($item['cantidad_facturada'] ?? $item['cantidad']) - (float)$item['cantidad']), 2, ',', '.'); ?>
                                     </td>
                                     <td class="text-center">
                                         <input type="number"

@@ -553,7 +553,7 @@ class presupuestoControlador extends presupuestoModelo
                 <tr>
                     <td>' . htmlspecialchars($row['codigo'], ENT_QUOTES, 'UTF-8') . '</td>
                     <td>' . htmlspecialchars($row['desc_articulo'], ENT_QUOTES, 'UTF-8') . '</td>
-                    <td class="text-right">' . number_format((float)$row['cantidad'], 0, ',', '.') . '</td>
+                    <td class="text-right">' . number_format((float)$row['cantidad'], 2, ',', '.') . '</td>
                     <td class="text-right">' . number_format((float)$row['precio'], 0, ',', '.') . '</td>
                     <td class="text-right">' . number_format((float)$row['subtotal'], 0, ',', '.') . '</td>
                 </tr>';

@@ -230,7 +230,7 @@
                 <div id="detalle_repuesto_resultado_${indexDetalle}"></div>
             </td>
             <td>
-                <input type="number" min="1" step="1"
+                <input type="number" min="0.01" step="0.01"
                     name="detalles[${indexDetalle}][cantidad_repuesto]"
                     class="form-control text-center"
                     value="1">

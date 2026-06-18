@@ -75,7 +75,7 @@ $creadoPor = trim(($cabecera['usu_nombre'] ?? '') . ' ' . ($cabecera['usu_apelli
                 <tr>
                     <td><?= $d['codigo'] ?></td>
                     <td><?= $d['desc_articulo'] ?></td>
-                    <td class="center"><?= number_format((float)($d['stock_actual'] ?? 0), 0, ',', '.') ?></td>
+                    <td class="center"><?= number_format((float)($d['stock_actual'] ?? 0), 2, ',', '.') ?></td>
                     <td class="center"><?= $d['cantidad'] ?></td>
                 </tr>
             <?php endforeach; ?>
