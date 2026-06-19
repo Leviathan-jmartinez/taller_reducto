@@ -277,6 +277,14 @@ class notasCreDeControlador extends notasCreDeModelo
             return ['status' => 'error', 'msg' => 'No hay detalle'];
         }
 
+        $facturaActual = notasCreDeModelo::obtenerFactura($factura['idcompra_cabecera']);
+        if (!$facturaActual) {
+            return ['status' => 'error', 'msg' => 'La factura asociada ya no esta disponible'];
+        }
+
+        $factura['total'] = $facturaActual['total_compra'];
+        $factura['estado_compra'] = (int)$facturaActual['estado'];
+
         $tipoNota = strtolower(mainModel::limpiar_string($_POST['tipo'] ?? ''));
         if (!in_array($tipoNota, ['credito', 'debito'], true)) {
             return ['status' => 'error', 'msg' => 'Debe seleccionar un tipo de nota valido'];
@@ -370,9 +378,22 @@ class notasCreDeControlador extends notasCreDeModelo
             }
         }
 
+        $diferencias = notasCreDeModelo::diferenciaCompraModelo($factura['idcompra_cabecera']);
+        $diferenciasPorArticulo = [];
+        $totalDiferencia = 0;
+        foreach ($diferencias as $dif) {
+            $cantidadDif = (float)$dif['cantidad_diferencia'];
+            $montoDif = round((float)$dif['monto_diferencia'], 2);
+            if ($cantidadDif > 0) {
+                $diferenciasPorArticulo[(int)$dif['id_articulo']] = $cantidadDif;
+                $totalDiferencia = round($totalDiferencia + $montoDif, 2);
+            }
+        }
+
+        $compraConDiferencia = (int)($factura['estado_compra'] ?? 0) === 3;
         $regularizaDiferencia = false;
         $anulacionTotal = false;
-        if ((int)($factura['estado_compra'] ?? 0) === 3) {
+        if ($compraConDiferencia) {
             if ($tipoNota !== 'credito') {
                 return [
                     "Alerta" => "simple",
@@ -390,18 +411,6 @@ class notasCreDeControlador extends notasCreDeModelo
                         "Texto"  => "La regularizacion de diferencia debe hacerse sin movimiento de stock.",
                         "Tipo"   => "error"
                     ];
-                }
-
-                $diferencias = notasCreDeModelo::diferenciaCompraModelo($factura['idcompra_cabecera']);
-                $diferenciasPorArticulo = [];
-                $totalDiferencia = 0;
-                foreach ($diferencias as $dif) {
-                    $cantidadDif = (float)$dif['cantidad_diferencia'];
-                    $montoDif = round((float)$dif['monto_diferencia'], 2);
-                    if ($cantidadDif > 0) {
-                        $diferenciasPorArticulo[(int)$dif['id_articulo']] = $cantidadDif;
-                        $totalDiferencia = round($totalDiferencia + $montoDif, 2);
-                    }
                 }
 
                 if ($totalDiferencia <= 0) {
@@ -605,12 +614,16 @@ class notasCreDeControlador extends notasCreDeModelo
             ]);
 
             if ($regularizaDiferencia) {
-                notasCreDeModelo::regularizarCompraModelo(
+                $regularizarCompra = notasCreDeModelo::regularizarCompraModelo(
                     $pdo,
                     $factura['idcompra_cabecera'],
                     $_SESSION['nick_sucursal'],
                     $_SESSION['id_str']
                 );
+
+                if ($regularizarCompra->rowCount() < 1) {
+                    throw new Exception("No se pudo actualizar el estado de la compra regularizada.");
+                }
             }
 
             if ($anulacionTotal) {

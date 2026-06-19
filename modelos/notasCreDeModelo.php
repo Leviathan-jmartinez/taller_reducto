@@ -357,7 +357,7 @@ class notasCreDeModelo extends mainModel
             updatedby = :usuario
         WHERE idcompra_cabecera = :idcompra
           AND id_sucursal = :sucursal
-          AND estado = 3
+          AND estado <> 0
         ");
 
         $sql->execute([
