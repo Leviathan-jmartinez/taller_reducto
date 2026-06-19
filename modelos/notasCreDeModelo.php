@@ -3,6 +3,8 @@ require_once "mainModel.php";
 
 class notasCreDeModelo extends mainModel
 {
+    private static $notaCompraTieneAlcance = null;
+
     private static function iniciarSesionSiHaceFalta()
     {
         if (session_status() === PHP_SESSION_NONE) {
@@ -91,17 +93,7 @@ class notasCreDeModelo extends mainModel
 
     protected static function insertarNotaCompraModelo(PDO $pdo, $d)
     {
-        $sql = $pdo->prepare("
-        INSERT INTO nota_compra
-        (idproveedor, id_sucursal, tipo, movimiento_stock, nro_documento, fecha,
-         idcompra_cabecera, total, descripcion,
-         estado, idusuario, fecha_creacion, timbrado)
-        VALUES
-        (:prov, :sucursal, :tipo, :mov_stock, :nro, :fecha,
-         :idcompra, :total, :desc,
-         1, :usuario, NOW(), :timbrado)");
-
-        $sql->execute([
+        $params = [
             ':prov'     => $d['idproveedor'],
             ':sucursal' => $d['id_sucursal'],
             ':tipo'     => $d['tipo'],
@@ -113,9 +105,45 @@ class notasCreDeModelo extends mainModel
             ':desc'     => $d['descripcion'],
             ':usuario'  => $d['usuario'],
             ':timbrado' => $d['timbrado']
-        ]);
+        ];
+
+        $campoAlcance = '';
+        $valorAlcance = '';
+        if (self::notaCompraTieneCampoAlcance($pdo)) {
+            $campoAlcance = ', alcance';
+            $valorAlcance = ', :alcance';
+            $params[':alcance'] = $d['alcance'] ?? 'regularizar_diferencia';
+        }
+
+        $sql = $pdo->prepare("
+        INSERT INTO nota_compra
+        (idproveedor, id_sucursal, tipo, movimiento_stock, nro_documento, fecha,
+         idcompra_cabecera, total, descripcion,
+         estado, idusuario, fecha_creacion, timbrado{$campoAlcance})
+        VALUES
+        (:prov, :sucursal, :tipo, :mov_stock, :nro, :fecha,
+         :idcompra, :total, :desc,
+         1, :usuario, NOW(), :timbrado{$valorAlcance})");
+
+        $sql->execute($params);
 
         return $pdo->lastInsertId();
+    }
+
+    private static function notaCompraTieneCampoAlcance(PDO $pdo)
+    {
+        if (self::$notaCompraTieneAlcance !== null) {
+            return self::$notaCompraTieneAlcance;
+        }
+
+        try {
+            $sql = $pdo->query("SHOW COLUMNS FROM nota_compra LIKE 'alcance'");
+            self::$notaCompraTieneAlcance = (bool)$sql->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            self::$notaCompraTieneAlcance = false;
+        }
+
+        return self::$notaCompraTieneAlcance;
     }
     protected static function insertarDetalleNotaCompraModelo(PDO $pdo, $idNota, $detalle)
     {
@@ -339,6 +367,71 @@ class notasCreDeModelo extends mainModel
         ]);
 
         return $sql;
+    }
+
+    protected static function anularCompraPorNotaTotalModelo(PDO $pdo, $idcompra, $idSucursal, $usuario)
+    {
+        $sql = $pdo->prepare("
+        UPDATE compra_cabecera
+        SET estado = 0,
+            updated = NOW(),
+            updatedby = :usuario
+        WHERE idcompra_cabecera = :idcompra
+          AND id_sucursal = :sucursal
+          AND estado <> 0
+        ");
+
+        $sql->execute([
+            ':usuario' => $usuario,
+            ':idcompra' => $idcompra,
+            ':sucursal' => $idSucursal
+        ]);
+
+        return $sql;
+    }
+
+    protected static function restaurarCompraPorAnulacionNotaTotalModelo(PDO $pdo, $idcompra, $idSucursal, $usuario)
+    {
+        $estado = self::estadoCompraSegunDetalleModelo($pdo, $idcompra, $idSucursal);
+
+        $sql = $pdo->prepare("
+        UPDATE compra_cabecera
+        SET estado = :estado,
+            updated = NOW(),
+            updatedby = :usuario
+        WHERE idcompra_cabecera = :idcompra
+          AND id_sucursal = :sucursal
+          AND estado = 0
+        ");
+
+        $sql->execute([
+            ':estado' => $estado,
+            ':usuario' => $usuario,
+            ':idcompra' => $idcompra,
+            ':sucursal' => $idSucursal
+        ]);
+
+        return $sql;
+    }
+
+    private static function estadoCompraSegunDetalleModelo(PDO $pdo, $idcompra, $idSucursal)
+    {
+        $sql = $pdo->prepare("
+        SELECT COUNT(*) AS diferencias
+        FROM compra_detalle d
+        INNER JOIN compra_cabecera c
+            ON c.idcompra_cabecera = d.idcompra_cabecera
+        WHERE d.idcompra_cabecera = :idcompra
+          AND c.id_sucursal = :sucursal
+          AND COALESCE(d.cantidad_facturada, d.cantidad_recibida) > d.cantidad_recibida
+        ");
+
+        $sql->execute([
+            ':idcompra' => $idcompra,
+            ':sucursal' => $idSucursal
+        ]);
+
+        return ((int)$sql->fetchColumn() > 0) ? 3 : 1;
     }
 
     protected static function marcarCompraConDiferenciaModelo(PDO $pdo, $idcompra, $idSucursal, $usuario)

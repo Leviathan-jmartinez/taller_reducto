@@ -328,7 +328,7 @@ $menuLateral = [
                     [
                         'titulo' => 'Empleados',
                         'icono' => 'fas fa-user',
-                        'href' => 'empleado-lista/',
+                        'href' => 'empleado-nuevo/',
                         'vistas' => ['empleado-nuevo', 'empleado-lista', 'empleado-actualizar', 'empleado-buscar'],
                         'permiso' => 'empleado.ver'
                     ],
@@ -373,10 +373,7 @@ $menuLateral = [
             'reportes.sucursales.ver',
             'reportes.clientes.ver',
             'reportes.vehiculos.ver',
-            'reportes.empleados.ver',
-            'reportes.marcas.ver',
-            'reportes.categorias.ver',
-            'reportes.usuarios.ver'
+            'reportes.empleados.ver'
         ],
         'items' => [
             [
@@ -390,10 +387,7 @@ $menuLateral = [
                     'reportes.sucursales.ver',
                     'reportes.clientes.ver',
                     'reportes.vehiculos.ver',
-                    'reportes.empleados.ver',
-                    'reportes.marcas.ver',
-                    'reportes.categorias.ver',
-                    'reportes.usuarios.ver'
+                    'reportes.empleados.ver'
                 ]
             ]
         ]
@@ -403,15 +397,10 @@ $menuLateral = [
         'icono' => 'fas fa-chart-line',
         'permiso' => [
             'reportes.pedidos.ver',
-            'reportes.presupuestos_compra.ver',
             'reportes.ordenes_compra.ver',
             'reportes.compras.ver',
-            'reportes.libro_compras.ver',
-            'reportes.stock.ver',
-            'reportes.movimientos_stock.ver',
             'reportes.recepcion_servicio.ver',
             'reportes.presupuesto_servicio.ver',
-            'reportes.orden_trabajo.ver',
             'reportes.registro_servicio.ver'
         ],
         'items' => [
@@ -422,15 +411,10 @@ $menuLateral = [
                 'vista' => 'reporte-movimientos',
                 'permiso' => [
                     'reportes.pedidos.ver',
-                    'reportes.presupuestos_compra.ver',
                     'reportes.ordenes_compra.ver',
                     'reportes.compras.ver',
-                    'reportes.libro_compras.ver',
-                    'reportes.stock.ver',
-                    'reportes.movimientos_stock.ver',
                     'reportes.recepcion_servicio.ver',
                     'reportes.presupuesto_servicio.ver',
-                    'reportes.orden_trabajo.ver',
                     'reportes.registro_servicio.ver'
                 ]
             ]

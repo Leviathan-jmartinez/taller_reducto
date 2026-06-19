@@ -270,13 +270,23 @@ class vehiculoControlador extends vehiculoModelo
         }
 
         $check_cliente = mainModel::ejecutar_consulta_simple(
-            "SELECT id_cliente FROM clientes WHERE id_cliente='$cliente' AND estado_cliente=1"
+            "SELECT id_cliente, estado_cliente FROM clientes WHERE id_cliente='$cliente'"
         );
         if ($check_cliente->rowCount() <= 0) {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Error",
                 "Texto" => "El cliente seleccionado no es valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+        $cliente_actual = $check_cliente->fetch(PDO::FETCH_ASSOC);
+        if ((int)$cliente_actual['estado_cliente'] !== 1) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Cliente inactivo",
+                "Texto" => "El cliente seleccionado se encuentra inactivo. Debe reactivarlo antes de asignarle un vehiculo.",
                 "Tipo" => "error"
             ]);
             exit();
@@ -402,7 +412,6 @@ class vehiculoControlador extends vehiculoModelo
             ]);
             exit();
         }
-
         if ($datos['anho'] != "" && mainModel::verificarDatos("[0-9]{4}", $datos['anho'])) {
             echo json_encode([
                 "Alerta" => "simple",
@@ -464,13 +473,23 @@ class vehiculoControlador extends vehiculoModelo
         }
 
         $check_cliente = mainModel::ejecutar_consulta_simple(
-            "SELECT id_cliente FROM clientes WHERE id_cliente='{$datos['id_cliente']}' AND estado_cliente=1"
+            "SELECT id_cliente, estado_cliente FROM clientes WHERE id_cliente='{$datos['id_cliente']}'"
         );
         if ($check_cliente->rowCount() <= 0) {
             echo json_encode([
                 "Alerta" => "simple",
                 "Titulo" => "Error",
                 "Texto" => "El cliente seleccionado no es valido",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+        $cliente_actual = $check_cliente->fetch(PDO::FETCH_ASSOC);
+        if ((int)$cliente_actual['estado_cliente'] !== 1) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Cliente inactivo",
+                "Texto" => "El cliente seleccionado se encuentra inactivo. Debe reactivarlo antes de asignarle un vehiculo.",
                 "Tipo" => "error"
             ]);
             exit();
@@ -539,7 +558,6 @@ class vehiculoControlador extends vehiculoModelo
             ]);
             exit();
         }
-
         $vehiculoActual = $check->fetch();
         if ((int)$vehiculoActual['estado'] === 0) {
             echo json_encode([

@@ -58,19 +58,47 @@
 
         // Temporizadores por fila para debounce
         const timers = {};
+        const formatearMonto = valor => Number(valor || 0).toLocaleString('es-PY', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+        const formatearCantidad = valor => Number(valor || 0).toLocaleString('es-PY', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+        });
+        const normalizarNumero = valor => {
+            if (typeof valor === 'number') return valor;
+            valor = String(valor || '').trim();
+            if (valor.includes(',') && valor.includes('.')) {
+                return parseFloat(valor.replace(/\./g, '').replace(',', '.')) || 0;
+            }
+            if (valor.includes(',')) {
+                return parseFloat(valor.replace(',', '.')) || 0;
+            }
+            if ((valor.match(/\./g) || []).length > 1) {
+                return parseFloat(valor.replace(/\./g, '')) || 0;
+            }
+            if (valor.includes('.')) {
+                const partes = valor.split('.');
+                if (partes.length === 2 && partes[1].length === 3) {
+                    return parseFloat(valor.replace('.', '')) || 0;
+                }
+            }
+            return parseFloat(valor) || 0;
+        };
 
         function recalcularYActualizar(fila) {
             let index = fila.dataset.index;
 
             // Leer valores
             const cantidadInput = fila.querySelector(".cantidad");
-            let cantidad = parseFloat(cantidadInput.value) || 0;
+            let cantidad = normalizarNumero(cantidadInput.value);
             const cantidadFacturadaInput = fila.querySelector(".cantidad-facturada");
-            let cantidadFacturada = parseFloat(cantidadFacturadaInput.value) || 0;
-            const maxCantidad = parseFloat(cantidadInput.max);
+            let cantidadFacturada = normalizarNumero(cantidadFacturadaInput.value);
+            const maxCantidad = cantidadInput.hasAttribute('max') ? normalizarNumero(cantidadInput.max) : NaN;
             if (!Number.isNaN(maxCantidad) && cantidad > maxCantidad) {
                 cantidad = maxCantidad;
-                cantidadInput.value = maxCantidad;
+                cantidadInput.value = maxCantidad.toFixed(2).replace(/\.?0+$/, '');
                 Swal.fire({
                     title: 'Cantidad excedida',
                     text: 'La cantidad no puede superar la cantidad pendiente de la OC',
@@ -80,7 +108,7 @@
             }
             if (!Number.isNaN(maxCantidad) && cantidadFacturada > maxCantidad) {
                 cantidadFacturada = maxCantidad;
-                cantidadFacturadaInput.value = maxCantidad;
+                cantidadFacturadaInput.value = maxCantidad.toFixed(2).replace(/\.?0+$/, '');
                 Swal.fire({
                     title: 'Cantidad excedida',
                     text: 'La cantidad facturada no puede superar la cantidad pendiente de la OC',
@@ -90,7 +118,7 @@
             }
             if (cantidad > cantidadFacturada) {
                 cantidad = cantidadFacturada;
-                cantidadInput.value = cantidadFacturada;
+                cantidadInput.value = cantidadFacturada.toFixed(2).replace(/\.?0+$/, '');
                 Swal.fire({
                     title: 'Cantidad excedida',
                     text: 'La cantidad recibida no puede superar la cantidad facturada',
@@ -99,15 +127,17 @@
                 });
             }
             let precioTexto = fila.querySelector(".precio").value;
-            let precio = parseFloat(precioTexto.replace(/\./g, '').replace(',', '.')) || 0;
+            let precio = normalizarNumero(precioTexto);
 
             // Subtotal e IVA
-            let subtotal = cantidadFacturada * precio;
-            fila.querySelector(".subtotal").innerText = subtotal.toLocaleString('es-ES');
-            fila.querySelector(".diferencia-cantidad").innerText = (cantidadFacturada - cantidad).toLocaleString('es-ES');
+            let subtotal = Math.round(cantidadFacturada * precio);
+            fila.dataset.subtotal = String(subtotal);
+            fila.querySelector(".subtotal").innerText = formatearMonto(subtotal);
+            fila.querySelector(".diferencia-cantidad").innerText = formatearCantidad(cantidadFacturada - cantidad);
             let divisor = parseFloat(fila.dataset.divisor);
-            let iva = divisor > 0 ? subtotal / divisor : 0;
-            fila.querySelector(".iva-monto").innerText = iva.toLocaleString('es-ES');
+            let iva = divisor > 0 ? Math.round(subtotal / divisor) : 0;
+            fila.dataset.iva = String(iva);
+            fila.querySelector(".iva-monto").innerText = formatearMonto(iva);
 
             // Totales generales en pantalla
             recalcularTotalesGenerales();
@@ -133,11 +163,11 @@
                     .then(data => {
                         console.log("SESSION ACTUALIZADA:", data);
                         if (data.status === "error" && data.cantidad_pendiente !== undefined) {
-                            fila.querySelector(".cantidad").value = data.cantidad_pendiente;
-                            fila.querySelector(".cantidad-facturada").value = data.cantidad_pendiente;
+                            fila.querySelector(".cantidad").value = Number(data.cantidad_pendiente).toFixed(2).replace(/\.?0+$/, '');
+                            fila.querySelector(".cantidad-facturada").value = Number(data.cantidad_pendiente).toFixed(2).replace(/\.?0+$/, '');
                             recalcularYActualizar(fila);
                         } else if (data.status === "error" && data.cantidad_facturada !== undefined) {
-                            fila.querySelector(".cantidad").value = data.cantidad_facturada;
+                            fila.querySelector(".cantidad").value = Number(data.cantidad_facturada).toFixed(2).replace(/\.?0+$/, '');
                             recalcularYActualizar(fila);
                         }
                     });
@@ -149,8 +179,8 @@
                 iva10 = 0,
                 subtotalGeneral = 0;
             document.querySelectorAll("#tabla-detalle tbody tr").forEach(fila => {
-                let sub = parseFloat(fila.querySelector(".subtotal").innerText.replace(/\./g, '').replace(',', '.')) || 0;
-                let iva = parseFloat(fila.querySelector(".iva-monto").innerText.replace(/\./g, '').replace(',', '.')) || 0;
+                let sub = normalizarNumero(fila.dataset.subtotal || fila.querySelector(".subtotal").innerText);
+                let iva = normalizarNumero(fila.dataset.iva || fila.querySelector(".iva-monto").innerText);
                 let rate = parseFloat(fila.dataset.rate);
                 if (rate === 0.05) iva5 += iva;
                 if (rate === 0.10) iva10 += iva;
@@ -160,11 +190,11 @@
             let totalIVA = iva5 + iva10;
             let totalFactura = subtotalGeneral;
 
-            document.getElementById("iva5").innerText = iva5.toLocaleString('es-ES');
-            document.getElementById("iva10").innerText = iva10.toLocaleString('es-ES');
-            document.getElementById("total-iva").innerText = totalIVA.toLocaleString('es-ES');
-            document.getElementById("subtotal-general").innerText = subtotalGeneral.toLocaleString('es-ES');
-            document.getElementById("total-factura").innerText = totalFactura.toLocaleString('es-ES');
+            document.getElementById("iva5").innerText = formatearMonto(iva5);
+            document.getElementById("iva10").innerText = formatearMonto(iva10);
+            document.getElementById("total-iva").innerText = formatearMonto(totalIVA);
+            document.getElementById("subtotal-general").innerText = formatearMonto(subtotalGeneral);
+            document.getElementById("total-factura").innerText = formatearMonto(totalFactura);
 
             document.getElementById("input-subtotal-general").value = subtotalGeneral.toFixed(0);
             document.getElementById("input-iva-total").value = totalIVA.toFixed(0);

@@ -49,7 +49,10 @@
         const totalCell = document.getElementById('total_item_' + index);
 
         if (totalCell) {
-            totalCell.innerText = totalItem.toLocaleString('es-ES');
+            totalCell.innerText = Math.round(totalItem).toLocaleString('es-PY', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
         }
 
         let data = new FormData();

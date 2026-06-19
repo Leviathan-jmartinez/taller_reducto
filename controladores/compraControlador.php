@@ -110,11 +110,11 @@ class compraControlador extends compraModelo
             $cantidad = $_SESSION['Cdatos_articuloCO'][$i]['cantidad'] ?? $row['cantidad_pendiente'];
             $cantidadFacturada = $_SESSION['Cdatos_articuloCO'][$i]['cantidad_facturada'] ?? $cantidad;
             $precio   = $_SESSION['Cdatos_articuloCO'][$i]['precio'] ?? $row['precio_unitario'];
-            $subtotal = $cantidadFacturada * $precio;
+            $subtotal = round($cantidadFacturada * $precio);
             if ($row['divisor'] == 0) {
                 $iva = 0;
             } else {
-                $iva = $subtotal / $row['divisor'];
+                $iva = round($subtotal / $row['divisor']);
             }
             $_SESSION['Cdatos_articuloCO'][$i] = [
                 "ID" => $row['id_articulo'],
@@ -180,8 +180,8 @@ class compraControlador extends compraModelo
                 $cantidadFacturadaPost = (float)($_POST['cantidades_facturadas'][$pos] ?? $cantidadRecibidaPost);
                 $precioPost = (float)($_POST['precios'][$pos] ?? 0);
                 $divisorPost = (float)($_SESSION['Cdatos_articuloCO'][$indice]['divisor'] ?? 0);
-                $subtotalPost = round($cantidadFacturadaPost * $precioPost, 2);
-                $ivaPost = $divisorPost > 0 ? round($subtotalPost / $divisorPost, 2) : 0;
+                $subtotalPost = round($cantidadFacturadaPost * $precioPost);
+                $ivaPost = $divisorPost > 0 ? round($subtotalPost / $divisorPost) : 0;
 
                 $_SESSION['Cdatos_articuloCO'][$indice]['cantidad'] = $cantidadRecibidaPost;
                 $_SESSION['Cdatos_articuloCO'][$indice]['cantidad_facturada'] = $cantidadFacturadaPost;
@@ -253,12 +253,12 @@ class compraControlador extends compraModelo
         foreach ($itemsValidos as $item) {
             $cantidadRecibida = (float)($item['cantidad'] ?? 0);
             $cantidadFacturada = (float)($item['cantidad_facturada'] ?? $cantidadRecibida);
-            $totalReal += round($cantidadFacturada * (float)$item['precio'], 2);
+            $totalReal += round($cantidadFacturada * (float)$item['precio']);
             if (abs($cantidadFacturada - $cantidadRecibida) > 0.0001) {
                 $tieneDiferencia = true;
             }
         }
-        $totalReal = round($totalReal, 2);
+        $totalReal = round($totalReal);
 
         $condicion = mainModel::limpiar_string($_POST['condicion'] ?? '');
         $vencimiento_timbrado = mainModel::limpiar_string($_POST['vencimiento_timbrado'] ?? '');
@@ -369,38 +369,38 @@ class compraControlador extends compraModelo
             /* ===============================
            DETALLES + STOCK + ACUMULADORES
         ================================ */
-            $exenta     = 0.00;
-            $gravada5   = 0.00;
-            $iva5       = 0.00;
-            $gravada10  = 0.00;
-            $iva10      = 0.00;
-            $totalLibro = 0.00;
+            $exenta     = 0;
+            $gravada5   = 0;
+            $iva5       = 0;
+            $gravada10  = 0;
+            $iva10      = 0;
+            $totalLibro = 0;
 
             foreach ($itemsValidos as $item) {
 
                 $cantidadRecibida = (float)($item['cantidad'] ?? 0);
                 $cantidadFacturada = (float)($item['cantidad_facturada'] ?? $cantidadRecibida);
                 $precioUnitario = round((float)$item['precio'], 2);
-                $subtotal = round($cantidadFacturada * $precioUnitario, 2);
-                $ivaItem  = ((float)$item['divisor'] > 0) ? round($subtotal / (float)$item['divisor'], 2) : 0;
+                $subtotal = round($cantidadFacturada * $precioUnitario);
+                $ivaItem  = ((float)$item['divisor'] > 0) ? round($subtotal / (float)$item['divisor']) : 0;
 
-                $totalLibro = round($totalLibro + $subtotal, 2);
+                $totalLibro = round($totalLibro + $subtotal);
 
                 switch ($item['tipo_iva']) {
                     case '1': // IVA 5%
-                        $base = round($subtotal - $ivaItem, 2);
-                        $gravada5 = round($gravada5 + $base, 2);
-                        $iva5     = round($iva5 + $ivaItem, 2);
+                        $base = round($subtotal - $ivaItem);
+                        $gravada5 = round($gravada5 + $base);
+                        $iva5     = round($iva5 + $ivaItem);
                         break;
 
                     case '2': // IVA 10%
-                        $base = round($subtotal - $ivaItem, 2);
-                        $gravada10 = round($gravada10 + $base, 2);
-                        $iva10     = round($iva10 + $ivaItem, 2);
+                        $base = round($subtotal - $ivaItem);
+                        $gravada10 = round($gravada10 + $base);
+                        $iva10     = round($iva10 + $ivaItem);
                         break;
 
                     default: // EXENTA
-                        $exenta = round($exenta + $subtotal, 2);
+                        $exenta = round($exenta + $subtotal);
                         break;
                 }
 
@@ -464,12 +464,12 @@ class compraControlador extends compraModelo
             $total     = $totalReal;
 
             if ($condicion === 'credito' || $condicion === 'contado') {
-                $monto_cuota = round($total / $cuotas, 2);
+                $monto_cuota = round($total / $cuotas);
                 $monto_acumulado = 0;
 
                 for ($i = 1; $i <= $cuotas; $i++) {
-                    $monto = $i === $cuotas ? round($total - $monto_acumulado, 2) : $monto_cuota;
-                    $monto_acumulado = round($monto_acumulado + $monto, 2);
+                    $monto = $i === $cuotas ? round($total - $monto_acumulado) : $monto_cuota;
+                    $monto_acumulado = round($monto_acumulado + $monto);
                     $fecha_vencimiento = date('Y-m-d', strtotime("+" . ($intervalo * $i) . " days"));
                     $datos_cuenta = [
                         "idcompra"          => $idcab,
@@ -502,12 +502,12 @@ class compraControlador extends compraModelo
                 "proveedor"   => $_SESSION['datos_proveedorCO']['ID'],
                 "prov_nom"    => $_SESSION['datos_proveedorCO']['RAZON'],
                 "prov_ruc"    => $_SESSION['datos_proveedorCO']['RUC'],
-                "exenta"      => round($exenta, 2),
-                "gravada5"    => round($gravada5, 2),
-                "iva5"        => round($iva5, 2),
-                "gravada10"   => round($gravada10, 2),
-                "iva10"       => round($iva10, 2),
-                "total"       => round($totalLibro, 2)
+                "exenta"      => round($exenta),
+                "gravada5"    => round($gravada5),
+                "iva5"        => round($iva5),
+                "gravada10"   => round($gravada10),
+                "iva10"       => round($iva10),
+                "total"       => round($totalLibro)
             ];
 
             $guardarLibro = compraModelo::insertar_libro_compra_modelo($datosLibro);
@@ -802,8 +802,8 @@ class compraControlador extends compraModelo
                 ];
             } else {
                 foreach ($detalle as $row) {
-                    $subtotal = $cantidad * $precio;
-                    $iva = ($row['divisor'] != 0) ? ($subtotal / $row['divisor']) : 0;
+                    $subtotal = round($cantidad * $precio);
+                    $iva = ($row['divisor'] != 0) ? round($subtotal / $row['divisor']) : 0;
 
                     // Guardar en sesión usando el ID del artículo como key
                     $_SESSION['Cdatos_articuloCO'][$row['id_articulo']] = [

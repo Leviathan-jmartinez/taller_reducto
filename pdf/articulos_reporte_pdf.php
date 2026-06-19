@@ -12,6 +12,9 @@ $hasta = isset($pdfVars['hasta']) ? (string)$pdfVars['hasta'] : '';
 $proveedor = isset($pdfVars['proveedor']) ? (string)$pdfVars['proveedor'] : '';
 $estado = isset($pdfVars['estado']) ? (string)$pdfVars['estado'] : '';
 $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
+$fmtCantidadArticulo = static function ($valor) {
+    return $valor === null || $valor === '' ? '-' : number_format((float)$valor, 2, ',', '.');
+};
 ?><!DOCTYPE html>
 <html lang="es">
 
@@ -106,8 +109,8 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
                         echo (intval($s) == $s) ? intval($s) : number_format($s, 2, ',', '.');
                         ?>
                     </td>
-                    <td class="text-right"><?= $row['stockcant_min'] ?? '-' ?></td>
-                    <td class="text-right"><?= $row['stockcant_max'] ?? '-' ?></td>
+                    <td class="text-right"><?= $fmtCantidadArticulo($row['stockcant_min'] ?? null) ?></td>
+                    <td class="text-right"><?= $fmtCantidadArticulo($row['stockcant_max'] ?? null) ?></td>
                     <td class="text-center"><?= $row['estado'] == 1 ? 'Activo' : 'Inactivo' ?></td>
                 </tr>
             <?php endforeach; ?>

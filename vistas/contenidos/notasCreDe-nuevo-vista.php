@@ -10,6 +10,11 @@ if (session_status() == PHP_SESSION_NONE) {
 
 $facturaNC = $_SESSION['NC_FACTURA'] ?? null;
 $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
+$alcanceNota = $facturaNC['alcance_nota'] ?? 'regularizar_diferencia';
+$fmtCantidadNota = function ($valor) {
+    $texto = number_format((float)$valor, 2, '.', '');
+    return rtrim(rtrim($texto, '0'), '.');
+};
 ?>
 
 <div class="container-fluid form-neon app-view">
@@ -80,7 +85,16 @@ $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
                 </div>
 
                 <div class="col-md-3">
-                    <label>Número de Nota</label>
+                    <label>Alcance NC</label>
+                    <select name="alcance_nota" class="form-control" <?= empty($facturaNC) ? 'disabled' : '' ?>>
+                        <option value="regularizar_diferencia" <?= $alcanceNota === 'regularizar_diferencia' ? 'selected' : '' ?>>Regularizar diferencia</option>
+                        <option value="anulacion_total" <?= $alcanceNota === 'anulacion_total' ? 'selected' : '' ?>>Anular factura completa</option>
+                    </select>
+                    <small class="text-muted">Use anulacion total cuando la factura queda sin efecto.</small>
+                </div>
+
+                <div class="col-md-3">
+                    <label>Numero de Nota</label>
                     <input type="text" name="nro_nota" class="form-control" required>
                 </div>
 
@@ -143,7 +157,7 @@ $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
                         $total_iva = $total_iva5 + $total_iva10;
 
                         foreach ($detalleNC as $i => $d):
-                            $total_item = $d['cantidad'] * $d['precio']; ?>
+                            $total_item = round($d['cantidad'] * $d['precio']); ?>
                             <tr>
                                 <td><?= $d['id_articulo'] ?></td>
                                 <td><?= $d['descripcion'] ?></td>
@@ -153,7 +167,7 @@ $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
                                         min="0"
                                         step="0.01"
                                         class="form-control form-control-sm text-center"
-                                        value="<?= $d['cantidad'] ?>"
+                                        value="<?= htmlspecialchars($fmtCantidadNota($d['cantidad']), ENT_QUOTES, 'UTF-8') ?>"
                                         onchange="actualizarItem(<?= $i ?>)">
                                 </td>
 
@@ -256,6 +270,7 @@ $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
 
         const tipoSelect = document.querySelector('[name="tipo"]');
         const movStock = document.querySelector('[name="movimiento_stock"]');
+        const alcanceNota = document.querySelector('[name="alcance_nota"]');
 
         function actualizar() {
             const tipo = tipoSelect.value;
@@ -264,13 +279,44 @@ $detalleNC = $_SESSION['NC_DETALLE'] ?? [];
                 movStock.value = 'NINGUNO';
                 movStock.style.pointerEvents = 'none';
                 movStock.style.backgroundColor = '#e9ecef';
+                if (alcanceNota) {
+                    alcanceNota.value = 'regularizar_diferencia';
+                    alcanceNota.style.pointerEvents = 'none';
+                    alcanceNota.style.backgroundColor = '#e9ecef';
+                }
             } else {
                 movStock.style.pointerEvents = 'auto';
                 movStock.style.backgroundColor = '';
+                if (alcanceNota && !alcanceNota.disabled) {
+                    alcanceNota.style.pointerEvents = 'auto';
+                    alcanceNota.style.backgroundColor = '';
+                }
             }
         }
 
         tipoSelect.addEventListener('change', actualizar);
+        if (alcanceNota) {
+            alcanceNota.addEventListener('change', function() {
+                const data = new FormData();
+                data.append('accion', 'cambiar_alcance_nc');
+                data.append('alcance_nota', alcanceNota.value);
+
+                fetch('<?php echo SERVERURL ?>ajax/notasCreDeAjax.php', {
+                        method: 'POST',
+                        body: data
+                    })
+                    .then(r => r.json())
+                    .then(resp => {
+                        if (resp.status === 'ok') {
+                            location.reload();
+                            return;
+                        }
+
+                        Swal.fire('Error', resp.msg || 'No se pudo cambiar el alcance', 'error');
+                    })
+                    .catch(() => Swal.fire('Error', 'Error de comunicacion con el servidor', 'error'));
+            });
+        }
 
         // Ejecutar al cargar
         actualizar();

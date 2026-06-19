@@ -23,6 +23,10 @@ function estadoCompra($estado)
         default => 'Desconocido',
     };
 }
+
+$fmtCantidad = static function ($valor) {
+    return number_format((float)$valor, 2, ',', '.');
+};
 ?>
 
 <!DOCTYPE html>
@@ -120,7 +124,7 @@ function estadoCompra($estado)
                     <td class="text-center"><?= estadoCompra($row['estado']) ?></td>
                     <td><?= $row['condicion'] ?></td>
                     <td class="text-center"><?= $row['cantidad_items'] ?></td>
-                    <td class="text-center"><?= $row['cantidad_total'] ?></td>
+                    <td class="text-center"><?= $fmtCantidad($row['cantidad_total']) ?></td>
                     <td class="text-right"><?= number_format($row['total_compra'], 0, ',', '.') ?></td>
                     <td><?= $row['sucursal'] ?></td>
                 </tr>

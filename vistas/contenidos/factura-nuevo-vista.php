@@ -21,6 +21,10 @@ if (isset($_POST['factura_tipo']) && $_POST['factura_tipo'] === "sin_oc") {
 
 $tipo = $_SESSION['factura_tipo'];
 $ocSeleccionada = !empty($_SESSION['id_oc_seleccionado']);
+$fmtCantidadCompra = function ($valor) {
+    $texto = number_format((float)$valor, 2, '.', '');
+    return rtrim(rtrim($texto, '0'), '.');
+};
 ?>
 
 <div class="container-fluid">
@@ -190,30 +194,32 @@ $ocSeleccionada = !empty($_SESSION['id_oc_seleccionado']);
                                 <tr
                                     data-index="<?= $i; ?>"
                                     data-rate="<?= $item['ratevalueiva']; ?>"
-                                    data-divisor="<?= $item['divisor']; ?>">
+                                    data-divisor="<?= $item['divisor']; ?>"
+                                    data-subtotal="<?= (float)$item['subtotal']; ?>"
+                                    data-iva="<?= (float)$item['iva']; ?>">
                                     <td class="text-left">
                                         <?= htmlspecialchars($item['descripcion']); ?>
                                         <input type="hidden" name="detalle_indices[]" value="<?= htmlspecialchars($i, ENT_QUOTES, 'UTF-8'); ?>">
                                     </td>
-                                    <td class="text-center"><?= htmlspecialchars($item['cantidad_pendiente'] ?? $item['cantidad']); ?></td>
+                                    <td class="text-center"><?= htmlspecialchars($fmtCantidadCompra($item['cantidad_pendiente'] ?? $item['cantidad']), ENT_QUOTES, 'UTF-8'); ?></td>
                                     <td class="text-center">
                                         <input type="number" min="0" step="0.01"
                                             name="cantidades_facturadas[]"
                                             class="form-control text-center cantidad-facturada"
-                                            value="<?= $item['cantidad_facturada'] ?? $item['cantidad']; ?>"
-                                            <?= isset($item['cantidad_pendiente']) ? 'max="' . htmlspecialchars($item['cantidad_pendiente']) . '"' : ''; ?>
+                                            value="<?= htmlspecialchars($fmtCantidadCompra($item['cantidad_facturada'] ?? $item['cantidad']), ENT_QUOTES, 'UTF-8'); ?>"
+                                            <?= isset($item['cantidad_pendiente']) ? 'max="' . htmlspecialchars($fmtCantidadCompra($item['cantidad_pendiente']), ENT_QUOTES, 'UTF-8') . '"' : ''; ?>
                                             required>
                                     </td>
                                     <td class="text-center">
                                         <input type="number" min="0" step="0.01"
                                             name="cantidades[]"
                                             class="form-control text-center cantidad"
-                                            value="<?= $item['cantidad']; ?>"
-                                            <?= isset($item['cantidad_pendiente']) ? 'max="' . htmlspecialchars($item['cantidad_pendiente']) . '"' : ''; ?>
+                                            value="<?= htmlspecialchars($fmtCantidadCompra($item['cantidad']), ENT_QUOTES, 'UTF-8'); ?>"
+                                            <?= isset($item['cantidad_pendiente']) ? 'max="' . htmlspecialchars($fmtCantidadCompra($item['cantidad_pendiente']), ENT_QUOTES, 'UTF-8') . '"' : ''; ?>
                                             required>
                                     </td>
                                     <td class="text-center diferencia-cantidad">
-                                        <?= number_format(((float)($item['cantidad_facturada'] ?? $item['cantidad']) - (float)$item['cantidad']), 2, ',', '.'); ?>
+                                        <?= htmlspecialchars($fmtCantidadCompra((float)($item['cantidad_facturada'] ?? $item['cantidad']) - (float)$item['cantidad']), ENT_QUOTES, 'UTF-8'); ?>
                                     </td>
                                     <td class="text-center">
                                         <input type="number"
@@ -241,37 +247,37 @@ $ocSeleccionada = !empty($_SESSION['id_oc_seleccionado']);
                 <div class="d-flex align-items-start justify-content-between p-3 border rounded">
                     <div class="text-center mx-2">
                         <small class="text-muted">IVA 5%</small><br>
-                        <span id="iva5">0.00</span>
+                        <span id="iva5">0</span>
                     </div>
                     <div class="text-center mx-2">
                         <small class="text-muted">IVA 10%</small><br>
-                        <span id="iva10">0.00</span>
+                        <span id="iva10">0</span>
                     </div>
                     <div class="text-center mx-2 font-weight-bold">
                         <small class="text-muted">Total IVA</small><br>
-                        <span id="total-iva">0.00</span>
+                        <span id="total-iva">0</span>
                     </div>
                     <div class="text-center mx-2 font-weight-bold">
                         <small class="text-muted">Subtotal</small><br>
-                        <span id="subtotal-general">0.00</span>
+                        <span id="subtotal-general">0</span>
                     </div>
                     <div class="text-center mx-2 font-weight-bold">
                         <small class="text-muted">Total Factura</small><br>
-                        <span id="total-factura">0.00</span>
+                        <span id="total-factura">0</span>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Hidden inputs -->
-        <input type="hidden" name="subtotal_general" id="input-subtotal-general" value="0.00">
-        <input type="hidden" name="iva_total" id="input-iva-total" value="0.00">
-        <input type="hidden" name="total_factura" id="input-total-factura" value="0.00">
-        <input type="hidden" name="base10" id="input-base10" value="0.00">
-        <input type="hidden" name="iva10" id="input-iva10" value="0.00">
-        <input type="hidden" name="base5" id="input-base5" value="0.00">
-        <input type="hidden" name="iva5" id="input-iva5" value="0.00">
-        <input type="hidden" name="base0" id="input-base0" value="0.00">
+        <input type="hidden" name="subtotal_general" id="input-subtotal-general" value="0">
+        <input type="hidden" name="iva_total" id="input-iva-total" value="0">
+        <input type="hidden" name="total_factura" id="input-total-factura" value="0">
+        <input type="hidden" name="base10" id="input-base10" value="0">
+        <input type="hidden" name="iva10" id="input-iva10" value="0">
+        <input type="hidden" name="base5" id="input-base5" value="0">
+        <input type="hidden" name="iva5" id="input-iva5" value="0">
+        <input type="hidden" name="base0" id="input-base0" value="0">
 
         <div class="text-center" style="margin-top: 40px; display: flex; justify-content: center; gap: 15px;">
             <button type="submit" class="btn btn-info btn-raised">

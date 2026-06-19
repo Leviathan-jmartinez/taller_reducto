@@ -30,6 +30,13 @@ if (isset($_POST['accion']) && $_POST['accion'] === 'actualizar_item_nc') {
     );
     exit;
 }
+
+if (isset($_POST['accion']) && $_POST['accion'] === 'cambiar_alcance_nc') {
+    echo json_encode(
+        notasCreDeControlador::cambiarAlcanceNota($_POST['alcance_nota'] ?? '')
+    );
+    exit;
+}
 // ajax/notasCreDeAjax.php
 
 if (isset($_POST['accion']) && $_POST['accion'] === 'guardar_nota_compra') {

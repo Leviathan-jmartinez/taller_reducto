@@ -12,6 +12,9 @@ $hasta = isset($pdfVars['hasta']) ? (string)$pdfVars['hasta'] : '';
 $proveedor = isset($pdfVars['proveedor']) ? (string)$pdfVars['proveedor'] : '';
 $estado = isset($pdfVars['estado']) ? (string)$pdfVars['estado'] : '';
 $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
+$fmtCantidad = static function ($valor) {
+    return number_format((float)$valor, 2, ',', '.');
+};
 ?><!DOCTYPE html>
 <html lang="es">
 
@@ -120,8 +123,8 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
                     <td><?= $row['usuario_actualiza'] ?: '-' ?></td>
                     <td class="text-center"><?= estadoOrdenCompra($row['estado']) ?></td>
                     <td class="text-center"><?= $row['cantidad_items'] ?></td>
-                    <td class="text-center"><?= $row['cantidad_total'] ?></td>
-                    <td class="text-center"><?= $row['cantidad_pendiente'] ?></td>
+                    <td class="text-center"><?= $fmtCantidad($row['cantidad_total']) ?></td>
+                    <td class="text-center"><?= $fmtCantidad($row['cantidad_pendiente']) ?></td>
                     <td class="text-right"><?= number_format($row['total'], 0, ',', '.') ?></td>
                     <td><?= $row['sucursal'] ?></td>
                 </tr>

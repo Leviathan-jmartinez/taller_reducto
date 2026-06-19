@@ -51,6 +51,32 @@ class sucursalModelo extends mainModel
         return $sql;
     }
 
+    /** validar duplicados por empresa */
+    protected static function existe_sucursal_duplicada_modelo($datos)
+    {
+        $sql = mainModel::conectar()->prepare(
+            "SELECT id_sucursal, suc_descri, nro_establecimiento
+            FROM sucursales
+            WHERE id_empresa = :id_empresa
+              AND id_sucursal <> :id_sucursal
+              AND (
+                LOWER(TRIM(suc_descri)) = LOWER(TRIM(:descri))
+                OR CAST(nro_establecimiento AS UNSIGNED) = CAST(:nro_est AS UNSIGNED)
+              )
+            LIMIT 1"
+        );
+
+        $idSucursal = isset($datos['id_sucursal']) ? (int)$datos['id_sucursal'] : 0;
+
+        $sql->bindParam(":id_empresa", $datos['id_empresa'], PDO::PARAM_INT);
+        $sql->bindParam(":id_sucursal", $idSucursal, PDO::PARAM_INT);
+        $sql->bindParam(":descri", $datos['suc_descri']);
+        $sql->bindParam(":nro_est", $datos['nro_establecimiento']);
+        $sql->execute();
+
+        return $sql;
+    }
+
     /** actualizar sucursal */
     protected static function actualizar_sucursal_modelo($datos)
     {

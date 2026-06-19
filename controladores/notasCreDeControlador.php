@@ -79,14 +79,52 @@ class notasCreDeControlador extends notasCreDeModelo
         ];
 
 
+        self::cargarDetalleNotaDesdeFactura($id, 'regularizar_diferencia');
+
+        return true;
+    }
+
+    public static function cambiarAlcanceNota($alcance)
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start(['name' => 'STR']);
+        }
+
+        $factura = $_SESSION['NC_FACTURA'] ?? null;
+        if (empty($factura['idcompra_cabecera'])) {
+            return ['status' => 'error', 'msg' => 'Debe seleccionar una factura valida'];
+        }
+
+        $alcance = self::normalizarAlcanceNota($alcance);
+        self::cargarDetalleNotaDesdeFactura((int)$factura['idcompra_cabecera'], $alcance);
+
+        return ['status' => 'ok', 'msg' => 'Alcance actualizado'];
+    }
+
+    private static function normalizarAlcanceNota($alcance)
+    {
+        $alcance = strtolower(mainModel::limpiar_string($alcance ?? 'regularizar_diferencia'));
+        return in_array($alcance, ['regularizar_diferencia', 'anulacion_total'], true)
+            ? $alcance
+            : 'regularizar_diferencia';
+    }
+
+    private static function cargarDetalleNotaDesdeFactura($id, $alcance)
+    {
+        $factura = $_SESSION['NC_FACTURA'] ?? notasCreDeModelo::obtenerFactura($id);
+        $estadoCompra = (int)($factura['estado_compra'] ?? $factura['estado'] ?? 0);
         $detalleBD = notasCreDeModelo::obtenerDetalleCompra($id);
         $_SESSION['NC_DETALLE'] = [];
+        $_SESSION['NC_FACTURA']['alcance_nota'] = $alcance;
 
         foreach ($detalleBD as $d) {
+            $cantidadFacturada = (float)($d['cantidad_facturada'] ?? $d['cantidad_recibida']);
+            $cantidadRecibida = (float)$d['cantidad_recibida'];
+            $cantidadDiferencia = max($cantidadFacturada - $cantidadRecibida, 0);
 
-            $cantidadBase = (int)$factura['estado'] === 3
-                ? max((float)($d['cantidad_facturada'] ?? $d['cantidad_recibida']) - (float)$d['cantidad_recibida'], 0)
-                : (float)$d['cantidad_recibida'];
+            $cantidadBase = ($estadoCompra === 3 && $alcance === 'regularizar_diferencia')
+                ? $cantidadDiferencia
+                : $cantidadFacturada;
 
             $subtotal = round($cantidadBase * $d['precio_unitario'], 2);
 
@@ -110,8 +148,9 @@ class notasCreDeControlador extends notasCreDeModelo
                 'descripcion' => $d['desc_articulo'],
                 'cantidad'    => $cantidadBase,
                 'cantidad_original' => $cantidadBase,
-                'cantidad_facturada' => $d['cantidad_facturada'] ?? $d['cantidad_recibida'],
-                'cantidad_recibida' => $d['cantidad_recibida'],
+                'cantidad_facturada' => $cantidadFacturada,
+                'cantidad_recibida' => $cantidadRecibida,
+                'cantidad_devolucion_maxima' => $cantidadRecibida,
                 'precio'      => $d['precio_unitario'],
                 'precio_original' => $d['precio_unitario'],
                 'iva_tipo'    => $d['tipo_impuesto_descri'],
@@ -123,8 +162,6 @@ class notasCreDeControlador extends notasCreDeModelo
                 'iva_10' => $iva10
             ];
         }
-
-        return true;
     }
 
     public static function actualizarItemNC($data)
@@ -254,6 +291,11 @@ class notasCreDeControlador extends notasCreDeModelo
             return ['status' => 'error', 'msg' => 'Movimiento de stock invalido'];
         }
 
+        $alcanceNota = self::normalizarAlcanceNota($_POST['alcance_nota'] ?? ($factura['alcance_nota'] ?? 'regularizar_diferencia'));
+        if ($tipoNota !== 'credito') {
+            $alcanceNota = 'regularizar_diferencia';
+        }
+
         $detalle = array_filter($_SESSION['NC_DETALLE'], function ($d) {
             return $d['cantidad'] > 0 && $d['precio'] > 0;
         });
@@ -329,60 +371,91 @@ class notasCreDeControlador extends notasCreDeModelo
         }
 
         $regularizaDiferencia = false;
+        $anulacionTotal = false;
         if ((int)($factura['estado_compra'] ?? 0) === 3) {
-            if ($tipoNota !== 'credito' || $movStock !== 'NINGUNO') {
+            if ($tipoNota !== 'credito') {
                 return [
                     "Alerta" => "simple",
                     "Titulo" => "Regularizacion requerida",
-                    "Texto"  => "Una compra con diferencia debe regularizarse con Nota de Credito sin movimiento de stock.",
+                    "Texto"  => "Una compra con diferencia debe procesarse con Nota de Credito.",
                     "Tipo"   => "error"
                 ];
             }
 
-            $diferencias = notasCreDeModelo::diferenciaCompraModelo($factura['idcompra_cabecera']);
-            $diferenciasPorArticulo = [];
-            $totalDiferencia = 0;
-            foreach ($diferencias as $dif) {
-                $cantidadDif = (float)$dif['cantidad_diferencia'];
-                $montoDif = round((float)$dif['monto_diferencia'], 2);
-                if ($cantidadDif > 0) {
-                    $diferenciasPorArticulo[(int)$dif['id_articulo']] = $cantidadDif;
-                    $totalDiferencia = round($totalDiferencia + $montoDif, 2);
-                }
-            }
-
-            if ($totalDiferencia <= 0) {
-                return [
-                    "Alerta" => "simple",
-                    "Titulo" => "Sin diferencia pendiente",
-                    "Texto"  => "La compra no posee diferencia pendiente para regularizar.",
-                    "Tipo"   => "error"
-                ];
-            }
-
-            foreach ($detalle as $d) {
-                $idArticulo = (int)$d['id_articulo'];
-                $cantidadPermitida = $diferenciasPorArticulo[$idArticulo] ?? 0;
-                if ((float)$d['cantidad'] > $cantidadPermitida) {
+            if ($alcanceNota === 'regularizar_diferencia') {
+                if ($movStock !== 'NINGUNO') {
                     return [
                         "Alerta" => "simple",
-                        "Titulo" => "Cantidad excedida",
-                        "Texto"  => "La NC no puede superar la diferencia pendiente del articulo " . $d['descripcion'] . ".",
+                        "Titulo" => "Regularizacion requerida",
+                        "Texto"  => "La regularizacion de diferencia debe hacerse sin movimiento de stock.",
                         "Tipo"   => "error"
                     ];
                 }
-            }
 
-            if (abs(round($total, 2) - round($totalDiferencia, 2)) > 0.01) {
+                $diferencias = notasCreDeModelo::diferenciaCompraModelo($factura['idcompra_cabecera']);
+                $diferenciasPorArticulo = [];
+                $totalDiferencia = 0;
+                foreach ($diferencias as $dif) {
+                    $cantidadDif = (float)$dif['cantidad_diferencia'];
+                    $montoDif = round((float)$dif['monto_diferencia'], 2);
+                    if ($cantidadDif > 0) {
+                        $diferenciasPorArticulo[(int)$dif['id_articulo']] = $cantidadDif;
+                        $totalDiferencia = round($totalDiferencia + $montoDif, 2);
+                    }
+                }
+
+                if ($totalDiferencia <= 0) {
+                    return [
+                        "Alerta" => "simple",
+                        "Titulo" => "Sin diferencia pendiente",
+                        "Texto"  => "La compra no posee diferencia pendiente para regularizar.",
+                        "Tipo"   => "error"
+                    ];
+                }
+
+                foreach ($detalle as $d) {
+                    $idArticulo = (int)$d['id_articulo'];
+                    $cantidadPermitida = $diferenciasPorArticulo[$idArticulo] ?? 0;
+                    if ((float)$d['cantidad'] > $cantidadPermitida) {
+                        return [
+                            "Alerta" => "simple",
+                            "Titulo" => "Cantidad excedida",
+                            "Texto"  => "La NC no puede superar la diferencia pendiente del articulo " . $d['descripcion'] . ".",
+                            "Tipo"   => "error"
+                        ];
+                    }
+                }
+
+                if (abs(round($total, 2) - round($totalDiferencia, 2)) > 0.01) {
+                    return [
+                        "Alerta" => "simple",
+                        "Titulo" => "Debe cubrir la diferencia",
+                        "Texto"  => "La NC debe cubrir exactamente la diferencia pendiente: " . number_format($totalDiferencia, 0, ',', '.'),
+                        "Tipo"   => "error"
+                    ];
+                }
+
+                $regularizaDiferencia = true;
+            } else {
+                $anulacionTotal = true;
+            }
+        } elseif ($alcanceNota === 'anulacion_total' && $tipoNota === 'credito') {
+            $anulacionTotal = true;
+        }
+
+        if ($anulacionTotal) {
+            $totalFactura = (float)$factura['total'];
+            $totalNCPrevias = notasCreDeModelo::totalNCActivasPorFactura($factura['idcompra_cabecera']);
+            $totalDisponible = round($totalFactura - $totalNCPrevias, 2);
+
+            if (abs(round($total, 2) - $totalDisponible) > 0.01) {
                 return [
                     "Alerta" => "simple",
-                    "Titulo" => "Debe cubrir la diferencia",
-                    "Texto"  => "La NC debe cubrir exactamente la diferencia pendiente: " . number_format($totalDiferencia, 0, ',', '.'),
+                    "Titulo" => "NC total requerida",
+                    "Texto"  => "Para anular la factura completa, la NC debe cubrir exactamente el saldo disponible de la factura: " . number_format($totalDisponible, 0, ',', '.'),
                     "Tipo"   => "error"
                 ];
             }
-
-            $regularizaDiferencia = true;
         }
 
         $montoMovimiento = $total;
@@ -397,7 +470,15 @@ class notasCreDeControlador extends notasCreDeModelo
                     $d['id_articulo']
                 );
 
-                if ($stockDisponible < (float)$d['cantidad']) {
+                $cantidadDevolucion = $anulacionTotal
+                    ? min((float)$d['cantidad'], (float)($d['cantidad_devolucion_maxima'] ?? $d['cantidad']))
+                    : (float)$d['cantidad'];
+
+                if ($cantidadDevolucion <= 0) {
+                    continue;
+                }
+
+                if ($stockDisponible < $cantidadDevolucion) {
                     return [
                         'status' => 'error',
                         'msg' => 'Stock insuficiente para devolver ' . $d['descripcion'] . '. Disponible: ' . number_format($stockDisponible, 2, ',', '.')
@@ -420,9 +501,10 @@ class notasCreDeControlador extends notasCreDeModelo
                 'fecha'       => $_POST['fecha'],
                 'idcompra'    => $factura['idcompra_cabecera'],
                 'total'       => $total,
-                'descripcion' => $_POST['descripcion'] ?? '',
+                'descripcion' => '[' . $alcanceNota . '] ' . ($_POST['descripcion'] ?? ''),
                 'usuario'     => $_SESSION['id_str'],
-                'timbrado'    => $_POST['timbrado'] ?? null
+                'timbrado'    => $_POST['timbrado'] ?? null,
+                'alcance'     => $alcanceNota
             ]);
 
             notasCreDeModelo::insertarDetalleNotaCompraModelo($pdo, $idNota, $detalle);
@@ -491,12 +573,19 @@ class notasCreDeControlador extends notasCreDeModelo
 
             if ($tipoNota === 'credito' && $movStock === 'DEVOLUCION') {
                 foreach ($detalle as $d) {
+                    $cantidadDevolucion = $anulacionTotal
+                        ? min((float)$d['cantidad'], (float)($d['cantidad_devolucion_maxima'] ?? $d['cantidad']))
+                        : (float)$d['cantidad'];
+
+                    if ($cantidadDevolucion <= 0) {
+                        continue;
+                    }
 
                     mainModel::registrar_movimiento_stock_modelo($pdo, [
                         "id_sucursal" => $_SESSION['nick_sucursal'],
                         "tipo" => "NC_COMPRA_DEV",
                         "id_articulo" => $d['id_articulo'],
-                        "cantidad" => $d['cantidad'],
+                        "cantidad" => $cantidadDevolucion,
                         "precio_venta" => 0,
                         "costo" => $d['precio'],
                         "usuario" => $_SESSION['id_str'],
@@ -517,6 +606,15 @@ class notasCreDeControlador extends notasCreDeModelo
 
             if ($regularizaDiferencia) {
                 notasCreDeModelo::regularizarCompraModelo(
+                    $pdo,
+                    $factura['idcompra_cabecera'],
+                    $_SESSION['nick_sucursal'],
+                    $_SESSION['id_str']
+                );
+            }
+
+            if ($anulacionTotal) {
+                notasCreDeModelo::anularCompraPorNotaTotalModelo(
                     $pdo,
                     $factura['idcompra_cabecera'],
                     $_SESSION['nick_sucursal'],
@@ -701,6 +799,18 @@ class notasCreDeControlador extends notasCreDeModelo
             return ['status' => 'error', 'msg' => 'La nota ya está anulada'];
         }
 
+        $facturaNota = notasCreDeModelo::obtenerFactura($nota['idcompra_cabecera']);
+        $esAnulacionTotal = false;
+        if ($nota['tipo'] === 'credito' && $facturaNota) {
+            $descripcionNota = (string)($nota['descripcion'] ?? '');
+            $esAnulacionTotal = ($nota['alcance'] ?? '') === 'anulacion_total'
+                || strpos($descripcionNota, '[anulacion_total]') === 0
+                || (
+                    strpos($descripcionNota, '[regularizar_diferencia]') !== 0
+                    && abs(round((float)$nota['total'], 2) - round((float)$facturaNota['total_compra'], 2)) <= 0.01
+                );
+        }
+
         $pdo = mainModel::conectar();
 
         try {
@@ -725,7 +835,14 @@ class notasCreDeControlador extends notasCreDeModelo
             ]);
 
             /* 3️⃣ Revertir stock si correspondía */
-            if ($nota['tipo'] === 'credito' && $nota['movimiento_stock'] === 'NINGUNO') {
+            if ($esAnulacionTotal) {
+                notasCreDeModelo::restaurarCompraPorAnulacionNotaTotalModelo(
+                    $pdo,
+                    $nota['idcompra_cabecera'],
+                    $nota['id_sucursal'],
+                    $_SESSION['id_str']
+                );
+            } elseif ($nota['tipo'] === 'credito' && $nota['movimiento_stock'] === 'NINGUNO') {
                 notasCreDeModelo::marcarCompraConDiferenciaModelo(
                     $pdo,
                     $nota['idcompra_cabecera'],
@@ -737,20 +854,37 @@ class notasCreDeControlador extends notasCreDeModelo
             if ($nota['movimiento_stock'] === 'DEVOLUCION') {
 
                 $det = $pdo->prepare("
-                SELECT id_articulo, cantidad, precio_unitario
-                FROM nota_compra_detalle
-                WHERE idnota_compra = :id
+                SELECT
+                    nd.id_articulo,
+                    nd.cantidad,
+                    nd.precio_unitario,
+                    COALESCE(cd.cantidad_recibida, nd.cantidad) AS cantidad_recibida
+                FROM nota_compra_detalle nd
+                LEFT JOIN compra_detalle cd
+                    ON cd.idcompra_cabecera = :idcompra
+                   AND cd.id_articulo = nd.id_articulo
+                WHERE nd.idnota_compra = :id
             ");
-                $det->execute([':id' => $idNota]);
+                $det->execute([
+                    ':id' => $idNota,
+                    ':idcompra' => $nota['idcompra_cabecera']
+                ]);
                 $items = $det->fetchAll(PDO::FETCH_ASSOC);
 
                 foreach ($items as $d) {
+                    $cantidadStock = $esAnulacionTotal
+                        ? min((float)$d['cantidad'], (float)$d['cantidad_recibida'])
+                        : (float)$d['cantidad'];
+
+                    if ($cantidadStock <= 0) {
+                        continue;
+                    }
 
                     mainModel::registrar_movimiento_stock_modelo($pdo, [
                         "id_sucursal" => $nota['id_sucursal'],
                         "tipo" => "ANULA_NC_COMPRA",
                         "id_articulo" => $d['id_articulo'],
-                        "cantidad" => $d['cantidad'],
+                        "cantidad" => $cantidadStock,
                         "precio_venta" => 0,
                         "costo" => $d['precio_unitario'],
                         "usuario" => $_SESSION['id_str'],

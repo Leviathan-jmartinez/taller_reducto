@@ -232,6 +232,10 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
             default => 'Desconocido',
         };
     }
+
+    $fmtCantidad = static function ($valor) {
+        return number_format((float)$valor, 2, ',', '.');
+    };
     ?>
 
     <!-- INFO -->
@@ -301,7 +305,7 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
             <?php foreach ($detalle as $d): ?>
                 <tr>
                     <td><?= $d['desc_articulo'] ?></td>
-                    <td class="center"><?= $d['cantidad'] ?></td>
+                    <td class="center"><?= $fmtCantidad($d['cantidad']) ?></td>
                     <td class="right"><?= number_format((float)$d['precio_unitario'], 0, ',', '.') ?></td>
                     <td class="right"><?= number_format((float)$d['subtotal'], 0, ',', '.') ?></td>
                 </tr>

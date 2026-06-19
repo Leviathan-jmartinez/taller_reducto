@@ -94,6 +94,14 @@ $qDet = $pdo->prepare("
 $qDet->execute([':id' => $id]);
 $detalle = $qDet->fetchAll(PDO::FETCH_ASSOC);
 
+$fmtCantidad = static function ($valor) {
+    return number_format((float)$valor, 2, ',', '.');
+};
+
+$fmtMonto = static function ($valor) {
+    return number_format((float)$valor, 0, ',', '.');
+};
+
 /* ================= MPDF ================= */
 $mpdf = new Mpdf([
     'mode' => 'utf-8',
@@ -272,7 +280,7 @@ ob_start();
     ?>
         <tr>
             <td style="border:1px solid #000; padding:4px; text-align:right;">
-                <?= number_format($d['cantidad'], 2) ?>
+                <?= $fmtCantidad($d['cantidad']) ?>
             </td>
             <td style="border:1px solid #000; padding:4px; text-align:center;">
                 <?= $d['unidad'] ?? 'UND' ?>
@@ -281,7 +289,7 @@ ob_start();
                 <?= $d['desc_articulo'] ?>
             </td>
             <td style="border:1px solid #000; padding:4px; text-align:right;">
-                <?= number_format($d['subtotal'], 2) ?>
+                <?= $fmtMonto($d['subtotal']) ?>
             </td>
         </tr>
     <?php endforeach; ?>
@@ -291,7 +299,7 @@ ob_start();
             <strong>Total</strong>
         </td>
         <td style="border:1px solid #000; padding:4px; text-align:right;">
-            <strong><?= number_format($total, 2) ?></strong>
+            <strong><?= $fmtMonto($total) ?></strong>
         </td>
     </tr>
 </table>

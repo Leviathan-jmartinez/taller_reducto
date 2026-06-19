@@ -1,10 +1,16 @@
 <?php
 $permisosMovimientos = [
     'reportes.pedidos.ver',
+    'reportes.presupuestos_compra.ver',
     'reportes.ordenes_compra.ver',
     'reportes.compras.ver',
+    'reportes.libro_compras.ver',
+    'reportes.stock.ver',
+    'reportes.transferencias.ver',
+    'reportes.movimientos_stock.ver',
     'reportes.recepcion_servicio.ver',
     'reportes.presupuesto_servicio.ver',
+    'reportes.orden_trabajo.ver',
     'reportes.registro_servicio.ver'
 ];
 
@@ -29,10 +35,17 @@ $proveedoresMov = $repMov->listar_proveedores_controlador();
 
 $tiposMovimientos = [
     'pedidos' => ['titulo' => 'Pedidos de Compra', 'permiso' => 'reportes.pedidos.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'estado_labels' => [0 => 'Anulado', 1 => 'Pendiente', 2 => 'Procesado'], 'sucursal' => true],
+    'presupuestos_compra' => ['titulo' => 'Presupuestos de Compra', 'permiso' => 'reportes.presupuestos_compra.ver', 'proveedor' => true, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'estado_labels' => [0 => 'Anulado', 1 => 'Pendiente', 2 => 'Procesado'], 'sucursal' => true],
     'ordenes_compra' => ['titulo' => 'Ordenes de Compra', 'permiso' => 'reportes.ordenes_compra.ver', 'proveedor' => true, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'estado_labels' => [0 => 'Anulado', 1 => 'Pendiente', 2 => 'Procesado'], 'sucursal' => true],
     'compras' => ['titulo' => 'Compras', 'permiso' => 'reportes.compras.ver', 'proveedor' => true, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'estado_labels' => [0 => 'Anulado', 1 => 'Activo', 2 => 'Procesado', 3 => 'Con diferencia', 4 => 'Regularizada con NC'], 'sucursal' => true],
+    'libro_compras' => ['titulo' => 'Libro de Compras', 'permiso' => 'reportes.libro_compras.ver', 'proveedor' => true, 'cliente' => false, 'articulo' => false, 'empleado' => false, 'vista' => false, 'fecha' => true, 'estado' => true, 'estado_labels' => [0 => 'Anulado', 1 => 'Activo'], 'sucursal' => true],
+    'stock' => ['titulo' => 'Stock', 'permiso' => 'reportes.stock.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => false, 'fecha' => false, 'estado' => true, 'estado_labels' => [0 => 'Inactivo', 1 => 'Activo'], 'sucursal' => true],
+    'transferencias' => ['titulo' => 'Transferencias', 'permiso' => 'reportes.transferencias.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'vista' => false, 'fecha' => true, 'estado' => true, 'estado_labels' => ['en_transito' => 'Pendiente de recibir', 'recibido' => 'Recibido', 'recibido_parcial' => 'Recibido parcial', 'anulado' => 'Anulado'], 'sucursal' => true],
+    'movimientos_stock' => ['titulo' => 'Movimientos de Stock', 'permiso' => 'reportes.movimientos_stock.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'stock_filtros' => true, 'vista' => false, 'fecha' => true, 'estado' => false, 'sucursal' => true],
+    'kardex_articulo' => ['titulo' => 'Kardex de Articulo', 'permiso' => 'reportes.movimientos_stock.ver', 'proveedor' => false, 'cliente' => false, 'articulo' => true, 'empleado' => false, 'stock_filtros' => true, 'requiere_sucursal' => true, 'requiere_articulo' => true, 'vista' => false, 'fecha' => true, 'estado' => false, 'sucursal' => true],
     'recepcion_servicio' => ['titulo' => 'Recepcion de Servicios', 'permiso' => 'reportes.recepcion_servicio.ver', 'proveedor' => false, 'cliente' => true, 'articulo' => false, 'empleado' => false, 'vista' => false, 'fecha' => true, 'estado' => true, 'estado_labels' => [0 => 'Anulado', 1 => 'Recepcionado', 2 => 'En proceso', 3 => 'Finalizado'], 'sucursal' => true],
     'presupuesto_servicio' => ['titulo' => 'Presupuestos de Servicios', 'permiso' => 'reportes.presupuesto_servicio.ver', 'proveedor' => false, 'cliente' => true, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'estado_labels' => [0 => 'Anulado', 1 => 'Pendiente', 2 => 'Aprobado', 3 => 'Rechazado', 4 => 'Facturado'], 'sucursal' => true],
+    'orden_trabajo' => ['titulo' => 'Ordenes de Trabajo', 'permiso' => 'reportes.orden_trabajo.ver', 'proveedor' => false, 'cliente' => true, 'articulo' => true, 'empleado' => false, 'vista' => true, 'fecha' => true, 'estado' => true, 'estado_labels' => [0 => 'Anulado', 1 => 'Pendiente', 2 => 'En proceso', 3 => 'Pendiente completar'], 'sucursal' => true],
     'registro_servicio' => ['titulo' => 'Registro de Servicios', 'permiso' => 'reportes.registro_servicio.ver', 'proveedor' => false, 'cliente' => true, 'articulo' => true, 'empleado' => true, 'vista' => true, 'fecha' => true, 'estado' => true, 'estado_labels' => [0 => 'Anulado', 1 => 'Registrado', 2 => 'Facturado', 3 => 'Con Reclamo'], 'sucursal' => true]
 ];
 
@@ -138,6 +151,39 @@ foreach ($tiposMovimientos as $clave => $tipo) {
                     </select>
                 </div>
 
+                <div class="col-md-3 mt-3 d-none" id="grupoNaturalezaStock">
+                    <label>Naturaleza</label>
+                    <select name="naturaleza_stock" id="naturaleza_stock" class="form-control">
+                        <option value="">Todos</option>
+                        <option value="entrada">Entradas</option>
+                        <option value="salida">Salidas</option>
+                        <option value="ajuste">Ajustes</option>
+                        <option value="compra">Compras</option>
+                        <option value="transferencia">Transferencias</option>
+                        <option value="servicio">Servicios</option>
+                        <option value="insumo">Insumos</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3 mt-3 d-none" id="grupoTipoStock">
+                    <label>Tipo stock</label>
+                    <select name="tipo_movimiento_stock" class="form-control">
+                        <option value="">Todos</option>
+                        <option value="RECEPCION COMPRA">Recepcion compra</option>
+                        <option value="ANULACION COMPRA">Anulacion compra</option>
+                        <option value="NC_COMPRA_DEV">NC compra devolucion</option>
+                        <option value="ANULA_NC_COMPRA">Anula NC compra</option>
+                        <option value="TRANSFERENCIA_SALIDA">Transferencia salida</option>
+                        <option value="TRANSFERENCIA_ENTRADA">Transferencia entrada</option>
+                        <option value="AJUSTE_INV">Ajuste inventario</option>
+                        <option value="ANULACION_AJUSTE_INV">Anulacion ajuste</option>
+                        <option value="REG. SERVICIO">Registro servicio</option>
+                        <option value="ANULACION REG. SERVICIO">Anulacion servicio</option>
+                        <option value="SALIDA INSUMO">Salida insumo</option>
+                        <option value="ANUL SALIDA INSUMO">Anulacion salida insumo</option>
+                    </select>
+                </div>
+
                 <div class="col-md-2 mt-3">
                     <label>Registros</label>
                     <select name="por_pagina" class="form-control">
@@ -170,6 +216,36 @@ foreach ($tiposMovimientos as $clave => $tipo) {
     </div>
 
     <div id="resumenMovimientos" class="row mt-3 d-none"></div>
+
+    <div id="kardexArticuloMeta" class="card mt-3 d-none">
+        <div class="card-body py-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-start">
+                <div class="mb-2">
+                    <small class="text-muted d-block">Articulo</small>
+                    <h5 class="mb-1" id="kardexArticuloTitulo">-</h5>
+                    <small class="text-muted" id="kardexArticuloPeriodo">-</small>
+                </div>
+                <div class="kardex-metricas">
+                    <div>
+                        <small>Saldo inicial</small>
+                        <strong id="kardexSaldoInicial">0</strong>
+                    </div>
+                    <div>
+                        <small>Entradas</small>
+                        <strong id="kardexEntradas">0</strong>
+                    </div>
+                    <div>
+                        <small>Salidas</small>
+                        <strong id="kardexSalidas">0</strong>
+                    </div>
+                    <div>
+                        <small>Saldo final</small>
+                        <strong id="kardexSaldoFinal">0</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div id="panelGraficosMovimientos" class="row mt-3 d-none">
         <div class="col-xl-4 col-lg-6 col-12 mb-3">
@@ -232,6 +308,8 @@ foreach ($tiposMovimientos as $clave => $tipo) {
     <input type="hidden" name="cliente">
     <input type="hidden" name="articulo">
     <input type="hidden" name="empleado">
+    <input type="hidden" name="naturaleza_stock">
+    <input type="hidden" name="tipo_movimiento_stock">
 </form>
 
 <form id="formCsvMovimientos" action="<?= SERVERURL ?>ajax/reportesAjax.php" method="POST" target="_blank" class="d-none">
@@ -246,6 +324,8 @@ foreach ($tiposMovimientos as $clave => $tipo) {
     <input type="hidden" name="cliente">
     <input type="hidden" name="articulo">
     <input type="hidden" name="empleado">
+    <input type="hidden" name="naturaleza_stock">
+    <input type="hidden" name="tipo_movimiento_stock">
 </form>
 
 <style>
@@ -275,6 +355,29 @@ foreach ($tiposMovimientos as $clave => $tipo) {
         width: 100% !important;
     }
 
+    .kardex-metricas {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(4, minmax(120px, 1fr));
+        min-width: min(100%, 560px);
+    }
+
+    .kardex-metricas div {
+        border-left: 3px solid #17a2b8;
+        padding-left: 0.75rem;
+    }
+
+    .kardex-metricas small {
+        color: #6c757d;
+        display: block;
+    }
+
+    .kardex-metricas strong {
+        display: block;
+        font-size: 1.05rem;
+        line-height: 1.2;
+    }
+
     @media (max-width: 767.98px) {
         .movimiento-grafico-card .card-body {
             height: 320px;
@@ -289,6 +392,11 @@ foreach ($tiposMovimientos as $clave => $tipo) {
         }
 
         .acciones-movimientos .accion-movimiento {
+            width: 100%;
+        }
+
+        .kardex-metricas {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
             width: 100%;
         }
     }
@@ -309,7 +417,16 @@ foreach ($tiposMovimientos as $clave => $tipo) {
         const grupoCliente = document.getElementById('grupoClienteMovimiento');
         const grupoArticulo = document.getElementById('grupoArticuloMovimiento');
         const grupoEmpleado = document.getElementById('grupoEmpleadoMovimiento');
+        const grupoNaturalezaStock = document.getElementById('grupoNaturalezaStock');
+        const grupoTipoStock = document.getElementById('grupoTipoStock');
         const resumen = document.getElementById('resumenMovimientos');
+        const kardexMeta = document.getElementById('kardexArticuloMeta');
+        const kardexArticuloTitulo = document.getElementById('kardexArticuloTitulo');
+        const kardexArticuloPeriodo = document.getElementById('kardexArticuloPeriodo');
+        const kardexSaldoInicial = document.getElementById('kardexSaldoInicial');
+        const kardexEntradas = document.getElementById('kardexEntradas');
+        const kardexSalidas = document.getElementById('kardexSalidas');
+        const kardexSaldoFinal = document.getElementById('kardexSaldoFinal');
         const panelGraficos = document.getElementById('panelGraficosMovimientos');
         const panelTabla = document.getElementById('panelTablaMovimientos');
         const tabla = document.getElementById('tablaMovimientos');
@@ -345,6 +462,11 @@ foreach ($tiposMovimientos as $clave => $tipo) {
                 $(select).trigger('change.select2');
             }
         };
+        const fechaPy = valor => {
+            const partes = String(valor || '').split('-');
+            return partes.length === 3 ? `${partes[2]}/${partes[1]}/${partes[0]}` : texto(valor);
+        };
+
         function configurarEstados(cfg) {
             if (!form.elements.estado) return;
             const valorActual = form.elements.estado.value;
@@ -369,6 +491,9 @@ foreach ($tiposMovimientos as $clave => $tipo) {
             grupoCliente.classList.toggle('d-none', !cfg.cliente);
             grupoArticulo.classList.toggle('d-none', !cfg.articulo);
             grupoEmpleado.classList.toggle('d-none', !cfg.empleado);
+            grupoNaturalezaStock.classList.toggle('d-none', !cfg.stock_filtros);
+            grupoTipoStock.classList.toggle('d-none', !cfg.stock_filtros);
+
             if (!cfg.vista && form.elements.vista_movimiento) form.elements.vista_movimiento.value = 'resumen';
             if (!cfg.fecha) {
                 form.elements.desde.value = '';
@@ -392,6 +517,11 @@ foreach ($tiposMovimientos as $clave => $tipo) {
                 form.elements.empleado.value = '';
                 refrescarSelect2(form.elements.empleado);
             }
+            if (!cfg.stock_filtros) {
+                form.elements.naturaleza_stock.value = '';
+                form.elements.tipo_movimiento_stock.value = '';
+            }
+
             if (cfg.proveedor) {
                 cargarProveedoresSiHaceFalta();
             }
@@ -438,22 +568,35 @@ foreach ($tiposMovimientos as $clave => $tipo) {
 
         function renderResumen(data, metricas = {}) {
             const tarjetas = data.tarjetas || {};
+            const esLibroCompras = form.elements.tipo_movimiento.value === 'libro_compras';
             const usaImporte = metricas.usa_importe === true;
             const usaItems = metricas.usa_items === true || Number(tarjetas.items || 0) > 0;
             const items = [];
 
-            items.push(['TOTAL', tarjetas.total || 0]);
-            if (usaImporte) {
+            if (esLibroCompras) {
                 items.push(
-                    ['IMPORTE TOTAL', numero(tarjetas.importe_total || 0)],
-                    ['PROMEDIO', numero(tarjetas.promedio || 0)]
+                    ['COMPROBANTES', tarjetas.total || 0],
+                    ['EXENTA', numero(tarjetas.exenta_total || 0)],
+                    ['GRAVADA 5%', numero(tarjetas.gravada_5_total || 0)],
+                    ['IVA 5%', numero(tarjetas.iva_5_total || 0)],
+                    ['GRAVADA 10%', numero(tarjetas.gravada_10_total || 0)],
+                    ['IVA 10%', numero(tarjetas.iva_10_total || 0)],
+                    ['TOTAL GENERAL', numero(tarjetas.importe_total || 0)]
                 );
-            }
-            if (usaItems) {
-                items.push(['ITEMS', numero(tarjetas.items || 0)]);
+            } else {
+                items.push(['TOTAL', tarjetas.total || 0]);
+                if (usaImporte) {
+                    items.push(
+                        ['IMPORTE TOTAL', numero(tarjetas.importe_total || 0)],
+                        ['PROMEDIO', numero(tarjetas.promedio || 0)]
+                    );
+                }
+                if (usaItems) {
+                    items.push(['ITEMS', numero(tarjetas.items || 0)]);
+                }
             }
 
-            const claseColumna = items.length <= 2 ? '6 col-lg-3' : '3';
+            const claseColumna = esLibroCompras ? '4 col-lg-3' : (items.length <= 2 ? '6 col-lg-3' : '3');
 
             resumen.innerHTML = items.map(item => `
             <div class="col-md-${claseColumna} mb-2">
@@ -466,6 +609,27 @@ foreach ($tiposMovimientos as $clave => $tipo) {
             </div>
         `).join('');
             resumen.classList.remove('d-none');
+        }
+
+        function renderKardexMeta(data) {
+            if (!data) {
+                kardexMeta.classList.add('d-none');
+                return;
+            }
+
+            const periodo = [
+                data.sucursal ? `Sucursal: ${data.sucursal}` : '',
+                data.desde ? `Desde: ${fechaPy(data.desde)}` : '',
+                data.hasta ? `Hasta: ${fechaPy(data.hasta)}` : ''
+            ].filter(Boolean).join(' | ');
+
+            kardexArticuloTitulo.textContent = `${data.codigo || '-'} - ${data.articulo || '-'}`;
+            kardexArticuloPeriodo.textContent = periodo || 'Periodo completo';
+            kardexSaldoInicial.textContent = numero(data.saldo_inicial || 0);
+            kardexEntradas.textContent = numero(data.entradas || 0);
+            kardexSalidas.textContent = numero(data.salidas || 0);
+            kardexSaldoFinal.textContent = numero(data.saldo_final || 0);
+            kardexMeta.classList.remove('d-none');
         }
 
         function dibujarFallback(canvas, datos) {
@@ -714,7 +878,7 @@ foreach ($tiposMovimientos as $clave => $tipo) {
 
         function sincronizar(formExportacion) {
             const fd = new FormData(form);
-            ['tipo_movimiento', 'vista_movimiento', 'desde', 'hasta', 'estado', 'sucursal', 'proveedor', 'cliente', 'articulo', 'empleado'].forEach(name => {
+            ['tipo_movimiento', 'vista_movimiento', 'desde', 'hasta', 'estado', 'sucursal', 'proveedor', 'cliente', 'articulo', 'empleado', 'naturaleza_stock', 'tipo_movimiento_stock'].forEach(name => {
                 formExportacion.elements[name].value = fd.get(name) || '';
             });
         }
@@ -731,6 +895,7 @@ foreach ($tiposMovimientos as $clave => $tipo) {
             estadoLabels = {};
             resumen.innerHTML = '';
             resumen.classList.add('d-none');
+            kardexMeta.classList.add('d-none');
             limpiarGraficos();
             tabla.querySelector('thead').innerHTML = '';
             tabla.querySelector('tbody').innerHTML = '';
@@ -746,7 +911,7 @@ foreach ($tiposMovimientos as $clave => $tipo) {
         }
 
         function limpiarFiltros() {
-            ['desde', 'hasta', 'estado', 'sucursal', 'proveedor', 'cliente', 'articulo', 'empleado'].forEach(name => {
+            ['desde', 'hasta', 'estado', 'sucursal', 'proveedor', 'cliente', 'articulo', 'empleado', 'naturaleza_stock', 'tipo_movimiento_stock'].forEach(name => {
                 if (form.elements[name]) form.elements[name].value = '';
             });
             ['estado', 'sucursal', 'proveedor', 'empleado'].forEach(name => refrescarSelect2(form.elements[name]));
@@ -764,6 +929,15 @@ foreach ($tiposMovimientos as $clave => $tipo) {
 
         form.addEventListener('submit', event => {
             event.preventDefault();
+            const cfg = tipos[tipo.value] || {};
+            if (cfg.requiere_sucursal && !form.elements.sucursal.value) {
+                Swal.fire('Atencion', 'Para el Kardex debe seleccionar una sucursal.', 'warning');
+                return;
+            }
+            if (cfg.requiere_articulo && !form.elements.articulo.value.trim()) {
+                Swal.fire('Atencion', 'Para el Kardex debe ingresar el ID o codigo exacto del articulo.', 'warning');
+                return;
+            }
             fetch("<?= SERVERURL ?>ajax/reportesAjax.php", {
                     method: 'POST',
                     body: new FormData(form)
@@ -775,6 +949,7 @@ foreach ($tiposMovimientos as $clave => $tipo) {
                         return;
                     }
                     renderResumen(resp.resumen || {}, resp.metricas || {});
+                    renderKardexMeta(resp.kardex || null);
                     renderGraficos(resp.graficos || {});
                     renderTabla(resp);
                     sincronizar(formPdf);
@@ -796,7 +971,7 @@ foreach ($tiposMovimientos as $clave => $tipo) {
             formCsv.submit();
         });
 
-        ['vista_movimiento', 'desde', 'hasta', 'estado', 'sucursal', 'proveedor', 'cliente', 'articulo', 'empleado', 'por_pagina'].forEach(name => {
+        ['vista_movimiento', 'desde', 'hasta', 'estado', 'sucursal', 'proveedor', 'cliente', 'articulo', 'empleado', 'naturaleza_stock', 'tipo_movimiento_stock', 'por_pagina'].forEach(name => {
             const control = form.elements[name];
             if (control) control.addEventListener('change', () => {
                 form.elements.pagina.value = 1;

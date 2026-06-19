@@ -215,6 +215,45 @@ class reporteControlador extends reportesModelo
                     ["key" => "celular", "label" => "Celular"],
                     ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
                 ]
+            ],
+            "marcas" => [
+                "titulo" => "Marcas",
+                "permiso" => "reportes.marcas.ver",
+                "modelo" => "reporte_marcas_modelo",
+                "resumen" => "resumen_marcas_modelo",
+                "orientacion" => "P",
+                "columnas" => [
+                    ["key" => "id_marcas", "label" => "ID"],
+                    ["key" => "mar_descri", "label" => "Marca"]
+                ]
+            ],
+            "categorias" => [
+                "titulo" => "Categorias",
+                "permiso" => "reportes.categorias.ver",
+                "modelo" => "reporte_categorias_modelo",
+                "resumen" => "resumen_categorias_modelo",
+                "orientacion" => "P",
+                "columnas" => [
+                    ["key" => "id_categoria", "label" => "ID"],
+                    ["key" => "cat_descri", "label" => "Categoria"]
+                ]
+            ],
+            "usuarios" => [
+                "titulo" => "Usuarios",
+                "permiso" => "reportes.usuarios.ver",
+                "modelo" => "reporte_usuarios_modelo",
+                "resumen" => "resumen_usuarios_modelo",
+                "orientacion" => "L",
+                "estado_key" => "usu_estado",
+                "columnas" => [
+                    ["key" => "usu_nombre", "label" => "Nombre"],
+                    ["key" => "usu_apellido", "label" => "Apellido"],
+                    ["key" => "usu_nick", "label" => "Usuario"],
+                    ["key" => "usu_email", "label" => "Correo"],
+                    ["key" => "usu_telefono", "label" => "Telefono"],
+                    ["key" => "sucursal", "label" => "Sucursal"],
+                    ["key" => "usu_estado", "label" => "Estado", "tipo" => "estado"]
+                ]
             ]
         ];
     }
@@ -520,6 +559,43 @@ class reporteControlador extends reportesModelo
                     ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
                 ]
             ],
+            "presupuestos_compra" => [
+                "titulo" => "Presupuestos de Compra",
+                "permiso" => "reportes.presupuestos_compra.ver",
+                "modelo" => "reporte_presupuestos_modelo",
+                "detalle_modelo" => "reporte_presupuestos_detalle_modelo",
+                "args" => ["desde", "hasta", "estado_int", "sucursal_int"],
+                "detalle_args" => ["desde", "hasta", "estado_int", "sucursal_int"],
+                "fecha" => "fecha",
+                "estado" => "estado",
+                "estado_labels" => [0 => "Anulado", 1 => "Pendiente", 2 => "Procesado"],
+                "importe" => "total",
+                "detalle_importe_unico" => "total",
+                "detalle_importe_unico_id" => "idpresupuesto_compra",
+                "entidad" => "proveedor",
+                "proveedor" => true,
+                "articulo" => true,
+                "columnas" => [
+                    ["key" => "idpresupuesto_compra", "label" => "Nro"],
+                    ["key" => "fecha", "label" => "Fecha", "tipo" => "fecha"],
+                    ["key" => "proveedor", "label" => "Proveedor"],
+                    ["key" => "sucursal", "label" => "Sucursal"],
+                    ["key" => "cantidad_items", "label" => "Items", "tipo" => "numero"],
+                    ["key" => "total", "label" => "Total", "tipo" => "moneda"],
+                    ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
+                ],
+                "detalle_columnas" => [
+                    ["key" => "idpresupuesto_compra", "label" => "Presupuesto"],
+                    ["key" => "fecha", "label" => "Fecha", "tipo" => "fecha"],
+                    ["key" => "proveedor", "label" => "Proveedor"],
+                    ["key" => "codigo", "label" => "Codigo"],
+                    ["key" => "articulo", "label" => "Articulo"],
+                    ["key" => "cantidad", "label" => "Cantidad", "tipo" => "numero"],
+                    ["key" => "precio", "label" => "Precio", "tipo" => "moneda"],
+                    ["key" => "subtotal", "label" => "Subtotal", "tipo" => "moneda"],
+                    ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
+                ]
+            ],
             "ordenes_compra" => [
                 "titulo" => "Ordenes de Compra",
                 "permiso" => "reportes.ordenes_compra.ver",
@@ -601,6 +677,130 @@ class reporteControlador extends reportesModelo
                     ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
                 ]
             ],
+            "libro_compras" => [
+                "titulo" => "Libro de Compras",
+                "permiso" => "reportes.libro_compras.ver",
+                "modelo" => "reporte_libro_compras_modelo",
+                "args" => ["desde", "hasta", "proveedor_int", "estado_int", "sucursal_int"],
+                "fecha" => "fecha",
+                "estado" => "estado",
+                "estado_labels" => [0 => "Anulado", 1 => "Activo"],
+                "importe" => "total",
+                "entidad" => "proveedor_nombre",
+                "proveedor" => true,
+                "columnas" => [
+                    ["key" => "fecha", "label" => "Fecha", "tipo" => "fecha"],
+                    ["key" => "tipo_comprobante", "label" => "Tipo"],
+                    ["key" => "serie", "label" => "Serie"],
+                    ["key" => "nro_comprobante", "label" => "Comprobante"],
+                    ["key" => "proveedor_nombre", "label" => "Proveedor"],
+                    ["key" => "proveedor_ruc", "label" => "RUC"],
+                    ["key" => "exenta", "label" => "Exenta", "tipo" => "moneda"],
+                    ["key" => "gravada_5", "label" => "Gravada 5%", "tipo" => "moneda"],
+                    ["key" => "iva_5", "label" => "IVA 5%", "tipo" => "moneda"],
+                    ["key" => "gravada_10", "label" => "Gravada 10%", "tipo" => "moneda"],
+                    ["key" => "iva_10", "label" => "IVA 10%", "tipo" => "moneda"],
+                    ["key" => "total", "label" => "Total", "tipo" => "moneda"],
+                    ["key" => "sucursal", "label" => "Sucursal"],
+                    ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
+                ]
+            ],
+            "transferencias" => [
+                "titulo" => "Transferencias",
+                "permiso" => "reportes.transferencias.ver",
+                "modelo" => "reporte_transferencias_modelo",
+                "args" => ["filtros_array"],
+                "fecha" => "fecha",
+                "estado" => "estado",
+                "estado_labels" => [
+                    "en_transito" => "Pendiente de recibir",
+                    "recibido" => "Recibido",
+                    "recibido_parcial" => "Recibido parcial",
+                    "anulado" => "Anulado"
+                ],
+                "importe" => null,
+                "entidad" => "suc_origen",
+                "articulo" => true,
+                "columnas" => [
+                    ["key" => "idtransferencia", "label" => "Nro"],
+                    ["key" => "fecha", "label" => "Fecha", "tipo" => "fecha"],
+                    ["key" => "suc_origen", "label" => "Origen"],
+                    ["key" => "suc_destino", "label" => "Destino"],
+                    ["key" => "nro_remision", "label" => "Remision"],
+                    ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
+                ]
+            ],
+            "movimientos_stock" => [
+                "titulo" => "Movimientos de Stock",
+                "permiso" => "reportes.movimientos_stock.ver",
+                "modelo" => "reporte_movimientos_stock_modelo",
+                "args" => ["filtros_array"],
+                "fecha" => "MovStockFechaHora",
+                "estado" => "TipoMovStockId",
+                "importe" => "importe_costo",
+                "entidad" => "desc_articulo",
+                "articulo" => true,
+                "columnas" => [
+                    ["key" => "MovStockFechaHora", "label" => "Fecha", "tipo" => "fecha"],
+                    ["key" => "sucursal", "label" => "Sucursal"],
+                    ["key" => "TipoMovStockId", "label" => "Tipo"],
+                    ["key" => "naturaleza_movimiento", "label" => "Naturaleza"],
+                    ["key" => "desc_articulo", "label" => "Articulo"],
+                    ["key" => "MovStockCantidad", "label" => "Cantidad", "tipo" => "numero"],
+                    ["key" => "MovStockCosto", "label" => "Costo Unit.", "tipo" => "moneda"],
+                    ["key" => "MovStockPrecioVenta", "label" => "Precio Venta Unit.", "tipo" => "moneda"],
+                    ["key" => "importe_costo", "label" => "Importe Costo", "tipo" => "moneda"],
+                    ["key" => "usuario", "label" => "Usuario"]
+                ]
+            ],
+            "kardex_articulo" => [
+                "titulo" => "Kardex de Articulo",
+                "permiso" => "reportes.movimientos_stock.ver",
+                "modelo" => "reporte_kardex_articulo_modelo",
+                "args" => ["filtros_array"],
+                "fecha" => "MovStockFechaHora",
+                "estado" => "grupo",
+                "importe" => null,
+                "entidad" => "TipoMovStockId",
+                "articulo" => true,
+                "requiere_sucursal" => true,
+                "requiere_articulo" => true,
+                "columnas" => [
+                    ["key" => "MovStockFechaHora", "label" => "Fecha", "tipo" => "fecha"],
+                    ["key" => "TipoMovStockId", "label" => "Tipo"],
+                    ["key" => "MovStockReferencia", "label" => "Referencia"],
+                    ["key" => "entrada", "label" => "Entrada", "tipo" => "numero"],
+                    ["key" => "salida", "label" => "Salida", "tipo" => "numero"],
+                    ["key" => "MovStockCosto", "label" => "Costo", "tipo" => "moneda"],
+                    ["key" => "saldo_anterior", "label" => "Saldo Ant.", "tipo" => "numero"],
+                    ["key" => "saldo_actual", "label" => "Saldo", "tipo" => "numero"],
+                    ["key" => "usuario", "label" => "Usuario"]
+                ]
+            ],
+            "stock" => [
+                "titulo" => "Stock",
+                "permiso" => "reportes.stock.ver",
+                "modelo" => "reporte_articulos_modelo",
+                "args" => ["stock_array"],
+                "fecha" => null,
+                "estado" => "estado",
+                "estado_labels" => [0 => "Inactivo", 1 => "Activo"],
+                "importe" => "valor_stock",
+                "entidad" => "desc_articulo",
+                "articulo" => true,
+                "columnas" => [
+                    ["key" => "codigo", "label" => "Codigo"],
+                    ["key" => "desc_articulo", "label" => "Articulo"],
+                    ["key" => "categoria", "label" => "Categoria"],
+                    ["key" => "marca", "label" => "Marca"],
+                    ["key" => "sucursal", "label" => "Sucursal"],
+                    ["key" => "stock", "label" => "Stock", "tipo" => "numero"],
+                    ["key" => "stockcant_min", "label" => "Min.", "tipo" => "numero"],
+                    ["key" => "precio_venta", "label" => "Precio", "tipo" => "moneda"],
+                    ["key" => "valor_stock", "label" => "Valor Stock", "tipo" => "moneda"],
+                    ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
+                ]
+            ],
             "recepcion_servicio" => [
                 "titulo" => "Recepcion de Servicios",
                 "permiso" => "reportes.recepcion_servicio.ver",
@@ -670,6 +870,42 @@ class reporteControlador extends reportesModelo
                     ["key" => "descuentos_aplicados", "label" => "Descuento"],
                     ["key" => "total_descuento", "label" => "Desc. Presup.", "tipo" => "moneda"],
                     ["key" => "total_final", "label" => "Total Final", "tipo" => "moneda"],
+                    ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
+                ]
+            ],
+            "orden_trabajo" => [
+                "titulo" => "Ordenes de Trabajo",
+                "permiso" => "reportes.orden_trabajo.ver",
+                "modelo" => "reporte_orden_trabajo_modelo",
+                "detalle_modelo" => "reporte_orden_trabajo_detalle_modelo",
+                "args" => ["desde", "hasta", "estado_int", "sucursal_int"],
+                "detalle_args" => ["desde", "hasta", "estado_int", "sucursal_int"],
+                "fecha" => "fecha_inicio",
+                "estado" => "estado",
+                "estado_labels" => [0 => "Anulado", 1 => "Pendiente", 2 => "En proceso", 3 => "Pendiente completar"],
+                "importe" => null,
+                "entidad" => "cliente",
+                "cliente" => true,
+                "articulo" => true,
+                "columnas" => [
+                    ["key" => "idorden_trabajo", "label" => "Nro"],
+                    ["key" => "fecha_inicio", "label" => "Inicio", "tipo" => "fecha"],
+                    ["key" => "cliente", "label" => "Cliente"],
+                    ["key" => "vehiculo", "label" => "Vehiculo"],
+                    ["key" => "equipo", "label" => "Equipo"],
+                    ["key" => "sucursal", "label" => "Sucursal"],
+                    ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
+                ],
+                "detalle_columnas" => [
+                    ["key" => "idorden_trabajo", "label" => "Orden"],
+                    ["key" => "fecha_inicio", "label" => "Inicio", "tipo" => "fecha"],
+                    ["key" => "cliente", "label" => "Cliente"],
+                    ["key" => "vehiculo", "label" => "Vehiculo"],
+                    ["key" => "codigo", "label" => "Codigo"],
+                    ["key" => "articulo", "label" => "Articulo"],
+                    ["key" => "cantidad", "label" => "Cantidad", "tipo" => "numero"],
+                    ["key" => "precio_unitario", "label" => "Precio", "tipo" => "moneda"],
+                    ["key" => "subtotal", "label" => "Subtotal", "tipo" => "moneda"],
                     ["key" => "estado", "label" => "Estado", "tipo" => "estado"]
                 ]
             ],
@@ -1067,6 +1303,35 @@ class reporteControlador extends reportesModelo
         ];
     }
 
+    private function meta_kardex_desde_datos($datos, $filtros)
+    {
+        if (empty($datos)) {
+            return null;
+        }
+
+        $primera = reset($datos);
+        $ultima = end($datos);
+        $entradas = 0;
+        $salidas = 0;
+
+        foreach ($datos as $row) {
+            $entradas += (float)($row['entrada'] ?? 0);
+            $salidas += (float)($row['salida'] ?? 0);
+        }
+
+        return [
+            "codigo" => $primera['codigo'] ?? '',
+            "articulo" => $primera['desc_articulo'] ?? '',
+            "sucursal" => $primera['sucursal'] ?? '',
+            "desde" => $filtros['desde'] ?? '',
+            "hasta" => $filtros['hasta'] ?? '',
+            "saldo_inicial" => (float)($primera['saldo_anterior'] ?? 0),
+            "entradas" => $entradas,
+            "salidas" => $salidas,
+            "saldo_final" => (float)($ultima['saldo_actual'] ?? 0)
+        ];
+    }
+
     private function columnas_tienen_claves($columnas, $claves)
     {
         foreach ($columnas as $columna) {
@@ -1111,6 +1376,7 @@ class reporteControlador extends reportesModelo
                 "usa_importe" => !empty($cfg['importe']) || !empty($cfg['importe_unico']),
                 "usa_items" => $this->columnas_tienen_claves($cfg['columnas'], ['cantidad_items', 'cantidad'])
             ],
+            "kardex" => $tipo === 'kardex_articulo' ? $this->meta_kardex_desde_datos($datos, $filtros) : null,
             "paginacion" => [
                 "pagina" => $pagina,
                 "por_pagina" => $porPagina,
@@ -1333,6 +1599,16 @@ class reporteControlador extends reportesModelo
 
         $this->imprimir_mpdf_html($html, "reporte_articulos.pdf", 'L');
         exit();
+    }
+
+    public function reporte_stock_controlador()
+    {
+        return $this->reporte_articulos_controlador();
+    }
+
+    public function imprimir_reporte_stock_controlador()
+    {
+        $this->imprimir_reporte_articulos_controlador();
     }
 
     /* ==================================================
@@ -1704,6 +1980,54 @@ class reporteControlador extends reportesModelo
         ]);
     }
 
+
+    public function reporte_presupuestos_controlador()
+    {
+        if (!mainModel::tienePermiso('reportes.presupuestos_compra.ver')) {
+            return $this->acceso_denegado_json();
+        }
+
+        [$desde, $hasta, $estado, $sucursal] = $this->filtros_movimiento_basico();
+        $data = reportesModelo::reporte_presupuestos_modelo($desde, $hasta, $estado, $sucursal);
+
+        return json_encode(["data" => $data]);
+    }
+
+    public function imprimir_reporte_presupuestos_controlador()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start(['name' => 'STR']);
+        }
+
+        if (!mainModel::tienePermiso('reportes.presupuestos_compra.ver')) {
+            header("Location: " . SERVERURL . "home/");
+            exit();
+        }
+
+        $desde = ($_POST['desde'] !== '') ? mainModel::limpiar_string($_POST['desde']) : null;
+        $hasta = ($_POST['hasta'] !== '') ? mainModel::limpiar_string($_POST['hasta']) : null;
+        $estado = ($_POST['estado'] !== '') ? mainModel::limpiar_string($_POST['estado']) : null;
+        $sucursal = ($_POST['sucursal'] !== '') ? mainModel::limpiar_string($_POST['sucursal']) : null;
+
+        $datos = reportesModelo::reporte_presupuestos_modelo(
+            $desde,
+            $hasta,
+            $estado,
+            $sucursal
+        );
+
+        $empresa  = $_SESSION['empresa_nombre'] ?? 'Empresa';
+        $usuario  = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
+        $filtros  = compact('desde', 'hasta', 'estado', 'sucursal');
+
+        ob_start();
+        require_once __DIR__ . "/../pdf/presupuestos_reporte_pdf.php";
+        $html = ob_get_clean();
+
+        $this->imprimir_mpdf_html($html, "reporte_presupuestos_compra.pdf", 'L');
+        exit();
+    }
+
     public function reporte_ordenes_compra_controlador()
     {
         if (!mainModel::tienePermiso('reportes.ordenes_compra.ver')) {
@@ -1793,6 +2117,176 @@ class reporteControlador extends reportesModelo
         $html = ob_get_clean();
 
         $this->imprimir_mpdf_html($html, "reporte_compras.pdf", 'L');
+        exit();
+    }
+
+    public function reporte_libro_compras_controlador()
+    {
+        if (!mainModel::tienePermiso('reportes.libro_compras.ver')) {
+            return $this->acceso_denegado_json();
+        }
+
+        $desde     = ($_POST['desde'] ?? '') !== '' ? mainModel::limpiar_string($_POST['desde']) : null;
+        $hasta     = ($_POST['hasta'] ?? '') !== '' ? mainModel::limpiar_string($_POST['hasta']) : null;
+        $proveedor = ($_POST['proveedor'] ?? '') !== '' ? mainModel::limpiar_string($_POST['proveedor']) : null;
+        $estado    = ($_POST['estado'] ?? '') !== '' ? mainModel::limpiar_string($_POST['estado']) : null;
+        $sucursal  = ($_POST['sucursal'] ?? '') !== '' ? mainModel::limpiar_string($_POST['sucursal']) : null;
+
+        $data = reportesModelo::reporte_libro_compras_modelo($desde, $hasta, $proveedor, $estado, $sucursal);
+
+        return json_encode(["data" => $data]);
+    }
+
+    public function imprimir_reporte_libro_compras_controlador()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start(['name' => 'STR']);
+        }
+
+        if (!mainModel::tienePermiso('reportes.libro_compras.ver')) {
+            header("Location: " . SERVERURL . "home/");
+            exit();
+        }
+
+        $desde     = ($_POST['desde'] !== '') ? mainModel::limpiar_string($_POST['desde']) : null;
+        $hasta     = ($_POST['hasta'] !== '') ? mainModel::limpiar_string($_POST['hasta']) : null;
+        $proveedor = ($_POST['proveedor'] !== '') ? mainModel::limpiar_string($_POST['proveedor']) : null;
+        $sucursal  = ($_POST['sucursal'] !== '') ? mainModel::limpiar_string($_POST['sucursal']) : null;
+        $estado  = ($_POST['estado'] !== '') ? mainModel::limpiar_string($_POST['estado']) : null;
+
+        $datos = reportesModelo::reporte_libro_compras_modelo(
+            $desde,
+            $hasta,
+            $proveedor,
+            $estado,
+            $sucursal
+        );
+
+        $empresa = $_SESSION['empresa_nombre'] ?? 'Empresa';
+        $usuario = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
+
+        ob_start();
+        require_once __DIR__ . "/../pdf/libro_compras_reporte_pdf.php";
+        $html = ob_get_clean();
+
+        $this->imprimir_mpdf_html($html, "reporte_libro_compras.pdf", 'L');
+        exit();
+    }
+
+    public function reporte_transferencias_controlador()
+    {
+        if (!mainModel::tienePermiso('reportes.transferencias.ver')) {
+            return $this->acceso_denegado_json();
+        }
+
+        $filtros = [
+            "sucursal" => mainModel::limpiar_string($_POST['sucursal']) ?? 0,
+            "estado"   => mainModel::limpiar_string($_POST['estado']) ?? 'T',
+            "desde"    => trim($_POST['desde'] ?? ''),
+            "hasta"    => trim($_POST['hasta'] ?? ''),
+            "tipo"     => mainModel::limpiar_string($_POST['tipo']) ?? 'T'
+        ];
+
+
+        $data = reportesModelo::reporte_transferencias_modelo($filtros);
+        $resumen = reportesModelo::resumen_transferencias_modelo($filtros);
+
+        return json_encode([
+            "data"    => $data,
+            "resumen" => $resumen
+        ]);
+    }
+
+    public function imprimir_reporte_transferencias_controlador()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start(['name' => 'STR']);
+        }
+
+        if (!mainModel::tienePermiso('reportes.transferencias.ver')) {
+            header("Location: " . SERVERURL . "home/");
+            exit();
+        }
+
+        $filtros = [
+            "sucursal" => ($_POST['sucursal'] !== '') ? mainModel::limpiar_string($_POST['sucursal']) : 0,
+            "estado"   => ($_POST['estado'] !== '') ? mainModel::limpiar_string($_POST['estado']) : 'T',
+            "desde"    => trim($_POST['desde'] ?? ''),
+            "hasta"    => trim($_POST['hasta'] ?? '')
+        ];
+
+        $datos = reportesModelo::reporte_transferencias_modelo($filtros);
+
+        $empresa = $_SESSION['empresa_nombre'] ?? 'Empresa';
+        $usuario = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
+
+        ob_start();
+        require_once __DIR__ . "/../pdf/transferencias_reporte_pdf.php";
+        $html = ob_get_clean();
+
+        $this->imprimir_mpdf_html($html, "reporte_transferencias.pdf", 'L');
+        exit();
+    }
+
+
+    /* ==================================================
+        REPORTE MOVIMIENTOS DE STOCK - PREVIEW
+    ================================================== */
+    public function reporte_movimientos_stock_controlador()
+    {
+        if (!mainModel::tienePermiso('reportes.movimientos_stock.ver')) {
+            return $this->acceso_denegado_json();
+        }
+
+        $filtros = [
+            "sucursal" => mainModel::limpiar_string($_POST['sucursal']) ?? 0,
+            "tipo"     => mainModel::limpiar_string($_POST['tipo']) ?? 'T',
+            "signo"    => mainModel::limpiar_string($_POST['signo']) ?? 'T',
+            "desde"    => trim($_POST['desde'] ?? ''),
+            "hasta"    => trim($_POST['hasta'] ?? '')
+        ];
+
+        $data = reportesModelo::reporte_movimientos_stock_modelo($filtros);
+        $resumen = reportesModelo::resumen_movimientos_stock_modelo($filtros);
+
+        return json_encode([
+            "data"    => $data,
+            "resumen" => $resumen
+        ]);
+    }
+
+    /* ==================================================
+        REPORTE MOVIMIENTOS DE STOCK - PDF
+    ================================================== */
+    public function imprimir_reporte_movimientos_stock_controlador()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start(['name' => 'STR']);
+        }
+
+        if (!mainModel::tienePermiso('reportes.movimientos_stock.ver')) {
+            header("Location: " . SERVERURL . "home/");
+            exit();
+        }
+
+        $filtros = [
+            "sucursal" => ($_POST['sucursal'] !== '') ? mainModel::limpiar_string($_POST['sucursal']) : 0,
+            "tipo"     => ($_POST['tipo'] !== '') ? mainModel::limpiar_string($_POST['tipo']) : 'T',
+            "signo"    => ($_POST['signo'] !== '') ? mainModel::limpiar_string($_POST['signo']) : 'T',
+            "desde"    => trim($_POST['desde'] ?? ''),
+            "hasta"    => trim($_POST['hasta'] ?? '')
+        ];
+
+        $datos = reportesModelo::reporte_movimientos_stock_modelo($filtros);
+
+        $empresa = $_SESSION['empresa_nombre'] ?? 'Empresa';
+        $usuario = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
+
+        ob_start();
+        require_once __DIR__ . "/../pdf/movimientos_stock_reporte_pdf.php";
+        $html = ob_get_clean();
+
+        $this->imprimir_mpdf_html($html, "reporte_movimientos_stock.pdf", 'L');
         exit();
     }
 
@@ -1892,6 +2386,52 @@ class reporteControlador extends reportesModelo
         $html = ob_get_clean();
 
         $this->imprimir_mpdf_html($html, "reporte_presupuesto_servicio.pdf", 'L');
+        exit();
+    }
+
+    public function reporte_orden_trabajo_controlador()
+    {
+        if (!mainModel::tienePermiso('reportes.orden_trabajo.ver')) {
+            return $this->acceso_denegado_json();
+        }
+
+        [$desde, $hasta, $estado, $sucursal] = $this->filtros_movimiento_basico();
+        $data = reportesModelo::reporte_orden_trabajo_modelo($desde, $hasta, $estado, $sucursal);
+
+        return json_encode(["data" => $data]);
+    }
+
+    public function imprimir_reporte_orden_trabajo_controlador()
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start(['name' => 'STR']);
+        }
+
+        if (!mainModel::tienePermiso('reportes.orden_trabajo.ver')) {
+            header("Location: " . SERVERURL . "home/");
+            exit();
+        }
+
+        $desde    = ($_POST['desde'] !== '') ? mainModel::limpiar_string($_POST['desde']) : null;
+        $hasta    = ($_POST['hasta'] !== '') ? mainModel::limpiar_string($_POST['hasta']) : null;
+        $estado   = ($_POST['estado'] !== '') ? mainModel::limpiar_string($_POST['estado']) : null;
+        $sucursal = ($_POST['sucursal'] !== '') ? mainModel::limpiar_string($_POST['sucursal']) : null;
+
+        $datos = reportesModelo::reporte_orden_trabajo_modelo(
+            $desde,
+            $hasta,
+            $estado,
+            $sucursal
+        );
+
+        $empresa = $_SESSION['empresa_nombre'] ?? 'Empresa';
+        $usuario = $_SESSION['nombre_str'] . ' ' . $_SESSION['apellido_str'];
+
+        ob_start();
+        require_once __DIR__ . "/../pdf/orden_trabajo_reporte_pdf.php";
+        $html = ob_get_clean();
+
+        $this->imprimir_mpdf_html($html, "reporte_orden_trabajo.pdf", 'L');
         exit();
     }
 

@@ -22,6 +22,9 @@ foreach ($promociones as $promo) {
         $promocionesPorDetalle[$idDetallePromo][] = $promo;
     }
 }
+$fmtCantidad = static function ($valor) {
+    return number_format((float)$valor, 2, ',', '.');
+};
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -245,7 +248,7 @@ foreach ($promociones as $promo) {
             <?php foreach ($detalle as $d): ?>
                 <tr>
                     <td><?= $d['desc_articulo'] ?></td>
-                    <td class="center"><?= $d['cantidad'] ?></td>
+                    <td class="center"><?= $fmtCantidad($d['cantidad']) ?></td>
                     <td class="right"><?= number_format($d['preciouni'], 0, ',', '.') ?></td>
                     <td class="right"><?= number_format($d['subtotal'], 0, ',', '.') ?></td>
                 </tr>
@@ -255,7 +258,7 @@ foreach ($promociones as $promo) {
                             <span class="promo-label">Promocion:</span>
                             <?= $promo['nombre'] ?>
                             <span class="muted">
-                                | <?= $promo['cantidad'] ?> x -<?= number_format($promo['monto_unitario'], 0, ',', '.') ?>
+                                | <?= $fmtCantidad($promo['cantidad']) ?> x -<?= number_format($promo['monto_unitario'], 0, ',', '.') ?>
                             </span>
                         </td>
                         <td class="right">- <?= number_format($promo['monto_aplicado'], 0, ',', '.') ?></td>

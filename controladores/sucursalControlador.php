@@ -128,6 +128,22 @@ class sucursalControlador extends sucursalModelo
             "estado" => $estado
         ];
 
+        $check_dup = sucursalModelo::existe_sucursal_duplicada_modelo($datos);
+        if ($check_dup->rowCount() > 0) {
+            $duplicado = $check_dup->fetch(PDO::FETCH_ASSOC);
+            $texto = ((int)$duplicado['nro_establecimiento'] === (int)$nro_est)
+                ? "Ya existe una sucursal con ese numero de establecimiento para la empresa seleccionada"
+                : "Ya existe una sucursal con esa descripcion para la empresa seleccionada";
+
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Duplicado",
+                "Texto" => $texto,
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         $guardar = sucursalModelo::agregar_sucursal_modelo($datos);
 
         if ($guardar->rowCount() == 1) {
@@ -408,6 +424,22 @@ class sucursalControlador extends sucursalModelo
             "estado" => $estado
         ];
 
+        $check_dup = sucursalModelo::existe_sucursal_duplicada_modelo($datos);
+        if ($check_dup->rowCount() > 0) {
+            $duplicado = $check_dup->fetch(PDO::FETCH_ASSOC);
+            $texto = ((int)$duplicado['nro_establecimiento'] === (int)$nro_est)
+                ? "Ya existe una sucursal con ese numero de establecimiento para la empresa seleccionada"
+                : "Ya existe una sucursal con esa descripcion para la empresa seleccionada";
+
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Duplicado",
+                "Texto" => $texto,
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
         sucursalModelo::actualizar_sucursal_modelo($datos);
 
         echo json_encode([
@@ -478,7 +510,7 @@ class sucursalControlador extends sucursalModelo
                     "Alerta" => "redireccionar_confirmado",
                     "URL" => SERVERURL . "sucursal-nuevo/",
                     "Titulo" => "Sucursal desactivada",
-                    "Texto"  => "La sucursal ya tenía movimientos, por lo que fue desactivada.",
+                    "Texto"  => "La sucursal tiene registros relacionados o está asignada a usuarios, por lo que fue desactivada.",
                     "Tipo"   => "warning"
                 ];
             } else {

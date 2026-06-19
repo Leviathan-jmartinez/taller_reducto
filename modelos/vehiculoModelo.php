@@ -180,9 +180,12 @@ class vehiculoModelo extends mainModel
         SELECT id_cliente,
                CONCAT(doc_number, ' - ',nombre_cliente,' ',apellido_cliente) AS cliente
         FROM clientes
-        WHERE nombre_cliente LIKE :term
-        OR apellido_cliente LIKE :term 
-        OR doc_number LIKE :term
+        WHERE estado_cliente = 1
+          AND (
+            nombre_cliente LIKE :term
+            OR apellido_cliente LIKE :term
+            OR doc_number LIKE :term
+          )
         ORDER BY nombre_cliente ASC
         LIMIT 20
         ");

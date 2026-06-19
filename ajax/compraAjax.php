@@ -165,11 +165,15 @@ if (isset($_POST['index'])) {
 
 
         // ✔️ ACTUALIZAR SESIÓN SOLO SI LOS DATOS SON VÁLIDOS
+        $divisor = (float)($_SESSION['Cdatos_articuloCO'][$i]['divisor'] ?? 0);
+        $subtotal = round($cantidadFacturada * $precio);
+        $iva = $divisor > 0 ? round($subtotal / $divisor) : 0;
+
         $_SESSION['Cdatos_articuloCO'][$i]['cantidad'] = $cantidad;
         $_SESSION['Cdatos_articuloCO'][$i]['cantidad_facturada'] = $cantidadFacturada;
         $_SESSION['Cdatos_articuloCO'][$i]['precio']   = $precio;
-        $_SESSION['Cdatos_articuloCO'][$i]['subtotal'] = floatval($_POST['subtotal']);
-        $_SESSION['Cdatos_articuloCO'][$i]['iva']      = floatval($_POST['iva']);
+        $_SESSION['Cdatos_articuloCO'][$i]['subtotal'] = $subtotal;
+        $_SESSION['Cdatos_articuloCO'][$i]['iva']      = $iva;
 
         echo json_encode(["status" => "ok"]);
         exit();
