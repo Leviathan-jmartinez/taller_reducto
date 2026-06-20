@@ -53,7 +53,6 @@ $navServicios = [
     'diagnostico-servicio-nuevo', 'diagnostico-servicio-buscar',
     'promocion-nuevo', 'promocion-lista',
     'descuento-nuevo', 'descuento-lista',
-    'regla-comercial-nuevo', 'regla-comercial-lista',
     'presupuesto-servicio-nuevo', 'presupuesto-servicio-lista', 'presupuesto-servicio-buscar',
     'ordenTrabajo-nuevo', 'ordenTrabajo-lista', 'ordenTrabajo-asignar', 'ordenTrabajo-buscar',
     'registro-servicio-nuevo', 'registro-servicio-lista', 'registro-servicio-buscar',
@@ -207,10 +206,6 @@ if ($inicialesNav === '') {
 
                             <?php if (mainModel::tienePermiso('servicio.descuento.ver')) { ?>
                                 <li><a href="<?= SERVERURL; ?>descuento-nuevo/"<?= navClase(['descuento-nuevo', 'descuento-lista']) ?>><i class="fas fa-tags fa-fw"></i> &nbsp; Descuentos</a></li>
-                            <?php } ?>
-
-                            <?php if (mainModel::tienePermiso('servicio.regla_comercial.ver')) { ?>
-                                <li><a href="<?= SERVERURL; ?>regla-comercial-nuevo/"<?= navClase(['regla-comercial-nuevo', 'regla-comercial-lista']) ?>><i class="fas fa-project-diagram fa-fw"></i> &nbsp; Reglas Comerciales</a></li>
                             <?php } ?>
 
                             <?php if (mainModel::tienePermiso('servicio.presupuesto.ver')) { ?>

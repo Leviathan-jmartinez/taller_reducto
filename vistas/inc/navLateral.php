@@ -230,13 +230,6 @@ $menuLateral = [
                 'permiso' => 'servicio.descuento.ver'
             ],
             [
-                'titulo' => 'Reglas Comerciales',
-                'icono' => 'fas fa-project-diagram',
-                'href' => 'regla-comercial-lista/',
-                'vistas' => ['regla-comercial-nuevo', 'regla-comercial-lista'],
-                'permiso' => 'servicio.regla_comercial.ver'
-            ],
-            [
                 'titulo' => 'Presupuesto de Trabajo',
                 'icono' => 'fas fa-file-invoice-dollar',
                 'href' => 'presupuesto-servicio-buscar/',
