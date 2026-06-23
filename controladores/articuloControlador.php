@@ -46,6 +46,14 @@ class articuloControlador extends articuloModelo
         $datos = $res['datos'];
         $total = $res['total'];
         $Npaginas = ceil($total / $registros);
+        $columnas = 5;
+
+        if (mainModel::tienePermiso('articulo.editar')) {
+            $columnas++;
+        }
+        if (mainModel::tienePermiso('articulo.eliminar')) {
+            $columnas++;
+        }
 
         /* ================= TABLA ================= */
 
@@ -56,7 +64,8 @@ class articuloControlador extends articuloModelo
                 <th>#</th>
                 <th>CÓDIGO</th>
                 <th>NOMBRE</th>
-                <th>PRECIO VENTA</th>';
+                <th>PRECIO VENTA</th>
+                <th>ESTADO</th>';
 
         if (mainModel::tienePermiso('articulo.editar')) {
             $tabla .= '<th>EDITAR</th>';
@@ -73,6 +82,9 @@ class articuloControlador extends articuloModelo
             $reg_inicio = $inicio + 1;
 
             foreach ($datos as $rows) {
+                $estado = ((int)$rows['estado'] === 1)
+                    ? '<span class="badge badge-success">Activo</span>'
+                    : '<span class="badge badge-danger">Inactivo</span>';
 
                 $tabla .= '
             <tr class="text-center">
@@ -81,7 +93,8 @@ class articuloControlador extends articuloModelo
                 <td>' . $rows['desc_articulo'] . '</td>
                 <td>
                     ' . number_format((float)$rows['precio_venta'], 0, ',', '.') . '
-                </td>';
+                </td>
+                <td>' . $estado . '</td>';
 
                 if (mainModel::tienePermiso('articulo.editar')) {
                     $tabla .= '
@@ -121,7 +134,7 @@ class articuloControlador extends articuloModelo
 
             if ($total >= 1) {
                 $tabla .= '<tr class="text-center">
-                <td colspan="6">
+                <td colspan="' . $columnas . '">
                     <a href="' . $url . '" class="btn btn-raised btn-primary btn-sm">
                         Haga click aquí para recargar el listado
                     </a>
@@ -129,7 +142,7 @@ class articuloControlador extends articuloModelo
             </tr>';
             } else {
                 $tabla .= '<tr class="text-center">
-                <td colspan="6">No hay registros en el sistema</td>
+                <td colspan="' . $columnas . '">No hay registros en el sistema</td>
             </tr>';
             }
         }
@@ -405,17 +418,6 @@ class articuloControlador extends articuloModelo
             exit();
         }
 
-        $articuloActual = $check_article->fetch();
-        if ((int)$articuloActual['estado'] === 0) {
-            echo json_encode([
-                "Alerta" => "simple",
-                "Titulo" => "Artículo inactivo",
-                "Texto"  => "El artículo ya se encuentra inactivo.",
-                "Tipo"   => "info"
-            ]);
-            exit();
-        }
-
         session_start(['name' => 'STR']);
         if (!mainModel::tienePermiso('articulo.eliminar')) {
             return json_encode([
@@ -428,7 +430,11 @@ class articuloControlador extends articuloModelo
 
         $stmt = articuloModelo::eliminar_articulo_modelo($id);
 
-        if ($stmt->rowCount() > 0) {
+        $verificar_eliminado = mainModel::ejecutar_consulta_simple(
+            "SELECT id_articulo FROM articulos WHERE id_articulo = '$id'"
+        );
+
+        if ($stmt->rowCount() > 0 || $verificar_eliminado->rowCount() <= 0) {
 
             // Verificar cómo quedó
             $verificar = mainModel::ejecutar_consulta_simple(
@@ -688,7 +694,8 @@ class articuloControlador extends articuloModelo
         if (articuloModelo::actualizar_articulo_modelo($datos_articulo_up)) {
 
             echo json_encode([
-                "Alerta" => "recargar",
+                "Alerta" => "redireccionar_confirmado",
+                "URL" => SERVERURL . "articulo-nuevo/",
                 "Titulo" => "Actualizado",
                 "Texto" => "Artículo actualizado correctamente",
                 "Tipo" => "success",

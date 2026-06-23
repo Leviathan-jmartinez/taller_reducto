@@ -620,7 +620,8 @@
             0: 'Anulado',
             1: 'En proceso',
             2: 'Presupuestado',
-            3: 'Finalizado'
+            3: 'Finalizado',
+            4: 'OT generada'
         };
 
         return estados[parseInt(estado)] || 'Pendiente';

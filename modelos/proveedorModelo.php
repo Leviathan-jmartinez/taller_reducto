@@ -60,16 +60,12 @@ class proveedorModelo extends mainModel
 
         $check = $pdo->prepare("
             SELECT 1
-            WHERE EXISTS (SELECT 1 FROM articulo_proveedor WHERE idproveedores = ?)
-               OR EXISTS (SELECT 1 FROM presupuesto_compra WHERE idproveedores = ?)
-               OR EXISTS (SELECT 1 FROM orden_compra WHERE idproveedores = ?)
-               OR EXISTS (SELECT 1 FROM compra_cabecera WHERE idproveedores = ?)
-               OR EXISTS (SELECT 1 FROM libro_compra WHERE idproveedores = ?)
+            FROM articulo_proveedor
+            WHERE idproveedores = ?
+            LIMIT 1
         ");
 
-        for ($i = 1; $i <= 5; $i++) {
-            $check->bindValue($i, (int)$id, PDO::PARAM_INT);
-        }
+        $check->bindValue(1, (int)$id, PDO::PARAM_INT);
         $check->execute();
 
         if ($check->rowCount() > 0) {

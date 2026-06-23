@@ -85,6 +85,7 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
                 <th>Cliente</th>
                 <th>Vehículo</th>
                 <th>Ítems</th>
+                <th>Usuario</th>
                 <th>Subtotal</th>
                 <th>Desc.</th>
                 <th>Total</th>
@@ -122,6 +123,7 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
                     <td><?= $row['cliente'] ?: '-' ?></td>
                     <td><?= $row['vehiculo'] ?: '-' ?></td>
                     <td class="text-center"><?= $row['cantidad_items'] ?></td>
+                    <td><?= $row['usuario'] ?: '-' ?></td>
                     <td class="text-right"><?= number_format($row['subtotal'], 0, ',', '.') ?></td>
                     <td class="text-right"><?= number_format($row['total_descuento'], 0, ',', '.') ?></td>
                     <td class="text-right"><?= number_format($row['total_final'], 0, ',', '.') ?></td>
@@ -132,7 +134,7 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
         </tbody>
         <tfoot>
             <tr>
-                <th colspan="8" class="text-right">TOTAL GENERAL</th>
+                <th colspan="9" class="text-right">TOTAL GENERAL</th>
                 <th class="text-right"><?= number_format($totalDescuentos, 0, ',', '.') ?></th>
                 <th class="text-right"><?= number_format($totalGeneral, 0, ',', '.') ?></th>
                 <th></th>

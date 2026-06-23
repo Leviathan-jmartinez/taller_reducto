@@ -4,7 +4,8 @@ $pagina = require __DIR__ . '/../inc/pagina.php';
 $vistaPartes = explode('/', trim($_GET['vista'] ?? '', '/'));
 $vistaActual = $vistaPartes[0] ?? 'proveedor-nuevo';
 $id = ($vistaActual === 'proveedor-actualizar') ? ($vistaPartes[1] ?? null) : null;
-$permisoNecesario = ($vistaActual === 'proveedor-actualizar') ? 'proveedor.editar' : 'proveedor.crear';
+$permisoNecesario = ($vistaActual === 'proveedor-actualizar') ? 'proveedor.editar' : 'proveedor.ver';
+$puedeCrear = mainModel::tienePermiso('proveedor.crear');
 
 if (!mainModel::tienePermiso($permisoNecesario)) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
@@ -32,11 +33,12 @@ $ciudades = $ins_proveedor->listar_ciudades_controlador();
 <div class="full-box page-header">
     <h3 class="text-left">
         <i class="fas fa-truck fa-fw"></i> &nbsp;
-        <?php echo $editando ? "ACTUALIZAR PROVEEDOR" : "AGREGAR PROVEEDOR"; ?>
+        <?php echo $editando ? "ACTUALIZAR PROVEEDOR" : ($puedeCrear ? "AGREGAR PROVEEDOR" : "LISTADO DE PROVEEDORES"); ?>
     </h3>
 </div>
 
 <!-- FORM -->
+<?php if ($editando || $puedeCrear) { ?>
 <div class="container-fluid">
     <form class="form-neon FormularioAjax app-form"
         action="<?php echo SERVERURL; ?>ajax/proveedorAjax.php"
@@ -55,8 +57,10 @@ $ciudades = $ins_proveedor->listar_ciudades_controlador();
             <div class="row">
 
                 <div class="col-12 col-md-6">
+                    <label for="proveedor_razon_social">Razón social *</label>
                     <input type="text"
                         class="form-control"
+                        id="proveedor_razon_social"
                         name="<?php echo $editando ? 'razon_social_up' : 'razon_social_reg'; ?>"
                         value="<?php echo $editando ? $campos['razon_social'] : ''; ?>"
                         pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,&-]{3,70}"
@@ -66,8 +70,10 @@ $ciudades = $ins_proveedor->listar_ciudades_controlador();
                 </div>
 
                 <div class="col-12 col-md-6">
+                    <label for="proveedor_ruc">RUC *</label>
                     <input type="text"
                         class="form-control"
+                        id="proveedor_ruc"
                         name="<?php echo $editando ? 'ruc_up' : 'ruc_reg'; ?>"
                         value="<?php echo $editando ? $campos['ruc'] : ''; ?>"
                         pattern="[0-9-]{6,15}"
@@ -80,8 +86,10 @@ $ciudades = $ins_proveedor->listar_ciudades_controlador();
                 <div class="w-100 mt-2"></div>
 
                 <div class="col-12 col-md-4">
+                    <label for="proveedor_telefono">Teléfono</label>
                     <input type="text"
                         class="form-control"
+                        id="proveedor_telefono"
                         name="<?php echo $editando ? 'telefono_up' : 'telefono_reg'; ?>"
                         value="<?php echo $editando ? $campos['telefono'] : ''; ?>"
                         pattern="[0-9()+ -]{6,30}"
@@ -92,8 +100,10 @@ $ciudades = $ins_proveedor->listar_ciudades_controlador();
                 </div>
 
                 <div class="col-12 col-md-4">
+                    <label for="proveedor_correo">Correo</label>
                     <input type="email"
                         class="form-control"
+                        id="proveedor_correo"
                         name="<?php echo $editando ? 'correo_up' : 'correo_reg'; ?>"
                         value="<?php echo $editando ? $campos['correo'] : ''; ?>"
                         maxlength="100"
@@ -101,7 +111,9 @@ $ciudades = $ins_proveedor->listar_ciudades_controlador();
                 </div>
 
                 <div class="col-12 col-md-4">
+                    <label for="proveedor_ciudad">Ciudad *</label>
                     <select class="form-control select2"
+                        id="proveedor_ciudad"
                         name="<?php echo $editando ? 'ciudad_up' : 'ciudad_reg'; ?>">
 
                         <option value=""></option>
@@ -120,8 +132,10 @@ foreach ($ciudades as $c) { ?>
                 <div class="w-100 mt-2"></div>
 
                 <div class="col-12">
+                    <label for="proveedor_direccion">Dirección</label>
                     <input type="text"
                         class="form-control"
+                        id="proveedor_direccion"
                         name="<?php echo $editando ? 'direccion_up' : 'direccion_reg'; ?>"
                         value="<?php echo $editando ? $campos['direccion'] : ''; ?>"
                         pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,#°\/-]{3,120}"
@@ -133,7 +147,9 @@ foreach ($ciudades as $c) { ?>
                 <div class="w-100 mt-2"></div>
 
                 <div class="col-12 col-md-4">
+                    <label for="proveedor_estado">Estado *</label>
                     <select class="form-control"
+                        id="proveedor_estado"
                         name="<?php echo $editando ? 'estado_up' : 'estado_reg'; ?>">
 
                         <option value="">Estado</option>
@@ -165,6 +181,7 @@ foreach ($ciudades as $c) { ?>
 
     </form>
 </div>
+<?php } ?>
 
 <!-- BUSCADOR -->
 <div class="container-fluid mb-3">

@@ -98,7 +98,7 @@ class notasCreDeControlador extends notasCreDeModelo
         $alcance = self::normalizarAlcanceNota($alcance);
         self::cargarDetalleNotaDesdeFactura((int)$factura['idcompra_cabecera'], $alcance);
 
-        return ['status' => 'ok', 'msg' => 'Alcance actualizado'];
+        return self::respuestaDetalleNotaActual('Alcance actualizado');
     }
 
     private static function normalizarAlcanceNota($alcance)
@@ -164,6 +164,52 @@ class notasCreDeControlador extends notasCreDeModelo
         }
     }
 
+    private static function respuestaDetalleNotaActual($msg = '')
+    {
+        $detalle = $_SESSION['NC_DETALLE'] ?? [];
+        $subtotal = 0;
+        $totalIva5 = 0;
+        $totalIva10 = 0;
+        $filas = [];
+
+        foreach ($detalle as $i => $d) {
+            $cantidad = (float)($d['cantidad'] ?? 0);
+            $precio = (float)($d['precio'] ?? 0);
+            $totalItem = round($cantidad * $precio, 2);
+            $iva5 = (float)($d['iva_5'] ?? 0);
+            $iva10 = (float)($d['iva_10'] ?? 0);
+
+            $subtotal += $totalItem;
+            $totalIva5 += $iva5;
+            $totalIva10 += $iva10;
+
+            $cantidadTexto = number_format($cantidad, 2, '.', '');
+            $cantidadTexto = rtrim(rtrim($cantidadTexto, '0'), '.');
+
+            $filas[] = [
+                'index' => $i,
+                'id_articulo' => $d['id_articulo'] ?? '',
+                'descripcion' => $d['descripcion'] ?? '',
+                'cantidad' => $cantidadTexto,
+                'precio' => $precio,
+                'iva_tipo' => $d['iva_tipo'] ?? '',
+                'total_item' => number_format($totalItem, 0, ',', '.')
+            ];
+        }
+
+        return [
+            'status' => 'ok',
+            'msg' => $msg,
+            'detalle' => $filas,
+            'totales' => [
+                'subtotal' => number_format($subtotal, 0, ',', '.'),
+                'iva_5' => number_format($totalIva5, 0, ',', '.'),
+                'iva_10' => number_format($totalIva10, 0, ',', '.'),
+                'total' => number_format($subtotal, 0, ',', '.')
+            ]
+        ];
+    }
+
     public static function actualizarItemNC($data)
     {
         if (session_status() === PHP_SESSION_NONE) {
@@ -192,7 +238,8 @@ class notasCreDeControlador extends notasCreDeModelo
             ];
         }
 
-        if ($tipoNota === 'credito' && isset($item['precio_original']) && $precio > (float)$item['precio_original']) {
+        $alcanceNota = $_SESSION['NC_FACTURA']['alcance_nota'] ?? 'regularizar_diferencia';
+        if ($tipoNota === 'credito' && $alcanceNota !== 'anulacion_total' && isset($item['precio_original']) && $precio > (float)$item['precio_original']) {
             return [
                 'status' => 'error',
                 'msg' => 'El precio no puede superar el precio facturado: ' . number_format((float)$item['precio_original'], 0, ',', '.')
@@ -321,7 +368,7 @@ class notasCreDeControlador extends notasCreDeModelo
                 ];
             }
 
-            if ($tipoNota === 'credito' && (float)$d['precio'] > (float)($d['precio_original'] ?? $d['precio'])) {
+            if ($tipoNota === 'credito' && $alcanceNota !== 'anulacion_total' && (float)$d['precio'] > (float)($d['precio_original'] ?? $d['precio'])) {
                 return [
                     'status' => 'error',
                     'msg' => 'El precio de ' . $d['descripcion'] . ' supera el precio facturado'
@@ -364,15 +411,17 @@ class notasCreDeControlador extends notasCreDeModelo
 
 
         if ($tipoNota === 'credito') {
-            $totalFactura = (float)$factura['total'];
-            $totalNCPrevias = notasCreDeModelo::totalNCActivasPorFactura($factura['idcompra_cabecera']);
+            $totalDisponibleNC = notasCreDeModelo::saldoDisponibleNCFactura(
+                $factura['idcompra_cabecera'],
+                $factura['total']
+            );
 
-            if (($totalNCPrevias + $total) > $totalFactura) {
+            if ($total > $totalDisponibleNC) {
                 return [
                     "Alerta" => "simple",
                     "Titulo" => "Error",
-                    "Texto"  => "La Nota de Crédito supera el monto de la factura. Disponible: "
-                        . number_format($totalFactura - $totalNCPrevias, 0, ',', '.'),
+                    "Texto"  => "La Nota de Crédito supera el saldo disponible de la factura. Disponible: "
+                        . number_format($totalDisponibleNC, 0, ',', '.'),
                     "Tipo"   => "error"
                 ];
             }
@@ -453,9 +502,10 @@ class notasCreDeControlador extends notasCreDeModelo
         }
 
         if ($anulacionTotal) {
-            $totalFactura = (float)$factura['total'];
-            $totalNCPrevias = notasCreDeModelo::totalNCActivasPorFactura($factura['idcompra_cabecera']);
-            $totalDisponible = round($totalFactura - $totalNCPrevias, 2);
+            $totalDisponible = notasCreDeModelo::saldoDisponibleNCFactura(
+                $factura['idcompra_cabecera'],
+                $factura['total']
+            );
 
             if (abs(round($total, 2) - $totalDisponible) > 0.01) {
                 return [

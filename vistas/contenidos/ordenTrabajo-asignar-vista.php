@@ -264,7 +264,8 @@ foreach ($detalleDiagnostico as $det) {
         $repuestosIniciales[] = [
             'id_articulo' => (int)$det['id_articulo_repuesto'],
             'descripcion' => $det['repuesto'] ?? '',
-            'cantidad' => (float)$det['cantidad_repuesto']
+            'cantidad' => (float)$det['cantidad_repuesto'],
+            'stock' => (float)($det['stock_repuesto'] ?? 0)
         ];
     }
 }

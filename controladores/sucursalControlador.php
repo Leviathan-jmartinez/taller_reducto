@@ -148,7 +148,7 @@ class sucursalControlador extends sucursalModelo
 
         if ($guardar->rowCount() == 1) {
             $alerta = [
-                "Alerta" => "limpiar",
+                "Alerta" => "recargar",
                 "Titulo" => "Sucursal",
                 "Texto" => "Sucursal registrada correctamente",
                 "Tipo" => "success"
@@ -482,20 +482,14 @@ class sucursalControlador extends sucursalModelo
             exit();
         }
 
-        $sucursalActual = $check->fetch();
-        if ((int)$sucursalActual['estado'] === 0) {
-            echo json_encode([
-                "Alerta" => "simple",
-                "Titulo" => "Sucursal inactiva",
-                "Texto"  => "La sucursal ya se encuentra inactiva.",
-                "Tipo"   => "info"
-            ]);
-            exit();
-        }
-
         $stmt = sucursalModelo::eliminar_sucursal_modelo($id);
 
-        if ($stmt->rowCount() > 0) {
+        $resultado_eliminar = mainModel::ejecutar_consulta_simple(
+            "SELECT estado FROM sucursales WHERE id_sucursal='$id'"
+        );
+        $estado_resultado = $resultado_eliminar->rowCount() > 0 ? (int)$resultado_eliminar->fetchColumn() : null;
+
+        if ($stmt->rowCount() > 0 || $resultado_eliminar->rowCount() <= 0 || $estado_resultado === 0) {
 
             // Verificar cómo quedó
             $verificar = mainModel::ejecutar_consulta_simple(

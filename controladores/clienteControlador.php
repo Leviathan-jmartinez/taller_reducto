@@ -317,6 +317,14 @@ class clienteControlador extends clienteModelo
         $datos = $res['datos'];
         $total = $res['total'];
         $Npaginas = ceil($total / $registros);
+        $columnas = 6;
+
+        if (mainModel::tienePermiso('cliente.editar')) {
+            $columnas++;
+        }
+        if (mainModel::tienePermiso('cliente.eliminar')) {
+            $columnas++;
+        }
 
         /* ===== TABLA ===== */
 
@@ -328,7 +336,8 @@ class clienteControlador extends clienteModelo
                 <th>CI</th>
                 <th>CLIENTE</th>
                 <th>TELÉFONO</th>
-                <th>DIRECCIÓN</th>';
+                <th>DIRECCIÓN</th>
+                <th>ESTADO</th>';
 
         if (mainModel::tienePermiso('cliente.editar')) {
             $tabla .= '<th>EDITAR</th>';
@@ -345,6 +354,9 @@ class clienteControlador extends clienteModelo
             $reg_inicio = $inicio + 1;
 
             foreach ($datos as $rows) {
+                $estado = ((int)$rows['estado_cliente'] === 1)
+                    ? '<span class="badge badge-success">Activo</span>'
+                    : '<span class="badge badge-danger">Inactivo</span>';
 
                 $tabla .= '
             <tr class="text-center">
@@ -360,7 +372,8 @@ class clienteControlador extends clienteModelo
                         data-content="' . $rows['direccion_cliente'] . '">
                         <i class="fas fa-info-circle"></i>
                     </button>
-                </td>';
+                </td>
+                <td>' . $estado . '</td>';
 
                 if (mainModel::tienePermiso('cliente.editar')) {
                     $tabla .= '
@@ -399,7 +412,7 @@ class clienteControlador extends clienteModelo
         } else {
 
             $tabla .= '<tr class="text-center">
-            <td colspan="6">No hay registros en el sistema</td>
+            <td colspan="' . $columnas . '">No hay registros en el sistema</td>
         </tr>';
         }
 
@@ -447,17 +460,6 @@ class clienteControlador extends clienteModelo
             exit();
         }
 
-        $clienteActual = $check_client->fetch();
-        if ((int)$clienteActual['estado_cliente'] === 0) {
-            echo json_encode([
-                "Alerta" => "simple",
-                "Titulo" => "Cliente inactivo",
-                "Texto"  => "El cliente ya se encuentra inactivo.",
-                "Tipo"   => "info"
-            ]);
-            exit();
-        }
-
         session_start(['name' => 'STR']);
         if (!mainModel::tienePermiso('cliente.eliminar')) {
             return json_encode([
@@ -470,7 +472,12 @@ class clienteControlador extends clienteModelo
 
         $stmt = clienteModelo::eliminar_cliente_modelo($id);
 
-        if ($stmt->rowCount() > 0) {
+        $resultado_eliminar = mainModel::ejecutar_consulta_simple(
+            "SELECT estado_cliente FROM clientes WHERE id_cliente='$id'"
+        );
+        $estado_resultado = $resultado_eliminar->rowCount() > 0 ? (int)$resultado_eliminar->fetchColumn() : null;
+
+        if ($stmt->rowCount() > 0 || $resultado_eliminar->rowCount() <= 0 || $estado_resultado === 0) {
 
             // Verificar cómo quedó
             $verificar = mainModel::ejecutar_consulta_simple(

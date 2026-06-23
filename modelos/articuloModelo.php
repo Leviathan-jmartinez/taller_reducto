@@ -103,13 +103,17 @@ class articuloModelo extends mainModel
         try {
             $stmt->execute();
         } catch (PDOException $e) {
-            $stmt = $pdo->prepare("
+            if ($stmt->queryString && stripos($stmt->queryString, 'DELETE FROM articulos') !== false) {
+                $stmt = $pdo->prepare("
             UPDATE articulos
             SET estado = 0
             WHERE id_articulo = :id
         ");
-            $stmt->bindParam(":id", $id, PDO::PARAM_INT);
-            $stmt->execute();
+                $stmt->bindParam(":id", $id, PDO::PARAM_INT);
+                $stmt->execute();
+            } else {
+                throw $e;
+            }
         }
 
         return $stmt;

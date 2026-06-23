@@ -37,9 +37,20 @@ if (
     if (isset($_POST['id_actualizar_precio'])) {
 
         session_start(['name' => 'STR']);
+        header('Content-Type: application/json; charset=utf-8');
 
         $idArticulo = (int)$_POST['id_actualizar_precio'];
         $precio     = (float)$_POST['precio'];
+
+        if ($idArticulo <= 0 || $precio <= 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Precio invalido",
+                "Texto" => "El precio del articulo debe ser mayor a cero",
+                "Tipo" => "error"
+            ]);
+            exit;
+        }
 
         $key = 'Cdatos_articuloPre';
 
@@ -55,6 +66,12 @@ if (
             $_SESSION['total_pre'] += $art['subtotal'];
         }
 
+        echo json_encode([
+            "Alerta" => "simple",
+            "Titulo" => "Precio actualizado",
+            "Texto" => "El precio fue actualizado correctamente",
+            "Tipo" => "success"
+        ]);
         exit;
     }
 

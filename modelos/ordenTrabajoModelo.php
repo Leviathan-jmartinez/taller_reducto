@@ -166,6 +166,7 @@ class ordenTrabajoModelo extends mainModel
             rep.desc_articulo AS repuesto,
 
             dd.cantidad_repuesto,
+            COALESCE(s.stockDisponible, 0) AS stock_repuesto,
             dd.problema,
             dd.gravedad,
             dd.repuesto_origen
@@ -178,11 +179,17 @@ class ordenTrabajoModelo extends mainModel
         LEFT JOIN articulos rep
             ON rep.id_articulo = dd.id_articulo_repuesto
 
+        LEFT JOIN stock s
+            ON s.id_articulo = dd.id_articulo_repuesto
+           AND s.id_sucursal = :sucursal
+
         WHERE dd.id_diagnostico = :id
 
         ORDER BY dd.id_diagnostico_detalle ASC
      ");
 
+        $sucursal = $_SESSION['nick_sucursal'] ?? 0;
+        $sql->bindParam(":sucursal", $sucursal, PDO::PARAM_INT);
         $sql->bindParam(":id", $idDiagnostico, PDO::PARAM_INT);
         $sql->execute();
 
@@ -319,21 +326,33 @@ class ordenTrabajoModelo extends mainModel
     {
         $sql = mainModel::conectar()->prepare("
         SELECT 
+            d.id_articulo,
             a.desc_articulo,
             d.cantidad,
             d.precio_unitario,
-            d.subtotal,
-            p.nombre AS promocion
+            d.subtotal
         FROM orden_trabajo_detalle d
         INNER JOIN articulos a ON a.id_articulo = d.id_articulo
-        LEFT JOIN presupuesto_promocion pp 
-            ON pp.idpresupuesto_servicio = d.idorden_trabajo
-        LEFT JOIN promociones p 
-            ON p.id_promocion = pp.id_promocion
-        WHERE d.idorden_trabajo = :id");
+        WHERE d.idorden_trabajo = :id
+        ORDER BY a.desc_articulo ASC, d.id_articulo ASC");
         $sql->bindParam(":id", $idOT);
         $sql->execute();
-        return $sql->fetchAll(PDO::FETCH_ASSOC);
+        $detalle = $sql->fetchAll(PDO::FETCH_ASSOC);
+        $detalleUnico = [];
+
+        foreach ($detalle as $fila) {
+            $clave = implode('|', [
+                $fila['id_articulo'] ?? '',
+                $fila['desc_articulo'] ?? '',
+                (string)($fila['cantidad'] ?? ''),
+                (string)($fila['precio_unitario'] ?? ''),
+                (string)($fila['subtotal'] ?? '')
+            ]);
+
+            $detalleUnico[$clave] = $fila;
+        }
+
+        return array_values($detalleUnico);
     }
 
     protected static function crear_ot_modelo2($datos)
@@ -439,6 +458,16 @@ class ordenTrabajoModelo extends mainModel
                 WHERE idpresupuesto_servicio = ?
             ");
             $upd->execute([$datos['idpresupuesto']]);
+
+            if (!empty($presupuesto['id_diagnostico'])) {
+                $updDiag = $pdo->prepare("
+                    UPDATE diagnostico_servicio
+                    SET estado = 4
+                    WHERE id_diagnostico = ?
+                      AND estado != 0
+                ");
+                $updDiag->execute([$presupuesto['id_diagnostico']]);
+            }
 
             $pdo->commit();
             return true;
@@ -559,6 +588,16 @@ class ordenTrabajoModelo extends mainModel
                     WHERE idpresupuesto_servicio = ?
                 ");
                 $updPres->execute([$ot['idpresupuesto_servicio']]);
+
+                $updDiagnostico = $pdo->prepare("
+                    UPDATE diagnostico_servicio d
+                    INNER JOIN presupuesto_servicio ps
+                        ON ps.id_diagnostico = d.id_diagnostico
+                    SET d.estado = 2
+                    WHERE ps.idpresupuesto_servicio = ?
+                      AND d.estado = 4
+                ");
+                $updDiagnostico->execute([$ot['idpresupuesto_servicio']]);
             }
 
             if (!empty($ot['idreclamo_servicio'])) {
@@ -704,7 +743,9 @@ class ordenTrabajoModelo extends mainModel
             ");
             $qDiagnostico->execute([$idReclamo]);
 
-            if (!$qDiagnostico->fetchColumn()) {
+            $idDiagnosticoReclamo = (int)$qDiagnostico->fetchColumn();
+
+            if ($idDiagnosticoReclamo <= 0) {
                 $pdo->rollBack();
                 return 'El reclamo no habilita OT directa. Debe ser valido, en garantia y sin cobro';
             }
@@ -758,6 +799,13 @@ class ordenTrabajoModelo extends mainModel
             WHERE idreclamo_servicio = ?
         ")->execute([$idReclamo]);
 
+            $pdo->prepare("
+            UPDATE diagnostico_servicio
+            SET estado = 4
+            WHERE id_diagnostico = ?
+              AND estado != 0
+        ")->execute([$idDiagnosticoReclamo]);
+
             $pdo->commit();
             return true;
         } catch (Exception $e) {
@@ -775,7 +823,7 @@ class ordenTrabajoModelo extends mainModel
             $pdo->beginTransaction();
 
             $qOT = $pdo->prepare("
-                SELECT estado, id_sucursal, origen
+                SELECT estado, id_sucursal, origen, idreclamo_servicio
                 FROM orden_trabajo
                 WHERE idorden_trabajo = ?
                 FOR UPDATE
@@ -903,18 +951,26 @@ class ordenTrabajoModelo extends mainModel
             ");
 
                 $qStock = $pdo->prepare("
-                SELECT stockDisponible 
-                FROM stock 
-                WHERE id_articulo = ? AND id_sucursal = ?
+                SELECT
+                    a.desc_articulo,
+                    COALESCE(s.stockDisponible, 0) AS stockDisponible
+                FROM articulos a
+                LEFT JOIN stock s
+                    ON s.id_articulo = a.id_articulo
+                   AND s.id_sucursal = ?
+                WHERE a.id_articulo = ?
+                LIMIT 1
             ");
 
                 foreach ($d['repuestos'] as $r) {
 
-                    $qStock->execute([$r['id_articulo'], $_SESSION['nick_sucursal']]);
-                    $stock = $qStock->fetchColumn();
+                    $qStock->execute([$_SESSION['nick_sucursal'], $r['id_articulo']]);
+                    $stockData = $qStock->fetch(PDO::FETCH_ASSOC);
+                    $stock = (float)($stockData['stockDisponible'] ?? 0);
 
-                    if ($stock === false || (float)$stock < (float)$r['cantidad']) {
-                        throw new Exception("Stock insuficiente para artículo ID " . $r['id_articulo']);
+                    if (!$stockData || $stock < (float)$r['cantidad']) {
+                        $articulo = $stockData['desc_articulo'] ?? ('ID ' . $r['id_articulo']);
+                        throw new Exception("Stock insuficiente para " . $articulo . ". Disponible: " . number_format($stock, 2, ',', '.'));
                     }
 
                     $sql->execute([
@@ -959,6 +1015,23 @@ class ordenTrabajoModelo extends mainModel
                 ":obs" => $d['obs'],
                 ":id" => $d['idorden_trabajo']
             ]);
+
+            if (!empty($ot['idreclamo_servicio'])) {
+                $updDiagnostico = $pdo->prepare("
+                    UPDATE diagnostico_servicio ds
+                    INNER JOIN recepcion_servicio rs
+                        ON rs.idrecepcion = ds.idrecepcion
+                    SET ds.estado = 4
+                    WHERE rs.idreclamo_servicio = :reclamo
+                      AND ds.estado != 0
+                      AND ds.es_reclamo_valido = 1
+                      AND ds.es_garantia = 1
+                      AND ds.requiere_cobro = 0
+                ");
+                $updDiagnostico->execute([
+                    ':reclamo' => $ot['idreclamo_servicio']
+                ]);
+            }
 
             $pdo->commit();
 

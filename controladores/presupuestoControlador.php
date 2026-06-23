@@ -139,6 +139,59 @@ class presupuestoControlador extends presupuestoModelo
             exit();
         }
 
+        $totalCalculado = 0;
+        foreach ($_SESSION['Cdatos_articuloPre'] as $article) {
+            $cantidad = (float)($article['cantidad'] ?? 0);
+            $precio = (float)($article['precio'] ?? 0);
+            $subtotal = (float)($article['subtotal'] ?? 0);
+            $descripcion = $article['descripcion'] ?? 'un articulo';
+
+            if ($cantidad <= 0) {
+                echo json_encode([
+                    "Alerta" => "simple",
+                    "Titulo" => "Detalle invalido",
+                    "Texto" => "La cantidad de {$descripcion} debe ser mayor a cero",
+                    "Tipo" => "error"
+                ]);
+                exit();
+            }
+
+            if ($precio <= 0) {
+                echo json_encode([
+                    "Alerta" => "simple",
+                    "Titulo" => "Precio requerido",
+                    "Texto" => "El precio de {$descripcion} debe ser mayor a cero antes de guardar el presupuesto",
+                    "Tipo" => "error"
+                ]);
+                exit();
+            }
+
+            $subtotalCalculado = $cantidad * $precio;
+            if ($subtotal <= 0 || abs($subtotal - $subtotalCalculado) > 1) {
+                echo json_encode([
+                    "Alerta" => "simple",
+                    "Titulo" => "Subtotal invalido",
+                    "Texto" => "El subtotal de {$descripcion} no coincide con la cantidad y el precio",
+                    "Tipo" => "error"
+                ]);
+                exit();
+            }
+
+            $totalCalculado += $subtotalCalculado;
+        }
+
+        if ($totalCalculado <= 0) {
+            echo json_encode([
+                "Alerta" => "simple",
+                "Titulo" => "Total invalido",
+                "Texto" => "El total del presupuesto debe ser mayor a cero",
+                "Tipo" => "error"
+            ]);
+            exit();
+        }
+
+        $_SESSION['total_pre'] = $totalCalculado;
+
         if (empty($fecha_venc)) {
             echo json_encode([
                 "Alerta" => "simple",
@@ -588,7 +641,9 @@ class presupuestoControlador extends presupuestoModelo
         $id = mainModel::decryption($_POST['presupuesto_id_del']);
         $id = mainModel::limpiar_string($id);
         $motivo = trim(mainModel::limpiar_string($_POST['observacion_anulacion'] ?? ''));
-        session_start(['name' => 'STR']);
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start(['name' => 'STR']);
+        }
 
         if ($motivo === '') {
             echo json_encode([

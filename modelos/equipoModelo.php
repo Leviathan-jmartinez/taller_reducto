@@ -198,8 +198,16 @@ class equipoModelo extends mainModel
         );
         $sql_equipo->bindParam(":id", $id_equipo, PDO::PARAM_INT);
 
+        $ok = $sql_equipo->execute() && $sql_equipo->rowCount() > 0;
+        if (!$ok) {
+            $verificar = $conexion->prepare("SELECT estado FROM equipo_trabajo WHERE id_equipo = :id");
+            $verificar->bindParam(":id", $id_equipo, PDO::PARAM_INT);
+            $verificar->execute();
+            $ok = ($verificar->rowCount() > 0 && (int)$verificar->fetchColumn() === 0);
+        }
+
         return [
-            "ok" => $sql_equipo->execute() && $sql_equipo->rowCount() > 0,
+            "ok" => $ok,
             "accion" => "inactivado"
         ];
     }

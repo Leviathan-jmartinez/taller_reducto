@@ -184,7 +184,7 @@ $inventarioCargado = !empty($_SESSION['id_inv_seleccionado']) || !empty($_SESSIO
                             <option value="">Seleccione...</option>
                             <option value="General">Inventario General</option>
                             <option value="Categoria">Inventario por Categoría</option>
-                            <option value="Proveedor">Inventario por Proveedor</option>
+                            <option value="Proveedor">Inventario por Proveedor asociado</option>
                             <option value="Producto">Inventario por Artículo</option>
                         </select>
                     </div>

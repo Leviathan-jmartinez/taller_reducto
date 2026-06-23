@@ -4,6 +4,7 @@ if (!mainModel::tienePermiso('roles.ver')) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
     return;
 }
+$puedeCrear = mainModel::tienePermiso('roles.crear');
 
 $vistaPartes = explode('/', trim($_GET['vista'] ?? '', '/'));
 $vistaActual = $vistaPartes[0] ?? 'rol-nuevo';
@@ -15,6 +16,11 @@ require_once "./controladores/rolesControlador.php";
 $ins = new rolesControlador();
 
 if ($id != null) {
+    if (!mainModel::tienePermiso('roles.editar')) {
+        echo '<div class="alert alert-danger">Acceso no autorizado</div>';
+        return;
+    }
+
     $dat = $ins->datos_roles_controlador("Unico", $id);
 
     if ($dat->rowCount() == 1) {
@@ -28,7 +34,7 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
 
 <div class="full-box page-header">
     <h3>
-        <?php echo $editando ? "ACTUALIZAR ROL" : "AGREGAR ROL"; ?>
+        <?php echo $editando ? "ACTUALIZAR ROL" : ($puedeCrear ? "AGREGAR ROL" : "LISTADO DE ROLES"); ?>
     </h3>
 </div>
 
@@ -57,6 +63,7 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
 
     </ul>
 
+    <?php if ($editando || $puedeCrear) { ?>
 
     <form class="form-neon FormularioAjax app-form"
         action="<?php echo SERVERURL; ?>ajax/rolesAjax.php"
@@ -73,7 +80,9 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
 
             <div class="col-md-4">
                 <div class="form-group">
+                    <label for="rol_nombre">Nombre del rol *</label>
                     <input type="text" class="form-control"
+                        id="rol_nombre"
                         placeholder="Nombre del rol"
                         name="<?php echo $editando ? 'rol_nombre_up' : 'rol_nombre_reg'; ?>"
                         value="<?php echo $editando ? $campos['nombre'] : ''; ?>"
@@ -84,7 +93,9 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
 
             <div class="col-md-6">
                 <div class="form-group">
+                    <label for="rol_descripcion">Descripción del rol</label>
                     <input type="text" class="form-control"
+                        id="rol_descripcion"
                         placeholder="Descripción del rol"
                         name="<?php echo $editando ? 'rol_descripcion_up' : 'rol_descripcion_reg'; ?>"
                         value="<?php echo $editando ? $campos['descripcion'] : ''; ?>"
@@ -97,7 +108,9 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
             <?php if ($editando) { ?>
                 <div class="col-md-2">
                     <div class="form-group">
+                        <label for="rol_estado">Estado *</label>
                         <select class="form-control select2"
+                            id="rol_estado"
                             name="rol_estado_up"
                             data-placeholder="Estado">
 
@@ -140,6 +153,7 @@ $busqueda = $_SESSION['busqueda_roles'] ?? "";
         </p>
 
     </form>
+    <?php } ?>
 </div>
 
 <!-- ================= BUSCADOR ================= -->

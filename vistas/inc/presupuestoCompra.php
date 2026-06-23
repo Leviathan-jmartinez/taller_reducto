@@ -129,13 +129,30 @@
             if (enviar) {
                 const idArticulo = input.dataset.id;
                 const formData = new FormData();
+
+                if (precio <= 0) {
+                    Swal.fire({
+                        title: 'Precio invalido',
+                        text: 'El precio del articulo debe ser mayor a cero',
+                        type: 'error',
+                        confirmButtonText: 'Aceptar'
+                    });
+                    return;
+                }
+
                 formData.append("id_actualizar_precio", idArticulo);
                 formData.append("precio", precio);
 
                 fetch("<?php echo SERVERURL ?>ajax/presupuestoAjax.php", {
                     method: "POST",
                     body: formData
-                });
+                })
+                    .then(respuesta => respuesta.json())
+                    .then(respuesta => {
+                        if (respuesta.Alerta !== "simple" || respuesta.Tipo !== "success") {
+                            alertasAjax(respuesta);
+                        }
+                    });
             }
         });
 

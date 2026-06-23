@@ -435,17 +435,6 @@ class usuarioControlador extends usuarioModelo
             exit();
         }
 
-        $usuarioActual = $check_user->fetch();
-        if ((int)$usuarioActual['usu_estado'] === 0) {
-            echo json_encode([
-                "Alerta" => "simple",
-                "Titulo" => "Usuario inactivo",
-                "Texto"  => "El usuario ya se encuentra inactivo.",
-                "Tipo"   => "info"
-            ]);
-            exit();
-        }
-
         session_start(['name' => 'STR']);
         if (!mainModel::tienePermiso('usuarios.eliminar')) {
             return json_encode([
@@ -458,7 +447,12 @@ class usuarioControlador extends usuarioModelo
 
         $stmt = usuarioModelo::eliminar_usuario_modelo($usuario);
 
-        if ($stmt->rowCount() > 0) {
+        $resultado_eliminar = mainModel::ejecutar_consulta_simple(
+            "SELECT usu_estado FROM usuarios WHERE id_usuario='$usuario'"
+        );
+        $estado_resultado = $resultado_eliminar->rowCount() > 0 ? (int)$resultado_eliminar->fetchColumn() : null;
+
+        if ($stmt->rowCount() > 0 || $resultado_eliminar->rowCount() <= 0 || $estado_resultado === 0) {
 
             // Verificar cómo quedó
             $verificar = mainModel::ejecutar_consulta_simple(
@@ -538,6 +532,7 @@ class usuarioControlador extends usuarioModelo
         } else {
             $campos_usuario_up = $checkUser->fetch();
         }
+        $cambiarClave = $campos_usuario_up['usu_cambiar_clave'];
         $ci = mainModel::limpiar_string($_POST['usuario_ci_up'] ?? "");
         $nombre = mainModel::limpiar_string($_POST['usuario_nombre_up'] ?? "");
         $apellido = mainModel::limpiar_string($_POST['usuario_apellido_up'] ?? "");
@@ -769,6 +764,7 @@ class usuarioControlador extends usuarioModelo
                     exit();
                 }
                 $clave = usuarioModelo::hash_clave_usuario_modelo($_POST['usuario_clave_nueva_1']);
+                $cambiarClave = 1;
             }
         } else {
             $clave = $campos_usuario_up['usu_clave'];
@@ -822,6 +818,7 @@ class usuarioControlador extends usuarioModelo
             "email" => $email,
             "nick" => $nick,
             "clave" => $clave,
+            "cambiar_clave" => $cambiarClave,
             "estado" => $estado,
             "iduser" => $id
         ];

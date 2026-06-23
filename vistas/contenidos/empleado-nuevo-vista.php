@@ -5,6 +5,7 @@ $vistaPartes = explode('/', trim($_GET['vista'] ?? '', '/'));
 $vistaActual = $vistaPartes[0] ?? 'empleado-nuevo';
 $id = ($vistaActual === 'empleado-actualizar') ? ($vistaPartes[1] ?? null) : null;
 $permisoNecesario = ($vistaActual === 'empleado-actualizar') ? 'empleado.editar' : 'empleado.ver';
+$puedeCrear = mainModel::tienePermiso('empleado.crear');
 
 if (!mainModel::tienePermiso($permisoNecesario)) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
@@ -32,10 +33,11 @@ $busqueda = $_SESSION['busqueda_empleado'] ?? "";
 
 <div class="full-box page-header">
     <h3>
-        <?php echo $editando ? "ACTUALIZAR EMPLEADO" : "AGREGAR EMPLEADO"; ?>
+        <?php echo $editando ? "ACTUALIZAR EMPLEADO" : ($puedeCrear ? "AGREGAR EMPLEADO" : "LISTADO DE EMPLEADOS"); ?>
     </h3>
 </div>
 
+<?php if ($editando || $puedeCrear) { ?>
 <div class="container-fluid">
 
     <form class="form-neon FormularioAjax app-form"
@@ -54,7 +56,9 @@ $busqueda = $_SESSION['busqueda_empleado'] ?? "";
             <!-- CARGO -->
             <div class="col-md-4">
                 <div class="form-group">
+                    <label for="empleado_cargo">Cargo *</label>
                     <select class="form-control select2"
+                        id="empleado_cargo"
                         name="<?php echo $editando ? 'cargo_up' : 'cargo_reg'; ?>"
                         data-placeholder="Seleccione cargo">
 
@@ -76,7 +80,9 @@ foreach ($cargos as $c) { ?>
             <!-- SUCURSAL -->
             <div class="col-md-4">
                 <div class="form-group">
+                    <label for="empleado_sucursal">Sucursal *</label>
                     <select class="form-control select2"
+                        id="empleado_sucursal"
                         name="<?php echo $editando ? 'sucursal_up' : 'sucursal_reg'; ?>"
                         data-placeholder="Seleccione sucursal">
 
@@ -98,7 +104,9 @@ foreach ($sucursales as $s) { ?>
             <!-- CEDULA -->
             <div class="col-md-4">
                 <div class="form-group">
+                    <label for="empleado_cedula">Cédula *</label>
                     <input type="text" class="form-control"
+                        id="empleado_cedula"
                         placeholder="Cédula"
                         name="<?php echo $editando ? 'cedula_up' : 'cedula_reg'; ?>"
                         value="<?php echo $editando ? $campos['nro_cedula'] : ''; ?>"
@@ -111,7 +119,9 @@ foreach ($sucursales as $s) { ?>
             <!-- NOMBRE -->
             <div class="col-md-4">
                 <div class="form-group">
+                    <label for="empleado_nombre">Nombre *</label>
                     <input type="text" class="form-control"
+                        id="empleado_nombre"
                         placeholder="Nombre"
                         name="<?php echo $editando ? 'nombre_up' : 'nombre_reg'; ?>"
                         value="<?php echo $editando ? $campos['nombre'] : ''; ?>"
@@ -123,7 +133,9 @@ foreach ($sucursales as $s) { ?>
             <!-- APELLIDO -->
             <div class="col-md-4">
                 <div class="form-group">
+                    <label for="empleado_apellido">Apellido *</label>
                     <input type="text" class="form-control"
+                        id="empleado_apellido"
                         placeholder="Apellido"
                         name="<?php echo $editando ? 'apellido_up' : 'apellido_reg'; ?>"
                         value="<?php echo $editando ? $campos['apellido'] : ''; ?>"
@@ -135,7 +147,9 @@ foreach ($sucursales as $s) { ?>
             <!-- CELULAR -->
             <div class="col-md-4">
                 <div class="form-group">
+                    <label for="empleado_celular">Celular</label>
                     <input type="text" class="form-control"
+                        id="empleado_celular"
                         placeholder="Celular"
                         name="<?php echo $editando ? 'celular_up' : 'celular_reg'; ?>"
                         value="<?php echo $editando ? $campos['celular'] : ''; ?>"
@@ -148,7 +162,9 @@ foreach ($sucursales as $s) { ?>
             <!-- DIRECCION -->
             <div class="col-md-6">
                 <div class="form-group">
+                    <label for="empleado_direccion">Dirección</label>
                     <input type="text" class="form-control"
+                        id="empleado_direccion"
                         placeholder="Dirección"
                         name="<?php echo $editando ? 'direccion_up' : 'direccion_reg'; ?>"
                         value="<?php echo $editando ? $campos['direccion'] : ''; ?>"
@@ -160,7 +176,9 @@ foreach ($sucursales as $s) { ?>
             <!-- ESTADO CIVIL -->
             <div class="col-md-3">
                 <div class="form-group">
+                    <label for="empleado_estado_civil">Estado civil</label>
                     <select class="form-control select2"
+                        id="empleado_estado_civil"
                         name="<?php echo $editando ? 'estado_civil_up' : 'estado_civil_reg'; ?>"
                         data-placeholder="Estado civil">
 
@@ -183,7 +201,9 @@ $estados = ["Soltero/a", "Casado/a", "Viudo/a", "Divorciado/a"];
             <?php if ($editando) { ?>
                 <div class="col-md-3">
                     <div class="form-group">
+                        <label for="empleado_estado">Estado *</label>
                         <select class="form-control select2"
+                            id="empleado_estado"
                             name="estado_up"
                             data-placeholder="Estado">
 
@@ -227,6 +247,7 @@ $estados = ["Soltero/a", "Casado/a", "Viudo/a", "Divorciado/a"];
 
     </form>
 </div>
+<?php } ?>
 
 <!-- ================= BUSCADOR ================= -->
 <div class="container-fluid mb-3">

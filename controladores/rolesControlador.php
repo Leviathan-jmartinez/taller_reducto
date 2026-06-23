@@ -374,17 +374,6 @@ class rolesControlador extends rolesModelo
             exit();
         }
 
-        $rolActual = $check_rol->fetch();
-        if ((int)$rolActual['estado'] === 0) {
-            echo json_encode([
-                "Alerta" => "simple",
-                "Titulo" => "Rol inactivo",
-                "Texto" => "El rol ya se encuentra inactivo.",
-                "Tipo" => "info"
-            ]);
-            exit();
-        }
-
         $delete = rolesModelo::eliminar_roles_modelo($id);
 
         if ($delete["ok"]) {

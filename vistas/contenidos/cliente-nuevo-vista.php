@@ -5,6 +5,7 @@ $vistaPartes = explode('/', trim($_GET['vista'] ?? '', '/'));
 $vistaActual = $vistaPartes[0] ?? 'cliente-nuevo';
 $id = ($vistaActual === 'cliente-actualizar') ? ($vistaPartes[1] ?? null) : null;
 $permisoNecesario = ($vistaActual === 'cliente-actualizar') ? 'cliente.editar' : 'cliente.ver';
+$puedeCrear = mainModel::tienePermiso('cliente.crear');
 
 if (!mainModel::tienePermiso($permisoNecesario)) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
@@ -29,10 +30,11 @@ $busqueda = $_SESSION['busqueda_cliente'] ?? "";
 
 <div class="full-box page-header">
     <h3>
-        <?php echo $editando ? "ACTUALIZAR CLIENTE" : "AGREGAR CLIENTE"; ?>
+        <?php echo $editando ? "ACTUALIZAR CLIENTE" : ($puedeCrear ? "AGREGAR CLIENTE" : "LISTADO DE CLIENTES"); ?>
     </h3>
 </div>
 
+<?php if ($editando || $puedeCrear) { ?>
 <div class="container-fluid">
 
     <form class="form-neon FormularioAjax app-form"
@@ -49,6 +51,7 @@ $busqueda = $_SESSION['busqueda_cliente'] ?? "";
         <div class="row">
 
             <div class="col-md-4">
+                <label for="cliente_tipo_documento">Tipo de documento *</label>
                 <select class="form-control select2"
                     id="cliente_tipo_documento"
                     name="<?php echo $editando ? 'tipo_documento_up' : 'tipo_documento_reg'; ?>">
@@ -64,6 +67,7 @@ $busqueda = $_SESSION['busqueda_cliente'] ?? "";
             </div>
             <br><br>
             <div class="col-md-4">
+                <label for="cliente_documento">Documento *</label>
                 <input type="text" class="form-control"
                     id="cliente_documento"
                     placeholder="Documento (Ej: 1234567)"
@@ -75,6 +79,7 @@ $busqueda = $_SESSION['busqueda_cliente'] ?? "";
             </div>
             <br><br>
             <div class="col-md-4">
+                <label for="cliente_dv">DV</label>
                 <input type="text" class="form-control"
                     id="cliente_dv"
                     placeholder="DV (Ej: 5)"
@@ -87,6 +92,7 @@ $busqueda = $_SESSION['busqueda_cliente'] ?? "";
             </div>
             <br><br>
             <div class="col-md-4">
+                <label for="cliente_nombre">Nombre del cliente *</label>
                 <input type="text" class="form-control"
                     id="cliente_nombre"
                     placeholder="Nombre del cliente"
@@ -98,6 +104,7 @@ $busqueda = $_SESSION['busqueda_cliente'] ?? "";
             </div>
             <br><br>
             <div class="col-md-4">
+                <label for="cliente_apellido">Apellido del cliente *</label>
                 <input type="text" class="form-control"
                     id="cliente_apellido"
                     placeholder="Apellido del cliente"
@@ -109,7 +116,9 @@ $busqueda = $_SESSION['busqueda_cliente'] ?? "";
             </div>
             <br><br>
             <div class="col-md-4">
+                <label for="cliente_telefono">Teléfono</label>
                 <input type="text" class="form-control"
+                    id="cliente_telefono"
                     placeholder="Teléfono (Ej: 0981...)"
                     name="<?php echo $editando ? 'cliente_telefono_up' : 'cliente_telefono_reg'; ?>"
                     value="<?php echo $editando ? $campos['celular_cliente'] : ''; ?>"
@@ -120,7 +129,9 @@ $busqueda = $_SESSION['busqueda_cliente'] ?? "";
             </div>
             <br><br>
             <div class="col-md-4">
+                <label for="cliente_email">Email</label>
                 <input type="email" class="form-control"
+                    id="cliente_email"
                     placeholder="Email (Ej: correo@mail.com)"
                     name="<?php echo $editando ? 'cliente_email_up' : 'cliente_email_reg'; ?>"
                     value="<?php echo $editando ? $campos['email_cliente'] : ''; ?>"
@@ -128,7 +139,9 @@ $busqueda = $_SESSION['busqueda_cliente'] ?? "";
             </div>
             <br><br>
             <div class="col-md-4">
+                <label for="cliente_direccion">Dirección</label>
                 <input type="text" class="form-control"
+                    id="cliente_direccion"
                     placeholder="Dirección del cliente"
                     name="<?php echo $editando ? 'cliente_direccion_up' : 'cliente_direccion_reg'; ?>"
                     value="<?php echo $editando ? $campos['direccion_cliente'] : ''; ?>"
@@ -143,7 +156,9 @@ $busqueda = $_SESSION['busqueda_cliente'] ?? "";
 $ciudades = $ins_cliente->listar_ciudades_controlador_up();
                 ?>
 
+                <label for="cliente_ciudad">Ciudad *</label>
                 <select class="form-control select2"
+                    id="cliente_ciudad"
                     name="<?php echo $editando ? 'ciudad_up' : 'ciudad_reg'; ?>">
 
                     <option value="">Seleccione ciudad</option>
@@ -170,7 +185,9 @@ foreach ($ciudades as $ciu) { ?>
                 <?php
 $estadoCivil = $editando ? trim($campos['estado_civil']) : ""; ?>
 
+                <label for="cliente_estado_civil">Estado civil</label>
                 <select class="form-control select2"
+                    id="cliente_estado_civil"
                     name="<?php echo $editando ? 'cliente_estadoC_up' : 'cliente_estadoC_reg'; ?>">
 
                     <option value="">Estado civil</option>
@@ -196,7 +213,8 @@ $estadoCivil = $editando ? trim($campos['estado_civil']) : ""; ?>
             <?php if ($editando) { ?>
                 <br><br>
                 <div class="col-md-4">
-                    <select class="form-control" name="cliente_estado_up">
+                    <label for="cliente_estado">Estado</label>
+                    <select class="form-control" id="cliente_estado" name="cliente_estado_up">
                         <option value="">Estado</option>
                         <option value="1" <?php if (($campos['estado_cliente'] ?? 1) == 1) echo 'selected'; ?>>Activo</option>
                         <option value="0" <?php if (($campos['estado_cliente'] ?? 1) == 0) echo 'selected'; ?>>Inactivo</option>
@@ -226,6 +244,7 @@ $estadoCivil = $editando ? trim($campos['estado_civil']) : ""; ?>
 
     </form>
 </div>
+<?php } ?>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

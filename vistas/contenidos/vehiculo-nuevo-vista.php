@@ -5,6 +5,7 @@ $vistaPartes = explode('/', trim($_GET['vista'] ?? '', '/'));
 $vistaActual = $vistaPartes[0] ?? 'vehiculo-nuevo';
 $id = ($vistaActual === 'vehiculo-actualizar') ? ($vistaPartes[1] ?? null) : null;
 $permisoNecesario = ($vistaActual === 'vehiculo-actualizar') ? 'vehiculo.editar' : 'vehiculo.ver';
+$puedeCrear = mainModel::tienePermiso('vehiculo.crear');
 
 if (!mainModel::tienePermiso($permisoNecesario)) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
@@ -51,10 +52,11 @@ $tiposVehiculo = [
 
 <div class="full-box page-header">
     <h3>
-        <?php echo $editando ? "ACTUALIZAR VEHICULO" : "AGREGAR VEHICULO"; ?>
+        <?php echo $editando ? "ACTUALIZAR VEHICULO" : ($puedeCrear ? "AGREGAR VEHICULO" : "LISTADO DE VEHICULOS"); ?>
     </h3>
 </div>
 
+<?php if ($editando || $puedeCrear) { ?>
 <div class="container-fluid">
 
     <form class="form-neon FormularioAjax app-form"
@@ -73,7 +75,9 @@ $tiposVehiculo = [
             <!-- CLIENTE -->
             <div class="col-md-4">
                 <div class="form-group">
+                    <label for="vehiculo_cliente">Cliente *</label>
                     <select class="form-control select2-clientes"
+                        id="vehiculo_cliente"
                         name="<?php echo $editando ? 'cliente_up' : 'cliente_reg'; ?>">
 
                         <?php if ($editando) { ?>
@@ -90,7 +94,9 @@ $tiposVehiculo = [
             <!-- MODELO -->
             <div class="col-md-4">
                 <div class="form-group">
+                    <label for="vehiculo_modelo">Modelo *</label>
                     <select class="form-control select2"
+                        id="vehiculo_modelo"
                         name="<?php echo $editando ? 'modelo_up' : 'modelo_reg'; ?>">
                         <option value="" disabled selected>Seleccione modelo</option>
                         <?php
@@ -108,8 +114,10 @@ foreach ($modelos as $m) { ?>
             <!-- COLOR -->
             <div class="col-md-4">
                 <div class="form-group">
+                    <label for="vehiculo_color">Color *</label>
                     <input type="text"
                         class="form-control"
+                        id="vehiculo_color"
                         placeholder="Color"
                         name="<?php echo $editando ? 'color_up' : 'color_reg'; ?>"
                         value="<?php echo $editando ? $campos['color'] : ''; ?>"
@@ -121,8 +129,10 @@ foreach ($modelos as $m) { ?>
             <!-- PLACA -->
             <div class="col-md-4">
                 <div class="form-group">
+                    <label for="vehiculo_placa">Placa *</label>
                     <input type="text"
                         class="form-control"
+                        id="vehiculo_placa"
                         placeholder="Placa *"
                         name="<?php echo $editando ? 'placa_up' : 'placa_reg'; ?>"
                         value="<?php echo $editando ? $campos['placa'] : ''; ?>"
@@ -134,8 +144,10 @@ foreach ($modelos as $m) { ?>
             <!-- AÑO -->
             <div class="col-md-4">
                 <div class="form-group">
+                    <label for="vehiculo_anho">Año</label>
                     <input type="text"
                         class="form-control"
+                        id="vehiculo_anho"
                         placeholder="Año"
                         name="<?php echo $editando ? 'anho_up' : 'anho_reg'; ?>"
                         value="<?php echo $editando ? $campos['anho'] : ''; ?>"
@@ -148,8 +160,10 @@ foreach ($modelos as $m) { ?>
             <!-- VERSION -->
             <div class="col-md-4">
                 <div class="form-group">
+                    <label for="vehiculo_version">Versión</label>
                     <input type="text"
                         class="form-control"
+                        id="vehiculo_version"
                         placeholder="Version"
                         name="<?php echo $editando ? 'version_up' : 'version_reg'; ?>"
                         value="<?php echo $editando ? ($campos['version'] ?? '') : ''; ?>"
@@ -161,8 +175,10 @@ foreach ($modelos as $m) { ?>
             <!-- TRANSMISION -->
             <div class="col-md-4">
                 <div class="form-group">
+                    <label for="vehiculo_transmision">Transmisión</label>
                     <input type="text"
                         class="form-control"
+                        id="vehiculo_transmision"
                         placeholder="Transmision"
                         name="<?php echo $editando ? 'transmision_up' : 'transmision_reg'; ?>"
                         value="<?php echo $editando ? ($campos['transmision'] ?? '') : ''; ?>"
@@ -174,8 +190,10 @@ foreach ($modelos as $m) { ?>
             <!-- MOTOR -->
             <div class="col-md-4">
                 <div class="form-group">
+                    <label for="vehiculo_motor">Motor</label>
                     <input type="text"
                         class="form-control"
+                        id="vehiculo_motor"
                         placeholder="Motor"
                         name="<?php echo $editando ? 'motor_up' : 'motor_reg'; ?>"
                         value="<?php echo $editando ? ($campos['motor'] ?? '') : ''; ?>"
@@ -187,7 +205,9 @@ foreach ($modelos as $m) { ?>
             <!-- TIPO VEHICULO -->
             <div class="col-md-4">
                 <div class="form-group">
+                    <label for="vehiculo_tipo">Tipo de vehículo</label>
                     <select class="form-control select2"
+                        id="vehiculo_tipo"
                         name="<?php echo $editando ? 'tipo_vehiculo_up' : 'tipo_vehiculo_reg'; ?>">
                         <option value="">Seleccione tipo de vehiculo</option>
                         <?php foreach ($tiposVehiculo as $tipoVehiculo) { ?>
@@ -203,7 +223,9 @@ foreach ($modelos as $m) { ?>
             <!-- ESTADO -->
             <div class="col-md-4">
                 <div class="form-group">
+                    <label for="vehiculo_estado">Estado *</label>
                     <select class="form-control select2"
+                        id="vehiculo_estado"
                         name="<?php echo $editando ? 'estado_up' : 'estado_reg'; ?>">
                         <option value="" disabled selected>Seleccione estado</option>
                         <option value="1" <?php if ($editando && $campos['estado'] == 1) echo "selected"; ?>>Activo</option>
@@ -236,6 +258,7 @@ foreach ($modelos as $m) { ?>
 
     </form>
 </div>
+<?php } ?>
 
 <!-- BUSCADOR -->
 <div class="container-fluid mb-3">

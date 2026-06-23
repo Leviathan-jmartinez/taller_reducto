@@ -149,6 +149,10 @@
                     label: "Vehiculo"
                 },
                 {
+                    key: "usuario_registra",
+                    label: "Usuario"
+                },
+                {
                     key: "tecnico",
                     label: "Tecnico"
                 },

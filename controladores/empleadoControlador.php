@@ -309,7 +309,8 @@ class empleadoControlador extends empleadoModelo
         empleadoModelo::actualizar_empleado_modelo($datos);
 
         echo json_encode([
-            "Alerta" => "recargar",
+            "Alerta" => "redireccionar_confirmado",
+            "URL" => SERVERURL . "empleado-nuevo/",
             "Titulo" => "Empleado",
             "Texto" => "Empleado actualizado correctamente",
             "Tipo" => "success"
@@ -338,17 +339,6 @@ class empleadoControlador extends empleadoModelo
             exit();
         }
 
-        $empleadoActual = $check->fetch();
-        if ((int)$empleadoActual['estado'] === 0) {
-            echo json_encode([
-                "Alerta" => "simple",
-                "Titulo" => "Empleado inactivo",
-                "Texto"  => "El empleado ya se encuentra inactivo.",
-                "Tipo"   => "info"
-            ]);
-            exit();
-        }
-
         session_start(['name' => 'STR']);
         if (!mainModel::tienePermiso('empleado.eliminar')) {
             return json_encode([
@@ -361,7 +351,12 @@ class empleadoControlador extends empleadoModelo
 
         $stmt = empleadoModelo::eliminar_empleado_modelo($id);
 
-        if ($stmt->rowCount() > 0) {
+        $resultado_eliminar = mainModel::ejecutar_consulta_simple(
+            "SELECT estado FROM empleados WHERE idempleados='$id'"
+        );
+        $estado_resultado = $resultado_eliminar->rowCount() > 0 ? (int)$resultado_eliminar->fetchColumn() : null;
+
+        if ($stmt->rowCount() > 0 || $resultado_eliminar->rowCount() <= 0 || $estado_resultado === 0) {
 
             // Verificar cómo quedó
             $verificar = mainModel::ejecutar_consulta_simple(
@@ -430,6 +425,14 @@ class empleadoControlador extends empleadoModelo
         $datos = $res['datos'];
         $total = $res['total'];
         $Npaginas = ceil($total / $registros);
+        $columnas = 5;
+
+        if (mainModel::tienePermiso('empleado.editar')) {
+            $columnas++;
+        }
+        if (mainModel::tienePermiso('empleado.eliminar')) {
+            $columnas++;
+        }
 
         /* ===== TABLA ===== */
         $tabla = '<div class="table-responsive">
@@ -439,7 +442,8 @@ class empleadoControlador extends empleadoModelo
                 <th>#</th>
                 <th>Empleado</th>
                 <th>Cargo</th>
-                <th>Sucursal</th>';
+                <th>Sucursal</th>
+                <th>Estado</th>';
 
         if (mainModel::tienePermiso('empleado.editar')) {
             $tabla .= '<th>ACTUALIZAR</th>';
@@ -456,12 +460,16 @@ class empleadoControlador extends empleadoModelo
             $reg_inicio = $inicio + 1;
 
             foreach ($datos as $row) {
+                $estado = ((int)$row['estado'] === 1)
+                    ? '<span class="badge badge-success">Activo</span>'
+                    : '<span class="badge badge-danger">Inactivo</span>';
 
                 $tabla .= '<tr class="text-center">
                 <td>' . $contador . '</td>
                 <td>' . $row['apellido'] . ' ' . $row['nombre'] . '</td>
                 <td>' . $row['cargo'] . '</td>
-                <td>' . $row['sucursal'] . '</td>';
+                <td>' . $row['sucursal'] . '</td>
+                <td>' . $estado . '</td>';
 
                 if (mainModel::tienePermiso('empleado.editar')) {
                     $tabla .= '<td>
@@ -497,7 +505,7 @@ class empleadoControlador extends empleadoModelo
             $reg_final = $contador - 1;
         } else {
             $tabla .= '<tr>
-            <td colspan="6" class="text-center">No hay registros</td>
+            <td colspan="' . $columnas . '" class="text-center">No hay registros</td>
         </tr>';
         }
 

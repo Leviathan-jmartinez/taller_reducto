@@ -44,16 +44,21 @@ if (!function_exists('nav_tiene_permiso')) {
 if (!function_exists('nav_item_visible')) {
     function nav_item_visible($item)
     {
-        if (isset($item['permiso']) && !nav_tiene_permiso($item['permiso'])) {
-            return false;
-        }
-
         if (!empty($item['items'])) {
+            $tieneSubitemVisible = false;
             foreach ($item['items'] as $subitem) {
                 if (nav_item_visible($subitem)) {
-                    return true;
+                    $tieneSubitemVisible = true;
+                    break;
                 }
             }
+
+            if ($tieneSubitemVisible) {
+                return true;
+            }
+        }
+
+        if (isset($item['permiso']) && !nav_tiene_permiso($item['permiso'])) {
             return false;
         }
 

@@ -141,7 +141,7 @@ class proveedorControlador extends proveedorModelo
 
         if ($guardar->rowCount() == 1) {
             $alerta = [
-                "Alerta" => "limpiar",
+                "Alerta" => "recargar",
                 "Titulo" => "Proveedor",
                 "Texto" => "Proveedor registrado correctamente",
                 "Tipo" => "success"
@@ -187,20 +187,14 @@ class proveedorControlador extends proveedorModelo
             exit();
         }
 
-        $proveedorActual = $check->fetch();
-        if ((int)$proveedorActual['estado'] === 0) {
-            echo json_encode([
-                "Alerta" => "simple",
-                "Titulo" => "Proveedor inactivo",
-                "Texto"  => "El proveedor ya se encuentra inactivo.",
-                "Tipo"   => "info"
-            ]);
-            exit();
-        }
-
         $stmt = proveedorModelo::eliminar_proveedor_modelo($id);
 
-        if ($stmt->rowCount() > 0) {
+        $resultado_eliminar = mainModel::ejecutar_consulta_simple(
+            "SELECT estado FROM proveedores WHERE idproveedores='$id'"
+        );
+        $estado_resultado = $resultado_eliminar->rowCount() > 0 ? (int)$resultado_eliminar->fetchColumn() : null;
+
+        if ($stmt->rowCount() > 0 || $resultado_eliminar->rowCount() <= 0 || $estado_resultado === 0) {
 
             $verificar = mainModel::ejecutar_consulta_simple(
                 "SELECT estado FROM proveedores WHERE idproveedores='$id'"

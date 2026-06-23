@@ -16,11 +16,13 @@ if (!mainModel::tienePermiso('empleado.ver')) {
 
 <div class="container-fluid">
     <ul class="full-box list-unstyled page-nav-tabs">
+        <?php if (mainModel::tienePermiso('empleado.crear')): ?>
         <li>
             <a href="<?php echo SERVERURL; ?>empleado-nuevo/">
                 <i class="fas fa-user-plus fa-fw"></i> &nbsp; AGREGAR EMPLEADO
             </a>
         </li>
+        <?php endif; ?>
         <li>
             <a href="<?php echo SERVERURL; ?>empleado-lista/">
                 <i class="fas fa-users fa-fw"></i> &nbsp; LISTA DE EMPLEADOS

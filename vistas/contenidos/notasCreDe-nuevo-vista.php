@@ -34,6 +34,7 @@ $fmtCantidadNota = function ($valor) {
         action="<?php echo SERVERURL; ?>ajax/notasCreDeAjax.php"
         method="POST"
         data-form="save"
+        data-custom-submit="true"
         autocomplete="off">
         <?php if (empty($facturaNC)): ?>
             <div class="col-md-6 mt-3">
@@ -308,7 +309,7 @@ $fmtCantidadNota = function ($valor) {
                     .then(r => r.json())
                     .then(resp => {
                         if (resp.status === 'ok') {
-                            location.reload();
+                            renderizarDetalleNota(resp);
                             return;
                         }
 
@@ -316,6 +317,54 @@ $fmtCantidadNota = function ($valor) {
                     })
                     .catch(() => Swal.fire('Error', 'Error de comunicacion con el servidor', 'error'));
             });
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function renderizarDetalleNota(resp) {
+            const detalle = document.getElementById('detalle_nota');
+            if (!detalle || !Array.isArray(resp.detalle)) return;
+
+            detalle.innerHTML = resp.detalle.map((item) => `
+                <tr>
+                    <td>${escapeHtml(item.id_articulo)}</td>
+                    <td>${escapeHtml(item.descripcion)}</td>
+                    <td>
+                        <input type="number"
+                            min="0"
+                            step="0.01"
+                            class="form-control form-control-sm text-center"
+                            value="${escapeHtml(item.cantidad)}"
+                            onchange="actualizarItem(${Number(item.index)})">
+                    </td>
+                    <td>
+                        <input type="number"
+                            min="0"
+                            step="0.01"
+                            class="form-control form-control-sm text-center"
+                            value="${escapeHtml(item.precio)}"
+                            onchange="actualizarItem(${Number(item.index)})">
+                    </td>
+                    <td>${escapeHtml(item.iva_tipo)}</td>
+                    <td class="text-right" id="total_item_${Number(item.index)}">
+                        ${escapeHtml(item.total_item)}
+                    </td>
+                </tr>
+            `).join('');
+
+            if (resp.totales) {
+                document.getElementById('subtotal').value = resp.totales.subtotal || '0';
+                document.getElementById('iva_5').value = resp.totales.iva_5 || '0';
+                document.getElementById('iva_10').value = resp.totales.iva_10 || '0';
+                document.getElementById('total').value = resp.totales.total || '0';
+            }
         }
 
         // Ejecutar al cargar

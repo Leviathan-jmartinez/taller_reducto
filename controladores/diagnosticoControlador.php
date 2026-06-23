@@ -505,6 +505,7 @@ class diagnosticoControlador extends diagnosticoModelo
                     1 => ['En proceso', 'info'],
                     2 => ['Presupuestado', 'success'],
                     3 => ['Finalizado', 'primary'],
+                    4 => ['OT generada', 'secondary'],
                     0 => ['Anulado', 'warning']
                 ];
 

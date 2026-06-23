@@ -64,11 +64,12 @@ class usuarioModelo extends mainModel
     /**modelo actualizar usuario */
     protected static function actualizar_usuario_modelo($datos)
     {
-        $sql = mainModel::conectar()->prepare("UPDATE usuarios SET usu_nombre=:nombre, usu_clave=:clave,
+        $sql = mainModel::conectar()->prepare("UPDATE usuarios SET usu_nombre=:nombre, usu_clave=:clave, usu_cambiar_clave=:cambiar_clave,
         usu_estado=:estado, usu_nick=:nick, usu_apellido=:apellido, usu_email=:email, usu_telefono=:telefono, usu_ci=:ci where id_usuario=:iduser");
         $sql->bindParam(":ci", $datos['ci']);
         $sql->bindParam(":nombre", $datos['nombre']);
         $sql->bindParam(":clave", $datos['clave']);
+        $sql->bindParam(":cambiar_clave", $datos['cambiar_clave']);
         $sql->bindParam(":estado", $datos['estado']);
         $sql->bindParam(":nick", $datos['nick']);
         $sql->bindParam(":apellido", $datos['apellido']);

@@ -323,6 +323,30 @@ class notasCreDeModelo extends mainModel
         return (float)$sql->fetchColumn();
     }
 
+    protected static function totalNDActivasPorFactura($idcompra)
+    {
+        $sql = mainModel::conectar()->prepare("
+        SELECT COALESCE(SUM(total), 0) AS total_nd
+        FROM nota_compra
+        WHERE idcompra_cabecera = :id
+          AND id_sucursal = :sucursal
+          AND tipo = 'debito'
+          AND estado = 1
+        ");
+        $sql->bindValue(':id', $idcompra, PDO::PARAM_INT);
+        $sql->bindValue(':sucursal', $_SESSION['nick_sucursal'], PDO::PARAM_INT);
+        $sql->execute();
+        return (float)$sql->fetchColumn();
+    }
+
+    protected static function saldoDisponibleNCFactura($idcompra, $totalCompra)
+    {
+        $totalND = self::totalNDActivasPorFactura($idcompra);
+        $totalNC = self::totalNCActivasPorFactura($idcompra);
+
+        return round(((float)$totalCompra + $totalND) - $totalNC, 2);
+    }
+
     protected static function diferenciaCompraModelo($idcompra)
     {
         self::iniciarSesionSiHaceFalta();

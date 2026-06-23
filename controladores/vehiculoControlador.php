@@ -558,17 +558,6 @@ class vehiculoControlador extends vehiculoModelo
             ]);
             exit();
         }
-        $vehiculoActual = $check->fetch();
-        if ((int)$vehiculoActual['estado'] === 0) {
-            echo json_encode([
-                "Alerta" => "simple",
-                "Titulo" => "Vehículo inactivo",
-                "Texto"  => "El vehículo ya se encuentra inactivo.",
-                "Tipo"   => "info"
-            ]);
-            exit();
-        }
-
         session_start(['name' => 'STR']);
         if (!mainModel::tienePermiso('vehiculo.eliminar')) {
             return json_encode([
@@ -581,7 +570,12 @@ class vehiculoControlador extends vehiculoModelo
 
         $stmt = vehiculoModelo::eliminar_vehiculo_modelo($id);
 
-        if ($stmt->rowCount() > 0) {
+        $resultado_eliminar = mainModel::ejecutar_consulta_simple(
+            "SELECT estado FROM vehiculos WHERE id_vehiculo='$id'"
+        );
+        $estado_resultado = $resultado_eliminar->rowCount() > 0 ? (int)$resultado_eliminar->fetchColumn() : null;
+
+        if ($stmt->rowCount() > 0 || $resultado_eliminar->rowCount() <= 0 || $estado_resultado === 0) {
 
             // Verificar cómo quedó
             $verificar = mainModel::ejecutar_consulta_simple(

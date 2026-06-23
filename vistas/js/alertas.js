@@ -126,7 +126,14 @@ formulario_ajax.forEach(formularios => {
 });
 
 function alertasAjax(alerta, form = null) {
-    if (alerta.Alerta === "simple") {
+    if (alerta.status === "error") {
+        Swal.fire({
+            title: alerta.Titulo || 'Error',
+            text: alerta.msg || alerta.Texto || 'No se pudo completar la operacion',
+            type: alerta.Tipo || 'error',
+            confirmButtonText: 'Aceptar'
+        });
+    } else if (alerta.Alerta === "simple") {
         Swal.fire({
             title: alerta.Titulo,
             text: alerta.Texto,

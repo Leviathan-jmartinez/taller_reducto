@@ -4,7 +4,8 @@ $pagina = require __DIR__ . '/../inc/pagina.php';
 $vistaPartes = explode('/', trim($_GET['vista'] ?? '', '/'));
 $vistaActual = $vistaPartes[0] ?? 'articulo-nuevo';
 $id = ($vistaActual === 'articulo-actualizar') ? ($vistaPartes[1] ?? null) : null;
-$permisoNecesario = ($vistaActual === 'articulo-actualizar') ? 'articulo.editar' : 'articulo.crear';
+$permisoNecesario = ($vistaActual === 'articulo-actualizar') ? 'articulo.editar' : 'articulo.ver';
+$puedeCrear = mainModel::tienePermiso('articulo.crear');
 
 if (!mainModel::tienePermiso($permisoNecesario)) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
@@ -35,10 +36,11 @@ $articlesMAR = $ins_articulo->listar_marca_controlador();
 
 <div class="full-box page-header">
     <h3>
-        <?php echo $editando ? "ACTUALIZAR ARTICULO" : "AGREGAR ARTICULO"; ?>
+        <?php echo $editando ? "ACTUALIZAR ARTICULO" : ($puedeCrear ? "AGREGAR ARTICULO" : "LISTADO DE ARTICULOS"); ?>
     </h3>
 </div>
 
+<?php if ($editando || $puedeCrear) { ?>
 <div class="container-fluid">
     <form class="form-neon FormularioAjax app-form"
         action="<?php echo SERVERURL; ?>ajax/articuloAjax.php"
@@ -56,9 +58,11 @@ $articlesMAR = $ins_articulo->listar_marca_controlador();
             <!-- CODIGO -->
             <div class="col-md-4">
                 <div class="form-group">
+                    <label for="articulo_codigo">Código *</label>
                     <input type="text"
                         class="form-control"
                         placeholder="Código *"
+                        id="articulo_codigo"
                         name="<?php echo $editando ? 'articulo_codigo_up' : 'articulo_codigo_reg'; ?>"
                         value="<?php echo $editando ? $campos['codigo'] : ''; ?>"
                         pattern="[0-9]{1,15}"
@@ -71,9 +75,11 @@ $articlesMAR = $ins_articulo->listar_marca_controlador();
             <!-- DESCRIPCION -->
             <div class="col-md-8">
                 <div class="form-group">
+                    <label for="articulo_descripcion">Descripción del artículo *</label>
                     <input type="text"
                         class="form-control"
                         placeholder="Descripción del artículo"
+                        id="articulo_descripcion"
                         name="<?php echo $editando ? 'articulo_nombre_up' : 'articulo_nombre_reg'; ?>"
                         value="<?php echo $editando ? $campos['desc_articulo'] : ''; ?>"
                         pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 ]{1,50}"
@@ -84,6 +90,7 @@ $articlesMAR = $ins_articulo->listar_marca_controlador();
 
             <div class="col-md-4">
                 <div class="form-group">
+                    <label for="articulo_precio_venta">Precio venta</label>
                     <input type="text"
                         class="form-control"
                         placeholder="Precio Venta"
@@ -99,7 +106,9 @@ $articlesMAR = $ins_articulo->listar_marca_controlador();
             <!-- IVA -->
             <div class="col-md-4">
                 <div class="form-group">
+                    <label for="articulo_iva">IVA</label>
                     <select class="form-control select2"
+                        id="articulo_iva"
                         name="<?php echo $editando ? 'tipo_iva_up' : 'tipo_iva_reg'; ?>">
                         <option value="" disabled <?php if (!$editando) echo "selected"; ?>>Seleccione IVA</option>
                         <?php
@@ -117,7 +126,9 @@ $articlesMAR = $ins_articulo->listar_marca_controlador();
             <!-- UNIDAD -->
             <div class="col-md-4">
                 <div class="form-group">
+                    <label for="articulo_unidad_medida">Unidad de medida</label>
                     <select class="form-control select2"
+                        id="articulo_unidad_medida"
                         name="<?php echo $editando ? 'um_up' : 'um_reg'; ?>">
                         <option value="" disabled <?php if (!$editando) echo "selected"; ?>>Seleccione unidad</option>
                         <?php
@@ -135,7 +146,9 @@ $articlesMAR = $ins_articulo->listar_marca_controlador();
             <!-- CATEGORIA -->
             <div class="col-md-4">
                 <div class="form-group">
+                    <label for="articulo_categoria">Categoría</label>
                     <select class="form-control select2"
+                        id="articulo_categoria"
                         name="<?php echo $editando ? 'categoria_up' : 'categoria_reg'; ?>">
                         <option value="" disabled <?php if (!$editando) echo "selected"; ?>>Seleccione categoría</option>
                         <?php
@@ -153,6 +166,7 @@ $articlesMAR = $ins_articulo->listar_marca_controlador();
             <!-- MARCA -->
             <div class="col-md-4">
                 <div class="form-group">
+                    <label for="articulo_marca">Marca</label>
                     <select class="form-control select2"
                         id="articulo_marca"
                         name="<?php echo $editando ? 'marca_up' : 'marca_reg'; ?>">
@@ -171,6 +185,7 @@ $articlesMAR = $ins_articulo->listar_marca_controlador();
             <!-- TIPO -->
             <div class="col-md-4">
                 <div class="form-group">
+                    <label for="articulo_tipo">Tipo de producto *</label>
                     <select class="form-control"
                         id="articulo_tipo"
                         name="<?php echo $editando ? 'tipoprodUp' : 'tipoprodReg'; ?>">
@@ -198,7 +213,8 @@ $articlesMAR = $ins_articulo->listar_marca_controlador();
             <?php if ($editando) { ?>
                 <div class="col-md-4">
                     <div class="form-group">
-                        <select class="form-control" name="articulo_estado_up">
+                        <label for="articulo_estado">Estado</label>
+                        <select class="form-control" id="articulo_estado" name="articulo_estado_up">
                             <option value="1" <?php if (($campos['estado'] ?? 1) == 1) echo 'selected'; ?>>
                                 Activo
                             </option>
@@ -233,6 +249,7 @@ $articlesMAR = $ins_articulo->listar_marca_controlador();
 
     </form>
 </div>
+<?php } ?>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

@@ -8,7 +8,7 @@ class vistasModelo
         "cliente-actualizar", "cliente-buscar", "cliente-lista", "cliente-nuevo", "company",  "proveedor-actualizar", "proveedor-buscar", "proveedor-lista", "proveedor-nuevo",      
         "usuario-actualizar", "usuario-buscar", "usuario-lista", "rol-permisos", "rol-nuevo","rol-actualizar","usuario-nuevo","pedido-lista","pedido-nuevo","pedido-buscar",
         "sucursal-nuevo","sucursal-lista","sucursal-actualizar","sucursal-buscar", "vehiculo-lista","vehiculo-nuevo","vehiculo-actualizar","vehiculo-buscar",
-        "empleado-actualizar","empleado-nuevo","empleado-lista","empleado-buscar","cargo-nuevo","cargo-lista","cargo-actualizar","cargo-buscar", "empleado-equipo-asignar", 
+        "empleado-actualizar","empleado-nuevo","empleado-lista","empleado-buscar", "empleado-equipo-asignar", 
         "empleado-equipo","empleado-equipo-actualizar","empleado-equipo-miembros", 
         "presupuesto-nuevo", "presupuesto-lista","presupuesto-buscar","oc-nuevo","oc-lista","oc-buscar","factura-nuevo","factura-lista","factura-buscar"
         ,"inventario", "inventario-buscar", "remision-nuevo", "remision-buscar", "notasCreDe-nuevo", "notasCreDe-buscar","recepcionServicio-nuevo","recepcionServicio-buscar",

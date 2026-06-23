@@ -294,10 +294,14 @@
         let html = '';
 
         repuestos.forEach((r, i) => {
+            const tieneStock = Object.prototype.hasOwnProperty.call(r, 'stock');
+            const stockHtml = tieneStock
+                ? `<br><small class="text-muted">Stock disponible: ${Number(r.stock || 0)}</small>`
+                : '';
 
             html += `
         <tr>
-            <td>${r.descripcion || r.nombre || '-'}</td>
+            <td>${r.descripcion || r.nombre || '-'}${stockHtml}</td>
 
             <td width="120">
                 <input type="number"
@@ -332,8 +336,9 @@
             valor = 1;
         }
 
+        const tieneStock = Object.prototype.hasOwnProperty.call(repuestos[index], 'stock');
         const stockDisponible = Number(repuestos[index].stock || 0);
-        if (stockDisponible > 0 && valor > stockDisponible) {
+        if (tieneStock && valor > stockDisponible) {
             alert("Stock insuficiente. Disponible: " + stockDisponible);
             valor = stockDisponible;
         }
@@ -649,6 +654,23 @@
             // 🔥 FORZAR ANTES DE QUE AJAX LEA EL FORM
             trabajosInput.value = JSON.stringify(trabajos || []);
             repuestosInput.value = JSON.stringify(repuestos || []);
+
+            const repuestoSinStock = (repuestos || []).find(r => {
+                if (!Object.prototype.hasOwnProperty.call(r, 'stock')) return false;
+
+                const cantidad = Number(r.cantidad || 0);
+                const stock = Number(r.stock || 0);
+
+                return stock <= 0 || cantidad > stock;
+            });
+
+            if (repuestoSinStock) {
+                const stock = Number(repuestoSinStock.stock || 0);
+                alert("Stock insuficiente para " + (repuestoSinStock.descripcion || repuestoSinStock.nombre || 'el repuesto') + ". Disponible: " + stock);
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                return false;
+            }
 
         }, true); // 👈 🔥 IMPORTANTE: CAPTURA
     });

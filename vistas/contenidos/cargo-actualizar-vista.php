@@ -1,1 +1,0 @@
-<?php require_once "./vistas/contenidos/cargo-nuevo-vista.php"; ?>

@@ -29,13 +29,13 @@ if ($datos_empresa->rowCount() == 0) {
                     <div class="row">
                         <div class="col-12 col-md-6">
                             <div class="form-group">
-                                <label for="empresa_nombre" class="bmd-label-floating">RUC de la empresa</label>
+                                <label for="empresa_ruc" class="bmd-label-floating">RUC de la empresa *</label>
                                 <input type="text" pattern="[0-9()+]{7,20}" class="form-control" name="empresa_ruc_reg" id="empresa_ruc" maxlength="70">
                             </div>
                         </div>
                         <div class="col-12 col-md-6">
                             <div class="form-group">
-                                <label for="empresa_nombre" class="bmd-label-floating">Nombre de la empresa</label>
+                                <label for="empresa_nombre" class="bmd-label-floating">Nombre de la empresa *</label>
                                 <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ. ]{1,70}" class="form-control" name="empresa_nombre_reg" id="empresa_nombre" maxlength="70">
                             </div>
                         </div>
@@ -54,7 +54,7 @@ if ($datos_empresa->rowCount() == 0) {
                         </div>
                         <div class="col-12 col-md-6">
                             <div class="form-group">
-                                <label for="empresa_direccion" class="bmd-label-floating">Dirección</label>
+                                <label for="empresa_direccion" class="bmd-label-floating">Dirección *</label>
                                 <input type="text" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ().,#\- ]{1,190}" class="form-control" name="empresa_direccion_reg" id="empresa_direccion" maxlength="190">
                             </div>
                         </div>
@@ -82,33 +82,33 @@ if ($datos_empresa->rowCount() == 0) {
                     <div class="row">
                         <div class="col-12 col-md-6">
                             <div class="form-group">
-                                <label for="empresa_nombre" class="bmd-label-floating">RUC de la empresa</label>
-                                <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ. ]{1,70}" class="form-control" name="empresa_ruc_up" id="empresa_nombre" maxlength="70" value="<?php echo $campos['ruc'] ?>">
+                                <label for="empresa_ruc_up" class="bmd-label-floating">RUC de la empresa *</label>
+                                <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ. ]{1,70}" class="form-control" name="empresa_ruc_up" id="empresa_ruc_up" maxlength="70" value="<?php echo $campos['ruc'] ?>">
                             </div>
                         </div>
                         <div class="col-12 col-md-6">
                             <div class="form-group">
-                                <label for="empresa_nombre" class="bmd-label-floating">Nombre de la empresa</label>
-                                <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ. ]{1,70}" class="form-control" name="empresa_nombre_up" id="empresa_nombre" maxlength="70" value="<?php echo $campos['razon_social'] ?>">
+                                <label for="empresa_nombre_up" class="bmd-label-floating">Nombre de la empresa *</label>
+                                <input type="text" pattern="[a-zA-z0-9áéíóúÁÉÍÓÚñÑ. ]{1,70}" class="form-control" name="empresa_nombre_up" id="empresa_nombre_up" maxlength="70" value="<?php echo $campos['razon_social'] ?>">
                             </div>
                         </div>
 
                         <div class="col-12 col-md-6">
                             <div class="form-group">
-                                <label for="empresa_email" class="bmd-label-floating">Correo</label>
-                                <input type="email" class="form-control" name="empresa_email_up" id="empresa_email" maxlength="70" value="<?php echo $campos['email_empresa'] ?>">
+                                <label for="empresa_email_up" class="bmd-label-floating">Correo</label>
+                                <input type="email" class="form-control" name="empresa_email_up" id="empresa_email_up" maxlength="70" value="<?php echo $campos['email_empresa'] ?>">
                             </div>
                         </div>
                         <div class="col-12 col-md-6">
                             <div class="form-group">
-                                <label for="empresa_telefono" class="bmd-label-floating">Telefono</label>
-                                <input type="text" pattern="[0-9()+]{8,20}" class="form-control" name="empresa_telefono_up" id="empresa_telefono" maxlength="20" value="<?php echo $campos['telefono_empresa'] ?>">
+                                <label for="empresa_telefono_up" class="bmd-label-floating">Telefono</label>
+                                <input type="text" pattern="[0-9()+]{8,20}" class="form-control" name="empresa_telefono_up" id="empresa_telefono_up" maxlength="20" value="<?php echo $campos['telefono_empresa'] ?>">
                             </div>
                         </div>
                         <div class="col-12 col-md-6">
                             <div class="form-group">
-                                <label for="empresa_direccion" class="bmd-label-floating">Dirección</label>
-                                <input type="text" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ().,#\- ]{1,190}" class="form-control" name="empresa_direccion_up" id="empresa_direccion" maxlength="190" value="<?php echo $campos['direccion'] ?>">
+                                <label for="empresa_direccion_up" class="bmd-label-floating">Dirección *</label>
+                                <input type="text" pattern="[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ().,#\- ]{1,190}" class="form-control" name="empresa_direccion_up" id="empresa_direccion_up" maxlength="190" value="<?php echo $campos['direccion'] ?>">
                             </div>
                         </div>
                     </div>

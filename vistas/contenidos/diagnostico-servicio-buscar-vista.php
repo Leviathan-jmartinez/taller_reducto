@@ -17,7 +17,7 @@ $busqueda_general = $_SESSION['busqueda_general_diag'] ?? '';
 $ordenDiagnostico = mainModel::cargar_ordenamiento_sesion('diagnostico', ['fecha', 'estado'], 'fecha', 'DESC');
 $busqueda_activa = isset($_SESSION['filtro_diagnostico_activo']);
 
-if (isset($_GET['estado_diag']) && in_array((string)$_GET['estado_diag'], ['0', '1', '2', '3'], true)) {
+if (isset($_GET['estado_diag']) && in_array((string)$_GET['estado_diag'], ['0', '1', '2', '3', '4'], true)) {
     $_SESSION['estado_diag'] = (string)$_GET['estado_diag'];
     $_SESSION['filtro_diagnostico_activo'] = '1';
     $estado = (string)$_GET['estado_diag'];
@@ -104,6 +104,7 @@ if (isset($_GET['estado_diag']) && in_array((string)$_GET['estado_diag'], ['0', 
                     <option value="1" <?php echo $estado === '1' ? 'selected' : ''; ?>>En proceso</option>
                     <option value="2" <?php echo $estado === '2' ? 'selected' : ''; ?>>Presupuestado</option>
                     <option value="3" <?php echo $estado === '3' ? 'selected' : ''; ?>>Finalizado</option>
+                    <option value="4" <?php echo $estado === '4' ? 'selected' : ''; ?>>OT generada</option>
                     <option value="0" <?php echo $estado === '0' ? 'selected' : ''; ?>>Anulado</option>
                 </select>
             </div>

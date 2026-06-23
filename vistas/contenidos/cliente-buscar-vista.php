@@ -15,9 +15,11 @@ if (!mainModel::tienePermiso('cliente.ver')) {
 
 <div class="container-fluid">
 	<ul class="full-box list-unstyled page-nav-tabs">
+		<?php if (mainModel::tienePermiso('cliente.crear')) { ?>
 		<li>
 			<a href="<?php echo SERVERURL; ?>cliente-nuevo/"><i class="fas fa-plus fa-fw"></i> &nbsp; AGREGAR CLIENTE</a>
 		</li>
+		<?php } ?>
 		<li>
 			<a class="active" href="<?php echo SERVERURL; ?>cliente-buscar/"><i class="fas fa-search fa-fw"></i> &nbsp; BUSCAR CLIENTE</a>
 		</li>

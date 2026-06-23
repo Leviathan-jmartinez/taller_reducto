@@ -339,8 +339,8 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
     <div class="condiciones">
         <strong>Condiciones:</strong><br>
 
-        La presente OT autoriza al taller a realizar los trabajos detallados.
-        Todo trabajo adicional será informado previamente al cliente.
+        La presente orden de trabajo autoriza al taller a realizar unicamente los trabajos detallados.
+        Cualquier trabajo adicional, repuesto extra o variacion de precio debera ser informado y autorizado previamente por el cliente.
     </div>
 
 

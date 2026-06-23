@@ -5,7 +5,8 @@ $vistaPartes = explode('/', trim($_GET['vista'] ?? '', '/'));
 $vistaActual = $vistaPartes[0] ?? 'sucursal-nuevo';
 $id = ($vistaActual === 'sucursal-actualizar') ? ($vistaPartes[1] ?? null) : null;
 
-$permisoNecesario = ($vistaActual === 'sucursal-actualizar') ? 'sucursal.editar' : 'sucursal.crear';
+$permisoNecesario = ($vistaActual === 'sucursal-actualizar') ? 'sucursal.editar' : 'sucursal.ver';
+$puedeCrear = mainModel::tienePermiso('sucursal.crear');
 
 if (!mainModel::tienePermiso($permisoNecesario)) {
     echo '<div class="alert alert-danger">Acceso no autorizado</div>';
@@ -32,11 +33,12 @@ $empresas = $ins->listar_empresas_controlador();
 <!-- HEADER -->
 <div class="full-box page-header">
     <h3>
-        <?php echo $editando ? "ACTUALIZAR SUCURSAL" : "AGREGAR SUCURSAL"; ?>
+        <?php echo $editando ? "ACTUALIZAR SUCURSAL" : ($puedeCrear ? "AGREGAR SUCURSAL" : "LISTADO DE SUCURSALES"); ?>
     </h3>
 </div>
 
 <!-- FORM -->
+<?php if ($editando || $puedeCrear) { ?>
 <div class="container-fluid">
     <form class="form-neon FormularioAjax app-form"
         action="<?php echo SERVERURL; ?>ajax/sucursalAjax.php"
@@ -52,7 +54,9 @@ $empresas = $ins->listar_empresas_controlador();
         <div class="row">
 
             <div class="col-md-4">
+                <label for="sucursal_empresa">Empresa *</label>
                 <select class="form-control select2"
+                    id="sucursal_empresa"
                     name="<?php echo $editando ? 'empresa_up' : 'empresa_reg'; ?>">
                     <option value="">Seleccione empresa</option>
                     <?php
@@ -67,8 +71,10 @@ $empresas = $ins->listar_empresas_controlador();
             </div>
 
             <div class="col-md-4">
+                <label for="sucursal_descripcion">Descripción *</label>
                 <input type="text"
                     class="form-control"
+                    id="sucursal_descripcion"
                     name="<?php echo $editando ? 'sucursal_descri_up' : 'sucursal_descri_reg'; ?>"
                     value="<?php echo $editando ? $campos['suc_descri'] : ''; ?>"
                     pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,#°-]{3,80}"
@@ -78,8 +84,10 @@ $empresas = $ins->listar_empresas_controlador();
             </div>
 
             <div class="col-md-4">
+                <label for="sucursal_nro_establecimiento">Nro. establecimiento *</label>
                 <input type="text"
                     class="form-control"
+                    id="sucursal_nro_establecimiento"
                     name="<?php echo $editando ? 'nro_establecimiento_up' : 'nro_establecimiento_reg'; ?>"
                     value="<?php echo $editando ? $campos['nro_establecimiento'] : ''; ?>"
                     pattern="[0-9]{1,3}"
@@ -92,8 +100,10 @@ $empresas = $ins->listar_empresas_controlador();
             <div class="w-100 mt-2"></div>
 
             <div class="col-md-6">
+                <label for="sucursal_direccion">Dirección</label>
                 <input type="text"
                     class="form-control"
+                    id="sucursal_direccion"
                     name="<?php echo $editando ? 'sucursal_direccion_up' : 'sucursal_direccion_reg'; ?>"
                     value="<?php echo $editando ? $campos['suc_direccion'] : ''; ?>"
                     pattern="[a-zA-ZáéíóúÁÉÍÓÚñÑ0-9 .,#°\/-]{3,120}"
@@ -103,8 +113,10 @@ $empresas = $ins->listar_empresas_controlador();
             </div>
 
             <div class="col-md-3">
+                <label for="sucursal_telefono">Teléfono</label>
                 <input type="text"
                     class="form-control"
+                    id="sucursal_telefono"
                     name="<?php echo $editando ? 'sucursal_telefono_up' : 'sucursal_telefono_reg'; ?>"
                     value="<?php echo $editando ? $campos['suc_telefono'] : ''; ?>"
                     pattern="[0-9()+ -]{6,20}"
@@ -115,7 +127,9 @@ $empresas = $ins->listar_empresas_controlador();
             </div>
 
             <div class="col-md-3">
+                <label for="sucursal_estado">Estado *</label>
                 <select class="form-control"
+                    id="sucursal_estado"
                     name="<?php echo $editando ? 'estado_up' : 'estado_reg'; ?>">
                     <option value="">Estado</option>
                     <option value="1" <?php if ($editando && $campos['estado'] == 1) echo "selected"; ?>>Activo</option>
@@ -144,6 +158,7 @@ $empresas = $ins->listar_empresas_controlador();
 
     </form>
 </div>
+<?php } ?>
 
 <!-- BUSCADOR -->
 <div class="container-fluid mb-3">

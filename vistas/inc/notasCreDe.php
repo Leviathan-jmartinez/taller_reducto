@@ -93,16 +93,11 @@
     }
 
     document.addEventListener('submit', function(e) {
-        e.preventDefault();
-        console.log('SUBMIT DETECTADO', e.target);
-    });
-
-
-    document.addEventListener('submit', function(e) {
 
         if (!e.target.classList.contains('FormularioAjax')) return;
 
         e.preventDefault();
+        e.stopImmediatePropagation();
 
         const form = e.target;
         const data = new FormData(form);
@@ -122,7 +117,7 @@
                 /* 🔴 ERROR CONTROLADO */
                 if (resp.status && resp.status === 'error') {
                     Swal.fire({
-                        icon: 'error',
+                        type: 'error',
                         title: 'Error',
                         text: resp.msg
                     });
@@ -132,7 +127,7 @@
                 /* 🟢 RESPUESTA ESTÁNDAR BACKEND */
                 if (resp.Alerta) {
                     Swal.fire({
-                        icon: resp.Tipo || 'success',
+                        type: resp.Tipo || 'success',
                         title: resp.Titulo || 'Correcto',
                         text: resp.Texto || ''
                     }).then(() => {
@@ -145,7 +140,7 @@
 
                 /* 🟡 FALLBACK */
                 Swal.fire({
-                    icon: 'error',
+                    type: 'error',
                     title: 'Error',
                     text: 'Respuesta inesperada del servidor'
                 });
@@ -153,7 +148,7 @@
             .catch(err => {
                 console.error(err);
                 Swal.fire({
-                    icon: 'error',
+                    type: 'error',
                     title: 'Error',
                     text: 'Error de comunicación con el servidor'
                 });

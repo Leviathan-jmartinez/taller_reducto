@@ -121,8 +121,12 @@ class rolesModelo extends mainModel
             $sql->bindParam(":id", $id, PDO::PARAM_INT);
             $sql->execute();
 
+            $verificar = $pdo->prepare("SELECT estado FROM roles WHERE id_rol = :id");
+            $verificar->bindParam(":id", $id, PDO::PARAM_INT);
+            $verificar->execute();
+
             return [
-                "ok" => $sql->rowCount() > 0,
+                "ok" => $sql->rowCount() > 0 || ($verificar->rowCount() > 0 && (int)$verificar->fetchColumn() === 0),
                 "accion" => "desactivado"
             ];
         }

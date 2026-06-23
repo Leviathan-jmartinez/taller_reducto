@@ -140,6 +140,7 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
                 <th>Estado</th>
                 <th>Cliente</th>
                 <th>Veh&iacute;culo</th>
+                <th>Usuario</th>
                 <th>Tecnico Encargado</th>
                 <th>Repuestos</th>
                 <th>Insumos</th>
@@ -157,6 +158,7 @@ $sucursal = isset($pdfVars['sucursal']) ? (string)$pdfVars['sucursal'] : '';
                     <td class="text-center"><?= estadoRegistroServicio($row['estado']) ?></td>
                     <td><?= h($row['cliente']) ?></td>
                     <td><?= h($row['vehiculo']) ?></td>
+                    <td><?= h($row['usuario_registra']) ?></td>
                     <td class="text-center"><?= h($row['tecnico']) ?></td>
                     <td class="text-center"><?= number_format((float)($row['cantidad_repuestos'] ?? 0), 2, ',', '.') ?></td>
                     <td class="text-center"><?= number_format((float)($row['cantidad_insumos'] ?? 0), 2, ',', '.') ?></td>

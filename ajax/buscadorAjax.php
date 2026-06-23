@@ -20,7 +20,6 @@ $modulo = $_POST['modulo'];
 $data_url = [
     "usuario" => "usuario-nuevo",
     "sucursal" => "sucursal-nuevo",
-    "cargo" => "cargo-nuevo",
     "empleado" => "empleado-nuevo",
     "vehiculo" => "vehiculo-nuevo",
     "proveedor" => "proveedor-nuevo",

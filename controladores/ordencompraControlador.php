@@ -876,7 +876,16 @@ class ordencompraControlador extends ordencompraModelo
             ");
 
             if ($datos_articuloPre->rowCount() >= 1) {
-                $tabla = '<div class="table-responsive"><table class="table table-hover table-bordered table-sm"><tbody>';
+                $tabla = '<div class="table-responsive"><table class="table table-hover table-bordered table-sm">
+                    <thead class="thead-dark">
+                        <tr class="text-center">
+                            <th>ARTICULO</th>
+                            <th>CANTIDAD</th>
+                            <th>PRECIO</th>
+                            <th>AGREGAR</th>
+                        </tr>
+                    </thead>
+                    <tbody>';
                 foreach ($datos_articuloPre->fetchAll() as $rows) {
                     $tabla .= '<tr class="text-center">
                     <td>' . $rows['codigo'] . ' - ' . $rows['desc_articulo'] . '</td>

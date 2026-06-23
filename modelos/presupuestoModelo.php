@@ -124,7 +124,6 @@ class presupuestoModelo extends mainModel
             return $sql;
         } catch (Exception $e) {
             $conexion->rollBack();
-            echo $e->getMessage(); 
             return false;
         }
     }
